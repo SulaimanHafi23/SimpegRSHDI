@@ -22,16 +22,15 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'username' => [
+            'login' => [
                 'required',
                 'string',
-                'max:255',
             ],
             'password' => [
                 'required',
                 'string',
             ],
-            'remember' => [
+            'remember_me' => [
                 'nullable',
                 'boolean',
             ],
@@ -44,14 +43,9 @@ class LoginRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'username.required' => 'Username atau email wajib diisi.',
-            'username.string' => 'Username atau email harus berupa teks.',
-            'username.max' => 'Username atau email maksimal 255 karakter.',
-
-            'password.required' => 'Password wajib diisi.',
-            'password.string' => 'Password harus berupa teks.',
-
-            'remember.boolean' => 'Remember me harus berupa true atau false.',
+            'login.required' => 'Username atau email harus diisi.',
+            'password.required' => 'Password harus diisi.',
+            'remember_me.boolean' => 'Remember me harus berupa true atau false.',
         ];
     }
 
@@ -61,9 +55,22 @@ class LoginRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'username' => 'username atau email',
+            'login' => 'username atau email',
             'password' => 'password',
-            'remember' => 'remember me',
+            'remember_me' => 'remember me',
         ];
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // Convert checkbox value to boolean
+        $this->merge([
+            'remember_me' => $this->has('remember_me') ?
+                filter_var($this->remember_me, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false :
+                false
+        ]);
     }
 }

@@ -6,9 +6,9 @@ namespace App\DTOs\Auth;
 class LoginDTO
 {
     public function __construct(
-        public readonly string $username,
+        public readonly string $login, // CHANGED: support email or username
         public readonly string $password,
-        public readonly bool $remember = false
+        public readonly bool $rememberMe = false // default false
     ) {}
 
     /**
@@ -17,10 +17,34 @@ class LoginDTO
     public static function fromRequest(array $data): self
     {
         return new self(
-            username: $data['username'],
+            login: $data['login'], // from form field name="login"
             password: $data['password'],
-            remember: $data['remember'] ?? false
+            rememberMe: (bool) ($data['remember_me'] ?? false) // ensure boolean
         );
+    }
+
+    /**
+     * Get credentials for authentication
+     * Auto-detect if login is email or username
+     */
+    public function getCredentials(): array
+    {
+        $field = filter_var($this->login, FILTER_VALIDATE_EMAIL) 
+            ? 'email' 
+            : 'username';
+        
+        return [
+            $field => $this->login,
+            'password' => $this->password,
+        ];
+    }
+
+    /**
+     * Check if remember me is enabled
+     */
+    public function shouldRemember(): bool
+    {
+        return $this->rememberMe;
     }
 
     /**
@@ -29,9 +53,9 @@ class LoginDTO
     public function toArray(): array
     {
         return [
-            'username' => $this->username,
+            'login' => $this->login,
             'password' => $this->password,
-            'remember' => $this->remember,
+            'remember_me' => $this->rememberMe,
         ];
     }
 }

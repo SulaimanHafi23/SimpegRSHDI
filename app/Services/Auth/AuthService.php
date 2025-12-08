@@ -25,16 +25,16 @@ class AuthService
     public function login(LoginDTO $dto): array
     {
         // Find user (support username or email)
-        $user = $this->findUser($dto->username);
+        $user = $this->findUser($dto->login);
 
         if (!$user) {
             Log::warning('Login attempt with invalid username/email', [
-                'username' => $dto->username,
+                'login' => $dto->login,
                 'ip' => request()->ip(),
             ]);
 
             throw ValidationException::withMessages([
-                'username' => ['Username atau email tidak ditemukan.'],
+                'login' => ['Username atau email tidak ditemukan.'],
             ]);
         }
 
@@ -42,7 +42,7 @@ class AuthService
         if (!$this->userRepository->isActive($user)) {
             Log::warning('Login attempt by inactive user', [
                 'user_id' => $user->id,
-                'username' => $user->username,
+                'login' => $user->username,
                 'is_active' => $user->is_active,
                 'worker_status' => $user->worker?->status,
             ]);
@@ -56,7 +56,7 @@ class AuthService
         if (!Hash::check($dto->password, $user->password)) {
             Log::warning('Login attempt with invalid password', [
                 'user_id' => $user->id,
-                'username' => $user->username,
+                'login' => $user->username,
                 'ip' => request()->ip(),
             ]);
 
@@ -66,7 +66,7 @@ class AuthService
         }
 
         // Login user
-        Auth::login($user, $dto->remember);
+        Auth::login($user, $dto->rememberMe);
 
         // Update last login
         $this->userRepository->updateLastLogin($user);
