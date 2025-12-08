@@ -1,0 +1,343 @@
+---
+config:
+  layout: elk
+---
+
+erDiagram
+    %% ===== MASTER DATA =====
+    religions {
+        uuid id PK
+        string name
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    genders {
+        uuid id PK
+        string name
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    positions {
+        uuid id PK
+        string name
+        text description
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    locations {
+        uuid id PK
+        string name
+        text address
+        decimal latitude
+        decimal longitude
+        integer radius
+        boolean enforce_geofence
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    document_types {
+        uuid id PK
+        string name
+        string file_format
+        integer max_file_size
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    file_requirments {
+        uuid id PK
+        uuid position_id FK
+        uuid document_type_id FK
+        boolean is_required
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== SHIFT MANAGEMENT =====
+    shifts {
+        uuid id PK
+        string name
+        time start_time
+        time end_time
+        integer total_hours
+        text description
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    shift_patterns {
+        uuid id PK
+        string name
+        json days_of_week
+        text description
+        boolean is_active
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    worker_shift_schedules {
+        uuid id PK
+        uuid worker_id FK
+        uuid shift_id FK
+        enum day_of_week "monday-sunday nullable"
+        boolean is_default "true for recurring"
+        date schedule_date "nullable for override"
+        boolean is_override "true for exceptions"
+        uuid replaced_worker_id FK "nullable"
+        enum status "Active Inactive Completed Cancelled"
+        text notes "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== WORKERS & USERS =====
+    workers {
+        uuid id PK
+        string nip UK
+        string name
+        string surname "nullable"
+        string frontname "nullable"
+        string backname "nullable"
+        string email UK
+        string phone_number UK
+        text address
+        date birth_date
+        string birth_place
+        uuid gender_id FK
+        uuid religion_id FK
+        uuid position_id FK
+        date hire_date
+        date resign_date "nullable"
+        enum status "Active Inactive Resigned"
+        string photo_url "nullable"
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    users {
+        uuid id PK
+        uuid worker_id FK, UK
+        string email UK
+        string username UK
+        timestamp email_verified_at "nullable"
+        string password
+        timestamp last_login "nullable"
+        boolean is_active
+        string remember_token "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== SPATIE PERMISSION =====
+    permissions {
+        bigint id PK
+        string name
+        string guard_name
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    roles {
+        bigint id PK
+        string name
+        string guard_name
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    model_has_permissions {
+        uuid model_id FK
+        string model_type
+        bigint permission_id FK
+    }
+
+    model_has_roles {
+        uuid model_id FK
+        string model_type
+        bigint role_id FK
+    }
+
+    role_has_permissions {
+        bigint permission_id FK
+        bigint role_id FK
+    }
+
+    %% ===== ATTENDANCE =====
+    absents {
+        uuid id PK
+        uuid worker_id FK
+        uuid location_id FK "nullable"
+        uuid worker_shift_schedule_id FK "nullable"
+        uuid business_trip_id FK "nullable"
+        datetime check_in
+        datetime check_out "nullable"
+        decimal check_in_latitude
+        decimal check_in_longitude
+        decimal check_out_latitude "nullable"
+        decimal check_out_longitude "nullable"
+        decimal distance_from_office "nullable in meters"
+        text reason "nullable"
+        enum status "Present Absent Permission Sick Leave Business_Trip"
+        enum absent_type "Normal Business_Trip Remote"
+        boolean present_by_admin
+        boolean is_late
+        integer late_minutes "nullable"
+        boolean is_outside_radius
+        text notes "nullable"
+        string photo_check_in "nullable"
+        string photo_check_out "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== LEAVE & OVERTIME =====
+    leave_requests {
+        uuid id PK
+        uuid worker_id FK
+        enum leave_type "Annual Sick Permission Maternity etc"
+        date start_date
+        date end_date
+        integer total_days
+        text reason
+        string attachment_url "nullable"
+        enum status "Pending Approved Rejected Cancelled"
+        uuid approved_by FK "nullable"
+        timestamp approved_at "nullable"
+        text notes "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    overtimes {
+        uuid id PK
+        uuid worker_id FK
+        date overtime_date
+        time start_time
+        time end_time
+        integer total_hours
+        text reason
+        enum status "Pending Approved Rejected"
+        uuid approved_by FK "nullable"
+        timestamp approved_at "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== BUSINESS TRIPS =====
+    business_trips {
+        uuid id PK
+        uuid worker_id FK
+        string title
+        string destination
+        text destination_address
+        decimal destination_latitude "nullable"
+        decimal destination_longitude "nullable"
+        text purpose
+        date start_date
+        date end_date
+        integer total_days
+        decimal budget "nullable"
+        decimal actual_cost "nullable"
+        string transport_type
+        enum status "Pending Approved Rejected Ongoing Completed Cancelled"
+        uuid approved_by FK "nullable"
+        timestamp approved_at "nullable"
+        text notes "nullable"
+        string attachment_url "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    business_trip_reports {
+        uuid id PK
+        uuid business_trip_id FK
+        string report_title
+        text report_content
+        string attachment_url "nullable"
+        timestamp submitted_at "nullable"
+        enum status "Draft Submitted Reviewed Approved Rejected"
+        uuid reviewed_by FK "nullable"
+        timestamp reviewed_at "nullable"
+        text review_notes "nullable"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== DOCUMENTS =====
+    berkas {
+        uuid id PK
+        uuid worker_id FK
+        uuid file_requirement_id FK
+        string file_name
+        string file_path
+        string file_type
+        integer file_size "in bytes"
+        enum status "Pending Approved Rejected"
+        uuid verified_by FK "nullable"
+        timestamp verified_at "nullable"
+        text rejection_reason "nullable"
+        text notes "nullable"
+        date expired_date "nullable"
+        boolean is_expired
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== SALARY =====
+    salaries {
+        uuid id PK
+        uuid worker_id FK, UK
+        decimal basic_salary
+        decimal allowance
+        decimal deduction
+        decimal total_salary
+        date payment_date "nullable"
+        enum status "Draft Pending Paid"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== RELATIONSHIPS =====
+    genders ||--o{ workers : "gender_id"
+    religions ||--o{ workers : "religion_id"
+    positions ||--o{ workers : "position_id"
+    positions ||--o{ file_requirments : "position_id"
+    document_types ||--o{ file_requirments : "document_type_id"
+
+    workers ||--o| users : "worker_id"
+    workers ||--o| salaries : "worker_id"
+    workers ||--o{ absents : "worker_id"
+    workers ||--o{ worker_shift_schedules : "worker_id"
+    workers ||--o{ worker_shift_schedules : "replaced_worker_id"
+    workers ||--o{ berkas : "worker_id"
+    workers ||--o{ leave_requests : "worker_id"
+    workers ||--o{ overtimes : "worker_id"
+    workers ||--o{ business_trips : "worker_id"
+
+    users ||--o{ model_has_roles : "model_id"
+    users ||--o{ model_has_permissions : "model_id"
+    users ||--o{ berkas : "verified_by"
+    users ||--o{ leave_requests : "approved_by"
+    users ||--o{ overtimes : "approved_by"
+    users ||--o{ business_trips : "approved_by"
+    users ||--o{ business_trip_reports : "reviewed_by"
+
+    roles ||--o{ model_has_roles : "role_id"
+    roles ||--o{ role_has_permissions : "role_id"
+    permissions ||--o{ model_has_permissions : "permission_id"
+    permissions ||--o{ role_has_permissions : "permission_id"
+
+    locations ||--o{ absents : "location_id"
+    shifts ||--o{ worker_shift_schedules : "shift_id"
+    worker_shift_schedules ||--o{ absents : "worker_shift_schedule_id"
+    business_trips ||--o{ absents : "business_trip_id"
+    business_trips ||--o{ business_trip_reports : "business_trip_id"
+    file_requirments ||--o{ berkas : "file_requirement_id"
