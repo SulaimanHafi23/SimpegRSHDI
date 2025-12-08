@@ -77,9 +77,9 @@
                 <form action="{{ route('login.post') }}" method="POST" class="space-y-6">
                     @csrf
                     
-                    {{-- Username Field --}}
+                    {{-- Username/Email Field - CHANGED name to "login" --}}
                     <div>
-                        <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
+                        <label for="login" class="block text-sm font-medium text-gray-700 mb-2">
                             Username atau Email
                         </label>
                         <div class="relative">
@@ -89,17 +89,17 @@
                                 </svg>
                             </div>
                             <input 
-                                id="username" 
-                                name="username" 
+                                id="login" 
+                                name="login" 
                                 type="text" 
                                 required 
-                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('username') border-red-300 @enderror" 
+                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('login') border-red-300 @enderror" 
                                 placeholder="Masukkan username atau email"
-                                value="{{ old('username') }}"
+                                value="{{ old('login') }}"
                                 autofocus
                             >
                         </div>
-                        @error('username')
+                        @error('login')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -129,17 +129,18 @@
                         @enderror
                     </div>
 
-                    {{-- Remember Me & Forgot Password --}}
+                    {{-- Remember Me - CHANGED name to "remember_me" --}}
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <input 
-                                id="remember" 
-                                name="remember" 
+                                id="remember_me" 
+                                name="remember_me" 
                                 type="checkbox" 
+                                value="1"
                                 class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                {{ old('remember') ? 'checked' : '' }}
+                                {{ old('remember_me') ? 'checked' : '' }}
                             >
-                            <label for="remember" class="ml-2 block text-sm text-gray-900">
+                            <label for="remember_me" class="ml-2 block text-sm text-gray-900">
                                 Ingat Saya
                             </label>
                         </div>
