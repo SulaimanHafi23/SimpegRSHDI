@@ -39,9 +39,9 @@ class Berkas extends Model
         return $this->belongsTo(Worker::class);
     }
 
-    public function keperluanBerkas(): BelongsTo
+    public function FileRequirement(): BelongsTo
     {
-        return $this->belongsTo(KeperluanBerkas::class);
+        return $this->belongsTo(FileRequirment::class);
     }
 
     public function verifier(): BelongsTo

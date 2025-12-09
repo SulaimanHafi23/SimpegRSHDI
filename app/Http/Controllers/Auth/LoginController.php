@@ -20,7 +20,7 @@ class LoginController extends Controller
      */
     public function showLoginForm(): View
     {
-        return view('welcome');
+        return view('auth.login');
     }
 
     /**
@@ -33,7 +33,7 @@ class LoginController extends Controller
         try {
             // Create DTO from request
             $dto = LoginDTO::fromRequest($request->validated());
-            
+
             // Authenticate user
             $result = $this->authService->login($dto);
 
@@ -63,8 +63,8 @@ class LoginController extends Controller
      */
     public function logout(): RedirectResponse
     {
-        $this->authService->logout(auth()->user() ?? null);
-        
+        $this->authService->logout(auth()->guard()->user() ?? null);
+
         request()->session()->invalidate();
         request()->session()->regenerateToken();
 
