@@ -4,6 +4,8 @@
 namespace App\Repositories\Contracts;
 
 use App\Models\User;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 
 interface UserRepositoryInterface
 {
@@ -46,4 +48,15 @@ interface UserRepositoryInterface
      * Clear user cache
      */
     public function clearUserCache(string $userId): void;
+
+    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator;
+    public function getAll(): Collection;
+    public function findById(string $id);
+    public function findByWorkerId(string $workerId);
+    public function create(array $data);
+    public function update(string $id, array $data): bool;
+    public function delete(string $id): bool;
+    public function updatePassword(string $id, string $password): bool;
+    public function syncRoles(string $id, array $roles): bool;
+    public function getActiveUsers(): Collection;
 }

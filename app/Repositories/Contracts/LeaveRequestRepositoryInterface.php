@@ -1,0 +1,27 @@
+<?php
+// filepath: app/Repositories/Contracts/Leave/LeaveRequestRepositoryInterface.php
+
+namespace App\Repositories\Contracts\Leave;
+
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
+
+interface LeaveRequestRepositoryInterface
+{
+    /**
+     * Create a new class instance.
+     */
+    public function __construct();
+
+    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator;
+    public function findById(string $id);
+    public function getByWorker(string $workerId, ?string $year = null): Collection;
+    public function getPending(): Collection;
+    public function getApproved(): Collection;
+    public function create(array $data);
+    public function update(string $id, array $data): bool;
+    public function delete(string $id): bool;
+    public function approve(string $id, string $userId): bool;
+    public function reject(string $id, string $userId, string $reason): bool;
+    public function checkOverlap(string $workerId, string $startDate, string $endDate, ?string $excludeId = null): bool;
+}

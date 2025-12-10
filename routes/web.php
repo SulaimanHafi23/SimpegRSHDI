@@ -1,35 +1,36 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
-// use App\Http\Controllers\DashboardRedirectController; // TODO: Create this controller
-// use App\Http\Controllers\Admin\DashboardController as AdminDashboardController; // TODO: Create
-// use App\Http\Controllers\Admin\Master\ReligionController; // TODO: Create
-// use App\Http\Controllers\Admin\Master\GenderController; // TODO: Create
-// use App\Http\Controllers\Admin\Master\PositionController; // TODO: Create
-// use App\Http\Controllers\Admin\Master\LocationController; // TODO: Create
-// use App\Http\Controllers\Admin\Master\DocumentTypeController; // TODO: Create
-// use App\Http\Controllers\Admin\Settings\FileRequirementController; // TODO: Create
-// use App\Http\Controllers\Admin\Settings\ShiftController; // TODO: Create
-// use App\Http\Controllers\Admin\Settings\ShiftPatternController; // TODO: Create
-// use App\Http\Controllers\Admin\Settings\RoleController; // TODO: Create
-// use App\Http\Controllers\Admin\Settings\PermissionController; // TODO: Create
-// use App\Http\Controllers\Admin\WorkerController; // TODO: Create
-// use App\Http\Controllers\Admin\AttendanceController as AdminAttendanceController; // TODO: Create
-// use App\Http\Controllers\Admin\Approval\LeaveApprovalController; // TODO: Create
-// use App\Http\Controllers\Admin\Approval\OvertimeApprovalController; // TODO: Create
-// use App\Http\Controllers\Admin\Approval\BusinessTripApprovalController; // TODO: Create
-// use App\Http\Controllers\Admin\Approval\DocumentApprovalController; // TODO: Create
-// use App\Http\Controllers\Admin\PayrollController as AdminPayrollController; // TODO: Create
-// use App\Http\Controllers\Admin\ReportController; // TODO: Create
-// use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController; // TODO: Create
-// use App\Http\Controllers\Employee\AttendanceController; // TODO: Create
-// use App\Http\Controllers\Employee\ScheduleController; // TODO: Create
-// use App\Http\Controllers\Employee\LeaveRequestController; // TODO: Create
-// use App\Http\Controllers\Employee\OvertimeRequestController; // TODO: Create
-// use App\Http\Controllers\Employee\BusinessTripRequestController; // TODO: Create
-// use App\Http\Controllers\Employee\DocumentController; // TODO: Create
-// use App\Http\Controllers\Employee\PayrollController; // TODO: Create
-// use App\Http\Controllers\Employee\ProfileController; // TODO: Create
+
+// Master Controllers
+use App\Http\Controllers\Admin\Master\DocumentTypeController;
+use App\Http\Controllers\Admin\Master\FileRequirementController;
+use App\Http\Controllers\Admin\Master\GenderController;
+use App\Http\Controllers\Admin\Master\LocationController;
+use App\Http\Controllers\Admin\Master\PositionController;
+use App\Http\Controllers\Admin\Master\ReligionController;
+use App\Http\Controllers\Admin\Master\ShiftController;
+use App\Http\Controllers\Admin\Master\ShiftPatternController;
+
+// Worker & User Controllers
+use App\Http\Controllers\Admin\Worker\WorkerController;
+use App\Http\Controllers\Admin\User\UserController;
+
+// Attendance & Schedule Controllers
+use App\Http\Controllers\Admin\Attendance\AbsentController;
+use App\Http\Controllers\Admin\Schedule\WorkerShiftScheduleController;
+
+// Leave & Overtime Controllers
+use App\Http\Controllers\Admin\Leave\LeaveRequestController;
+use App\Http\Controllers\Admin\Overtime\OvertimeController;
+
+// Business Trip Controllers
+use App\Http\Controllers\Admin\BusinessTrip\BusinessTripController;
+use App\Http\Controllers\Admin\BusinessTrip\BusinessTripReportController;
+
+// Document Controllers
+use App\Http\Controllers\Admin\Document\BerkasController;
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
@@ -49,7 +50,6 @@ Route::get('/', function () {
 
 // ========== PUBLIC AUTH ROUTES (GUEST ONLY) ==========
 Route::middleware('guest')->group(function () {
-    // Login
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('login', [LoginController::class, 'login'])->name('login.post');
 
@@ -82,211 +82,255 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
 
     // ========== ADMIN ROUTES ==========
-    Route::middleware(['role:Super Admin|HR|Manager'])->prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('admin')->name('admin.')->group(function () {
 
         // Dashboard
         Route::get('dashboard', function () {
-            return view('admin.dashboard');
+            return view('admin.dashboard.index');
         })->name('dashboard');
-        // Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard'); // TODO: Uncomment when controller ready
 
-        // ========== MASTER DATA ==========
+        // ===== MASTER DATA ROUTES =====
         Route::prefix('master')->name('master.')->group(function () {
-            // TODO: Uncomment when controllers ready
-            // Route::resource('religions', ReligionController::class);
-            // Route::resource('genders', GenderController::class);
-            // Route::resource('positions', PositionController::class);
-            // Route::resource('locations', LocationController::class);
-            // Route::resource('document-types', DocumentTypeController::class);
+            // Religions
+            Route::resource('religions', ReligionController::class);
+
+            // Genders
+            Route::resource('genders', GenderController::class);
+
+            // Positions
+            Route::resource('positions', PositionController::class);
+
+            // Locations
+            Route::resource('locations', LocationController::class);
+
+            // Document Types
+            Route::resource('document-types', DocumentTypeController::class);
+
+            // File Requirements
+            Route::resource('file-requirements', FileRequirementController::class);
+            Route::get('file-requirements/position/{positionId}', [FileRequirementController::class, 'byPosition'])
+                ->name('file-requirements.by-position');
         });
 
-        // ========== SETTINGS ==========
+        // ===== SHIFT MANAGEMENT ROUTES =====
         Route::prefix('settings')->name('settings.')->group(function () {
-            // TODO: Uncomment when controllers ready
-            // Route::resource('file-requirements', FileRequirementController::class);
-            // Route::resource('shifts', ShiftController::class);
-            // Route::resource('shift-patterns', ShiftPatternController::class);
-            // Route::resource('roles', RoleController::class);
-            // Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
-            // Route::get('permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
-            // Route::get('permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
+            // Shifts
+            Route::resource('shifts', ShiftController::class);
+
+            // Shift Patterns
+            Route::resource('shift-patterns', ShiftPatternController::class);
         });
 
-        // ========== WORKERS MANAGEMENT ==========
+        // ===== WORKER ROUTES =====
         Route::prefix('workers')->name('workers.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('import', [WorkerController::class, 'showImportForm'])->name('import');
-            // Route::post('import', [WorkerController::class, 'import'])->name('import.post');
-            // Route::get('export', [WorkerController::class, 'export'])->name('export');
-            // Route::get('/', [WorkerController::class, 'index'])->name('index');
-            // Route::get('create', [WorkerController::class, 'create'])->name('create');
-            // Route::post('/', [WorkerController::class, 'store'])->name('store');
-            // Route::get('{worker}', [WorkerController::class, 'show'])->name('show');
-            // Route::get('{worker}/edit', [WorkerController::class, 'edit'])->name('edit');
-            // Route::put('{worker}', [WorkerController::class, 'update'])->name('update');
-            // Route::delete('{worker}', [WorkerController::class, 'destroy'])->name('destroy');
-            // Route::get('{worker}/schedule', [WorkerController::class, 'schedule'])->name('schedule');
-            // Route::post('{worker}/schedule', [WorkerController::class, 'updateSchedule'])->name('schedule.update');
+            Route::get('/', [WorkerController::class, 'index'])->name('index');
+            Route::get('create', [WorkerController::class, 'create'])->name('create');
+            Route::post('/', [WorkerController::class, 'store'])->name('store');
+            Route::get('{id}', [WorkerController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [WorkerController::class, 'edit'])->name('edit');
+            Route::put('{id}', [WorkerController::class, 'update'])->name('update');
+            Route::delete('{id}', [WorkerController::class, 'destroy'])->name('destroy');
+
+            // Additional worker routes
+            Route::get('{id}/documents', [WorkerController::class, 'documents'])->name('documents');
+            Route::get('{id}/attendance', [WorkerController::class, 'attendance'])->name('attendance');
+            Route::get('{id}/leaves', [WorkerController::class, 'leaves'])->name('leaves');
         });
 
-        // ========== ATTENDANCE MONITORING ==========
+        // ===== USER MANAGEMENT ROUTES =====
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('create', [UserController::class, 'create'])->name('create');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::get('{id}', [UserController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [UserController::class, 'edit'])->name('edit');
+            Route::put('{id}', [UserController::class, 'update'])->name('update');
+            Route::delete('{id}', [UserController::class, 'destroy'])->name('destroy');
+
+            // Password & roles
+            Route::put('{id}/password', [UserController::class, 'updatePassword'])->name('update-password');
+            Route::put('{id}/roles', [UserController::class, 'updateRoles'])->name('update-roles');
+        });
+
+        // ===== ATTENDANCE ROUTES =====
         Route::prefix('attendance')->name('attendance.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('/', [AdminAttendanceController::class, 'index'])->name('index');
-            // Route::get('{attendance}', [AdminAttendanceController::class, 'show'])->name('show');
-            // Route::get('report/view', [AdminAttendanceController::class, 'report'])->name('report');
-            // Route::get('report/export', [AdminAttendanceController::class, 'export'])->name('export');
+            Route::get('/', [AbsentController::class, 'index'])->name('index');
+            Route::get('create', [AbsentController::class, 'create'])->name('create');
+            Route::post('/', [AbsentController::class, 'store'])->name('store');
+            Route::get('{id}', [AbsentController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [AbsentController::class, 'edit'])->name('edit');
+            Route::put('{id}', [AbsentController::class, 'update'])->name('update');
+            Route::delete('{id}', [AbsentController::class, 'destroy'])->name('destroy');
+
+            // Attendance reports
+            Route::get('reports/daily', [AbsentController::class, 'dailyReport'])->name('daily-report');
+            Route::get('reports/monthly', [AbsentController::class, 'monthlyReport'])->name('monthly-report');
+            Route::get('worker/{workerId}', [AbsentController::class, 'workerAttendance'])->name('worker-attendance');
         });
 
-        // ========== APPROVALS CENTER ==========
-        Route::prefix('approvals')->name('approvals.')->group(function () {
+        // ===== SHIFT SCHEDULE ROUTES =====
+        Route::prefix('schedules')->name('schedules.')->group(function () {
+            Route::get('/', [WorkerShiftScheduleController::class, 'index'])->name('index');
+            Route::get('create', [WorkerShiftScheduleController::class, 'create'])->name('create');
+            Route::post('/', [WorkerShiftScheduleController::class, 'store'])->name('store');
+            Route::get('{id}', [WorkerShiftScheduleController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [WorkerShiftScheduleController::class, 'edit'])->name('edit');
+            Route::put('{id}', [WorkerShiftScheduleController::class, 'update'])->name('update');
+            Route::delete('{id}', [WorkerShiftScheduleController::class, 'destroy'])->name('destroy');
 
-            // Leave Approvals
-            Route::prefix('leaves')->name('leaves.')->group(function () {
-                // TODO: Uncomment when controller ready
-                // Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
-                // Route::get('{leave}', [LeaveApprovalController::class, 'show'])->name('show');
-                // Route::post('{leave}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
-                // Route::post('{leave}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
-            });
-
-            // Overtime Approvals
-            Route::prefix('overtimes')->name('overtimes.')->group(function () {
-                // TODO: Uncomment when controller ready
-                // Route::get('/', [OvertimeApprovalController::class, 'index'])->name('index');
-                // Route::get('{overtime}', [OvertimeApprovalController::class, 'show'])->name('show');
-                // Route::post('{overtime}/approve', [OvertimeApprovalController::class, 'approve'])->name('approve');
-                // Route::post('{overtime}/reject', [OvertimeApprovalController::class, 'reject'])->name('reject');
-            });
-
-            // Business Trip Approvals
-            Route::prefix('business-trips')->name('business-trips.')->group(function () {
-                // TODO: Uncomment when controller ready
-                // Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
-                // Route::get('{businessTrip}', [BusinessTripApprovalController::class, 'show'])->name('show');
-                // Route::post('{businessTrip}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
-                // Route::post('{businessTrip}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
-                // Route::get('{businessTrip}/report', [BusinessTripApprovalController::class, 'reviewReport'])->name('report.review');
-            });
-
-            // Document Verification
-            Route::prefix('documents')->name('documents.')->group(function () {
-                // TODO: Uncomment when controller ready
-                // Route::get('/', [DocumentApprovalController::class, 'index'])->name('index');
-                // Route::get('{document}', [DocumentApprovalController::class, 'show'])->name('show');
-                // Route::post('{document}/verify', [DocumentApprovalController::class, 'verify'])->name('verify');
-                // Route::post('{document}/reject', [DocumentApprovalController::class, 'reject'])->name('reject');
-            });
+            // Additional schedule routes
+            Route::get('worker/{workerId}', [WorkerShiftScheduleController::class, 'workerSchedule'])->name('worker-schedule');
+            Route::post('bulk-create', [WorkerShiftScheduleController::class, 'bulkCreate'])->name('bulk-create');
+            Route::get('calendar', [WorkerShiftScheduleController::class, 'calendar'])->name('calendar');
         });
 
-        // ========== PAYROLL MANAGEMENT ==========
-        Route::prefix('payroll')->name('payroll.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('generate', [AdminPayrollController::class, 'showGenerateForm'])->name('generate');
-            // Route::post('generate', [AdminPayrollController::class, 'generate'])->name('generate.post');
-            // Route::get('export', [AdminPayrollController::class, 'export'])->name('export');
-            // Route::get('/', [AdminPayrollController::class, 'index'])->name('index');
-            // Route::get('create', [AdminPayrollController::class, 'create'])->name('create');
-            // Route::post('/', [AdminPayrollController::class, 'store'])->name('store');
-            // Route::get('{payroll}', [AdminPayrollController::class, 'show'])->name('show');
-            // Route::get('{payroll}/edit', [AdminPayrollController::class, 'edit'])->name('edit');
-            // Route::put('{payroll}', [AdminPayrollController::class, 'update'])->name('update');
-            // Route::delete('{payroll}', [AdminPayrollController::class, 'destroy'])->name('destroy');
+        // ===== LEAVE REQUEST ROUTES =====
+        Route::prefix('leaves')->name('leave.')->group(function () {
+            Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
+            Route::get('create', [LeaveRequestController::class, 'create'])->name('create');
+            Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
+            Route::get('{id}', [LeaveRequestController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [LeaveRequestController::class, 'edit'])->name('edit');
+            Route::put('{id}', [LeaveRequestController::class, 'update'])->name('update');
+            Route::delete('{id}', [LeaveRequestController::class, 'destroy'])->name('destroy');
+
+            // Approval routes
+            Route::post('{id}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
+            Route::post('{id}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
+            Route::get('pending', [LeaveRequestController::class, 'pending'])->name('pending');
+
+            // Worker leave quota
+            Route::get('worker/{workerId}/quota', [LeaveRequestController::class, 'workerLeaveQuota'])->name('worker-quota');
+
+            // Download attachment
+            Route::get('{id}/download', [LeaveRequestController::class, 'downloadAttachment'])->name('download-attachment');
         });
 
-        // ========== REPORTS ==========
-        Route::prefix('reports')->name('reports.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('attendance', [ReportController::class, 'attendance'])->name('attendance');
-            // Route::get('leaves', [ReportController::class, 'leaves'])->name('leaves');
-            // Route::get('overtimes', [ReportController::class, 'overtimes'])->name('overtimes');
-            // Route::get('business-trips', [ReportController::class, 'businessTrips'])->name('business-trips');
-            // Route::get('payroll', [ReportController::class, 'payroll'])->name('payroll');
-            // Route::get('summary', [ReportController::class, 'summary'])->name('summary');
+        // ===== OVERTIME ROUTES =====
+        Route::prefix('overtimes')->name('overtime.')->group(function () {
+            Route::get('/', [OvertimeController::class, 'index'])->name('index');
+            Route::get('create', [OvertimeController::class, 'create'])->name('create');
+            Route::post('/', [OvertimeController::class, 'store'])->name('store');
+            Route::get('{id}', [OvertimeController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [OvertimeController::class, 'edit'])->name('edit');
+            Route::put('{id}', [OvertimeController::class, 'update'])->name('update');
+            Route::delete('{id}', [OvertimeController::class, 'destroy'])->name('destroy');
+
+            // Approval routes
+            Route::post('{id}/approve', [OvertimeController::class, 'approve'])->name('approve');
+            Route::post('{id}/reject', [OvertimeController::class, 'reject'])->name('reject');
+            Route::get('pending', [OvertimeController::class, 'pending'])->name('pending');
+
+            // Worker overtime report
+            Route::get('worker/{workerId}/report', [OvertimeController::class, 'workerOvertimeReport'])->name('worker-report');
+
+            // Download attachment
+            Route::get('{id}/download', [OvertimeController::class, 'downloadAttachment'])->name('download-attachment');
         });
-    }); // End Admin Routes
 
-    // ========== EMPLOYEE ROUTES ==========
-    Route::middleware(['role:Employee|Super Admin|HR|Manager'])->prefix('employee')->name('employee.')->group(function () {
+        // ===== BUSINESS TRIP ROUTES =====
+        Route::prefix('business-trips')->name('business-trip.')->group(function () {
+            Route::get('/', [BusinessTripController::class, 'index'])->name('index');
+            Route::get('create', [BusinessTripController::class, 'create'])->name('create');
+            Route::post('/', [BusinessTripController::class, 'store'])->name('store');
+            Route::get('{id}', [BusinessTripController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [BusinessTripController::class, 'edit'])->name('edit');
+            Route::put('{id}', [BusinessTripController::class, 'update'])->name('update');
+            Route::delete('{id}', [BusinessTripController::class, 'destroy'])->name('destroy');
 
-        // Dashboard
+            // Approval routes
+            Route::post('{id}/approve', [BusinessTripController::class, 'approve'])->name('approve');
+            Route::post('{id}/reject', [BusinessTripController::class, 'reject'])->name('reject');
+            Route::get('pending', [BusinessTripController::class, 'pending'])->name('pending');
+            Route::get('active', [BusinessTripController::class, 'active'])->name('active');
+
+            // Worker summary
+            Route::get('worker/{workerId}/summary', [BusinessTripController::class, 'workerSummary'])->name('worker-summary');
+        });
+
+        // ===== BUSINESS TRIP REPORT ROUTES =====
+        Route::prefix('business-trip-reports')->name('business-trip-report.')->group(function () {
+            Route::get('{id}', [BusinessTripReportController::class, 'show'])->name('show');
+            Route::get('create/{businessTripId}', [BusinessTripReportController::class, 'create'])->name('create');
+            Route::post('/', [BusinessTripReportController::class, 'store'])->name('store');
+            Route::get('{id}/edit', [BusinessTripReportController::class, 'edit'])->name('edit');
+            Route::put('{id}', [BusinessTripReportController::class, 'update'])->name('update');
+            Route::delete('{id}', [BusinessTripReportController::class, 'destroy'])->name('destroy');
+
+            // Review routes
+            Route::post('{id}/approve', [BusinessTripReportController::class, 'approve'])->name('approve');
+            Route::post('{id}/reject', [BusinessTripReportController::class, 'reject'])->name('reject');
+            Route::get('pending-review', [BusinessTripReportController::class, 'pendingReview'])->name('pending-review');
+
+            // Download attachment
+            Route::get('{id}/download', [BusinessTripReportController::class, 'downloadAttachment'])->name('download-attachment');
+        });
+
+        // ===== DOCUMENT (BERKAS) ROUTES =====
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/', [BerkasController::class, 'index'])->name('index');
+            Route::get('create', [BerkasController::class, 'create'])->name('create');
+            Route::post('/', [BerkasController::class, 'store'])->name('store');
+            Route::get('{id}', [BerkasController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [BerkasController::class, 'edit'])->name('edit');
+            Route::put('{id}', [BerkasController::class, 'update'])->name('update');
+            Route::delete('{id}', [BerkasController::class, 'destroy'])->name('destroy');
+
+            // Verification routes
+            Route::post('{id}/verify', [BerkasController::class, 'verify'])->name('verify');
+            Route::post('{id}/reject', [BerkasController::class, 'reject'])->name('reject');
+            Route::get('pending', [BerkasController::class, 'pending'])->name('pending');
+
+            // Worker documents
+            Route::get('worker/{workerId}', [BerkasController::class, 'workerDocuments'])->name('worker-documents');
+            Route::get('worker/{workerId}/check-completeness', [BerkasController::class, 'checkCompleteness'])->name('check-completeness');
+
+            // Download
+            Route::get('{id}/download', [BerkasController::class, 'download'])->name('download');
+            Route::get('{id}/preview', [BerkasController::class, 'preview'])->name('preview');
+        });
+    });
+
+    // ========== HR ROUTES ==========
+    Route::prefix('hr')->name('hr.')->middleware('role:HR')->group(function () {
         Route::get('dashboard', function () {
             return view('employee.dashboard');
         })->name('dashboard');
-        // Route::get('dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard'); // TODO: Uncomment when controller ready
+    });
 
-        // ========== ATTENDANCE ==========
-        Route::prefix('attendance')->name('attendance.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('/', [AttendanceController::class, 'index'])->name('index');
-            // Route::get('create', [AttendanceController::class, 'create'])->name('create');
-            // Route::post('/', [AttendanceController::class, 'store'])->name('store');
-            // Route::get('{attendance}', [AttendanceController::class, 'show'])->name('show');
-        });
+    // ========== MANAGER ROUTES ==========
+    Route::prefix('manager')->name('manager.')->middleware('role:Manager')->group(function () {
+        Route::get('dashboard', function () {
+            return view('manager.dashboard');
+        })->name('dashboard');
+    });
 
-        // ========== SCHEDULE ==========
-        Route::prefix('schedule')->name('schedule.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('/', [ScheduleController::class, 'index'])->name('index');
-            // Route::get('calendar', [ScheduleController::class, 'calendar'])->name('calendar');
-        });
+    // ========== USER (EMPLOYEE) ROUTES ==========
+    Route::prefix('employee')->name('employee.')->middleware('role:User')->group(function () {
+        Route::get('dashboard', function () {
+            return view('employee.dashboard.index');
+        })->name('dashboard');
 
-        // ========== REQUESTS ==========
-        Route::prefix('requests')->name('requests.')->group(function () {
+        // Employee self-service
+        Route::get('profile', function () {
+            return view('employee.profile');
+        })->name('profile');
 
-            // Leave Requests
-            // TODO: Uncomment when controller ready
-            // Route::resource('leaves', LeaveRequestController::class)->except(['destroy']);
-            // Route::delete('leaves/{leave}', [LeaveRequestController::class, 'destroy'])->name('leaves.destroy');
+        Route::get('attendance', function () {
+            return view('employee.attendance');
+        })->name('attendance');
 
-            // Overtime Requests
-            // TODO: Uncomment when controller ready
-            // Route::resource('overtimes', OvertimeRequestController::class)->except(['destroy']);
-            // Route::delete('overtimes/{overtime}', [OvertimeRequestController::class, 'destroy'])->name('overtimes.destroy');
+        Route::get('leaves', function () {
+            return view('employee.leaves');
+        })->name('leaves');
 
-            // Business Trip Requests
-            Route::prefix('business-trips')->name('business-trips.')->group(function () {
-                // TODO: Uncomment when controller ready
-                // Route::get('/', [BusinessTripRequestController::class, 'index'])->name('index');
-                // Route::get('create', [BusinessTripRequestController::class, 'create'])->name('create');
-                // Route::post('/', [BusinessTripRequestController::class, 'store'])->name('store');
-                // Route::get('{businessTrip}', [BusinessTripRequestController::class, 'show'])->name('show');
-                // Route::get('{businessTrip}/edit', [BusinessTripRequestController::class, 'edit'])->name('edit');
-                // Route::put('{businessTrip}', [BusinessTripRequestController::class, 'update'])->name('update');
-                // Route::delete('{businessTrip}', [BusinessTripRequestController::class, 'destroy'])->name('destroy');
-                // Route::get('{businessTrip}/report/create', [BusinessTripRequestController::class, 'createReport'])->name('report.create');
-                // Route::post('{businessTrip}/report', [BusinessTripRequestController::class, 'storeReport'])->name('report.store');
-                // Route::get('{businessTrip}/report/edit', [BusinessTripRequestController::class, 'editReport'])->name('report.edit');
-                // Route::put('{businessTrip}/report', [BusinessTripRequestController::class, 'updateReport'])->name('report.update');
-            });
-        });
+        Route::get('documents', function () {
+            return view('employee.documents');
+        })->name('documents');
+    });
+});
 
-        // ========== DOCUMENTS ==========
-        Route::prefix('documents')->name('documents.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('/', [DocumentController::class, 'index'])->name('index');
-            // Route::get('upload', [DocumentController::class, 'showUploadForm'])->name('upload');
-            // Route::post('/', [DocumentController::class, 'store'])->name('store');
-            // Route::get('{document}', [DocumentController::class, 'show'])->name('show');
-            // Route::delete('{document}', [DocumentController::class, 'destroy'])->name('destroy');
-        });
-
-        // ========== PAYROLL ==========
-        Route::prefix('payroll')->name('payroll.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('/', [PayrollController::class, 'index'])->name('index');
-            // Route::get('{payroll}', [PayrollController::class, 'show'])->name('show');
-            // Route::get('{payroll}/download', [PayrollController::class, 'download'])->name('download');
-        });
-
-        // ========== PROFILE ==========
-        Route::prefix('profile')->name('profile.')->group(function () {
-            // TODO: Uncomment when controller ready
-            // Route::get('/', [ProfileController::class, 'index'])->name('index');
-            // Route::get('edit', [ProfileController::class, 'edit'])->name('edit');
-            // Route::put('/', [ProfileController::class, 'update'])->name('update');
-            // Route::get('change-password', [ProfileController::class, 'showChangePasswordForm'])->name('change-password');
-            // Route::put('change-password', [ProfileController::class, 'changePassword'])->name('change-password.update');
-        });
-    }); // End Employee Routes
-}); // End Auth Middleware
+// Fallback
+Route::fallback(function () {
+    return view('errors.404');
+});
