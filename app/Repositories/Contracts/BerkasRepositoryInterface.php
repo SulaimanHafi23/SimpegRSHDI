@@ -9,11 +9,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface BerkasRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct();
-
     public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator;
     public function findById(string $id);
     public function findByWorker(string $workerId): Collection;

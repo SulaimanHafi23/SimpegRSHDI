@@ -1,27 +1,20 @@
 <?php
 
-// filepath: app/Http/Controllers/Admin/Overtime/OvertimeController.php
+namespace App\Http\Controllers;
 
-namespace App\Http\Controllers\Admin\Overtime;
-
-use App\DTOs\Overtime\OvertimeDTO;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Overtime\OvertimeRequest;
-use App\Services\Overtime\OvertimeService;
-use App\Services\Worker\WorkerService;
+use App\DTOs\OvertimeDTO;
+use App\Http\Requests\OvertimeRequest;
+use App\Services\OvertimeService;
+use App\Services\WorkerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
-/**
- * @method void middleware(string|array $middleware)
- */
 class OvertimeController extends Controller
 {
     public function __construct(
         private readonly OvertimeService $service,
         private readonly WorkerService $workerService
     ) {
-        $this->middleware(['auth']);
     }
 
     public function index(Request $request)

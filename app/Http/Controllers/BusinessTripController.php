@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Admin\BusinessTrip;
+namespace App\Http\Controllers;
 
 use App\DTOs\BusinessTrip\BusinessTripDTO;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\BusinessTrip\BusinessTripRequest;
-use App\Services\BusinessTrip\BusinessTripService;
-use App\Services\Worker\WorkerService;
+use App\Services\BusinessTripService;
+use App\Services\WorkerService;
 use Illuminate\Http\Request;
 
 class BusinessTripController extends Controller
@@ -15,7 +14,6 @@ class BusinessTripController extends Controller
         private readonly BusinessTripService $service,
         private readonly WorkerService $workerService
     ) {
-        $this->middleware(['auth']);
     }
 
     public function index(Request $request)

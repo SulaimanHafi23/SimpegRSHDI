@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\GenderDTO;
 use App\Http\Controllers\Controller;
@@ -12,9 +12,7 @@ class GenderController extends Controller
 {
     public function __construct(
         private readonly GenderService $service
-    ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
-    }
+    ) {}
 
     public function index(Request $request)
     {

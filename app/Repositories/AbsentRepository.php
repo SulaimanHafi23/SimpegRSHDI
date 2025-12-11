@@ -1,10 +1,9 @@
 <?php
-// filepath: app/Repositories/Attendance/AbsentRepository.php
 
-namespace App\Repositories\Attendance;
+namespace App\Repositories;
 
 use App\Models\Absent;
-use App\Repositories\Contracts\Attendance\AbsentRepositoryInterface;
+use App\Repositories\Contracts\AbsentRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;
@@ -33,19 +32,18 @@ class AbsentRepository implements AbsentRepositoryInterface
         }
 
         if (!empty($filters['date'])) {
-            $query->whereDate('date', $filters['date']);
+            $query->whereDate('check_in', $filters['date']);
         }
 
         if (!empty($filters['start_date'])) {
-            $query->where('date', '>=', $filters['start_date']);
+            $query->whereDate('check_in', '>=', $filters['start_date']);
         }
 
         if (!empty($filters['end_date'])) {
-            $query->where('date', '<=', $filters['end_date']);
+            $query->whereDate('check_in', '<=', $filters['end_date']);
         }
 
         return $query
-            ->orderBy('date', 'desc')
             ->orderBy('check_in', 'desc')
             ->paginate($perPage);
     }
@@ -61,7 +59,7 @@ class AbsentRepository implements AbsentRepositoryInterface
     {
         return $this->model
             ->where('worker_id', $workerId)
-            ->whereDate('date', $date)
+            ->whereDate('check_in', $date)
             ->first();
     }
 
@@ -72,15 +70,15 @@ class AbsentRepository implements AbsentRepositoryInterface
             ->where('worker_id', $workerId);
 
         if ($startDate) {
-            $query->where('date', '>=', $startDate);
+            $query->whereDate('check_in', '>=', $startDate);
         }
 
         if ($endDate) {
-            $query->where('date', '<=', $endDate);
+            $query->whereDate('check_in', '<=', $endDate);
         }
 
         return $query
-            ->orderBy('date', 'desc')
+            ->orderBy('check_in', 'desc')
             ->get();
     }
 
@@ -88,7 +86,7 @@ class AbsentRepository implements AbsentRepositoryInterface
     {
         return $this->model
             ->with(['worker.position', 'location'])
-            ->whereDate('date', $date)
+            ->whereDate('check_in', $date)
             ->orderBy('check_in')
             ->get();
     }
@@ -97,9 +95,9 @@ class AbsentRepository implements AbsentRepositoryInterface
     {
         return $this->model
             ->with(['worker.position', 'location'])
-            ->whereBetween('date', [$startDate, $endDate])
-            ->orderBy('date', 'desc')
-            ->orderBy('check_in')
+            ->whereDate('check_in', '>=', $startDate)
+            ->whereDate('check_in', '<=', $endDate)
+            ->orderBy('check_in', 'desc')
             ->get();
     }
 
@@ -107,7 +105,7 @@ class AbsentRepository implements AbsentRepositoryInterface
     {
         return $this->model
             ->with(['worker.position', 'location'])
-            ->whereDate('date', Carbon::today())
+            ->whereDate('check_in', Carbon::today())
             ->orderBy('check_in')
             ->get();
     }

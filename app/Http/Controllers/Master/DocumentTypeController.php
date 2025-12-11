@@ -1,8 +1,8 @@
 <?php
 
-// filepath: app/Http/Controllers/Admin/Master/DocumentTypeController.php
+// filepath: app/Http/Controllers/Master/DocumentTypeController.php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\DocumentTypeDTO;
 use App\Http\Controllers\Controller;
@@ -14,9 +14,7 @@ class DocumentTypeController extends Controller
 {
     public function __construct(
         private readonly DocumentTypeService $service
-    ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
-    }
+    ) {}
 
     public function index(Request $request)
     {

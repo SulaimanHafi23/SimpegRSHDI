@@ -36,16 +36,16 @@ use App\Repositories\Contracts\WorkerShiftScheduleRepositoryInterface;
 use App\Repositories\WorkerShiftScheduleRepository;
 
 // Leave & Overtime Repositories
-use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
-use App\Repositories\Leave\LeaveRequestRepository;
-use App\Repositories\Contracts\Overtime\OvertimeRepositoryInterface;
-use App\Repositories\Overtime\OvertimeRepository;
+use App\Repositories\Contracts\LeaveRequestRepositoryInterface;
+use App\Repositories\LeaveRequestRepository;
+use App\Repositories\Contracts\OvertimeRepositoryInterface;
+use App\Repositories\OvertimeRepository;
 
 // Business Trip Repositories
-use App\Repositories\Contracts\BusinessTrip\BusinessTripRepositoryInterface;
-use App\Repositories\BusinessTrip\BusinessTripRepository;
-use App\Repositories\Contracts\BusinessTrip\BusinessTripReportRepositoryInterface;
-use App\Repositories\BusinessTrip\BusinessTripReportRepository;
+use App\Repositories\Contracts\BusinessTripRepositoryInterface;
+use App\Repositories\BusinessTripRepository;
+use App\Repositories\Contracts\BusinessTripReportRepositoryInterface;
+use App\Repositories\BusinessTripReportRepository;
 
 // Document Repositories
 use App\Repositories\Contracts\BerkasRepositoryInterface;

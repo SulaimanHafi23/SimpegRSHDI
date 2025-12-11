@@ -1,10 +1,9 @@
 <?php
-// filepath: app/Repositories/Schedule/WorkerShiftScheduleRepository.php
 
-namespace App\Repositories\Schedule;
+namespace App\Repositories;
 
 use App\Models\WorkerShiftSchedule;
-use App\Repositories\Contracts\Schedule\WorkerShiftScheduleRepositoryInterface;
+use App\Repositories\Contracts\WorkerShiftScheduleRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 

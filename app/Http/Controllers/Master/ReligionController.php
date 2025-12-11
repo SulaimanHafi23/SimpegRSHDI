@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\ReligionDTO;
 use App\Http\Controllers\Controller;
@@ -13,9 +13,7 @@ class ReligionController extends Controller
 {
     public function __construct(
         private readonly ReligionService $service
-    ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
-    }
+    ) {}
 
     /**
      * Display a listing of the resource.

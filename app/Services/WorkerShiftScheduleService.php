@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Schedule;
+namespace App\Services;
 
 use App\DTOs\Schedule\WorkerShiftScheduleDTO;
 use App\Repositories\Contracts\Schedule\WorkerShiftScheduleRepositoryInterface;

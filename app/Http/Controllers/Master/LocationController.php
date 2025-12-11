@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\LocationDTO;
 use App\Http\Controllers\Controller;
@@ -12,9 +12,7 @@ class LocationController extends Controller
 {
     public function __construct(
         private readonly LocationService $service
-    ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
-    }
+    ) {}
 
     public function index(Request $request)
     {

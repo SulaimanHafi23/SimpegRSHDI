@@ -1,12 +1,11 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Schedule;
+namespace App\Http\Controllers;
 
 use App\DTOs\Schedule\WorkerShiftScheduleDTO;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Schedule\WorkerShiftScheduleRequest;
-use App\Services\Schedule\WorkerShiftScheduleService;
-use App\Services\Worker\WorkerService;
+use App\Services\WorkerShiftScheduleService;
+use App\Services\WorkerService;
 use App\Services\Master\ShiftService;
 use App\Services\Master\ShiftPatternService;
 use Illuminate\Http\Request;
@@ -19,7 +18,6 @@ class WorkerShiftScheduleController extends Controller
         private readonly ShiftService $shiftService,
         private readonly ShiftPatternService $shiftPatternService
     ) {
-        $this->middleware(['auth', 'role:Super Admin|HR|Manager']);
     }
 
     public function index(Request $request)

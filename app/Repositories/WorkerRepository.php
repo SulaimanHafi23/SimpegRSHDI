@@ -28,10 +28,6 @@ class WorkerRepository implements WorkerRepositoryInterface
             $query->where('status', $filters['status']);
         }
 
-        if (isset($filters['is_active'])) {
-            $query->where('is_active', $filters['is_active']);
-        }
-
         return $query
             ->orderBy('name')
             ->paginate($perPage);
@@ -49,7 +45,7 @@ class WorkerRepository implements WorkerRepositoryInterface
     {
         return $this->model
             ->with(['gender', 'religion', 'position'])
-            ->where('is_active', true)
+            ->where('status', 'Active')
             ->orderBy('name')
             ->get();
     }
@@ -121,7 +117,7 @@ class WorkerRepository implements WorkerRepositoryInterface
     {
         return $this->model
             ->where('position_id', $positionId)
-            ->where('is_active', true)
+            ->where('status', 'Active')
             ->orderBy('name')
             ->get();
     }
@@ -130,7 +126,6 @@ class WorkerRepository implements WorkerRepositoryInterface
     {
         return $this->model
             ->where('status', $status)
-            ->where('is_active', true)
             ->orderBy('name')
             ->get();
     }
@@ -141,9 +136,9 @@ class WorkerRepository implements WorkerRepositoryInterface
 
         return $this->model
             ->with(['position'])
-            ->where('is_active', true)
-            ->whereMonth('date_of_birth', $currentMonth)
-            ->orderByRaw('DAY(date_of_birth)')
+            ->where('status', 'Active')
+            ->whereMonth('birth_date', $currentMonth)
+            ->orderByRaw('DAY(birth_date)')
             ->get();
     }
 

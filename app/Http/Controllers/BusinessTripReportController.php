@@ -1,14 +1,11 @@
 <?php
 
-// filepath: app/Http/Controllers/Admin/BusinessTrip/BusinessTripReportController.php
-
-namespace App\Http\Controllers\Admin\BusinessTrip;
+namespace App\Http\Controllers;
 
 use App\DTOs\BusinessTrip\BusinessTripReportDTO;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\BusinessTrip\BusinessTripReportRequest;
-use App\Services\BusinessTrip\BusinessTripReportService;
-use App\Services\BusinessTrip\BusinessTripService;
+use App\Services\BusinessTripReportService;
+use App\Services\BusinessTripService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,7 +15,6 @@ class BusinessTripReportController extends Controller
         private readonly BusinessTripReportService $service,
         private readonly BusinessTripService $businessTripService
     ) {
-        $this->middleware(['auth']);
     }
 
     public function show(string $id)

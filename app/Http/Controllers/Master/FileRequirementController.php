@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\FileRequirementDTO;
 use App\Http\Controllers\Controller;
@@ -16,9 +16,7 @@ class FileRequirementController extends Controller
         private readonly FileRequirementService $service,
         private readonly PositionService $positionService,
         private readonly DocumentTypeService $documentTypeService
-    ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
-    }
+    ) {}
 
     public function index(Request $request)
     {

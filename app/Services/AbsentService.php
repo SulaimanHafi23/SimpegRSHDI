@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\Attendance;
+namespace App\Services;
 
 use App\DTOs\Attendance\AbsentDTO;
-use App\Repositories\Contracts\Attendance\AbsentRepositoryInterface;
+use App\Repositories\Contracts\AbsentRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;

@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\Leave;
+namespace App\Services;
 
-use App\DTOs\Leave\LeaveRequestDTO;
-use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
+use App\DTOs\LeaveRequestDTO;
+use App\Repositories\Contracts\LeaveRequestRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -95,7 +95,7 @@ class LeaveRequestService
      */
     public function getAvailableLeaveTypes(): array
     {
-        return self::LEAVE_TYPES;
+        return array_map(fn($config) => $config['name'], self::LEAVE_TYPES);
     }
 
     public function create(LeaveRequestDTO $dto, ?UploadedFile $attachment = null): array

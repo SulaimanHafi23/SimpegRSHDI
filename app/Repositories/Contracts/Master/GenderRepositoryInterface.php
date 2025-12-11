@@ -7,11 +7,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface GenderRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct();
-
     public function paginate(int $perPage = 15): LengthAwarePaginator;
     public function all(): Collection;
     public function findById(string $id);

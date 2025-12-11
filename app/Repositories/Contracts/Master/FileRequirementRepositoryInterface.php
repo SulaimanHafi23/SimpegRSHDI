@@ -7,14 +7,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface FileRequirementRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct()
-    {
-        //
-    }
-
     public function paginate(int $perPage = 15, ?string $positionId = null): LengthAwarePaginator;
     public function all(): Collection;
     public function findById(string $id);

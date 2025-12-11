@@ -22,9 +22,9 @@ class DocumentType extends Model
         'is_active' => 'boolean',
     ];
 
-    public function keperluanBerkas(): HasMany
+    public function fileRequirments(): HasMany
     {
-        return $this->hasMany(KeperluanBerkas::class);
+        return $this->hasMany(FileRequirment::class);
     }
 
     public function getAllowedFormatsAttribute(): array

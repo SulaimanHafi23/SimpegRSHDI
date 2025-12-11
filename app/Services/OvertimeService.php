@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Services\Overtime;
+namespace App\Services;
 
-use App\DTOs\Overtime\OvertimeDTO;
-use App\Repositories\Contracts\Overtime\OvertimeRepositoryInterface;
+use App\DTOs\OvertimeDTO;
+use App\Repositories\Contracts\OvertimeRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;

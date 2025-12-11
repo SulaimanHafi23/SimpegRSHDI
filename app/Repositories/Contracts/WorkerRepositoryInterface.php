@@ -7,11 +7,6 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface WorkerRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct();
-
     public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator;
     public function all(): Collection;
     public function active(): Collection;

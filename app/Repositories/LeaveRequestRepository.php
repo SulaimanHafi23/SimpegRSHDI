@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Repositories\Leave;
+namespace App\Repositories;
 
 use App\Models\LeaveRequest;
-use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
+use App\Repositories\Contracts\LeaveRequestRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;

@@ -1,14 +1,11 @@
 <?php
 
-// filepath: app/Http/Controllers/Admin/Leave/LeaveRequestController.php
+namespace App\Http\Controllers;
 
-namespace App\Http\Controllers\Admin\Leave;
-
-use App\DTOs\Leave\LeaveRequestDTO;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Leave\LeaveRequestRequest;
-use App\Services\Leave\LeaveRequestService;
-use App\Services\Worker\WorkerService;
+use App\DTOs\LeaveRequestDTO;
+use App\Http\Requests\LeaveRequestRequest;
+use App\Services\LeaveRequestService;
+use App\Services\WorkerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,7 +15,6 @@ class LeaveRequestController extends Controller
         private readonly LeaveRequestService $service,
         private readonly WorkerService $workerService
     ) {
-        $this->middleware(['auth']);
     }
 
     public function index(Request $request)

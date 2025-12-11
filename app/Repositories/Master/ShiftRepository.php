@@ -19,7 +19,7 @@ class ShiftRepository implements ShiftRepositoryInterface
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return $this->model
-            ->withCount('workerShiftSchedules')
+            ->withCount('schedules')
             ->orderBy('start_time')
             ->paginate($perPage);
     }

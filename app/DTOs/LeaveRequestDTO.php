@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\Leave;
+namespace App\DTOs;
 
 use Carbon\Carbon;
 

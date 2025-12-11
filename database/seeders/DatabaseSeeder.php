@@ -18,22 +18,23 @@ class DatabaseSeeder extends Seeder
             PositionSeeder::class,           // 3️⃣
             LocationSeeder::class,           // 4️⃣
             DocumentTypeSeeder::class,       // 5️⃣
+            FileRequirmentSeeder::class,     // 6️⃣
             
             // ========== SHIFT ==========
-            ShiftSeeder::class,              // 6️⃣
-            ShiftPatternSeeder::class,       // 7️⃣
+            ShiftSeeder::class,              // 7️⃣
+            ShiftPatternSeeder::class,       // 8️⃣
             
             // ========== SPATIE PERMISSION ==========
-            RolePermissionSeeder::class,     // 8️⃣
+            RolePermissionSeeder::class,     // 9️⃣
             
             // ========== WORKER & USER (BUTUH MASTER DATA) ==========
-            WorkerSeeder::class,             // 9️⃣ (butuh Gender, Religion, Position)
-            SuperAdminSeeder::class,         // 🔟 (butuh Worker, Role)
-            UserSeeder::class,               // 1️⃣1️⃣ (butuh Worker, Role)
+            WorkerSeeder::class,             // 🔟 (butuh Gender, Religion, Position)
+            SuperAdminSeeder::class,         // 1️⃣1️⃣ (butuh Worker, Role)
+            UserSeeder::class,               // 1️⃣2️⃣ (butuh Worker, Role)
             
             // ========== SHIFT ASSIGNMENT (BUTUH WORKER & SHIFT) ==========
-            // WorkerShiftAssignmentSeeder::class,  // 1️⃣2️⃣
-            WorkerShiftScheduleSeeder::class,    // 1️⃣3️⃣
+            // WorkerShiftAssignmentSeeder::class,  // 1️⃣3️⃣
+            WorkerShiftScheduleSeeder::class,    // 1️⃣4️⃣
         ]);
     }
 }

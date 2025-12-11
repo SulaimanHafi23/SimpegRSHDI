@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\BusinessTrip;
+namespace App\Services;
 
 use App\DTOs\BusinessTrip\BusinessTripReportDTO;
 use App\Repositories\Contracts\BusinessTrip\BusinessTripReportRepositoryInterface;

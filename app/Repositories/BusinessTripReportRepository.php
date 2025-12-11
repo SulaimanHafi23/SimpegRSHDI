@@ -1,11 +1,9 @@
 <?php
 
-// filepath: app/Repositories/BusinessTrip/BusinessTripReportRepository.php
-
-namespace App\Repositories\BusinessTrip;
+namespace App\Repositories;
 
 use App\Models\BusinessTripReport;
-use App\Repositories\Contracts\BusinessTrip\BusinessTripReportRepositoryInterface;
+use App\Repositories\Contracts\BusinessTripReportRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class BusinessTripReportRepository implements BusinessTripReportRepositoryInterface

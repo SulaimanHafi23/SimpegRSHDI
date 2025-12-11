@@ -1,11 +1,9 @@
 <?php
 
-// filepath: app/Repositories/BusinessTrip/BusinessTripRepository.php
-
-namespace App\Repositories\BusinessTrip;
+namespace App\Repositories;
 
 use App\Models\BusinessTrip;
-use App\Repositories\Contracts\BusinessTrip\BusinessTripRepositoryInterface;
+use App\Repositories\Contracts\BusinessTripRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Carbon\Carbon;

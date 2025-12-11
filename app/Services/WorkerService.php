@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\Worker;
+namespace App\Services;
 
 use App\DTOs\Worker\WorkerDTO;
 use App\Repositories\Contracts\WorkerRepositoryInterface;

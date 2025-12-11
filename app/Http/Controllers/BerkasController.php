@@ -1,14 +1,11 @@
 <?php
 
-// filepath: app/Http/Controllers/Admin/Document/BerkasController.php
-
-namespace App\Http\Controllers\Admin\Document;
+namespace App\Http\Controllers;
 
 use App\DTOs\BerkasDTO;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\BerkasRequest;
 use App\Services\BerkasService;
-use App\Services\Worker\WorkerService;
+use App\Services\WorkerService;
 use App\Services\Master\FileRequirementService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;

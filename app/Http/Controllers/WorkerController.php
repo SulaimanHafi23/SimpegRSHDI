@@ -1,13 +1,10 @@
 <?php
 
-// filepath: app/Http/Controllers/Admin/WorkerController.php
-
-namespace App\Http\Controllers\Admin\Worker;
+namespace App\Http\Controllers;
 
 use App\DTOs\Worker\WorkerDTO;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\Worker\WorkerRequest;
-use App\Services\Worker\WorkerService;
+use App\Services\WorkerService;
 use App\Services\Master\GenderService;
 use App\Services\Master\ReligionService;
 use App\Services\Master\PositionService;
@@ -21,7 +18,6 @@ class WorkerController extends Controller
         private readonly ReligionService $religionService,
         private readonly PositionService $positionService
     ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
     }
 
     public function index(Request $request)

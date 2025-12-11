@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\PositionDTO;
 use App\Http\Controllers\Controller;
@@ -12,9 +12,7 @@ class PositionController extends Controller
 {
     public function __construct(
         private readonly PositionService $service
-    ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
-    }
+    ) {}
 
     public function index(Request $request)
     {

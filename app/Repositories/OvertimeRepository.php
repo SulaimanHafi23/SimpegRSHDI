@@ -1,10 +1,9 @@
 <?php
-// filepath: app/Repositories/Overtime/OvertimeRepository.php
 
-namespace App\Repositories\Overtime;
+namespace App\Repositories;
 
 use App\Models\Overtime;
-use App\Repositories\Contracts\Overtime\OvertimeRepositoryInterface;
+use App\Repositories\Contracts\OvertimeRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 

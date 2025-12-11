@@ -14,7 +14,7 @@ class Berkas extends Model
 
     protected $fillable = [
         'worker_id',
-        'keperluan_berkas_id',
+        'file_requirement_id',
         'file_name',
         'file_path',
         'file_type',
@@ -39,9 +39,9 @@ class Berkas extends Model
         return $this->belongsTo(Worker::class);
     }
 
-    public function FileRequirement(): BelongsTo
+    public function fileRequirement(): BelongsTo
     {
-        return $this->belongsTo(FileRequirment::class);
+        return $this->belongsTo(FileRequirment::class, 'file_requirement_id');
     }
 
     public function verifier(): BelongsTo

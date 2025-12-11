@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Controllers\Admin\User;
+namespace App\Http\Controllers;
 
 use App\DTOs\User\UserDTO;
-use App\Http\Controllers\Controller;
 use App\Http\Requests\User\UserRequest;
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\UpdateRolesRequest;
-use App\Services\User\UserService;
-use App\Services\Worker\WorkerService;
+use App\Services\UserService;
+use App\Services\WorkerService;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 
@@ -18,8 +17,6 @@ class UserController extends Controller
         private readonly UserService $service,
         private readonly WorkerService $workerService
     ) {
-        $this->middleware(['auth']);
-        // $this->middleware(['permission:manage-users']); // Uncomment if using permissions
     }
 
     public function index(Request $request)
@@ -154,5 +151,61 @@ class UserController extends Controller
         }
 
         return back()->withErrors(['error' => $result['message']]);
+    }
+
+    public function profile()
+    {
+        $user = auth()->user()->load(['worker', 'roles']);
+        return view('admin.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,' . auth()->id()],
+            'photo' => ['nullable', 'image', 'max:2048'],
+        ]);
+
+        try {
+            $user = auth()->user();
+            
+            if ($request->hasFile('photo')) {
+                // Delete old photo if exists
+                if ($user->photo && file_exists(public_path($user->photo))) {
+                    unlink(public_path($user->photo));
+                }
+                
+                // Store new photo
+                $photo = $request->file('photo');
+                $photoName = time() . '_' . $photo->getClientOriginalName();
+                $photo->move(public_path('images/users'), $photoName);
+                $validated['photo'] = 'images/users/' . $photoName;
+            }
+
+            $user->update($validated);
+
+            return back()->with('success', 'Profile berhasil diperbarui');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal memperbarui profile: ' . $e->getMessage()]);
+        }
+    }
+
+    public function updateOwnPassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        try {
+            auth()->user()->update([
+                'password' => bcrypt($validated['password'])
+            ]);
+
+            return back()->with('success', 'Password berhasil diubah');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Gagal mengubah password: ' . $e->getMessage()]);
+        }
     }
 }
