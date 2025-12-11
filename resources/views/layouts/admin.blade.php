@@ -24,12 +24,12 @@
         @include('layouts.partials.admin-sidebar')
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col lg:ml-64">
             <!-- Navbar -->
             @include('layouts.partials.admin-navbar')
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-6">
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
                 <!-- Breadcrumb -->
                 @if(isset($breadcrumbs))
                     <x-ui.breadcrumb :items="$breadcrumbs" />
@@ -53,6 +53,19 @@
         </div>
     </div>
 
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
     @stack('scripts')
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
 </body>
 </html>

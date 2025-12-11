@@ -30,31 +30,32 @@
         <!-- Content -->
         <div class="relative z-10">
             <!-- Navigation -->
-            <nav class="px-6 py-6">
+            <nav class="px-4 sm:px-6 py-4 sm:py-6">
                 <div class="max-w-7xl mx-auto flex justify-between items-center">
-                    <div class="flex items-center space-x-3">
-                        <div class="h-12 w-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center shadow-lg">
-                            <svg class="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <div class="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="h-6 w-6 sm:h-7 sm:w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                         </div>
                         <div>
-                            <h1 class="text-xl font-bold text-gray-900">{{ config('app.name', 'SIMPEGRS HDI') }}</h1>
-                            <p class="text-xs text-gray-600">Employee Management System</p>
+                            <h1 class="text-base sm:text-xl font-bold text-gray-900">{{ config('app.name', 'SIMPEGRS HDI') }}</h1>
+                            <p class="text-xs text-gray-600 hidden sm:block">Employee Management System</p>
                         </div>
                     </div>
 
                     <!-- Sign In Button (GREEN) -->
-                    <a href="{{ route('login') }}" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-6 py-2.5 text-sm rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Sign In
+                    <a href="{{ route('login') }}" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105">
+                        <i class="fas fa-sign-in-alt mr-1 sm:mr-2"></i>
+                        <span class="hidden sm:inline">Sign In</span>
+                        <span class="sm:hidden">Login</span>
                     </a>
                 </div>
             </nav>
 
             <!-- Hero Section -->
-            <div class="max-w-7xl mx-auto px-6 py-20 sm:py-32">
-                <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 lg:py-32">
+                <div class="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
 
                     <!-- Left Content -->
                     <div class="space-y-8 animate-slide-right">
@@ -67,13 +68,13 @@
                         </div>
 
                         <div>
-                            <h2 class="text-5xl sm:text-6xl font-extrabold text-gray-900 leading-tight">
+                            <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
                                 Welcome to
                                 <span class="bg-gradient-to-r from-green-600 via-green-700 to-yellow-600 bg-clip-text text-transparent">
                                     SIMPEGRS HDI
                                 </span>
                             </h2>
-                            <p class="mt-6 text-xl text-gray-600 leading-relaxed">
+                            <p class="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed">
                                 Sistem Informasi Manajemen Pegawai yang modern dan efisien untuk
                                 <span class="font-semibold text-gray-900">RSUD Haji Darlan Ismail</span>
                             </p>
@@ -267,35 +268,35 @@
             </div>
 
             <!-- Features Section -->
-            <div id="features" class="max-w-7xl mx-auto px-6 py-20 border-t border-gray-200">
-                <div class="text-center mb-16 animate-fade-in">
-                    <h2 class="text-4xl font-bold text-gray-900 mb-4">Powerful Features</h2>
-                    <p class="text-lg text-gray-600">Everything you need to manage your workforce efficiently</p>
+            <div id="features" class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 border-t border-gray-200">
+                <div class="text-center mb-8 sm:mb-12 lg:mb-16 animate-fade-in">
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Powerful Features</h2>
+                    <p class="text-base sm:text-lg text-gray-600">Everything you need to manage your workforce efficiently</p>
                 </div>
 
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="card p-8 card-hover cursor-default border-t-4 border-green-500">
-                        <div class="h-14 w-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fas fa-clock text-2xl text-white"></i>
+                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                    <div class="card p-6 sm:p-8 card-hover cursor-default border-t-4 border-green-500">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-clock text-xl sm:text-2xl text-white"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Smart Attendance</h3>
-                        <p class="text-gray-600">Real-time attendance tracking with geolocation and face recognition support.</p>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Smart Attendance</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Real-time attendance tracking with geolocation and face recognition support.</p>
                     </div>
 
-                    <div class="card p-8 card-hover cursor-default border-t-4 border-yellow-500">
-                        <div class="h-14 w-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fas fa-umbrella-beach text-2xl text-white"></i>
+                    <div class="card p-6 sm:p-8 card-hover cursor-default border-t-4 border-yellow-500">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-umbrella-beach text-xl sm:text-2xl text-white"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Leave Management</h3>
-                        <p class="text-gray-600">Streamlined leave request and approval process with automated notifications.</p>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Leave Management</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Streamlined leave request and approval process with automated notifications.</p>
                     </div>
 
-                    <div class="card p-8 card-hover cursor-default border-t-4 border-green-500">
-                        <div class="h-14 w-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fas fa-money-bill-wave text-2xl text-white"></i>
+                    <div class="card p-6 sm:p-8 card-hover cursor-default border-t-4 border-green-500">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-money-bill-wave text-xl sm:text-2xl text-white"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-gray-900 mb-3">Payroll Processing</h3>
-                        <p class="text-gray-600">Automated salary calculation with tax computation and slip generation.</p>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Payroll Processing</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Automated salary calculation with tax computation and slip generation.</p>
                     </div>
                 </div>
             </div>

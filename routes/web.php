@@ -2,34 +2,45 @@
 
 use App\Http\Controllers\Auth\LoginController;
 
+// Dashboard Controllers
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Workers\DashboardController as WorkersDashboardController;
+
+// Workers Self-Service Controllers
+use App\Http\Controllers\Workers\LeaveController as WorkersLeaveController;
+use App\Http\Controllers\Workers\OvertimeController as WorkersOvertimeController;
+use App\Http\Controllers\Workers\AttendanceController as WorkersAttendanceController;
+use App\Http\Controllers\Workers\ScheduleController as WorkersScheduleController;
+use App\Http\Controllers\Workers\DocumentController as WorkersDocumentController;
+
 // Master Controllers
-use App\Http\Controllers\Admin\Master\DocumentTypeController;
-use App\Http\Controllers\Admin\Master\FileRequirementController;
-use App\Http\Controllers\Admin\Master\GenderController;
-use App\Http\Controllers\Admin\Master\LocationController;
-use App\Http\Controllers\Admin\Master\PositionController;
-use App\Http\Controllers\Admin\Master\ReligionController;
-use App\Http\Controllers\Admin\Master\ShiftController;
-use App\Http\Controllers\Admin\Master\ShiftPatternController;
+use App\Http\Controllers\Master\DocumentTypeController;
+use App\Http\Controllers\Master\FileRequirementController;
+use App\Http\Controllers\Master\GenderController;
+use App\Http\Controllers\Master\LocationController;
+use App\Http\Controllers\Master\PositionController;
+use App\Http\Controllers\Master\ReligionController;
+use App\Http\Controllers\Master\ShiftController;
+use App\Http\Controllers\Master\ShiftPatternController;
 
 // Worker & User Controllers
-use App\Http\Controllers\Admin\Worker\WorkerController;
-use App\Http\Controllers\Admin\User\UserController;
+use App\Http\Controllers\WorkerController;
+use App\Http\Controllers\UserController;
 
 // Attendance & Schedule Controllers
-use App\Http\Controllers\Admin\Attendance\AbsentController;
-use App\Http\Controllers\Admin\Schedule\WorkerShiftScheduleController;
+use App\Http\Controllers\AbsentController;
+use App\Http\Controllers\WorkerShiftScheduleController;
 
 // Leave & Overtime Controllers
-use App\Http\Controllers\Admin\Leave\LeaveRequestController;
-use App\Http\Controllers\Admin\Overtime\OvertimeController;
+use App\Http\Controllers\LeaveRequestController;
+use App\Http\Controllers\OvertimeController;
 
 // Business Trip Controllers
-use App\Http\Controllers\Admin\BusinessTrip\BusinessTripController;
-use App\Http\Controllers\Admin\BusinessTrip\BusinessTripReportController;
+use App\Http\Controllers\BusinessTripController;
+use App\Http\Controllers\BusinessTripReportController;
 
 // Document Controllers
-use App\Http\Controllers\Admin\Document\BerkasController;
+use App\Http\Controllers\BerkasController;
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
@@ -77,17 +88,35 @@ Route::middleware('auth')->group(function () {
             return redirect()->route('admin.dashboard');
         }
 
-        // Default to employee dashboard
-        return redirect()->route('employee.dashboard');
+        // Default to workers dashboard
+        return redirect()->route('workers.dashboard');
     })->name('dashboard');
 
-    // ========== ADMIN ROUTES ==========
+    // ========== PROFILE & SETTINGS (All Roles) ==========
     Route::prefix('admin')->name('admin.')->group(function () {
+        // Profile - accessible by all authenticated users
+        Route::get('profile', [UserController::class, 'profile'])->name('profile');
+        Route::put('profile', [UserController::class, 'updateProfile'])->name('profile.update');
+        Route::put('profile/password', [UserController::class, 'updateOwnPassword'])->name('profile.password');
+
+        // Settings - accessible by all authenticated users
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::get('shifts', [ShiftController::class, 'index'])->name('shifts.index');
+            Route::get('shifts/{shift}', [ShiftController::class, 'show'])->name('shifts.show');
+        });
+    });
+
+    // ========== ADMIN ROUTES (Admin Roles Only) ==========
+    Route::prefix('admin')->name('admin.')->middleware('role:Super Admin|HR|Manager')->group(function () {
 
         // Dashboard
-        Route::get('dashboard', function () {
-            return view('admin.dashboard.index');
-        })->name('dashboard');
+        Route::get('dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Settings Management (Full CRUD - Admin only)
+        Route::prefix('settings')->name('settings.')->group(function () {
+            Route::resource('shifts', ShiftController::class)->except(['index', 'show']);
+            Route::resource('shift-patterns', ShiftPatternController::class);
+        });
 
         // ===== MASTER DATA ROUTES =====
         Route::prefix('master')->name('master.')->group(function () {
@@ -110,15 +139,6 @@ Route::middleware('auth')->group(function () {
             Route::resource('file-requirements', FileRequirementController::class);
             Route::get('file-requirements/position/{positionId}', [FileRequirementController::class, 'byPosition'])
                 ->name('file-requirements.by-position');
-        });
-
-        // ===== SHIFT MANAGEMENT ROUTES =====
-        Route::prefix('settings')->name('settings.')->group(function () {
-            // Shifts
-            Route::resource('shifts', ShiftController::class);
-
-            // Shift Patterns
-            Route::resource('shift-patterns', ShiftPatternController::class);
         });
 
         // ===== WORKER ROUTES =====
@@ -153,7 +173,7 @@ Route::middleware('auth')->group(function () {
         });
 
         // ===== ATTENDANCE ROUTES =====
-        Route::prefix('attendance')->name('attendance.')->group(function () {
+        Route::prefix('absents')->name('absents.')->group(function () {
             Route::get('/', [AbsentController::class, 'index'])->name('index');
             Route::get('create', [AbsentController::class, 'create'])->name('create');
             Route::post('/', [AbsentController::class, 'store'])->name('store');
@@ -163,6 +183,9 @@ Route::middleware('auth')->group(function () {
             Route::delete('{id}', [AbsentController::class, 'destroy'])->name('destroy');
 
             // Attendance reports
+            Route::get('report', function() {
+                return view('admin.absents.report');
+            })->name('report');
             Route::get('reports/daily', [AbsentController::class, 'dailyReport'])->name('daily-report');
             Route::get('reports/monthly', [AbsentController::class, 'monthlyReport'])->name('monthly-report');
             Route::get('worker/{workerId}', [AbsentController::class, 'workerAttendance'])->name('worker-attendance');
@@ -185,7 +208,7 @@ Route::middleware('auth')->group(function () {
         });
 
         // ===== LEAVE REQUEST ROUTES =====
-        Route::prefix('leaves')->name('leave.')->group(function () {
+        Route::prefix('leave')->name('leave.')->group(function () {
             Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
             Route::get('create', [LeaveRequestController::class, 'create'])->name('create');
             Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
@@ -289,12 +312,34 @@ Route::middleware('auth')->group(function () {
             Route::get('{id}/download', [BerkasController::class, 'download'])->name('download');
             Route::get('{id}/preview', [BerkasController::class, 'preview'])->name('preview');
         });
+
+        // ===== SALARIES ROUTES =====
+        Route::prefix('salaries')->name('salaries.')->group(function () {
+            Route::get('/', function () {
+                return view('admin.salaries.index');
+            })->name('index');
+            Route::get('create', function () {
+                return view('admin.salaries.create');
+            })->name('create');
+            Route::get('{id}', function () {
+                return view('admin.salaries.show');
+            })->name('show');
+            Route::get('{id}/edit', function () {
+                return view('admin.salaries.edit');
+            })->name('edit');
+            Route::get('generate', function () {
+                return view('admin.salaries.generate');
+            })->name('generate');
+            Route::get('export', function () {
+                return view('admin.salaries.export');
+            })->name('export');
+        });
     });
 
     // ========== HR ROUTES ==========
     Route::prefix('hr')->name('hr.')->middleware('role:HR')->group(function () {
         Route::get('dashboard', function () {
-            return view('employee.dashboard');
+            return view('workers.dashboard');
         })->name('dashboard');
     });
 
@@ -305,28 +350,53 @@ Route::middleware('auth')->group(function () {
         })->name('dashboard');
     });
 
-    // ========== USER (EMPLOYEE) ROUTES ==========
-    Route::prefix('employee')->name('employee.')->middleware('role:User')->group(function () {
-        Route::get('dashboard', function () {
-            return view('employee.dashboard.index');
-        })->name('dashboard');
+    // ========== WORKERS (SELF-SERVICE) ROUTES ==========
+    Route::prefix('workers')->name('workers.')->middleware('role:User')->group(function () {
+        Route::get('dashboard', [WorkersDashboardController::class, 'index'])->name('dashboard');
 
-        // Employee self-service
+        // Profile
         Route::get('profile', function () {
-            return view('employee.profile');
+            return view('workers.profile');
         })->name('profile');
 
-        Route::get('attendance', function () {
-            return view('employee.attendance');
-        })->name('attendance');
+        // Leave Requests
+        Route::prefix('leaves')->name('leaves.')->group(function () {
+            Route::get('/', [WorkersLeaveController::class, 'index'])->name('index');
+            Route::get('create', [WorkersLeaveController::class, 'create'])->name('create');
+            Route::post('/', [WorkersLeaveController::class, 'store'])->name('store');
+            Route::get('{id}', [WorkersLeaveController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [WorkersLeaveController::class, 'edit'])->name('edit');
+            Route::put('{id}', [WorkersLeaveController::class, 'update'])->name('update');
+            Route::delete('{id}', [WorkersLeaveController::class, 'destroy'])->name('destroy');
+            Route::get('{id}/download', [WorkersLeaveController::class, 'download'])->name('download');
+        });
 
-        Route::get('leaves', function () {
-            return view('employee.leaves');
-        })->name('leaves');
+        // Overtime
+        Route::prefix('overtimes')->name('overtimes.')->group(function () {
+            Route::get('/', [WorkersOvertimeController::class, 'index'])->name('index');
+            Route::get('create', [WorkersOvertimeController::class, 'create'])->name('create');
+            Route::post('/', [WorkersOvertimeController::class, 'store'])->name('store');
+            Route::get('{id}', [WorkersOvertimeController::class, 'show'])->name('show');
+            Route::get('{id}/edit', [WorkersOvertimeController::class, 'edit'])->name('edit');
+            Route::put('{id}', [WorkersOvertimeController::class, 'update'])->name('update');
+            Route::delete('{id}', [WorkersOvertimeController::class, 'destroy'])->name('destroy');
+        });
 
-        Route::get('documents', function () {
-            return view('employee.documents');
-        })->name('documents');
+        // Attendance
+        Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('/', [WorkersAttendanceController::class, 'index'])->name('index');
+            Route::get('history', [WorkersAttendanceController::class, 'history'])->name('history');
+        });
+
+        // Schedule
+        Route::get('schedule', [WorkersScheduleController::class, 'index'])->name('schedule');
+
+        // Documents
+        Route::get('documents', [WorkersDocumentController::class, 'index'])->name('documents');
+        Route::post('documents', [WorkersDocumentController::class, 'store'])->name('documents.store');
+        Route::get('documents/{id}', [WorkersDocumentController::class, 'show'])->name('documents.show');
+        Route::get('documents/{id}/download', [WorkersDocumentController::class, 'download'])->name('documents.download');
+        Route::delete('documents/{id}', [WorkersDocumentController::class, 'destroy'])->name('documents.destroy');
     });
 });
 

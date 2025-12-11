@@ -119,7 +119,7 @@
         </div>
 
         <!-- RIGHT SIDE - Login Form with Background Image -->
-        <div class="w-full lg:w-1/2 flex items-center justify-center p-8 relative overflow-hidden">
+        <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
             <!-- Background Image with Opacity -->
             <div class="absolute inset-0 z-0">
                 <img
@@ -151,11 +151,11 @@
                     <p class="text-sm text-gray-600">Employee Management System</p>
                 </div>
 
-                <div class="card p-8 shadow-2xl animate-slide-left border-t-4 border-green-600 backdrop-blur-lg bg-white/95">
+                <div class="card p-6 sm:p-8 shadow-2xl animate-slide-left border-t-4 border-green-600 backdrop-blur-lg bg-white/95">
                     <!-- Header -->
-                    <div class="mb-8">
-                        <h2 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back! 👋</h2>
-                        <p class="text-gray-600">Sign in to access your account</p>
+                    <div class="mb-6 sm:mb-8">
+                        <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Welcome Back! 👋</h2>
+                        <p class="text-sm sm:text-base text-gray-600">Sign in to access your account</p>
                     </div>
 
                     <!-- Error Messages -->
