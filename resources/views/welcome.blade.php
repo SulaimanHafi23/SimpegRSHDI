@@ -1,177 +1,326 @@
-{{-- filepath: resources/views/auth/login.blade.php --}}
-
+{{-- filepath: resources/views/welcome.blade.php --}}
 <!DOCTYPE html>
-<html lang="id">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - SIMPEG RSHDI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ config('app.name', 'SIMPEGRS HDI') }} - Welcome</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800,900&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100">
-    <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div class="max-w-md w-full">
-            {{-- Logo & Title --}}
-            <div class="text-center mb-8">
-                <div class="mx-auto h-20 w-20 bg-indigo-600 rounded-full flex items-center justify-center mb-4">
-                    <svg class="h-12 w-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
+<body class="font-sans antialiased">
+    <!-- Main Container -->
+    <div class="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-green-50 relative overflow-hidden">
+
+        <!-- Animated Background (GREEN & YELLOW) -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
+            <div class="absolute -top-40 -right-40 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse-slow"></div>
+            <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse-slow animation-delay-2000"></div>
+            <div class="absolute top-1/3 left-1/2 w-96 h-96 bg-green-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse-slow animation-delay-4000"></div>
+        </div>
+
+        <!-- Content -->
+        <div class="relative z-10">
+            <!-- Navigation -->
+            <nav class="px-4 sm:px-6 py-4 sm:py-6">
+                <div class="max-w-7xl mx-auto flex justify-between items-center">
+                    <div class="flex items-center space-x-2 sm:space-x-3">
+                        <div class="h-10 w-10 sm:h-12 sm:w-12 bg-gradient-to-br from-green-600 to-green-800 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg class="h-6 w-6 sm:h-7 sm:w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-base sm:text-xl font-bold text-gray-900">{{ config('app.name', 'SIMPEGRS HDI') }}</h1>
+                            <p class="text-xs text-gray-600 hidden sm:block">Employee Management System</p>
+                        </div>
+                    </div>
+
+                    <!-- Sign In Button (GREEN) -->
+                    <a href="{{ route('login') }}" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105">
+                        <i class="fas fa-sign-in-alt mr-1 sm:mr-2"></i>
+                        <span class="hidden sm:inline">Sign In</span>
+                        <span class="sm:hidden">Login</span>
+                    </a>
                 </div>
-                <h2 class="text-3xl font-extrabold text-gray-900">
-                    SIMPEG RSHDI
-                </h2>
-                <p class="mt-2 text-sm text-gray-600">
-                    Sistem Informasi Manajemen Pegawai
-                </p>
-            </div>
-            
-            {{-- Login Card --}}
-            <div class="bg-white rounded-lg shadow-xl p-8">
-                
-                {{-- Error Messages --}}
-                @if ($errors->any())
-                    <div class="mb-6 rounded-md bg-red-50 p-4 border border-red-200">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                                </svg>
+            </nav>
+
+            <!-- Hero Section -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 lg:py-32">
+                <div class="grid lg:grid-cols-2 gap-8 sm:gap-12 items-center">
+
+                    <!-- Left Content -->
+                    <div class="space-y-8 animate-slide-right">
+                        <div class="inline-flex items-center px-4 py-2 bg-white rounded-full shadow-md border border-green-100">
+                            <span class="flex h-2 w-2 relative mr-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-600"></span>
+                            </span>
+                            <span class="text-sm font-semibold text-gray-700">v2.0 Now Available</span>
+                        </div>
+
+                        <div>
+                            <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight">
+                                Welcome to
+                                <span class="bg-gradient-to-r from-green-600 via-green-700 to-yellow-600 bg-clip-text text-transparent">
+                                    SIMPEGRS HDI
+                                </span>
+                            </h2>
+                            <p class="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed">
+                                Sistem Informasi Manajemen Pegawai yang modern dan efisien untuk
+                                <span class="font-semibold text-gray-900">RSUD Haji Darlan Ismail</span>
+                            </p>
+                        </div>
+
+                        <!-- Features Grid -->
+                        <div class="grid grid-cols-2 gap-4 pt-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Attendance System</h3>
+                                    <p class="text-sm text-gray-600">Real-time tracking</p>
+                                </div>
                             </div>
-                            <div class="ml-3">
-                                <h3 class="text-sm font-medium text-red-800">
-                                    Login Gagal
-                                </h3>
-                                <div class="mt-2 text-sm text-red-700">
-                                    <ul class="list-disc pl-5 space-y-1">
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
+
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check text-yellow-600"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Leave Management</h3>
+                                    <p class="text-sm text-gray-600">Easy approval flow</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Payroll System</h3>
+                                    <p class="text-sm text-gray-600">Automated process</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="h-10 w-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check text-yellow-600"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h3 class="font-semibold text-gray-900">Reports & Analytics</h3>
+                                    <p class="text-sm text-gray-600">Insightful data</p>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                @endif
-                
-                {{-- Success Messages --}}
-                @if (session('success'))
-                    <div class="mb-6 rounded-md bg-green-50 p-4 border border-green-200">
-                        <div class="flex">
-                            <div class="flex-shrink-0">
-                                <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-green-800">
-                                    {{ session('success') }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                @endif
-                
-                {{-- Login Form --}}
-                <form action="{{ route('login.post') }}" method="POST" class="space-y-6">
-                    @csrf
-                    
-                    {{-- Username/Email Field - CHANGED name to "login" --}}
-                    <div>
-                        <label for="login" class="block text-sm font-medium text-gray-700 mb-2">
-                            Username atau Email
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                            </div>
-                            <input 
-                                id="login" 
-                                name="login" 
-                                type="text" 
-                                required 
-                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('login') border-red-300 @enderror" 
-                                placeholder="Masukkan username atau email"
-                                value="{{ old('login') }}"
-                                autofocus
-                            >
-                        </div>
-                        @error('login')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
 
-                    {{-- Password Field --}}
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                            Password
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                </svg>
-                            </div>
-                            <input 
-                                id="password" 
-                                name="password" 
-                                type="password" 
-                                required 
-                                class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 @error('password') border-red-300 @enderror" 
-                                placeholder="Masukkan password"
-                            >
-                        </div>
-                        @error('password')
-                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    {{-- Remember Me - CHANGED name to "remember_me" --}}
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input 
-                                id="remember_me" 
-                                name="remember_me" 
-                                type="checkbox" 
-                                value="1"
-                                class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                                {{ old('remember_me') ? 'checked' : '' }}
-                            >
-                            <label for="remember_me" class="ml-2 block text-sm text-gray-900">
-                                Ingat Saya
-                            </label>
-                        </div>
-
-                        <div class="text-sm">
-                            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
-                                Lupa Password?
+                        <!-- CTA Buttons (GREEN & YELLOW) -->
+                        <div class="flex flex-col sm:flex-row gap-4 pt-4 relative z-20">
+                            <a href="{{ route('login') }}" class="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold px-8 py-4 text-base rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:scale-105 group text-center">
+                                <i class="fas fa-sign-in-alt mr-2 group-hover:translate-x-1 transition-transform"></i>
+                                Get Started
+                            </a>
+                            <a href="#features" class="px-8 py-4 bg-white text-gray-700 font-semibold rounded-lg shadow-md hover:shadow-xl border-2 border-gray-200 hover:border-green-300 transition-all duration-300 text-center cursor-pointer transform hover:scale-105">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Learn More
                             </a>
                         </div>
+
+                        <!-- Trust Indicators -->
+                        <div class="flex items-center space-x-6 pt-8 border-t border-gray-200">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">500+</div>
+                                <div class="text-sm text-gray-600">Employees</div>
+                            </div>
+                            <div class="h-12 w-px bg-gray-300"></div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">99.9%</div>
+                                <div class="text-sm text-gray-600">Uptime</div>
+                            </div>
+                            <div class="h-12 w-px bg-gray-300"></div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-green-600">24/7</div>
+                                <div class="text-sm text-gray-600">Support</div>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Submit Button --}}
-                    <div>
-                        <button 
-                            type="submit" 
-                            class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150"
-                        >
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                            </svg>
-                            Masuk
-                        </button>
+                    <!-- Right Content - Dashboard Preview -->
+                    <div class="relative animate-slide-left">
+                        <!-- Main Card -->
+                        <div class="relative z-10 bg-white rounded-2xl shadow-2xl p-8 border border-gray-100">
+                            <!-- Mock Dashboard -->
+                            <div class="space-y-6">
+                                <!-- Header -->
+                                <div class="flex items-center justify-between pb-6 border-b border-gray-200">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-gray-900">Dashboard Preview</h3>
+                                        <p class="text-sm text-gray-600">Your workplace at a glance</p>
+                                    </div>
+                                    <div class="h-10 w-10 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-white"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Stats Grid (GREEN & YELLOW) -->
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-2xl">👥</span>
+                                            <span class="text-xs font-semibold text-green-600 bg-green-200 px-2 py-1 rounded-full">+12%</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-green-900">245</div>
+                                        <div class="text-xs text-green-700">Active Staff</div>
+                                    </div>
+
+                                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-2xl">✅</span>
+                                            <span class="text-xs font-semibold text-yellow-600 bg-yellow-200 px-2 py-1 rounded-full">+8%</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-yellow-900">98%</div>
+                                        <div class="text-xs text-yellow-700">Attendance</div>
+                                    </div>
+
+                                    <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-2xl">📋</span>
+                                            <span class="text-xs font-semibold text-green-600 bg-green-200 px-2 py-1 rounded-full">5</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-green-900">12</div>
+                                        <div class="text-xs text-green-700">Pending</div>
+                                    </div>
+
+                                    <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="text-2xl">💰</span>
+                                            <span class="text-xs font-semibold text-yellow-600 bg-yellow-200 px-2 py-1 rounded-full">✓</span>
+                                        </div>
+                                        <div class="text-2xl font-bold text-yellow-900">45M</div>
+                                        <div class="text-xs text-yellow-700">Payroll</div>
+                                    </div>
+                                </div>
+
+                                <!-- Activity List -->
+                                <div class="space-y-3">
+                                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div class="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">JD</div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 truncate">John Doe checked in</p>
+                                            <p class="text-xs text-gray-600">2 minutes ago</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div class="h-8 w-8 bg-yellow-500 rounded-full flex items-center justify-center text-white text-xs font-bold">AS</div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 truncate">Leave approved</p>
+                                            <p class="text-xs text-gray-600">15 minutes ago</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                        <div class="h-8 w-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">MR</div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-900 truncate">New payslip generated</p>
+                                            <p class="text-xs text-gray-600">1 hour ago</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Floating Cards (GREEN & YELLOW) -->
+                        <div class="absolute -top-6 -right-6 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-xl p-4 w-32 animate-float z-20">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">⏰</div>
+                                <div class="text-xs text-white font-semibold">08:15 AM</div>
+                                <div class="text-xs text-green-100">Check-in</div>
+                            </div>
+                        </div>
+
+                        <div class="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-xl p-4 w-32 border border-yellow-100 animate-float animation-delay-2000 z-20">
+                            <div class="text-center">
+                                <div class="text-2xl mb-1">📊</div>
+                                <div class="text-xs text-gray-900 font-semibold">Reports</div>
+                                <div class="text-xs text-gray-600">Ready</div>
+                            </div>
+                        </div>
                     </div>
-                </form>
-                
-                {{-- Footer --}}
-                <div class="mt-6 text-center text-sm text-gray-600">
-                    <p>&copy; {{ date('Y') }} RS Harapan Delima Indramayu</p>
                 </div>
             </div>
+
+            <!-- Features Section -->
+            <div id="features" class="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 border-t border-gray-200">
+                <div class="text-center mb-8 sm:mb-12 lg:mb-16 animate-fade-in">
+                    <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">Powerful Features</h2>
+                    <p class="text-base sm:text-lg text-gray-600">Everything you need to manage your workforce efficiently</p>
+                </div>
+
+                <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+                    <div class="card p-6 sm:p-8 card-hover cursor-default border-t-4 border-green-500">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-clock text-xl sm:text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Smart Attendance</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Real-time attendance tracking with geolocation and face recognition support.</p>
+                    </div>
+
+                    <div class="card p-6 sm:p-8 card-hover cursor-default border-t-4 border-yellow-500">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-umbrella-beach text-xl sm:text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Leave Management</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Streamlined leave request and approval process with automated notifications.</p>
+                    </div>
+
+                    <div class="card p-6 sm:p-8 card-hover cursor-default border-t-4 border-green-500">
+                        <div class="h-12 w-12 sm:h-14 sm:w-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
+                            <i class="fas fa-money-bill-wave text-xl sm:text-2xl text-white"></i>
+                        </div>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Payroll Processing</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Automated salary calculation with tax computation and slip generation.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="border-t border-gray-200 py-12">
+                <div class="max-w-7xl mx-auto px-6">
+                    <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                        <div class="text-center md:text-left">
+                            <p class="text-sm text-gray-600">&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                            <p class="text-xs text-gray-500 mt-1">RSUD Haji Darlan Ismail</p>
+                        </div>
+                        <div class="flex items-center space-x-6">
+                            <a href="#" class="text-sm text-gray-600 hover:text-green-600 transition duration-200">Privacy</a>
+                            <a href="#" class="text-sm text-gray-600 hover:text-green-600 transition duration-200">Terms</a>
+                            <a href="#" class="text-sm text-gray-600 hover:text-green-600 transition duration-200">Contact</a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
+
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>

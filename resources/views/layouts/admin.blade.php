@@ -1,0 +1,71 @@
+{{-- filepath: resources/views/layouts/admin.blade.php --}}
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title') - {{ config('app.name') }}</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @stack('styles')
+</head>
+<body class="font-sans antialiased bg-gray-50">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        @include('layouts.partials.admin-sidebar')
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col lg:ml-64">
+            <!-- Navbar -->
+            @include('layouts.partials.admin-navbar')
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+                <!-- Breadcrumb -->
+                @if(isset($breadcrumbs))
+                    <x-ui.breadcrumb :items="$breadcrumbs" />
+                @endif
+
+                <!-- Alert Messages -->
+                @if(session('success'))
+                    <x-ui.alert type="success" :message="session('success')" />
+                @endif
+
+                @if(session('error'))
+                    <x-ui.alert type="error" :message="session('error')" />
+                @endif
+
+                <!-- Page Content -->
+                @yield('content')
+            </main>
+
+            <!-- Footer -->
+            @include('layouts.partials.admin-footer')
+        </div>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    @stack('scripts')
+    
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+    </script>
+</body>
+</html>
