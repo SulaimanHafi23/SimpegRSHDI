@@ -3,7 +3,7 @@
 
 namespace App\Repositories\Master;
 
-use App\Models\FileRequirment;
+use App\Models\FileRequirement;
 use App\Repositories\Contracts\Master\FileRequirementRepositoryInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 class FileRequirementRepository implements FileRequirementRepositoryInterface
 {
     public function __construct(
-        private readonly FileRequirment $model
+        private readonly FileRequirement $model
     ) {}
 
     public function paginate(int $perPage = 15, ?string $positionId = null): LengthAwarePaginator

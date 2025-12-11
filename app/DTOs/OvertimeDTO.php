@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\Overtime;
+namespace App\DTOs;
 
 use Carbon\Carbon;
 

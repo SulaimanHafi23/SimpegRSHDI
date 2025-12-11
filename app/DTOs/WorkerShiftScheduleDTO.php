@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\Schedule;
+namespace App\DTOs;
 
 use Carbon\Carbon;
 

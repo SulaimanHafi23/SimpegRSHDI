@@ -2,21 +2,18 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use App\Traits\HasUuid;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens; // ✅ Add this
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids, HasRoles, HasApiTokens; // ✅ Add HasApiTokens
+    use HasFactory, Notifiable, HasUuid, HasRoles;
 
-    // ✅ IMPORTANT: Specify key type for Spatie
-    protected $keyType = 'string';
-    public $incrementing = false;
+    protected $guard_name = 'web';
 
     /**
      * The attributes that are mass assignable.
@@ -26,10 +23,9 @@ class User extends Authenticatable
     protected $fillable = [
         'worker_id',
         'email',
-        'username',
         'password',
-        'last_login',
         'is_active',
+        'email_verified_at',
     ];
 
     /**
@@ -51,7 +47,6 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'last_login' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
         ];
@@ -68,7 +63,7 @@ class User extends Authenticatable
     /**
      * Check if the user is a Super Admin.
      */
-    public function isSuperAdmin(): bool
+    public function isAdmin(): bool
     {
         return $this->hasRole('Super Admin');
     }
@@ -90,10 +85,18 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if the user is a Director.
+     * Check if the user is an Employee.
      */
-    public function isDirektur(): bool
+    public function isEmployee(): bool
     {
-        return $this->hasRole('Direktur');
+        return $this->hasRole('Employee');
+    }
+
+    /**
+     * Check if the user can approve.
+     */
+    public function canApprove(): bool
+    {
+        return $this->hasAnyRole(['Super Admin', 'HR', 'Manager']);
     }
 }

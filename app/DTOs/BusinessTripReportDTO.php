@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\BusinessTrip;
+namespace App\DTOs;
 
 class BusinessTripReportDTO
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\DTOs\Worker;
+namespace App\DTOs;
 
 use Carbon\Carbon;
 

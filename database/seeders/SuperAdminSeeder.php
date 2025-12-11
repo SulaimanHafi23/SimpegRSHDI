@@ -2,12 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Worker;
-use App\Models\Gender;
-use App\Models\Religion;
-use App\Models\Position;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class SuperAdminSeeder extends Seeder
@@ -23,9 +20,9 @@ class SuperAdminSeeder extends Seeder
         
         $this->command->info('🔍 Checking master data...');
         
-        $gender = Gender::firstOrCreate(['name' => 'Laki-laki']);
-        $religion = Religion::firstOrCreate(['name' => 'Islam']);
-        $position = Position::firstOrCreate(
+        $gender = \App\Models\Gender::firstOrCreate(['name' => 'Laki-laki']);
+        $religion = \App\Models\Religion::firstOrCreate(['name' => 'Islam']);
+        $position = \App\Models\Position::firstOrCreate(
             ['name' => 'Admin'], 
             ['description' => 'Staff administrasi']
         );

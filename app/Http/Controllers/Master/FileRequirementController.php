@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\FileRequirementDTO;
 use App\Http\Controllers\Controller;

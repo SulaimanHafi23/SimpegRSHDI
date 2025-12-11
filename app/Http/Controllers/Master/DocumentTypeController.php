@@ -2,7 +2,7 @@
 
 // filepath: app/Http/Controllers/Admin/Master/DocumentTypeController.php
 
-namespace App\Http\Controllers\Admin\Master;
+namespace App\Http\Controllers\Master;
 
 use App\DTOs\Master\DocumentTypeDTO;
 use App\Http\Controllers\Controller;

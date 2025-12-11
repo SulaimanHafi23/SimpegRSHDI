@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('file_requirments', function (Blueprint $table) {
+        Schema::create('file_requirements', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->foreignUuid('position_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignUuid('document_type_id')->constrained()->cascadeOnDelete();
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('keperluan_berkas');
+        Schema::dropIfExists('file_requirements');
     }
 };

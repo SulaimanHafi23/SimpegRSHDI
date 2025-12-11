@@ -24,16 +24,16 @@ use App\Repositories\Contracts\Master\ShiftPatternRepositoryInterface;
 use App\Repositories\Master\ShiftPatternRepository;
 
 // Worker & User Repositories
-use App\Repositories\Contracts\WorkerRepositoryInterface;
-use App\Repositories\WorkerRepository;
-use App\Repositories\Contracts\UserRepositoryInterface;
-use App\Repositories\UserRepository;
+use App\Repositories\Contracts\Worker\WorkerRepositoryInterface;
+use App\Repositories\Worker\WorkerRepository;
+use App\Repositories\Contracts\User\UserRepositoryInterface;
+use App\Repositories\User\UserRepository;
 
 // Attendance & Schedule Repositories
-use App\Repositories\Contracts\AbsentRepositoryInterface;
-use App\Repositories\AbsentRepository;
-use App\Repositories\Contracts\WorkerShiftScheduleRepositoryInterface;
-use App\Repositories\WorkerShiftScheduleRepository;
+use App\Repositories\Contracts\Attendance\AbsentRepositoryInterface;
+use App\Repositories\Attendance\AbsentRepository;
+use App\Repositories\Contracts\Schedule\WorkerShiftScheduleRepositoryInterface;
+use App\Repositories\Schedule\WorkerShiftScheduleRepository;
 
 // Leave & Overtime Repositories
 use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
@@ -48,8 +48,14 @@ use App\Repositories\Contracts\BusinessTrip\BusinessTripReportRepositoryInterfac
 use App\Repositories\BusinessTrip\BusinessTripReportRepository;
 
 // Document Repositories
-use App\Repositories\Contracts\BerkasRepositoryInterface;
-use App\Repositories\BerkasRepository;
+use App\Repositories\Contracts\Document\BerkasRepositoryInterface;
+use App\Repositories\Document\BerkasRepository;
+
+// Role & Permission Repositories
+use App\Repositories\Contracts\Role\RoleRepositoryInterface;
+use App\Repositories\Role\RoleRepository;
+use App\Repositories\Contracts\Permission\PermissionRepositoryInterface;
+use App\Repositories\Permission\PermissionRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -86,6 +92,10 @@ class RepositoryServiceProvider extends ServiceProvider
 
         // ========== DOCUMENT REPOSITORIES ==========
         $this->app->bind(BerkasRepositoryInterface::class, BerkasRepository::class);
+
+        // ========== ROLE & PERMISSION REPOSITORIES ==========
+        $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
+        $this->app->bind(PermissionRepositoryInterface::class, PermissionRepository::class);
     }
 
     /**
