@@ -2,14 +2,20 @@
 <aside class="fixed top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white flex flex-col shadow-2xl transition-transform -translate-x-full lg:translate-x-0" id="admin-sidebar">
     <!-- Logo -->
     <div class="p-6 border-b border-green-600">
-        <div class="flex items-center space-x-3">
-            <div class="h-10 w-10 bg-white rounded-lg flex items-center justify-center">
-                <i class="fas fa-hospital text-green-700 text-xl"></i>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="h-10 w-10 bg-white rounded-lg flex items-center justify-center">
+                    <i class="fas fa-hospital text-green-700 text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold">SIMPEGRS HDI</h1>
+                    <p class="text-xs text-yellow-100">Admin Panel</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-lg font-bold">SIMPEGRS HDI</h1>
-                <p class="text-xs text-yellow-100">Admin Panel</p>
-            </div>
+            <!-- Close Button for Mobile -->
+            <button onclick="toggleSidebar()" class="lg:hidden p-2 hover:bg-green-600 rounded-lg transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
         </div>
     </div>
 
@@ -71,19 +77,19 @@
         <!-- Management Section -->
         <div class="pt-4">
             <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">MANAJEMEN</p>
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.view'))
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-workers'))
             <a href="{{ route('admin.workers.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.workers.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-users w-5"></i>
                 <span>Pegawai</span>
             </a>
             @endif
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('attendance.view'))
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-attendance'))
             <a href="{{ route('admin.attendance.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.attendance.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-clipboard-check w-5"></i>
                 <span>Absensi</span>
             </a>
             @endif
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker-shift.view'))
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-schedules'))
             <a href="{{ route('admin.worker-shifts.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-user-clock w-5"></i>
                 <span>Jadwal Pegawai</span>
@@ -94,7 +100,7 @@
         <!-- Approval Section -->
         <div class="pt-4">
             <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">PERSETUJUAN</p>
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.view'))
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-leave-requests'))
             <a href="{{ route('admin.leave.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-calendar-times w-5"></i>
                 <span>Cuti</span>
@@ -103,7 +109,7 @@
                 @endif
             </a>
             @endif
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('overtime.view'))
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-overtimes'))
             <a href="{{ route('admin.overtime.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-clock w-5"></i>
                 <span>Lembur</span>
@@ -114,13 +120,13 @@
         <!-- Settings Section -->
         <div class="pt-4">
             <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">PENGATURAN</p>
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('role.view'))
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-roles'))
             <a href="{{ route('admin.roles.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.roles.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-user-tag w-5"></i>
                 <span>Role</span>
             </a>
             @endif
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.view'))
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-users'))
             <a href="{{ route('admin.users.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.users.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-user-shield w-5"></i>
                 <span>Users</span>

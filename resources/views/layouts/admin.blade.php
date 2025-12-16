@@ -14,6 +14,9 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
@@ -29,7 +32,7 @@
             @include('layouts.partials.admin-navbar')
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 {{ auth()->check() && auth()->user()->hasRole('Employee') ? 'pb-20 lg:pb-8' : '' }}">
                 <!-- Breadcrumb -->
                 @if(isset($breadcrumbs))
                     <x-ui.breadcrumb :items="$breadcrumbs" />
@@ -53,8 +56,13 @@
         </div>
     </div>
 
+    <!-- Bottom Navigation for Employee Role -->
+    @if(auth()->check() && auth()->user()->hasRole('Employee'))
+        @include('layouts.partials.employee-footer')
+    @endif
+
     <!-- Mobile Sidebar Overlay -->
-    <div id="sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 hidden lg:hidden" onclick="toggleSidebar()"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 hidden lg:hidden transition-opacity duration-300" style="z-index: 35;"></div>
 
     @stack('scripts')
     
@@ -63,9 +71,43 @@
             const sidebar = document.getElementById('admin-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
             
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
+            if (sidebar && overlay) {
+                const isHidden = sidebar.classList.contains('-translate-x-full');
+                
+                if (isHidden) {
+                    // Open sidebar
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    // Close sidebar
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                    document.body.style.overflow = '';
+                }
+            }
         }
+
+        // Initialize overlay click handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const overlay = document.getElementById('sidebar-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', toggleSidebar);
+            }
+
+            // Auto-dismiss alerts after 3 seconds
+            const alerts = document.querySelectorAll('.bg-green-100, .bg-red-100, .bg-yellow-100');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 3000);
+            });
+        });
     </script>
 </body>
 </html>

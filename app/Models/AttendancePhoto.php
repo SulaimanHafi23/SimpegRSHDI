@@ -32,6 +32,6 @@ class AttendancePhoto extends Model
 
     public function attendance(): BelongsTo
     {
-        return $this->belongsTo(Attendances::class, 'attendance_id');
+        return $this->belongsTo(Attendance::class, 'attendance_id');
     }
 }

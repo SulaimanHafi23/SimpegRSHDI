@@ -129,7 +129,7 @@
                     <i class="fas fa-user-edit text-green-600 mr-2"></i>Update Profile
                 </h2>
                 
-                <form action="{{ route('admin.profile.update') }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
@@ -205,7 +205,7 @@
                     <i class="fas fa-lock text-yellow-600 mr-2"></i>Ubah Password
                 </h2>
                 
-                <form action="{{ route('admin.profile.password') }}" method="POST">
+                <form action="{{ route('profile.update-password') }}" method="POST">
                     @csrf
                     @method('PUT')
 

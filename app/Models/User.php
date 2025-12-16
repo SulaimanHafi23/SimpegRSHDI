@@ -63,7 +63,7 @@ class User extends Authenticatable
 
     public function createdShiftOverrides(): HasMany
     {
-        return $this->hasMany(ShiftOverrides::class, 'created_by');
+        return $this->hasMany(ShiftOverride::class, 'created_by');
     }
 
     public function verifiedDocuments(): HasMany

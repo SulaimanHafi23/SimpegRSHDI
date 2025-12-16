@@ -66,12 +66,12 @@ class Worker extends Model
 
     public function shiftOverrides(): HasMany
     {
-        return $this->hasMany(ShiftOverrides::class);
+        return $this->hasMany(ShiftOverride::class);
     }
 
     public function attendances(): HasMany
     {
-        return $this->hasMany(Attendances::class);
+        return $this->hasMany(Attendance::class);
     }
 
     public function workerDocuments(): HasMany

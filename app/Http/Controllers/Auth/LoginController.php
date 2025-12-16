@@ -47,7 +47,7 @@ class LoginController extends Controller
             // Redirect based on role
             return redirect()->intended(
                 $this->getRedirectUrl($result['user'])
-            )->with('success', 'Login berhasil!');
+            );
 
         } catch (\Exception $e) {
             return back()

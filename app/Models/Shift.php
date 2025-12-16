@@ -37,7 +37,7 @@ class Shift extends Model
 
     public function shiftOverrides(): HasMany
     {
-        return $this->hasMany(ShiftOverrides::class);
+        return $this->hasMany(ShiftOverride::class);
     }
 
     public function attendances(): HasMany

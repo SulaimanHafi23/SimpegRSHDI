@@ -3,7 +3,7 @@
 namespace App\Repositories\ShiftOverride;
 
 use App\DTOs\ShiftOverrideDTO;
-use App\Models\ShiftOverrides;
+use App\Models\ShiftOverride;
 use App\Repositories\Contracts\ShiftOverride\ShiftOverrideRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -11,7 +11,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 class ShiftOverrideRepository implements ShiftOverrideRepositoryInterface
 {
     public function __construct(
-        protected ShiftOverrides $model
+        protected ShiftOverride $model
     ) {}
 
     public function getAll(array $filters = []): LengthAwarePaginator

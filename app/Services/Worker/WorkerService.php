@@ -31,6 +31,14 @@ class WorkerService
         return $this->workerRepository->getById($id);
     }
 
+    /**
+     * Alias for getById() for backward compatibility
+     */
+    public function findById(string $id)
+    {
+        return $this->getById($id);
+    }
+
     public function getByNip(string $nip)
     {
         return $this->workerRepository->getByNip($nip);
