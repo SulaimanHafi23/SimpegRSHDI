@@ -13,7 +13,11 @@ class PositionController extends Controller
     public function __construct(
         private readonly PositionService $service
     ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
+        $this->middleware('auth');
+        $this->middleware('permission:position.view')->only(['index', 'show']);
+        $this->middleware('permission:position.create')->only(['create', 'store']);
+        $this->middleware('permission:position.edit')->only(['edit', 'update']);
+        $this->middleware('permission:position.delete')->only('destroy');
     }
 
     public function index(Request $request)

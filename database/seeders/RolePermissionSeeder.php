@@ -33,12 +33,76 @@ class RolePermissionSeeder extends Seeder
             'assign-permissions-to-users',
         ];
 
-        // Master Data Permissions
+        // Master Data Permissions - Generic
         $masterPermissions = [
             'view-master-data',
             'create-master-data',
             'edit-master-data',
             'delete-master-data',
+        ];
+
+        // Master Data Permissions - Specific per entity
+        $departmentPermissions = [
+            'department.view',
+            'department.create',
+            'department.edit',
+            'department.delete',
+        ];
+
+        $genderPermissions = [
+            'gender.view',
+            'gender.create',
+            'gender.edit',
+            'gender.delete',
+        ];
+
+        $religionPermissions = [
+            'religion.view',
+            'religion.create',
+            'religion.edit',
+            'religion.delete',
+        ];
+
+        $locationPermissions = [
+            'location.view',
+            'location.create',
+            'location.edit',
+            'location.delete',
+        ];
+
+        $shiftPermissions = [
+            'shift.view',
+            'shift.create',
+            'shift.edit',
+            'shift.delete',
+        ];
+
+        $leaveTypePermissions = [
+            'leave-type.view',
+            'leave-type.create',
+            'leave-type.edit',
+            'leave-type.delete',
+        ];
+
+        $documentTypePermissions = [
+            'document-type.view',
+            'document-type.create',
+            'document-type.edit',
+            'document-type.delete',
+        ];
+
+        $positionPermissions = [
+            'position.view',
+            'position.create',
+            'position.edit',
+            'position.delete',
+        ];
+
+        $fileRequirementPermissions = [
+            'file-requirement.view',
+            'file-requirement.create',
+            'file-requirement.edit',
+            'file-requirement.delete',
         ];
 
         // Worker Management Permissions
@@ -172,10 +236,6 @@ class RolePermissionSeeder extends Seeder
         $settingsPermissions = [
             'view-settings',
             'edit-settings',
-            'view-shifts',
-            'create-shifts',
-            'edit-shifts',
-            'delete-shifts',
             'view-shift-patterns',
             'create-shift-patterns',
             'edit-shift-patterns',
@@ -187,6 +247,15 @@ class RolePermissionSeeder extends Seeder
             $rolePermissions,
             $permissionManagement,
             $masterPermissions,
+            $departmentPermissions,
+            $genderPermissions,
+            $religionPermissions,
+            $locationPermissions,
+            $shiftPermissions,
+            $leaveTypePermissions,
+            $documentTypePermissions,
+            $positionPermissions,
+            $fileRequirementPermissions,
             $workerPermissions,
             $userPermissions,
             $attendancePermissions,
@@ -223,10 +292,39 @@ class RolePermissionSeeder extends Seeder
             'view-roles',
             'view-permissions',
             
-            // Master Data
+            // Master Data - Generic
             'view-master-data',
             'create-master-data',
             'edit-master-data',
+            
+            // Master Data - Specific
+            'department.view',
+            'department.create',
+            'department.edit',
+            'gender.view',
+            'gender.create',
+            'gender.edit',
+            'religion.view',
+            'religion.create',
+            'religion.edit',
+            'location.view',
+            'location.create',
+            'location.edit',
+            'shift.view',
+            'shift.create',
+            'shift.edit',
+            'leave-type.view',
+            'leave-type.create',
+            'leave-type.edit',
+            'document-type.view',
+            'document-type.create',
+            'document-type.edit',
+            'position.view',
+            'position.create',
+            'position.edit',
+            'file-requirement.view',
+            'file-requirement.create',
+            'file-requirement.edit',
             
             // Workers
             'view-workers',
@@ -295,9 +393,7 @@ class RolePermissionSeeder extends Seeder
             
             // Settings
             'view-settings',
-            'view-shifts',
-            'create-shifts',
-            'edit-shifts',
+            'edit-settings',
             'view-shift-patterns',
             'create-shift-patterns',
             'edit-shift-patterns',
@@ -312,6 +408,18 @@ class RolePermissionSeeder extends Seeder
         // 3. Manager - Department Management
         $manager = Role::firstOrCreate(['name' => 'Manager']);
         $manager->givePermissionTo([
+            // Master Data - View Only
+            'view-master-data',
+            'department.view',
+            'gender.view',
+            'religion.view',
+            'location.view',
+            'shift.view',
+            'leave-type.view',
+            'document-type.view',
+            'position.view',
+            'file-requirement.view',
+            
             // Workers
             'view-workers',
             'view-worker-profile',

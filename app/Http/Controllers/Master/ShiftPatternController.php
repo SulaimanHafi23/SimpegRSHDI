@@ -13,7 +13,11 @@ class ShiftPatternController extends Controller
     public function __construct(
         private readonly ShiftPatternService $service
     ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
+        $this->middleware('auth');
+        $this->middleware('permission:view-shift-patterns')->only(['index', 'show']);
+        $this->middleware('permission:create-shift-patterns')->only(['create', 'store']);
+        $this->middleware('permission:edit-shift-patterns')->only(['edit', 'update']);
+        $this->middleware('permission:delete-shift-patterns')->only('destroy');
     }
 
     public function index(Request $request)
