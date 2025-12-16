@@ -8,8 +8,7 @@ class RoleDTO
     public function __construct(
         public readonly ?string $id,
         public readonly string $name,
-        public readonly ?string $guardName,
-        public readonly array $permissions,
+        public readonly ?array $permissions = [],
     ) {}
 
     public static function fromRequest(array $data): self
@@ -17,7 +16,6 @@ class RoleDTO
         return new self(
             id: $data['id'] ?? null,
             name: $data['name'],
-            guardName: $data['guard_name'] ?? 'web',
             permissions: $data['permissions'] ?? [],
         );
     }
@@ -25,8 +23,9 @@ class RoleDTO
     public function toArray(): array
     {
         return array_filter([
+            'id' => $this->id,
             'name' => $this->name,
-            'guard_name' => $this->guardName,
-        ], fn($value) => !is_null($value));
+            'permissions' => $this->permissions,
+        ], fn($value) => $value !== null);
     }
 }

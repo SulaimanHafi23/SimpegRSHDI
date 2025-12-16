@@ -2,85 +2,68 @@
 
 namespace App\DTOs;
 
-use Carbon\Carbon;
-
 class WorkerDTO
 {
     public function __construct(
         public readonly ?string $id,
-        public readonly string $nik,
+        public readonly string $nip,
         public readonly string $name,
         public readonly string $email,
-        public readonly string $phone,
-        public readonly string $genderId,
-        public readonly string $religionId,
-        public readonly string $positionId,
-        public readonly string $placeOfBirth,
-        public readonly string $dateOfBirth, // Y-m-d format
-        public readonly string $address,
-        public readonly string $hireDate, // Y-m-d format
+        public readonly string $phone_number,
+        public readonly ?string $address,
+        public readonly string $birth_date,
+        public readonly string $birth_place,
+        public readonly string $gender_id,
+        public readonly string $religion_id,
+        public readonly string $department_id,
+        public readonly string $hire_date,
+        public readonly ?string $resign_date,
+        public readonly string $employment_status,
         public readonly string $status,
-        public readonly bool $isActive,
+        public readonly ?string $photo_url,
     ) {}
 
     public static function fromRequest(array $data): self
     {
         return new self(
             id: $data['id'] ?? null,
-            nik: $data['nik'],
+            nip: $data['nip'],
             name: $data['name'],
             email: $data['email'],
-            phone: $data['phone_number'],
-            genderId: $data['gender_id'],
-            religionId: $data['religion_id'],
-            positionId: $data['position_id'],
-            placeOfBirth: $data['place_of_birth'],
-            dateOfBirth: $data['date_of_birth'],
-            address: $data['address'],
-            hireDate: $data['hire_date'],
-            status: $data['status'],
-            isActive: (bool) ($data['is_active'] ?? true),
+            phone_number: $data['phone_number'],
+            address: $data['address'] ?? null,
+            birth_date: $data['birth_date'],
+            birth_place: $data['birth_place'],
+            gender_id: $data['gender_id'],
+            religion_id: $data['religion_id'],
+            department_id: $data['department_id'],
+            hire_date: $data['hire_date'],
+            resign_date: $data['resign_date'] ?? null,
+            employment_status: $data['employment_status'] ?? 'contract',
+            status: $data['status'] ?? 'active',
+            photo_url: $data['photo_url'] ?? null,
         );
     }
 
     public function toArray(): array
     {
-        return [
-            'nik' => $this->nik,
+        return array_filter([
+            'id' => $this->id,
+            'nip' => $this->nip,
             'name' => $this->name,
             'email' => $this->email,
-            'phone' => $this->phone,
-            'gender_id' => $this->genderId,
-            'religion_id' => $this->religionId,
-            'position_id' => $this->positionId,
-            'place_of_birth' => $this->placeOfBirth,
-            'date_of_birth' => $this->dateOfBirth,
+            'phone_number' => $this->phone_number,
             'address' => $this->address,
-            'hire_date' => $this->hireDate,
+            'birth_date' => $this->birth_date,
+            'birth_place' => $this->birth_place,
+            'gender_id' => $this->gender_id,
+            'religion_id' => $this->religion_id,
+            'department_id' => $this->department_id,
+            'hire_date' => $this->hire_date,
+            'resign_date' => $this->resign_date,
+            'employment_status' => $this->employment_status,
             'status' => $this->status,
-            'is_active' => $this->isActive,
-        ];
-    }
-
-    public function getAge(): int
-    {
-        return Carbon::parse($this->dateOfBirth)->age;
-    }
-
-    public function getWorkDuration(): string
-    {
-        $hireDate = Carbon::parse($this->hireDate);
-        $now = Carbon::now();
-        
-        $years = $hireDate->diffInYears($now);
-        $months = $hireDate->copy()->addYears($years)->diffInMonths($now);
-        
-        if ($years > 0 && $months > 0) {
-            return "{$years} tahun {$months} bulan";
-        } elseif ($years > 0) {
-            return "{$years} tahun";
-        } else {
-            return "{$months} bulan";
-        }
+            'photo_url' => $this->photo_url,
+        ], fn($value) => $value !== null);
     }
 }

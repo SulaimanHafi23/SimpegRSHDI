@@ -2,68 +2,44 @@
 
 namespace App\Http\Controllers\User;
 
-use App\DTOs\UserDTO;
-use App\Services\Role\RoleService;
-use App\Services\User\UserService;
 use App\Http\Controllers\Controller;
+use App\Services\User\UserService;
 use App\Services\Worker\WorkerService;
+use App\Services\Role\RoleService;
+use App\DTOs\UserDTO;
 use App\Http\Requests\User\UserRequest;
-use App\Http\Requests\User\UpdateRolesRequest;
-use App\Services\Permission\PermissionService;
-use App\Http\Requests\User\UpdatePasswordRequest;
 use Illuminate\Http\Request;
-
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
     public function __construct(
-        private readonly UserService $service,
-        private readonly WorkerService $workerService,
-        private readonly RoleService $roleService,
-        private readonly PermissionService $permissionService
+        protected UserService $userService,
+        protected WorkerService $workerService,
+        protected RoleService $roleService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:view-users')->only(['index', 'show']);
-        $this->middleware('permission:create-users')->only(['create', 'store']);
-        $this->middleware('permission:edit-users')->only(['edit', 'update', 'updatePassword']);
-        $this->middleware('permission:delete-users')->only(['destroy']);
-        $this->middleware('permission:assign-roles')->only(['updateRoles']);
-        $this->middleware('permission:assign-permissions-to-users')->only(['showPermissions', 'updatePermissions']);
-        $this->middleware('permission:toggle-user-status')->only(['toggleActive']);
+        // Permission check dilakukan di blade dengan @can
     }
 
     public function index(Request $request)
     {
-        $this->authorizePermission('view-users');
-
         $filters = [
-            'search' => $request->input('search'),
-            'is_active' => $request->input('is_active'),
-            'role' => $request->input('role'),
+            'search' => $request->search,
+            'role' => $request->role,
+            'is_active' => $request->is_active,
+            'per_page' => $request->per_page ?? 15,
         ];
 
-        $users = $this->service->getAllPaginated(15, $filters);
+        $users = $this->userService->getAll($filters);
         $roles = $this->roleService->getAll();
 
         return view('admin.users.index', compact('users', 'roles', 'filters'));
     }
 
-    public function show(string $id)
-    {
-        $this->authorizePermission('view-users');
-
-        $user = $this->service->findById($id);
-
-        return view('admin.users.show', compact('user'));
-    }
-
     public function create()
     {
-        $this->authorizePermission('create-users');
-
-        $workers = $this->workerService->getActive()
-            ->filter(fn($worker) => !$worker->user);
-        
+        $workers = $this->workerService->getAllActive();
         $roles = $this->roleService->getAll();
 
         return view('admin.users.create', compact('workers', 'roles'));
@@ -71,137 +47,81 @@ class UserController extends Controller
 
     public function store(UserRequest $request)
     {
-        $this->authorizePermission('create-users');
+        try {
+            $validated = $request->validated();
+            $validated['password'] = Hash::make($validated['password']);
+            $user = $this->userService->create($validated);
 
-        $dto = UserDTO::fromRequest($request->validated());
-        $roles = $request->input('roles', []);
-        
-        $result = $this->service->create($dto, $roles);
-
-        if ($result['success']) {
             return redirect()
-                ->route('admin.users.show', $result['data']->id)
-                ->with('success', $result['message']);
+                ->route('admin.users.index')
+                ->with('success', 'User berhasil ditambahkan');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
 
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
+    public function show(string $id)
+    {
+        try {
+            $user = $this->userService->getById($id);
+            return view('admin.users.show', compact('user'));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function edit(string $id)
     {
-        $this->authorizePermission('edit-users');
+        try {
+            $user = $this->userService->getById($id);
+            $workers = $this->workerService->getAllActive();
+            $roles = $this->roleService->getAll();
 
-        $user = $this->service->findById($id);
-        
-        $workers = $this->workerService->getActive()
-            ->filter(fn($worker) => !$worker->user || $worker->id === $user->worker_id);
-        
-        $roles = $this->roleService->getAll();
-
-        return view('admin.users.edit', compact('user', 'workers', 'roles'));
+            return view('admin.users.edit', compact('user', 'workers', 'roles'));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.users.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function update(UserRequest $request, string $id)
     {
-        $this->authorizePermission('edit-users');
+        try {
+            $validated = $request->validated();
+            
+            if (!empty($validated['password'])) {
+                $validated['password'] = Hash::make($validated['password']);
+            } else {
+                unset($validated['password']);
+            }
 
-        $dto = UserDTO::fromRequest($request->validated());
-        $roles = $request->has('roles') ? $request->input('roles') : null;
-        
-        $result = $this->service->update($id, $dto, $roles);
+            $user = $this->userService->update($id, $validated);
 
-        if ($result['success']) {
             return redirect()
                 ->route('admin.users.show', $id)
-                ->with('success', $result['message']);
+                ->with('success', 'User berhasil diupdate');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
     public function destroy(string $id)
     {
-        $this->authorizePermission('delete-users');
+        try {
+            $this->userService->delete($id);
 
-        $result = $this->service->delete($id);
-
-        if ($result['success']) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('success', $result['message']);
+                ->with('success', 'User berhasil dihapus');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()->withErrors(['error' => $result['message']]);
-    }
-
-    public function updatePassword(UpdatePasswordRequest $request, string $id)
-    {
-        $this->authorizePermission('edit-users');
-
-        $result = $this->service->updatePassword($id, $request->password);
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        }
-
-        return back()->withErrors(['error' => $result['message']]);
-    }
-
-    public function updateRoles(UpdateRolesRequest $request, string $id)
-    {
-        $this->authorizePermission('assign-roles');
-
-        $result = $this->service->updateRoles($id, $request->input('roles', []));
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        }
-
-        return back()->withErrors(['error' => $result['message']]);
-    }
-
-    public function showPermissions(string $id)
-    {
-        $this->authorizePermission('assign-permissions-to-users');
-
-        $user = $this->service->findById($id);
-        $permissions = $this->permissionService->getGrouped();
-        
-        return view('admin.users.permissions', compact('user', 'permissions'));
-    }
-
-    public function updatePermissions(Request $request, string $id)
-    {
-        $this->authorizePermission('assign-permissions-to-users');
-
-        $request->validate([
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'string|exists:permissions,name',
-        ]);
-
-        $result = $this->service->updateDirectPermissions($id, $request->input('permissions', []));
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        }
-
-        return back()->withErrors(['error' => $result['message']]);
-    }
-
-    public function toggleActive(string $id)
-    {
-        $this->authorizePermission('toggle-user-status');
-
-        $result = $this->service->toggleActive($id);
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
-        }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 }

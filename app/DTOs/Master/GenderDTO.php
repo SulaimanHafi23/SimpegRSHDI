@@ -8,6 +8,7 @@ class GenderDTO
     public function __construct(
         public readonly ?string $id,
         public readonly string $name,
+        public readonly bool $is_active,
     ) {}
 
     public static function fromRequest(array $data): self
@@ -15,6 +16,7 @@ class GenderDTO
         return new self(
             id: $data['id'] ?? null,
             name: $data['name'],
+            is_active: $data['is_active'] ?? true,
         );
     }
 
@@ -23,6 +25,7 @@ class GenderDTO
         return array_filter([
             'id' => $this->id,
             'name' => $this->name,
-        ], fn($value) => !is_null($value));
+            'is_active' => $this->is_active,
+        ], fn($value) => $value !== null);
     }
 }

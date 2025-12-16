@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-// ========== AUTH CONTROLLER ==========
 use App\Http\Controllers\Auth\LoginController;
 
 // ========== ROLE & USER CONTROLLERS ==========
@@ -13,299 +11,218 @@ use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\Worker\WorkerController;
 
 // ========== ATTENDANCE CONTROLLER ==========
-use App\Http\Controllers\Attendance\AbsentController;
+use App\Http\Controllers\Attendance\AttendanceController;
 
 // ========== SCHEDULE CONTROLLER ==========
-use App\Http\Controllers\Schedule\WorkerShiftScheduleController;
+use App\Http\Controllers\WorkerShift\WorkerShiftController;
+use App\Http\Controllers\ShiftOverride\ShiftOverrideController;
 
 // ========== LEAVE CONTROLLER ==========
 use App\Http\Controllers\Leave\LeaveRequestController;
 
 // ========== OVERTIME CONTROLLER ==========
-use App\Http\Controllers\Overtime\OvertimeController;
-
-// ========== BUSINESS TRIP CONTROLLERS ==========
-use App\Http\Controllers\BusinessTrip\BusinessTripController;
-use App\Http\Controllers\BusinessTrip\BusinessTripReportController;
+use App\Http\Controllers\Overtime\OvertimeRequestController;
 
 // ========== DOCUMENT CONTROLLER ==========
-use App\Http\Controllers\Document\BerkasController;
+use App\Http\Controllers\WorkerDocument\WorkerDocumentController;
 
 // ========== MASTER DATA CONTROLLERS ==========
 use App\Http\Controllers\Master\ShiftController;
 use App\Http\Controllers\Master\LocationController;
 use App\Http\Controllers\Master\GenderController;
-use App\Http\Controllers\Master\PositionController;
+use App\Http\Controllers\Master\DepartmentController;
 use App\Http\Controllers\Master\DocumentTypeController;
 use App\Http\Controllers\Master\ReligionController;
-use App\Http\Controllers\Master\FileRequirementController;
-use App\Http\Controllers\Master\ShiftPatternController;
+use App\Http\Controllers\Master\LeaveTypeController;
+
+// Dashboard Controllers
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
+
+// Profile Controller
+use App\Http\Controllers\ProfileController;
+
+// Approval Controllers
+use App\Http\Controllers\Approval\LeaveApprovalController;
+use App\Http\Controllers\Approval\OvertimeApprovalController;
+use App\Http\Controllers\Approval\DocumentApprovalController;
+
+// Report Controller
+use App\Http\Controllers\Report\ReportController;
 
 // ========== AUTH ROUTES ==========
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login'])->name('login.post');
-Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+});
+
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
 
 // ========== AUTHENTICATED ROUTES ==========
 Route::middleware(['auth'])->group(function () {
     
-    // ========== DASHBOARD ==========
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('admin.dashboard');
+    // ========== DASHBOARDS ==========
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
+
+    // ========== PROFILE ROUTES ==========
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'show'])->name('show');
+        Route::get('/edit', [ProfileController::class, 'edit'])->name('edit');
+        Route::put('/', [ProfileController::class, 'update'])->name('update');
+        Route::put('/password', [ProfileController::class, 'updatePassword'])->name('update-password');
+    });
+
+    // ========== APPROVAL ROUTES ========== 
+    // TODO: Create Approval Controllers
+    // Route::prefix('approvals')->name('approvals.')->group(function () {
+    //     // Leave Approvals
+    //     Route::prefix('leaves')->name('leaves.')->group(function () {
+    //         Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
+    //         Route::get('/{id}', [LeaveApprovalController::class, 'show'])->name('show');
+    //         Route::post('/{id}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
+    //         Route::post('/{id}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
+    //     });
+    //     // Overtime Approvals
+    //     Route::prefix('overtimes')->name('overtimes.')->group(function () {
+    //         Route::get('/', [OvertimeApprovalController::class, 'index'])->name('index');
+    //         Route::get('/{id}', [OvertimeApprovalController::class, 'show'])->name('show');
+    //         Route::post('/{id}/approve', [OvertimeApprovalController::class, 'approve'])->name('approve');
+    //         Route::post('/{id}/reject', [OvertimeApprovalController::class, 'reject'])->name('reject');
+    //     });
+    //     // Document Approvals
+    //     Route::prefix('documents')->name('documents.')->group(function () {
+    //         Route::get('/', [DocumentApprovalController::class, 'index'])->name('index');
+    //         Route::get('/{id}', [DocumentApprovalController::class, 'show'])->name('show');
+    //         Route::post('/{id}/verify', [DocumentApprovalController::class, 'verify'])->name('verify');
+    //         Route::post('/{id}/reject', [DocumentApprovalController::class, 'reject'])->name('reject');
+    //     });
+    // });
+
+    // ========== REPORT ROUTES ==========
+    // TODO: Create Report Controller
+    // Route::prefix('reports')->name('reports.')->group(function () {
+    //     Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
+    //     Route::get('/leaves', [ReportController::class, 'leaves'])->name('leaves');
+    //     Route::get('/overtimes', [ReportController::class, 'overtimes'])->name('overtimes');
+    // });
 
     // ========== ROLE MANAGEMENT ==========
-    Route::prefix('roles')->name('admin.roles.')->group(function () {
-        Route::middleware('permission:view-roles')->group(function () {
-            Route::get('/', [RoleController::class, 'index'])->name('index');
-            Route::get('/{id}', [RoleController::class, 'show'])->name('show');
-        });
-        
-        Route::middleware('permission:create-roles')->group(function () {
-            Route::get('/create', [RoleController::class, 'create'])->name('create');
-            Route::post('/', [RoleController::class, 'store'])->name('store');
-        });
-        
-        Route::middleware('permission:edit-roles')->group(function () {
-            Route::get('/{id}/edit', [RoleController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [RoleController::class, 'update'])->name('update');
-            Route::get('/{id}/permissions', [RoleController::class, 'editPermissions'])->name('edit-permissions');
-            Route::put('/{id}/permissions', [RoleController::class, 'updatePermissions'])->name('update-permissions');
-        });
-        
-        Route::delete('/{id}', [RoleController::class, 'destroy'])
-            ->middleware('permission:delete-roles')
-            ->name('destroy');
-    });
+    Route::resource('roles', RoleController::class)->names('admin.roles');
 
     // ========== USER MANAGEMENT ==========
-    Route::prefix('users')->name('admin.users.')->group(function () {
-        Route::middleware('permission:view-users')->group(function () {
-            Route::get('/', [UserController::class, 'index'])->name('index');
-            Route::get('/{id}', [UserController::class, 'show'])->name('show');
-        });
-        
-        Route::middleware('permission:create-users')->group(function () {
-            Route::get('/create', [UserController::class, 'create'])->name('create');
-            Route::post('/', [UserController::class, 'store'])->name('store');
-        });
-        
-        Route::middleware('permission:edit-users')->group(function () {
-            Route::get('/{id}/edit', [UserController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [UserController::class, 'update'])->name('update');
-        });
-        
-        Route::delete('/{id}', [UserController::class, 'destroy'])
-            ->middleware('permission:delete-users')
-            ->name('destroy');
-        
-        Route::middleware('permission:manage-user-roles')->group(function () {
-            Route::get('/{id}/roles', [UserController::class, 'editRoles'])->name('edit-roles');
-            Route::put('/{id}/roles', [UserController::class, 'updateRoles'])->name('update-roles');
-        });
-        
-        Route::middleware('permission:manage-user-permissions')->group(function () {
-            Route::get('/{id}/permissions', [UserController::class, 'editPermissions'])->name('edit-permissions');
-            Route::put('/{id}/permissions', [UserController::class, 'updatePermissions'])->name('update-permissions');
-        });
-        
-        Route::middleware('permission:reset-user-password')->group(function () {
-            Route::get('/{id}/password', [UserController::class, 'editPassword'])->name('edit-password');
-            Route::put('/{id}/password', [UserController::class, 'updatePassword'])->name('update-password');
-        });
-    });
+    Route::resource('users', UserController::class)->names('admin.users');
 
     // ========== WORKER MANAGEMENT ==========
     Route::prefix('workers')->name('admin.workers.')->group(function () {
-        Route::middleware('permission:view-workers')->group(function () {
-            Route::get('/', [WorkerController::class, 'index'])->name('index');
-            Route::get('/{id}', [WorkerController::class, 'show'])->name('show');
-        });
-        
-        Route::middleware('permission:create-workers')->group(function () {
-            Route::get('/create', [WorkerController::class, 'create'])->name('create');
-            Route::post('/', [WorkerController::class, 'store'])->name('store');
-        });
-        
-        Route::middleware('permission:edit-workers')->group(function () {
-            Route::get('/{id}/edit', [WorkerController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [WorkerController::class, 'update'])->name('update');
-        });
-        
-        Route::delete('/{id}', [WorkerController::class, 'destroy'])
-            ->middleware('permission:delete-workers')
-            ->name('destroy');
+        Route::get('/', [WorkerController::class, 'index'])->name('index');
+        Route::get('/create', [WorkerController::class, 'create'])->name('create');
+        Route::get('/export', [WorkerController::class, 'export'])->name('export');
+        Route::post('/import', [WorkerController::class, 'import'])->name('import');
+        Route::post('/', [WorkerController::class, 'store'])->name('store');
+        Route::get('/{id}', [WorkerController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [WorkerController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [WorkerController::class, 'update'])->name('update');
+        Route::delete('/{id}', [WorkerController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/resign', [WorkerController::class, 'resign'])->name('resign');
     });
 
     // ========== ATTENDANCE MANAGEMENT ==========
     Route::prefix('attendance')->name('admin.attendance.')->group(function () {
-        Route::middleware('permission:view-attendance,view-own-attendance')->group(function () {
-            Route::get('/', [AbsentController::class, 'index'])->name('index');
-            Route::get('/{id}', [AbsentController::class, 'show'])->name('show');
-            Route::get('/report/daily', [AbsentController::class, 'dailyReport'])->name('report.daily');
-            Route::get('/report/monthly', [AbsentController::class, 'monthlyReport'])->name('report.monthly');
-        });
-        
-        Route::middleware('permission:create-attendance')->group(function () {
-            Route::get('/create', [AbsentController::class, 'create'])->name('create');
-            Route::post('/', [AbsentController::class, 'store'])->name('store');
-        });
-        
-        Route::middleware('permission:edit-attendance')->group(function () {
-            Route::get('/{id}/edit', [AbsentController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [AbsentController::class, 'update'])->name('update');
-        });
-        
-        Route::delete('/{id}', [AbsentController::class, 'destroy'])
-            ->middleware('permission:delete-attendance')
-            ->name('destroy');
-        
-        Route::middleware('permission:approve-attendance')->group(function () {
-            Route::post('/{id}/approve', [AbsentController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [AbsentController::class, 'reject'])->name('reject');
-        });
+        Route::get('/', [AttendanceController::class, 'index'])->name('index');
+        Route::get('/create', [AttendanceController::class, 'create'])->name('create');
+        Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');
+        Route::post('/check-out/{id}', [AttendanceController::class, 'checkOut'])->name('check-out');
+        Route::get('/{id}', [AttendanceController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [AttendanceController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [AttendanceController::class, 'update'])->name('update');
+        Route::delete('/{id}', [AttendanceController::class, 'destroy'])->name('destroy');
+        Route::get('/report/daily', [AttendanceController::class, 'dailyReport'])->name('report.daily');
+        Route::get('/report/monthly', [AttendanceController::class, 'monthlyReport'])->name('report.monthly');
+        Route::get('/export', [AttendanceController::class, 'export'])->name('export');
     });
 
-    // ========== SCHEDULE MANAGEMENT ==========
-    Route::prefix('schedules')->name('admin.schedules.')->group(function () {
-        Route::middleware('permission:view-schedules,view-own-schedule')->group(function () {
-            Route::get('/', [WorkerShiftScheduleController::class, 'index'])->name('index');
-            Route::get('/{id}', [WorkerShiftScheduleController::class, 'show'])->name('show');
-            Route::get('/calendar', [WorkerShiftScheduleController::class, 'calendar'])->name('calendar');
-            Route::get('/worker/{workerId}', [WorkerShiftScheduleController::class, 'workerSchedule'])->name('worker-schedule');
-        });
-        
-        Route::middleware('permission:create-schedules')->group(function () {
-            Route::get('/create', [WorkerShiftScheduleController::class, 'create'])->name('create');
-            Route::post('/', [WorkerShiftScheduleController::class, 'store'])->name('store');
-        });
-        
-        Route::middleware('permission:edit-schedules')->group(function () {
-            Route::get('/{id}/edit', [WorkerShiftScheduleController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [WorkerShiftScheduleController::class, 'update'])->name('update');
-        });
-        
-        Route::delete('/{id}', [WorkerShiftScheduleController::class, 'destroy'])
-            ->middleware('permission:delete-schedules')
-            ->name('destroy');
-        
-        Route::post('/bulk-create', [WorkerShiftScheduleController::class, 'bulkCreate'])
-            ->middleware('permission:bulk-create-schedules')
-            ->name('bulk-create');
+    // ========== WORKER SHIFT MANAGEMENT ==========
+    Route::prefix('worker-shifts')->name('admin.worker-shifts.')->group(function () {
+        Route::get('/', [WorkerShiftController::class, 'index'])->name('index');
+        Route::get('/create', [WorkerShiftController::class, 'create'])->name('create');
+        Route::post('/', [WorkerShiftController::class, 'store'])->name('store');
+        Route::get('/{id}', [WorkerShiftController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [WorkerShiftController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [WorkerShiftController::class, 'update'])->name('update');
+        Route::delete('/{id}', [WorkerShiftController::class, 'destroy'])->name('destroy');
+        Route::get('/worker/{workerId}', [WorkerShiftController::class, 'workerShifts'])->name('worker-shifts');
+    });
+
+    // ========== SHIFT OVERRIDE MANAGEMENT ==========
+    Route::prefix('shift-overrides')->name('admin.shift-overrides.')->group(function () {
+        Route::get('/', [ShiftOverrideController::class, 'index'])->name('index');
+        Route::get('/create', [ShiftOverrideController::class, 'create'])->name('create');
+        Route::post('/', [ShiftOverrideController::class, 'store'])->name('store');
+        Route::get('/{id}', [ShiftOverrideController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ShiftOverrideController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ShiftOverrideController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ShiftOverrideController::class, 'destroy'])->name('destroy');
+        Route::post('/bulk-create', [ShiftOverrideController::class, 'bulkCreate'])->name('bulk-create');
     });
     
     // ========== LEAVE REQUEST MANAGEMENT ==========
-    Route::prefix('leaves')->name('leave.')->group(function () {
+    Route::prefix('leaves')->name('admin.leave.')->group(function () {
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
-        Route::get('create', [LeaveRequestController::class, 'create'])->name('create');
+        Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
         Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
-        Route::get('{id}', [LeaveRequestController::class, 'show'])->name('show');
-        Route::get('{id}/edit', [LeaveRequestController::class, 'edit'])->name('edit');
-        Route::put('{id}', [LeaveRequestController::class, 'update'])->name('update');
-        Route::delete('{id}', [LeaveRequestController::class, 'destroy'])->name('destroy');
-        
-        // Approval routes
-        Route::post('{id}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
-        Route::post('{id}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
-        Route::get('pending', [LeaveRequestController::class, 'pending'])->name('pending');
-        
-        // Worker leave quota
-        Route::get('worker/{workerId}/quota', [LeaveRequestController::class, 'workerLeaveQuota'])->name('worker-quota');
-        
-        // Download attachment
-        Route::get('{id}/download', [LeaveRequestController::class, 'downloadAttachment'])->name('download-attachment');
+        Route::get('/{id}', [LeaveRequestController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [LeaveRequestController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [LeaveRequestController::class, 'update'])->name('update');
+        Route::delete('/{id}', [LeaveRequestController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
+        Route::post('/{id}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
+        Route::get('/worker/{workerId}/balance', [LeaveRequestController::class, 'workerLeaveBalance'])->name('worker-balance');
     });
     
     // ========== OVERTIME MANAGEMENT ==========
-    Route::prefix('overtimes')->name('overtime.')->group(function () {
-        Route::get('/', [OvertimeController::class, 'index'])->name('index');
-        Route::get('create', [OvertimeController::class, 'create'])->name('create');
-        Route::post('/', [OvertimeController::class, 'store'])->name('store');
-        Route::get('{id}', [OvertimeController::class, 'show'])->name('show');
-        Route::get('{id}/edit', [OvertimeController::class, 'edit'])->name('edit');
-        Route::put('{id}', [OvertimeController::class, 'update'])->name('update');
-        Route::delete('{id}', [OvertimeController::class, 'destroy'])->name('destroy');
-        
-        // Approval routes
-        Route::post('{id}/approve', [OvertimeController::class, 'approve'])->name('approve');
-        Route::post('{id}/reject', [OvertimeController::class, 'reject'])->name('reject');
-        Route::get('pending', [OvertimeController::class, 'pending'])->name('pending');
-        
-        // Worker overtime report
-        Route::get('worker/{workerId}/report', [OvertimeController::class, 'workerOvertimeReport'])->name('worker-report');
-        
-        // Download attachment
-        Route::get('{id}/download', [OvertimeController::class, 'downloadAttachment'])->name('download-attachment');
+    Route::prefix('overtimes')->name('admin.overtime.')->group(function () {
+        Route::get('/', [OvertimeRequestController::class, 'index'])->name('index');
+        Route::get('/create', [OvertimeRequestController::class, 'create'])->name('create');
+        Route::post('/', [OvertimeRequestController::class, 'store'])->name('store');
+        Route::get('/{id}', [OvertimeRequestController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [OvertimeRequestController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [OvertimeRequestController::class, 'update'])->name('update');
+        Route::delete('/{id}', [OvertimeRequestController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/approve', [OvertimeRequestController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [OvertimeRequestController::class, 'reject'])->name('reject');
+        Route::post('/bulk-approve', [OvertimeRequestController::class, 'bulkApprove'])->name('bulk-approve');
     });
     
-    // ========== BUSINESS TRIP MANAGEMENT ==========
-    Route::prefix('business-trips')->name('business-trip.')->group(function () {
-        Route::get('/', [BusinessTripController::class, 'index'])->name('index');
-        Route::get('create', [BusinessTripController::class, 'create'])->name('create');
-        Route::post('/', [BusinessTripController::class, 'store'])->name('store');
-        Route::get('{id}', [BusinessTripController::class, 'show'])->name('show');
-        Route::get('{id}/edit', [BusinessTripController::class, 'edit'])->name('edit');
-        Route::put('{id}', [BusinessTripController::class, 'update'])->name('update');
-        Route::delete('{id}', [BusinessTripController::class, 'destroy'])->name('destroy');
-        
-        // Approval routes
-        Route::post('{id}/approve', [BusinessTripController::class, 'approve'])->name('approve');
-        Route::post('{id}/reject', [BusinessTripController::class, 'reject'])->name('reject');
-        Route::get('pending', [BusinessTripController::class, 'pending'])->name('pending');
-        Route::get('active', [BusinessTripController::class, 'active'])->name('active');
-        
-        // Worker summary
-        Route::get('worker/{workerId}/summary', [BusinessTripController::class, 'workerSummary'])->name('worker-summary');
-    });
-    
-    // ========== BUSINESS TRIP REPORT MANAGEMENT ==========
-    Route::prefix('business-trip-reports')->name('business-trip-report.')->group(function () {
-        Route::get('{id}', [BusinessTripReportController::class, 'show'])->name('show');
-        Route::get('create/{businessTripId}', [BusinessTripReportController::class, 'create'])->name('create');
-        Route::post('/', [BusinessTripReportController::class, 'store'])->name('store');
-        Route::get('{id}/edit', [BusinessTripReportController::class, 'edit'])->name('edit');
-        Route::put('{id}', [BusinessTripReportController::class, 'update'])->name('update');
-        Route::delete('{id}', [BusinessTripReportController::class, 'destroy'])->name('destroy');
-        
-        // Review routes
-        Route::post('{id}/approve', [BusinessTripReportController::class, 'approve'])->name('approve');
-        Route::post('{id}/reject', [BusinessTripReportController::class, 'reject'])->name('reject');
-        Route::get('pending-review', [BusinessTripReportController::class, 'pendingReview'])->name('pending-review');
-        
-        // Download attachment
-        Route::get('{id}/download', [BusinessTripReportController::class, 'downloadAttachment'])->name('download-attachment');
-    });
-    
-    // ========== DOCUMENT (BERKAS) MANAGEMENT ==========
-    Route::prefix('documents')->name('documents.')->group(function () {
-        Route::get('/', [BerkasController::class, 'index'])->name('index');
-        Route::get('create', [BerkasController::class, 'create'])->name('create');
-        Route::post('/', [BerkasController::class, 'store'])->name('store');
-        Route::get('{id}', [BerkasController::class, 'show'])->name('show');
-        Route::get('{id}/edit', [BerkasController::class, 'edit'])->name('edit');
-        Route::put('{id}', [BerkasController::class, 'update'])->name('update');
-        Route::delete('{id}', [BerkasController::class, 'destroy'])->name('destroy');
-        
-        // Verification routes
-        Route::post('{id}/verify', [BerkasController::class, 'verify'])->name('verify');
-        Route::post('{id}/reject', [BerkasController::class, 'reject'])->name('reject');
-        Route::get('pending', [BerkasController::class, 'pending'])->name('pending');
-        
-        // Worker documents
-        Route::get('worker/{workerId}', [BerkasController::class, 'workerDocuments'])->name('worker-documents');
-        Route::get('worker/{workerId}/check-completeness', [BerkasController::class, 'checkCompleteness'])->name('check-completeness');
-        
-        // Download & Preview
-        Route::get('{id}/download', [BerkasController::class, 'download'])->name('download');
-        Route::get('{id}/preview', [BerkasController::class, 'preview'])->name('preview');
+    // ========== WORKER DOCUMENT MANAGEMENT ==========
+    Route::prefix('worker-documents')->name('admin.worker-documents.')->group(function () {
+        Route::get('/', [WorkerDocumentController::class, 'index'])->name('index');
+        Route::get('/create', [WorkerDocumentController::class, 'create'])->name('create');
+        Route::post('/', [WorkerDocumentController::class, 'store'])->name('store');
+        Route::get('/{id}', [WorkerDocumentController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [WorkerDocumentController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [WorkerDocumentController::class, 'update'])->name('update');
+        Route::delete('/{id}', [WorkerDocumentController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/verify', [WorkerDocumentController::class, 'verify'])->name('verify');
+        Route::post('/{id}/reject', [WorkerDocumentController::class, 'reject'])->name('reject');
+        Route::get('/{id}/download', [WorkerDocumentController::class, 'download'])->name('download');
+        Route::get('/worker/{workerId}', [WorkerDocumentController::class, 'workerDocuments'])->name('worker-documents');
+        Route::get('/expired', [WorkerDocumentController::class, 'expired'])->name('expired');
+        Route::get('/expiring', [WorkerDocumentController::class, 'expiring'])->name('expiring');
     });
 
     // ========== MASTER DATA MANAGEMENT ==========
-    Route::prefix('master')->name('admin.master.')->group(function () {
+    Route::prefix('master')->name('admin.master.')->middleware(['auth'])->group(function () {
+        
+        // Departments (Pengganti Positions)
+        Route::resource('departments', DepartmentController::class);
         
         // Shifts
         Route::resource('shifts', ShiftController::class);
@@ -316,20 +233,14 @@ Route::middleware(['auth'])->group(function () {
         // Genders
         Route::resource('genders', GenderController::class);
         
-        // Positions
-        Route::resource('positions', PositionController::class);
+        // Religions
+        Route::resource('religions', ReligionController::class);
         
         // Document Types
         Route::resource('document-types', DocumentTypeController::class);
         
-        // Religions
-        Route::resource('religions', ReligionController::class);
-        
-        // File Requirements
-        Route::resource('file-requirements', FileRequirementController::class);
-        
-        // Shift Patterns
-        Route::resource('shift-patterns', ShiftPatternController::class);
+        // Leave Types
+        Route::resource('leave-types', LeaveTypeController::class);
     });
 });
 

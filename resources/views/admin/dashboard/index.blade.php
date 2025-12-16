@@ -222,7 +222,7 @@
                 <span class="mt-3 text-sm font-medium text-center text-gray-700">Tambah Pegawai</span>
             </a>
 
-            <a href="{{ route('admin.absents.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-md group">
+            <a href="{{ route('admin.attendance.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-md group">
                 <div class="p-3 text-white transition duration-300 bg-green-500 rounded-full group-hover:scale-110">
                     <i class="text-xl fas fa-clipboard-check"></i>
                 </div>
@@ -250,7 +250,7 @@
                 <span class="mt-3 text-sm font-medium text-center text-gray-700">Data Pegawai</span>
             </a>
 
-            <a href="{{ route('admin.settings.shifts.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 hover:shadow-md group">
+            <a href="{{ route('admin.master.shifts.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 hover:shadow-md group">
                 <div class="p-3 text-white transition duration-300 bg-indigo-500 rounded-full group-hover:scale-110">
                     <i class="text-xl fas fa-cog"></i>
                 </div>

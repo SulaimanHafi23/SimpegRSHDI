@@ -21,51 +21,80 @@
             <span class="font-medium">Dashboard</span>
         </a>
 
-        <!-- Master Data -->
+        <!-- Master Data Section -->
         <div class="pt-4">
-            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">Master Data</p>
+            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">DATA MASTER</p>
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('religion.view'))
             <a href="{{ route('admin.master.religions.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.religions.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-mosque w-5"></i>
                 <span>Agama</span>
             </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('gender.view'))
             <a href="{{ route('admin.master.genders.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.genders.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-venus-mars w-5"></i>
                 <span>Jenis Kelamin</span>
             </a>
-            <a href="{{ route('admin.master.positions.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.positions.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
-                <i class="fas fa-briefcase w-5"></i>
-                <span>Jabatan</span>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('department.view'))
+            <a href="{{ route('admin.master.departments.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.departments.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-building w-5"></i>
+                <span>Departemen</span>
             </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('location.view'))
             <a href="{{ route('admin.master.locations.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.locations.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-map-marker-alt w-5"></i>
                 <span>Lokasi</span>
             </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('shift.view'))
+            <a href="{{ route('admin.master.shifts.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.shifts.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-clock w-5"></i>
+                <span>Shift</span>
+            </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave-type.view'))
+            <a href="{{ route('admin.master.leave-types.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.leave-types.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-calendar-alt w-5"></i>
+                <span>Tipe Cuti</span>
+            </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('document-type.view'))
             <a href="{{ route('admin.master.document-types.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.document-types.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-file-alt w-5"></i>
                 <span>Tipe Dokumen</span>
             </a>
+            @endif
         </div>
 
-        <!-- Workers -->
+        <!-- Management Section -->
         <div class="pt-4">
-            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">Manajemen</p>
+            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">MANAJEMEN</p>
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.view'))
             <a href="{{ route('admin.workers.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.workers.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-users w-5"></i>
                 <span>Pegawai</span>
             </a>
-            <a href="{{ route('admin.absents.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.absents.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('attendance.view'))
+            <a href="{{ route('admin.attendance.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.attendance.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-clipboard-check w-5"></i>
                 <span>Absensi</span>
             </a>
-            <a href="{{ route('admin.salaries.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.salaries.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
-                <i class="fas fa-money-bill-wave w-5"></i>
-                <span>Gaji</span>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker-shift.view'))
+            <a href="{{ route('admin.worker-shifts.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-user-clock w-5"></i>
+                <span>Jadwal Pegawai</span>
             </a>
+            @endif
         </div>
 
-        <!-- Approvals -->
+        <!-- Approval Section -->
         <div class="pt-4">
-            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">Persetujuan</p>
+            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">PERSETUJUAN</p>
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.view'))
             <a href="{{ route('admin.leave.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-calendar-times w-5"></i>
                 <span>Cuti</span>
@@ -73,23 +102,30 @@
                     <span class="ml-auto bg-yellow-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">{{ $pendingLeaves }}</span>
                 @endif
             </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('overtime.view'))
             <a href="{{ route('admin.overtime.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-clock w-5"></i>
                 <span>Lembur</span>
             </a>
+            @endif
         </div>
 
-        <!-- Settings -->
+        <!-- Settings Section -->
         <div class="pt-4">
-            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">Pengaturan</p>
-            <a href="{{ route('admin.settings.shifts.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.settings.shifts.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
-                <i class="fas fa-business-time w-5"></i>
-                <span>Shift</span>
+            <p class="px-4 text-xs font-semibold text-yellow-200 uppercase tracking-wider mb-2">PENGATURAN</p>
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('role.view'))
+            <a href="{{ route('admin.roles.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.roles.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-user-tag w-5"></i>
+                <span>Role</span>
             </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.view'))
             <a href="{{ route('admin.users.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.users.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-user-shield w-5"></i>
                 <span>Users</span>
             </a>
+            @endif
         </div>
     </nav>
 

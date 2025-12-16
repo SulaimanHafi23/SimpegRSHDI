@@ -13,20 +13,21 @@ return new class extends Migration
     {
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('worker_id')->constrained()->cascadeOnDelete();
-            $table->enum('leave_type', ['Annual', 'Sick', 'Maternity', 'Unpaid']);
+            $table->foreignUuid('worker_id')->constrained('workers')->cascadeOnDelete();
+            $table->foreignUuid('leave_type_id')->constrained('leave_types')->cascadeOnDelete();
             $table->date('start_date');
             $table->date('end_date');
             $table->integer('total_days');
             $table->text('reason');
-            $table->string('attachment_url')->nullable();
-            $table->enum('status', ['Pending', 'Approved', 'Rejected'])->default('Pending');
+            $table->string('attachment_path')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
             $table->foreignUuid('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
-            $table->text('notes')->nullable();
+            $table->text('rejection_reason')->nullable();
             $table->timestamps();
 
             $table->index(['worker_id', 'status']);
+            $table->index(['start_date', 'end_date']);
         });
     }
 

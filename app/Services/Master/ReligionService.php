@@ -13,27 +13,66 @@ class ReligionService
         private readonly ReligionRepositoryInterface $repository
     ) {}
 
+    /**
+     * Get all religions with pagination
+     */
     public function getAllPaginated(int $perPage = 15)
     {
         return $this->repository->paginate($perPage);
     }
 
+    /**
+     * Get all religions
+     */
     public function getAll()
     {
         return $this->repository->all();
     }
 
-    public function findById(string $id)
+    /**
+     * Get all active religions
+     */
+    public function getAllActive()
     {
-        return $this->repository->findById($id);
+        return $this->repository->active();
     }
 
+    /**
+     * Find religion by ID
+     */
+    public function findById(string $id)
+    {
+        $religion = $this->repository->findById($id);
+
+        if (!$religion) {
+            throw new \Exception('Agama tidak ditemukan');
+        }
+
+        return $religion;
+    }
+
+    /**
+     * Get religion by name
+     */
+    public function getByName(string $name)
+    {
+        return $this->repository->getByName($name);
+    }
+
+    /**
+     * Create new religion
+     */
     public function create(ReligionDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
-            $religion = $this->repository->create($dto->toArray());
+            // Check if name already exists
+            if ($this->repository->getByName($dto->name)) {
+                throw new \Exception('Nama agama sudah digunakan');
+            }
+
+            $religion = $this->repository->create($dto);
 
             DB::commit();
 
@@ -48,27 +87,35 @@ class ReligionService
 
             return [
                 'success' => false,
-                'message' => 'Gagal menambahkan agama: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
     }
 
+    /**
+     * Update existing religion
+     */
     public function update(string $id, ReligionDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
-            $updated = $this->repository->update($id, $dto->toArray());
+            $religion = $this->findById($id);
 
-            if (!$updated) {
-                throw new \Exception('Gagal mengupdate data');
+            // Check if name already exists (except current)
+            $existingByName = $this->repository->getByName($dto->name);
+            if ($existingByName && $existingByName->id !== $id) {
+                throw new \Exception('Nama agama sudah digunakan');
             }
+
+            $religion = $this->repository->update($id, $dto);
 
             DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'Agama berhasil diupdate',
+                'message' => 'Agama berhasil diperbarui',
+                'data' => $religion,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -76,28 +123,27 @@ class ReligionService
 
             return [
                 'success' => false,
-                'message' => 'Gagal mengupdate agama: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
     }
 
+    /**
+     * Delete religion
+     */
     public function delete(string $id): array
     {
         try {
             DB::beginTransaction();
 
-            // Check if religion is being used
-            $religion = $this->repository->findById($id);
-            
+            $religion = $this->findById($id);
+
+            // Check if religion has workers
             if ($religion->workers()->exists()) {
                 throw new \Exception('Agama tidak dapat dihapus karena masih digunakan oleh pegawai');
             }
 
-            $deleted = $this->repository->delete($id);
-
-            if (!$deleted) {
-                throw new \Exception('Gagal menghapus data');
-            }
+            $this->repository->delete($id);
 
             DB::commit();
 
@@ -116,6 +162,37 @@ class ReligionService
         }
     }
 
+    /**
+     * Toggle religion status
+     */
+    public function toggleStatus(string $id): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $religion = $this->repository->toggleStatus($id);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Status agama berhasil diubah',
+                'data' => $religion,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error toggling religion status: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Search religions
+     */
     public function search(string $keyword, int $perPage = 15)
     {
         return $this->repository->search($keyword, $perPage);

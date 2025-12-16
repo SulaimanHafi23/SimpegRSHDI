@@ -4,29 +4,34 @@
 
 namespace App\Http\Controllers\Master;
 
-use App\DTOs\Master\DocumentTypeDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Master\DocumentTypeRequest;
 use App\Services\Master\DocumentTypeService;
+use App\DTOs\Master\DocumentTypeDTO;
 use Illuminate\Http\Request;
 
 class DocumentTypeController extends Controller
 {
     public function __construct(
-        private readonly DocumentTypeService $service
+        protected DocumentTypeService $documentTypeService
     ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
+        $this->middleware('auth');
+        $this->middleware('permission:document-type.view')->only(['index', 'show']);
+        $this->middleware('permission:document-type.create')->only(['create', 'store']);
+        $this->middleware('permission:document-type.edit')->only(['edit', 'update']);
+        $this->middleware('permission:document-type.delete')->only('destroy');
     }
 
     public function index(Request $request)
     {
-        $keyword = $request->input('search');
-        
-        $documentTypes = $keyword 
-            ? $this->service->search($keyword)
-            : $this->service->getAllPaginated();
+        $filters = [
+            'search' => $request->search,
+            'is_required' => $request->is_required,
+            'per_page' => $request->per_page ?? 15,
+        ];
 
-        return view('admin.master.document-types.index', compact('documentTypes', 'keyword'));
+        $documentTypes = $this->documentTypeService->getAll($filters);
+
+        return view('admin.master.document-types.index', compact('documentTypes'));
     }
 
     public function create()
@@ -34,60 +39,110 @@ class DocumentTypeController extends Controller
         return view('admin.master.document-types.create');
     }
 
-    public function store(DocumentTypeRequest $request)
+    public function store(Request $request)
     {
-        $dto = DocumentTypeDTO::fromRequest($request->validated());
-        $result = $this->service->create($dto);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:document_types,name',
+            'code' => 'required|string|max:50|unique:document_types,code',
+            'description' => 'nullable|string',
+            'is_required' => 'nullable|boolean',
+            'has_expiry' => 'nullable|boolean',
+            'max_file_size' => 'nullable|integer|min:1',
+            'allowed_extensions' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
+        ]);
 
-        if ($result['success']) {
-            return redirect()
-                ->route('admin.master.document-types.index')
-                ->with('success', $result['message']);
+        try {
+            $dto = DocumentTypeDTO::fromRequest($validated);
+            $result = $this->documentTypeService->create($dto);
+
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.document-types.index')
+                    ->with('success', $result['message']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
     public function show(string $id)
     {
-        $documentType = $this->service->findWithFileRequirements($id);
-        return view('admin.master.document-types.show', compact('documentType'));
+        try {
+            $documentType = $this->documentTypeService->findById($id);
+            return view('admin.master.document-types.show', compact('documentType'));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.master.document-types.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function edit(string $id)
     {
-        $documentType = $this->service->findById($id);
-        return view('admin.master.document-types.edit', compact('documentType'));
-    }
-
-    public function update(DocumentTypeRequest $request, string $id)
-    {
-        $dto = DocumentTypeDTO::fromRequest($request->validated());
-        $result = $this->service->update($id, $dto);
-
-        if ($result['success']) {
+        try {
+            $documentType = $this->documentTypeService->findById($id);
+            return view('admin.master.document-types.edit', compact('documentType'));
+        } catch (\Exception $e) {
             return redirect()
                 ->route('admin.master.document-types.index')
-                ->with('success', $result['message']);
+                ->with('error', $e->getMessage());
         }
+    }
 
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
+    public function update(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:document_types,name,' . $id,
+            'code' => 'required|string|max:50|unique:document_types,code,' . $id,
+            'description' => 'nullable|string',
+            'is_required' => 'nullable|boolean',
+            'has_expiry' => 'nullable|boolean',
+            'max_file_size' => 'nullable|integer|min:1',
+            'allowed_extensions' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        try {
+            $dto = DocumentTypeDTO::fromRequest($validated);
+            $result = $this->documentTypeService->update($id, $dto);
+
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.document-types.show', $id)
+                    ->with('success', $result['message']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     public function destroy(string $id)
     {
-        $result = $this->service->delete($id);
+        try {
+            $result = $this->documentTypeService->delete($id);
 
-        if ($result['success']) {
-            return redirect()
-                ->route('admin.master.document-types.index')
-                ->with('success', $result['message']);
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.document-types.index')
+                    ->with('success', $result['message']);
+            }
+
+            return back()->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 }

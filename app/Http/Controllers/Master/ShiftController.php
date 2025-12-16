@@ -2,92 +2,145 @@
 
 namespace App\Http\Controllers\Master;
 
-use App\DTOs\Master\ShiftDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Master\ShiftRequest;
 use App\Services\Master\ShiftService;
+use App\DTOs\Master\ShiftDTO;
 use Illuminate\Http\Request;
 
 class ShiftController extends Controller
 {
     public function __construct(
-        private readonly ShiftService $service
+        protected ShiftService $shiftService
     ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
+        $this->middleware('auth');
+        $this->middleware('permission:shift.view')->only(['index', 'show']);
+        $this->middleware('permission:shift.create')->only(['create', 'store']);
+        $this->middleware('permission:shift.edit')->only(['edit', 'update']);
+        $this->middleware('permission:shift.delete')->only('destroy');
     }
 
     public function index(Request $request)
     {
-        $keyword = $request->input('search');
+        $perPage = $request->per_page ?? 15;
         
-        $shifts = $keyword 
-            ? $this->service->search($keyword)
-            : $this->service->getAllPaginated();
+        if ($request->has('search')) {
+            $shifts = $this->shiftService->search($request->search, $perPage);
+        } else {
+            $shifts = $this->shiftService->getAllPaginated($perPage);
+        }
 
-        return view('admin.settings.shifts.index', compact('shifts', 'keyword'));
+        return view('admin.master.shifts.index', compact('shifts'));
     }
 
     public function create()
     {
-        return view('admin.settings.shifts.create');
+        return view('admin.master.shifts.create');
     }
 
-    public function store(ShiftRequest $request)
+    public function store(Request $request)
     {
-        $dto = ShiftDTO::fromRequest($request->validated());
-        $result = $this->service->create($dto);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:shifts,name',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
+            'total_hours' => 'required|integer|min:1|max:24',
+            'grace_period_minutes' => 'nullable|integer|min:0|max:60',
+            'is_overnight' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+        ]);
 
-        if ($result['success']) {
-            return redirect()
-                ->route('admin.settings.shifts.index')
-                ->with('success', $result['message']);
+        try {
+            $dto = ShiftDTO::fromRequest($validated);
+            $result = $this->shiftService->create($dto);
+
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.shifts.index')
+                    ->with('success', $result['message']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
     public function show(string $id)
     {
-        $shift = $this->service->findById($id);
-        $duration = $this->service->calculateShiftDuration($shift->start_time, $shift->end_time);
-        
-        return view('admin.settings.shifts.show', compact('shift', 'duration'));
+        try {
+            $shift = $this->shiftService->findById($id);
+            $statistics = $this->shiftService->getShiftStatistics($id);
+
+            return view('admin.master.shifts.show', compact('shift', 'statistics'));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.master.shifts.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
     public function edit(string $id)
     {
-        $shift = $this->service->findById($id);
-        return view('admin.settings.shifts.edit', compact('shift'));
+        try {
+            $shift = $this->shiftService->findById($id);
+            return view('admin.master.shifts.edit', compact('shift'));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.master.shifts.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
-    public function update(ShiftRequest $request, string $id)
+    public function update(Request $request, string $id)
     {
-        $dto = ShiftDTO::fromRequest($request->validated());
-        $result = $this->service->update($id, $dto);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:shifts,name,' . $id,
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i',
+            'total_hours' => 'required|integer|min:1|max:24',
+            'grace_period_minutes' => 'nullable|integer|min:0|max:60',
+            'is_overnight' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+        ]);
 
-        if ($result['success']) {
-            return redirect()
-                ->route('admin.settings.shifts.index')
-                ->with('success', $result['message']);
+        try {
+            $dto = ShiftDTO::fromRequest($validated);
+            $result = $this->shiftService->update($id, $dto);
+
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.shifts.show', $id)
+                    ->with('success', $result['message']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
     public function destroy(string $id)
     {
-        $result = $this->service->delete($id);
+        try {
+            $result = $this->shiftService->delete($id);
 
-        if ($result['success']) {
-            return redirect()
-                ->route('admin.settings.shifts.index')
-                ->with('success', $result['message']);
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.shifts.index')
+                    ->with('success', $result['message']);
+            }
+
+            return back()->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 }

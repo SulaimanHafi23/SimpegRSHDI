@@ -2,36 +2,33 @@
 
 namespace App\Models;
 
-use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Carbon\Carbon;
 
 class Worker extends Model
 {
-    use HasUuid, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'nip',
         'name',
-        'surname',
-        'frontname',
-        'backname',
         'email',
+        'phone_number',
         'address',
         'birth_date',
         'birth_place',
         'gender_id',
         'religion_id',
-        'position_id',
-        'phone_number',
-        'status',
+        'department_id',
         'hire_date',
         'resign_date',
+        'employment_status',
+        'status',
         'photo_url',
     ];
 
@@ -41,8 +38,7 @@ class Worker extends Model
         'resign_date' => 'date',
     ];
 
-    // ========== RELATIONSHIPS ==========
-    
+    // Relationships
     public function gender(): BelongsTo
     {
         return $this->belongsTo(Gender::class);
@@ -53,9 +49,9 @@ class Worker extends Model
         return $this->belongsTo(Religion::class);
     }
 
-    public function position(): BelongsTo
+    public function department(): BelongsTo
     {
-        return $this->belongsTo(Position::class);
+        return $this->belongsTo(Department::class);
     }
 
     public function user(): HasOne
@@ -63,44 +59,24 @@ class Worker extends Model
         return $this->hasOne(User::class);
     }
 
-    // ✅ SHIFT SCHEDULES (Recurring + Override)
-    public function shiftSchedules(): HasMany
+    public function workerShifts(): HasMany
     {
-        return $this->hasMany(WorkerShiftSchedule::class);
+        return $this->hasMany(WorkerShift::class);
     }
 
-    // ✅ SHORTCUT: Akses shifts via schedules
-    public function shifts(): BelongsToMany
+    public function shiftOverrides(): HasMany
     {
-        return $this->belongsToMany(
-            Shift::class,
-            'worker_shift_schedules',
-            'worker_id',
-            'shift_id'
-        )
-        ->withPivot([
-            'day_of_week',
-            'schedule_date',
-            'is_default',
-            'is_override',
-            'status',
-            'notes'
-        ])
-        ->withTimestamps();
+        return $this->hasMany(ShiftOverrides::class);
     }
 
-    // ✅ TAMBAH: Get active shift assignments
-    public function activeShifts(): BelongsToMany
+    public function attendances(): HasMany
     {
-        return $this->shifts()
-            ->wherePivot('assignment_date', '<=', now())
-            ->latest('worker_shift_assigments.assignment_date');
+        return $this->hasMany(Attendances::class);
     }
 
-    // Other relationships
-    public function absents(): HasMany
+    public function workerDocuments(): HasMany
     {
-        return $this->hasMany(Absent::class);
+        return $this->hasMany(WorkerDocument::class);
     }
 
     public function leaveRequests(): HasMany
@@ -108,192 +84,50 @@ class Worker extends Model
         return $this->hasMany(LeaveRequest::class);
     }
 
-    public function overtimes(): HasMany
+    public function overtimeRequests(): HasMany
     {
-        return $this->hasMany(Overtime::class);
-    }
-
-    public function businessTrips(): HasMany
-    {
-        return $this->hasMany(BusinessTrip::class);
-    }
-
-    public function berkas(): HasMany
-    {
-        return $this->hasMany(Berkas::class);
-    }
-
-    public function salary(): HasOne
-    {
-        return $this->hasOne(Salary::class);
-    }
-
-    // ========== SCOPES ==========
-    
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'Active');
-    }
-
-    public function scopeInactive($query)
-    {
-        return $query->where('status', 'Inactive');
-    }
-
-    public function scopeResigned($query)
-    {
-        return $query->where('status', 'Resigned');
-    }
-
-    public function scopeByPosition($query, $positionId)
-    {
-        return $query->where('position_id', $positionId);
-    }
-
-    // ========== ACCESSORS ==========
-    
-    /**
-     * Get full name with titles
-     */
-    public function getFullNameAttribute(): string
-    {
-        $name = $this->name;
-        
-        if ($this->frontname) {
-            $name = $this->frontname . ' ' . $name;
-        }
-        
-        if ($this->backname) {
-            $name .= ', ' . $this->backname;
-        }
-        
-        return $name;
+        return $this->hasMany(OvertimeRequest::class);
     }
 
     /**
-     * Get age in years
-     * 
-     * @return int|null
+     * Get active worker shift
      */
-    public function getAgeAttribute(): ?int
+    public function activeWorkerShift(): HasOne
     {
-        // ✅ FIX: Check if birth_date exists and is Carbon instance
-        if (!$this->birth_date) {
-            return null;
-        }
-
-        return $this->birth_date->age;
-    }
-
-    /**
-     * Get years of service
-     * 
-     * @return int|null
-     */
-    public function getYearsOfServiceAttribute(): ?int
-    {
-        // ✅ FIX: Check if hire_date exists
-        if (!$this->hire_date) {
-            return null;
-        }
-
-        $endDate = $this->resign_date ?? now();
-        return $this->hire_date->diffInYears($endDate);
-    }
-
-    // ========== HELPERS ==========
-    
-    /**
-     * Check if worker is active
-     */
-    public function isActive(): bool
-    {
-        return $this->status === 'Active';
-    }
-
-    /**
-     * Check if worker has resigned
-     */
-    public function hasResigned(): bool
-    {
-        return $this->status === 'Resigned' && $this->resign_date !== null;
-    }
-
-    /**
-     * Resign worker
-     */
-    public function resign($date = null): bool
-    {
-        $this->status = 'Resigned';
-        $this->resign_date = $date ?? now();
-        return $this->save();
-    }
-
-    /**
-     * Reactivate worker
-     */
-    public function reactivate(): bool
-    {
-        $this->status = 'Active';
-        $this->resign_date = null;
-        return $this->save();
-    }
-
-    /**
-     * Get current shift for today
-     */
-    public function getCurrentShift()
-    {
-        $today = now()->format('l'); // Monday, Tuesday, etc.
-        
-        return $this->shiftSchedules()
-            ->where('is_default', true)
-            ->where('day_of_week', strtolower($today))
-            ->where('status', 'Active')
-            ->with('shift')
-            ->first();
+        return $this->hasOne(WorkerShift::class)
+            ->where('is_active', true)
+            ->where('effective_from', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('effective_until')
+                    ->orWhere('effective_until', '>=', now());
+            })
+            ->latestOfMany();
     }
 
     /**
      * Get shift for specific date
      */
-    public function getShiftForDate($date)
+    public function getShiftForDate(\DateTime $date): ?string
     {
-        $checkDate = is_string($date) ? Carbon::parse($date) : $date;
-        
         // Check override first
-        $override = $this->shiftSchedules()
-            ->where('is_override', true)
-            ->whereDate('schedule_date', $checkDate)
-            ->where('status', 'Active')
-            ->with('shift')
+        $override = $this->shiftOverrides()
+            ->where('override_date', $date->format('Y-m-d'))
             ->first();
-        
-        if ($override) {
-            return $override;
-        }
-        
-        // Check default schedule
-        $dayOfWeek = strtolower($checkDate->format('l'));
-        
-        return $this->shiftSchedules()
-            ->where('is_default', true)
-            ->where('day_of_week', $dayOfWeek)
-            ->where('status', 'Active')
-            ->with('shift')
-            ->first();
-    }
 
-    /**
-     * Get all active default schedules
-     */
-    public function getDefaultSchedules()
-    {
-        return $this->shiftSchedules()
-            ->where('is_default', true)
-            ->where('status', 'Active')
-            ->with('shift')
-            ->get()
-            ->groupBy('day_of_week');
+        if ($override) {
+            return $override->shift_id;
+        }
+
+        // Get active worker shift
+        $workerShift = $this->workerShifts()
+            ->where('is_active', true)
+            ->where('effective_from', '<=', $date->format('Y-m-d'))
+            ->where(function ($query) use ($date) {
+                $query->whereNull('effective_until')
+                    ->orWhere('effective_until', '>=', $date->format('Y-m-d'));
+            })
+            ->first();
+
+        return $workerShift?->getShiftForDate($date);
     }
 }

@@ -13,38 +13,93 @@ class DocumentTypeService
         private readonly DocumentTypeRepositoryInterface $repository
     ) {}
 
+    /**
+     * Get all document types with pagination
+     */
     public function getAllPaginated(int $perPage = 15)
     {
         return $this->repository->paginate($perPage);
     }
 
-    public function getAll()
+    /**
+     * Get all document types with filters
+     */
+    public function getAll(array $filters = [])
     {
-        return $this->repository->all();
+        return $this->repository->getAll($filters);
     }
 
+    /**
+     * Get all active document types
+     */
+    public function getAllActive()
+    {
+        return $this->repository->active();
+    }
+
+    /**
+     * Get all required document types
+     */
+    public function getRequired()
+    {
+        return $this->repository->required();
+    }
+
+    /**
+     * Find document type by ID
+     */
     public function findById(string $id)
     {
-        return $this->repository->findById($id);
+        $documentType = $this->repository->findById($id);
+
+        if (!$documentType) {
+            throw new \Exception('Tipe dokumen tidak ditemukan');
+        }
+
+        return $documentType;
     }
 
-    public function findWithFileRequirements(string $id)
+    /**
+     * Get document type by name
+     */
+    public function getByName(string $name)
     {
-        return $this->repository->withFileRequirements($id);
+        return $this->repository->getByName($name);
     }
 
+    /**
+     * Get document type by code
+     */
+    public function getByCode(string $code)
+    {
+        return $this->repository->getByCode($code);
+    }
+
+    /**
+     * Create new document type
+     */
     public function create(DocumentTypeDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
-            $documentType = $this->repository->create($dto->toArray());
+            // Check if name already exists
+            if ($this->repository->getByName($dto->name)) {
+                throw new \Exception('Nama tipe dokumen sudah digunakan');
+            }
+
+            // Check if code already exists
+            if ($this->repository->getByCode($dto->code)) {
+                throw new \Exception('Kode tipe dokumen sudah digunakan');
+            }
+
+            $documentType = $this->repository->create($dto);
 
             DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'Jenis dokumen berhasil ditambahkan',
+                'message' => 'Tipe dokumen berhasil ditambahkan',
                 'data' => $documentType,
             ];
         } catch (\Exception $e) {
@@ -53,27 +108,41 @@ class DocumentTypeService
 
             return [
                 'success' => false,
-                'message' => 'Gagal menambahkan jenis dokumen: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
     }
 
+    /**
+     * Update existing document type
+     */
     public function update(string $id, DocumentTypeDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
-            $updated = $this->repository->update($id, $dto->toArray());
+            $documentType = $this->findById($id);
 
-            if (!$updated) {
-                throw new \Exception('Gagal mengupdate data');
+            // Check if name already exists (except current)
+            $existingByName = $this->repository->getByName($dto->name);
+            if ($existingByName && $existingByName->id !== $id) {
+                throw new \Exception('Nama tipe dokumen sudah digunakan');
             }
+
+            // Check if code already exists (except current)
+            $existingByCode = $this->repository->getByCode($dto->code);
+            if ($existingByCode && $existingByCode->id !== $id) {
+                throw new \Exception('Kode tipe dokumen sudah digunakan');
+            }
+
+            $documentType = $this->repository->update($id, $dto);
 
             DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'Jenis dokumen berhasil diupdate',
+                'message' => 'Tipe dokumen berhasil diperbarui',
+                'data' => $documentType,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -81,37 +150,33 @@ class DocumentTypeService
 
             return [
                 'success' => false,
-                'message' => 'Gagal mengupdate jenis dokumen: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
     }
 
+    /**
+     * Delete document type
+     */
     public function delete(string $id): array
     {
         try {
             DB::beginTransaction();
 
-            $documentType = $this->repository->findById($id);
-            
-            if ($documentType->fileRequirments()->exists()) {
-                throw new \Exception('Jenis dokumen tidak dapat dihapus karena masih digunakan dalam persyaratan dokumen');
+            $documentType = $this->findById($id);
+
+            // Check if document type has worker documents
+            if ($documentType->workerDocuments()->exists()) {
+                throw new \Exception('Tipe dokumen tidak dapat dihapus karena masih digunakan');
             }
 
-            if ($documentType->berkas()->exists()) {
-                throw new \Exception('Jenis dokumen tidak dapat dihapus karena masih ada dokumen yang menggunakan jenis ini');
-            }
-
-            $deleted = $this->repository->delete($id);
-
-            if (!$deleted) {
-                throw new \Exception('Gagal menghapus data');
-            }
+            $this->repository->delete($id);
 
             DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'Jenis dokumen berhasil dihapus',
+                'message' => 'Tipe dokumen berhasil dihapus',
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -124,27 +189,73 @@ class DocumentTypeService
         }
     }
 
+    /**
+     * Toggle document type status
+     */
+    public function toggleStatus(string $id): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $documentType = $this->repository->toggleStatus($id);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Status tipe dokumen berhasil diubah',
+                'data' => $documentType,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error toggling document type status: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Search document types
+     */
     public function search(string $keyword, int $perPage = 15)
     {
         return $this->repository->search($keyword, $perPage);
     }
 
     /**
-     * Parse file format string to array
+     * Validate file extension
      */
-    public function parseFileFormats(string $fileFormat): array
+    public function isValidExtension(string $documentTypeId, string $extension): bool
     {
-        return array_map('trim', explode(',', strtolower($fileFormat)));
+        $documentType = $this->findById($documentTypeId);
+
+        if (!$documentType->allowed_extensions) {
+            return true; // All extensions allowed
+        }
+
+        $allowedExtensions = explode(',', $documentType->allowed_extensions);
+        $allowedExtensions = array_map('trim', $allowedExtensions);
+
+        return in_array(strtolower($extension), array_map('strtolower', $allowedExtensions));
     }
 
     /**
-     * Validate if file extension is allowed
+     * Validate file size
      */
-    public function isValidFileExtension(string $documentTypeId, string $extension): bool
+    public function isValidFileSize(string $documentTypeId, int $fileSize): bool
     {
         $documentType = $this->findById($documentTypeId);
-        $allowedFormats = $this->parseFileFormats($documentType->file_format);
-        
-        return in_array(strtolower($extension), $allowedFormats);
+
+        if (!$documentType->max_file_size) {
+            return true; // No size limit
+        }
+
+        // Convert max_file_size from KB to bytes
+        $maxSizeInBytes = $documentType->max_file_size * 1024;
+
+        return $fileSize <= $maxSizeInBytes;
     }
 }

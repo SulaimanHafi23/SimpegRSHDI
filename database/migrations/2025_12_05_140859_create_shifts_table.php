@@ -17,7 +17,8 @@ return new class extends Migration
             $table->time('start_time');
             $table->time('end_time');
             $table->integer('total_hours');
-            $table->text('description')->nullable();
+            $table->integer('grace_period_minutes')->default(15);
+            $table->boolean('is_overnight')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

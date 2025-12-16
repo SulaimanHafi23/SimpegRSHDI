@@ -4,6 +4,7 @@ namespace App\Http\Requests\Schedule;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Models\WorkerShiftSchedule;
 
 class WorkerShiftScheduleRequest extends FormRequest
 {
@@ -22,54 +23,57 @@ class WorkerShiftScheduleRequest extends FormRequest
 
     public function rules(): array
     {
+        $rules = [
+            'worker_id' => ['required', Rule::exists('workers', 'id')],
+            'shift_id' => ['required', Rule::exists('shifts', 'id')],
+            'status' => ['nullable', Rule::in(array_keys(WorkerShiftSchedule::getStatuses()))],
+            'notes' => 'nullable|string|max:1000',
+        ];
+
+        // Validation for default recurring schedule
+        if ($this->input('is_default')) {
+            $rules['day_of_week'] = ['required', Rule::in(array_keys(WorkerShiftSchedule::getDaysOfWeek()))];
+            $rules['is_default'] = 'required|boolean';
+        }
+
+        // Validation for override/exception schedule
+        if ($this->input('is_override')) {
+            $rules['schedule_date'] = 'required|date';
+            $rules['is_override'] = 'required|boolean';
+            $rules['replaced_worker_id'] = ['nullable', Rule::exists('workers', 'id')];
+        }
+
+        // At least one type must be set
+        if (!$this->input('is_default') && !$this->input('is_override')) {
+            $rules['is_default'] = 'required_without:is_override|boolean';
+            $rules['is_override'] = 'required_without:is_default|boolean';
+        }
+
+        return $rules;
+    }
+
+    public function attributes(): array
+    {
         return [
-            'worker_id' => [
-                'required',
-                'uuid',
-                'exists:workers,id',
-            ],
-            'shift_id' => [
-                'required',
-                'uuid',
-                'exists:shifts,id',
-            ],
-            'shift_pattern_id' => [
-                'required',
-                'uuid',
-                'exists:shift_patterns,id',
-            ],
-            'schedule_date' => [
-                'required',
-                'date',
-                'after_or_equal:today',
-            ],
-            'replaced_worker_id' => [
-                'nullable',
-                'uuid',
-                'exists:workers,id',
-                'different:worker_id',
-            ],
-            'notes' => ['nullable', 'string', 'max:500'],
-            'status' => [
-                'required',
-                Rule::in(['scheduled', 'completed', 'cancelled', 'swapped']),
-            ],
+            'worker_id' => 'Pekerja',
+            'shift_id' => 'Shift',
+            'day_of_week' => 'Hari',
+            'is_default' => 'Jadwal Default',
+            'schedule_date' => 'Tanggal Jadwal',
+            'is_override' => 'Override Jadwal',
+            'replaced_worker_id' => 'Pekerja Pengganti',
+            'status' => 'Status',
+            'notes' => 'Catatan',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'worker_id.required' => 'Pegawai harus dipilih.',
-            'worker_id.exists' => 'Pegawai tidak ditemukan.',
-            'shift_id.required' => 'Shift harus dipilih.',
-            'shift_id.exists' => 'Shift tidak ditemukan.',
-            'shift_pattern_id.required' => 'Pola shift harus dipilih.',
-            'shift_pattern_id.exists' => 'Pola shift tidak ditemukan.',
-            'schedule_date.required' => 'Tanggal jadwal harus diisi.',
-            'schedule_date.after_or_equal' => 'Tanggal jadwal tidak boleh di masa lalu.',
-            'replaced_worker_id.different' => 'Pegawai pengganti tidak boleh sama dengan pegawai yang diganti.',
-            'status.in' => 'Status tidak valid.',
+            'is_default.required_without' => 'Harus memilih jenis jadwal (Default atau Override)',
+            'is_override.required_without' => 'Harus memilih jenis jadwal (Default atau Override)',
+            'day_of_week.required' => ':attribute wajib diisi untuk jadwal default',
+            'schedule_date.required' => ':attribute wajib diisi untuk jadwal override',
         ];
     }
 }

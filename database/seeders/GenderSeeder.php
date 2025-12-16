@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Gender;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class GenderSeeder extends Seeder
 {
@@ -13,12 +14,22 @@ class GenderSeeder extends Seeder
     public function run(): void
     {
         $genders = [
-            'Laki-laki',
-            'Perempuan',
+            [
+                'id' => Str::uuid(),
+                'name' => 'Laki-laki',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'name' => 'Perempuan',
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
-        foreach ($genders as $gender) {
-            Gender::create(['name' => $gender]);
-        }
+        DB::table('genders')->insert($genders);
     }
 }

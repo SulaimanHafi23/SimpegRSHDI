@@ -4,246 +4,171 @@
 
 namespace App\Http\Controllers\Leave;
 
-use App\DTOs\LeaveRequestDTO;
-use App\Http\Requests\Leave\LeaveRequestRequest;
+use App\Http\Controllers\Controller;
 use App\Services\Leave\LeaveRequestService;
 use App\Services\Worker\WorkerService;
+use App\Services\Master\LeaveTypeService;
+use App\Http\Requests\Leave\LeaveRequestRequest;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
     public function __construct(
-        private readonly LeaveRequestService $service,
-        private readonly WorkerService $workerService
+        protected LeaveRequestService $leaveRequestService,
+        protected WorkerService $workerService,
+        protected LeaveTypeService $leaveTypeService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:view-leave-requests|view-own-leave-requests')->only(['index', 'show']);
-        $this->middleware('permission:create-leave-requests')->only(['create', 'store']);
-        $this->middleware('permission:edit-leave-requests')->only(['edit', 'update']);
-        $this->middleware('permission:delete-leave-requests')->only(['destroy']);
-        $this->middleware('permission:approve-leave-requests')->only(['approve']);
-        $this->middleware('permission:reject-leave-requests')->only(['reject']);
-        $this->middleware('permission:view-pending-leaves')->only(['pending']);
+        // Permission check dilakukan di blade dengan @can
     }
 
     public function index(Request $request)
     {
-        $this->authorizeAnyPermission(['view-leave-requests', 'view-own-leave-requests']);
-
         $filters = [
-            'worker_id' => $request->input('worker_id'),
-            'status' => $request->input('status'),
-            'start_date' => $request->input('start_date'),
-            'end_date' => $request->input('end_date'),
-            'leave_type' => $request->input('leave_type'),
+            'status' => $request->status,
+            'worker_id' => $request->worker_id,
+            'leave_type_id' => $request->leave_type_id,
+            'leave_type' => $request->leave_type,
+            'month' => $request->month,
+            'year' => $request->year,
+            'per_page' => $request->per_page ?? 15,
         ];
 
-        // Apply permission-based filters
-        if (auth()->user()->can('view-own-leave-requests') && 
-            !auth()->user()->can('view-leave-requests')) {
-            $filters['worker_id'] = auth()->user()->worker_id;
-        }
-
-        $leaveRequests = $this->service->getAllPaginated(15, $filters);
+        $leaveRequests = $this->leaveRequestService->getAll($filters);
+        $workers = $this->workerService->getAllActive();
+        $leaveTypes = $this->leaveTypeService->getAllActive();
         
-        $workers = auth()->user()->can('view-leave-requests')
-            ? $this->workerService->getActive()
-            : collect([auth()->user()->worker]);
+        // Statistics
+        $statistics = [
+            'total' => $this->leaveRequestService->getAll(['per_page' => 9999])->total(),
+            'pending' => $this->leaveRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total(),
+            'approved' => $this->leaveRequestService->getAll(['status' => 'approved', 'per_page' => 9999])->total(),
+            'rejected' => $this->leaveRequestService->getAll(['status' => 'rejected', 'per_page' => 9999])->total(),
+            'cancelled' => $this->leaveRequestService->getAll(['status' => 'cancelled', 'per_page' => 9999])->total(),
+        ];
 
-        return view('admin.leave.index', compact('leaveRequests', 'workers', 'filters'));
-    }
-
-    public function show(string $id)
-    {
-        $this->authorizeAnyPermission(['view-leave-requests', 'view-own-leave-requests']);
-
-        $leaveRequest = $this->service->findById($id);
-
-        // Check own data permission
-        if (auth()->user()->can('view-own-leave-requests') && 
-            !auth()->user()->can('view-leave-requests') &&
-            !$this->isOwnData($leaveRequest->worker_id)) {
-            abort(403, 'Anda hanya dapat melihat pengajuan cuti Anda sendiri.');
-        }
-
-        return view('admin.leave.show', compact('leaveRequest'));
+        return view('admin.leave.index', compact('leaveRequests', 'workers', 'leaveTypes', 'statistics', 'filters'));
     }
 
     public function create()
     {
-        $this->authorizePermission('create-leave-requests');
+        $workers = $this->workerService->getAllActive();
+        $leaveTypes = $this->leaveTypeService->getAllActive();
 
-        $workers = auth()->user()->can('view-leave-requests')
-            ? $this->workerService->getActive()
-            : collect([auth()->user()->worker]);
-
-        return view('admin.leave.create', compact('workers'));
+        return view('admin.leave.create', compact('workers', 'leaveTypes'));
     }
 
     public function store(LeaveRequestRequest $request)
     {
-        $this->authorizePermission('create-leave-requests');
+        try {
+            $this->leaveRequestService->create($request->validated());
 
-        $dto = LeaveRequestDTO::fromRequest($request->validated());
-        $result = $this->service->create($dto, $request->file('attachment'));
-
-        if ($result['success']) {
             return redirect()
-                ->route('admin.leave.show', $result['data']->id)
-                ->with('success', $result['message']);
+                ->route('admin.leave.index')
+                ->with('success', 'Permohonan cuti berhasil diajukan');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
+    }
 
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
+    public function show(string $id)
+    {
+        $leave = $this->leaveRequestService->getById($id);
+
+        return view('admin.leave.show', compact('leave'));
     }
 
     public function edit(string $id)
     {
-        $this->authorizePermission('edit-leave-requests');
+        $leave = $this->leaveRequestService->getById($id);
+        $workers = $this->workerService->getAllActive();
+        $leaveTypes = $this->leaveTypeService->getAllActive();
 
-        $leaveRequest = $this->service->findById($id);
-
-        // Check own data permission
-        if (auth()->user()->can('view-own-leave-requests') && 
-            !auth()->user()->can('edit-leave-requests') &&
-            !$this->isOwnData($leaveRequest->worker_id)) {
-            abort(403, 'Anda hanya dapat mengedit pengajuan cuti Anda sendiri.');
-        }
-
-        $workers = auth()->user()->can('view-leave-requests')
-            ? $this->workerService->getActive()
-            : collect([auth()->user()->worker]);
-
-        return view('admin.leave.edit', compact('leaveRequest', 'workers'));
+        return view('admin.leave.edit', compact('leave', 'workers', 'leaveTypes'));
     }
 
     public function update(LeaveRequestRequest $request, string $id)
     {
-        $this->authorizePermission('edit-leave-requests');
+        try {
+            $this->leaveRequestService->update($id, $request->validated());
 
-        $leaveRequest = $this->service->findById($id);
-
-        // Check own data permission
-        if (auth()->user()->can('view-own-leave-requests') && 
-            !auth()->user()->can('edit-leave-requests') &&
-            !$this->isOwnData($leaveRequest->worker_id)) {
-            abort(403);
-        }
-
-        $dto = LeaveRequestDTO::fromRequest($request->validated());
-        $result = $this->service->update($id, $dto, $request->file('attachment'));
-
-        if ($result['success']) {
             return redirect()
                 ->route('admin.leave.show', $id)
-                ->with('success', $result['message']);
+                ->with('success', 'Permohonan cuti berhasil diperbarui');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', $e->getMessage());
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
     public function destroy(string $id)
     {
-        $this->authorizePermission('delete-leave-requests');
+        try {
+            $this->leaveRequestService->delete($id);
 
-        $leaveRequest = $this->service->findById($id);
-
-        // Check own data permission
-        if (auth()->user()->can('view-own-leave-requests') && 
-            !auth()->user()->can('delete-leave-requests') &&
-            !$this->isOwnData($leaveRequest->worker_id)) {
-            abort(403);
-        }
-
-        $result = $this->service->delete($id);
-
-        if ($result['success']) {
             return redirect()
                 ->route('admin.leave.index')
-                ->with('success', $result['message']);
+                ->with('success', 'Permohonan cuti berhasil dihapus');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 
     public function approve(string $id)
     {
-        $this->authorizePermission('approve-leave-requests');
+        try {
+            $this->leaveRequestService->approve($id, Auth::id());
 
-        $result = $this->service->approve($id, auth()->id());
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
+            return back()->with('success', 'Permohonan cuti berhasil disetujui');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 
     public function reject(Request $request, string $id)
     {
-        $this->authorizePermission('reject-leave-requests');
-
-        $request->validate([
-            'rejection_reason' => 'required|string|max:500',
-        ], [
-            'rejection_reason.required' => 'Alasan penolakan harus diisi.',
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string',
         ]);
 
-        $result = $this->service->reject($id, auth()->id(), $request->rejection_reason);
+        try {
+            $this->leaveRequestService->reject($id, Auth::id(), $validated['rejection_reason']);
 
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
+            return back()->with('success', 'Permohonan cuti berhasil ditolak');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 
-    public function pending()
+    public function cancel(string $id)
     {
-        $this->authorizePermission('view-pending-leaves');
+        try {
+            $this->leaveRequestService->cancel($id);
 
-        $pendingLeaves = $this->service->getPending();
-
-        return view('admin.leave.pending', compact('pendingLeaves'));
+            return back()->with('success', 'Permohonan cuti berhasil dibatalkan');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
-    public function workerLeaveQuota(string $workerId)
+    public function workerLeaveBalance(string $workerId)
     {
-        $this->authorizeAnyPermission(['view-leave-requests', 'view-own-leave-requests']);
-
-        if (!$this->isOwnData($workerId)) {
-            $this->authorizePermission('view-leave-requests');
+        $worker = $this->workerService->getById($workerId);
+        $leaveTypes = $this->leaveTypeService->getAllActive();
+        
+        $balances = [];
+        foreach ($leaveTypes as $leaveType) {
+            $balances[$leaveType->id] = $this->leaveRequestService->getLeaveBalance(
+                $workerId,
+                $leaveType->id,
+                now()->year
+            );
         }
 
-        $worker = $this->workerService->findById($workerId);
-        $year = date('Y');
-        $quota = $this->service->getWorkerLeaveQuota($workerId, $year);
-
-        return view('admin.leave.quota', compact('worker', 'quota', 'year'));
-    }
-
-    public function downloadAttachment(string $id)
-    {
-        $leaveRequest = $this->service->findById($id);
-
-        // Check permission
-        if (!$this->isOwnData($leaveRequest->worker_id)) {
-            $this->authorizePermission('view-leave-requests');
-        }
-
-        if (!$leaveRequest->attachment_url) {
-            return back()->withErrors(['error' => 'File tidak ditemukan']);
-        }
-
-        if (!Storage::disk('public')->exists($leaveRequest->attachment_url)) {
-            return back()->withErrors(['error' => 'File tidak ditemukan di storage']);
-        }
-
-        return Storage::disk('public')->download($leaveRequest->attachment_url);
+        return view('admin.leave.balance', compact('worker', 'leaveTypes', 'balances'));
     }
 }

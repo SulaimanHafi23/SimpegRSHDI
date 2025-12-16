@@ -8,7 +8,9 @@ class DocumentTypeDTO
     public function __construct(
         public readonly ?string $id,
         public readonly string $name,
-        public readonly string $fileFormat,
+        public readonly ?string $description,
+        public readonly bool $is_required,
+        public readonly bool $is_active,
     ) {}
 
     public static function fromRequest(array $data): self
@@ -16,7 +18,9 @@ class DocumentTypeDTO
         return new self(
             id: $data['id'] ?? null,
             name: $data['name'],
-            fileFormat: $data['file_format'],
+            description: $data['description'] ?? null,
+            is_required: $data['is_required'] ?? false,
+            is_active: $data['is_active'] ?? true,
         );
     }
 
@@ -25,7 +29,9 @@ class DocumentTypeDTO
         return array_filter([
             'id' => $this->id,
             'name' => $this->name,
-            'file_format' => $this->fileFormat,
-        ], fn($value) => !is_null($value));
+            'description' => $this->description,
+            'is_required' => $this->is_required,
+            'is_active' => $this->is_active,
+        ], fn($value) => $value !== null);
     }
 }

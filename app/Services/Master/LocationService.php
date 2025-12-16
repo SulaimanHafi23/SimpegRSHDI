@@ -13,32 +13,66 @@ class LocationService
         private readonly LocationRepositoryInterface $repository
     ) {}
 
+    /**
+     * Get all locations with pagination
+     */
     public function getAllPaginated(int $perPage = 15)
     {
         return $this->repository->paginate($perPage);
     }
 
-    public function getAll()
+    /**
+     * Get all locations with filters
+     */
+    public function getAll(array $filters = [])
     {
-        return $this->repository->all();
+        return $this->repository->getAll($filters);
     }
 
-    public function getActive()
+    /**
+     * Get all active locations
+     */
+    public function getAllActive()
     {
         return $this->repository->active();
     }
 
+    /**
+     * Find location by ID
+     */
     public function findById(string $id)
     {
-        return $this->repository->findById($id);
+        $location = $this->repository->findById($id);
+
+        if (!$location) {
+            throw new \Exception('Lokasi tidak ditemukan');
+        }
+
+        return $location;
     }
 
+    /**
+     * Get location by name
+     */
+    public function getByName(string $name)
+    {
+        return $this->repository->getByName($name);
+    }
+
+    /**
+     * Create new location
+     */
     public function create(LocationDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
-            $location = $this->repository->create($dto->toArray());
+            // Check if location name already exists
+            if ($this->repository->getByName($dto->name)) {
+                throw new \Exception('Nama lokasi sudah digunakan');
+            }
+
+            $location = $this->repository->create($dto);
 
             DB::commit();
 
@@ -53,27 +87,35 @@ class LocationService
 
             return [
                 'success' => false,
-                'message' => 'Gagal menambahkan lokasi: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
     }
 
+    /**
+     * Update existing location
+     */
     public function update(string $id, LocationDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
-            $updated = $this->repository->update($id, $dto->toArray());
+            $location = $this->findById($id);
 
-            if (!$updated) {
-                throw new \Exception('Gagal mengupdate data');
+            // Check if name already exists (except current)
+            $existingByName = $this->repository->getByName($dto->name);
+            if ($existingByName && $existingByName->id !== $id) {
+                throw new \Exception('Nama lokasi sudah digunakan');
             }
+
+            $location = $this->repository->update($id, $dto);
 
             DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'Lokasi berhasil diupdate',
+                'message' => 'Lokasi berhasil diperbarui',
+                'data' => $location,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -81,27 +123,27 @@ class LocationService
 
             return [
                 'success' => false,
-                'message' => 'Gagal mengupdate lokasi: ' . $e->getMessage(),
+                'message' => $e->getMessage(),
             ];
         }
     }
 
+    /**
+     * Delete location
+     */
     public function delete(string $id): array
     {
         try {
             DB::beginTransaction();
 
-            $location = $this->repository->findById($id);
-            
-            if ($location->absents()->exists()) {
+            $location = $this->findById($id);
+
+            // Check if location has attendances
+            if ($location->attendances()->exists()) {
                 throw new \Exception('Lokasi tidak dapat dihapus karena memiliki data absensi');
             }
 
-            $deleted = $this->repository->delete($id);
-
-            if (!$deleted) {
-                throw new \Exception('Gagal menghapus data');
-            }
+            $this->repository->delete($id);
 
             DB::commit();
 
@@ -120,24 +162,77 @@ class LocationService
         }
     }
 
+    /**
+     * Toggle location status
+     */
+    public function toggleStatus(string $id): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $location = $this->repository->toggleStatus($id);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Status lokasi berhasil diubah',
+                'data' => $location,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error toggling location status: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Search locations
+     */
     public function search(string $keyword, int $perPage = 15)
     {
         return $this->repository->search($keyword, $perPage);
     }
 
     /**
-     * Calculate distance between two coordinates (Haversine formula)
+     * Check if coordinates are within location radius
      */
-    public function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
+    public function isWithinRadius(string $locationId, float $latitude, float $longitude): bool
+    {
+        $location = $this->findById($locationId);
+
+        $distance = $this->calculateDistance(
+            $location->latitude,
+            $location->longitude,
+            $latitude,
+            $longitude
+        );
+
+        return $distance <= $location->radius;
+    }
+
+    /**
+     * Calculate distance between two coordinates (in meters)
+     */
+    private function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
     {
         $earthRadius = 6371000; // meters
 
-        $dLat = deg2rad($lat2 - $lat1);
-        $dLon = deg2rad($lon2 - $lon1);
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lon1);
+        $latTo = deg2rad($lat2);
+        $lonTo = deg2rad($lon2);
 
-        $a = sin($dLat / 2) * sin($dLat / 2) +
-             cos(deg2rad($lat1)) * cos(deg2rad($lat2)) *
-             sin($dLon / 2) * sin($dLon / 2);
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2) +
+            cos($latFrom) * cos($latTo) *
+            sin($lonDelta / 2) * sin($lonDelta / 2);
 
         $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
 
@@ -145,27 +240,28 @@ class LocationService
     }
 
     /**
-     * Check if coordinates are within location radius
+     * Get nearest location
      */
-    public function isWithinRadius(string $locationId, float $lat, float $lon): bool
+    public function getNearestLocation(float $latitude, float $longitude)
     {
-        $location = $this->findById($locationId);
+        $locations = $this->getAllActive();
+        $nearest = null;
+        $minDistance = PHP_FLOAT_MAX;
 
-        if (!$location->latitude || !$location->longitude) {
-            return true; // No geofence if coordinates not set
+        foreach ($locations as $location) {
+            $distance = $this->calculateDistance(
+                $location->latitude,
+                $location->longitude,
+                $latitude,
+                $longitude
+            );
+
+            if ($distance < $minDistance) {
+                $minDistance = $distance;
+                $nearest = $location;
+            }
         }
 
-        if (!$location->enforce_geofence) {
-            return true; // Geofence not enforced
-        }
-
-        $distance = $this->calculateDistance(
-            $location->latitude,
-            $location->longitude,
-            $lat,
-            $lon
-        );
-
-        return $distance <= $location->radius;
+        return $nearest;
     }
 }

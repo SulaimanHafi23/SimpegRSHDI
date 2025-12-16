@@ -29,19 +29,21 @@ class PositionRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('positions', 'name')->ignore($positionId),
+                Rule::unique('positions', 'name')->ignore($positionId)->whereNull('deleted_at'),
             ],
-            'description' => ['nullable', 'string', 'max:500'],
+            'description' => 'nullable|string|max:500',
+            'level' => 'nullable|integer|min:1|max:100',
+            'is_active' => 'nullable|boolean',
         ];
     }
 
-    public function messages(): array
+    public function attributes(): array
     {
         return [
-            'name.required' => 'Nama jabatan harus diisi.',
-            'name.unique' => 'Jabatan ini sudah ada.',
-            'name.max' => 'Nama jabatan maksimal 100 karakter.',
-            'description.max' => 'Deskripsi maksimal 500 karakter.',
+            'name' => 'Nama Jabatan',
+            'description' => 'Deskripsi',
+            'level' => 'Level',
+            'is_active' => 'Status Aktif',
         ];
     }
 }

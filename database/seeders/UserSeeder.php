@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Worker;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -23,12 +24,12 @@ class UserSeeder extends Seeder
         }
 
         // Get roles
-        $roleUser = \Spatie\Permission\Models\Role::where('name', 'User')->first();
+        $roleUser = \Spatie\Permission\Models\Role::where('name', 'Employee')->first();
         $roleHR = \Spatie\Permission\Models\Role::where('name', 'HR')->first();
         $roleManager = \Spatie\Permission\Models\Role::where('name', 'Manager')->first();
 
         if (!$roleUser) {
-            $this->command->error('❌ Role "User" belum ada! Run RolePermissionSeeder dulu.');
+            $this->command->error('❌ Role "Employee" belum ada! Run RolePermissionSeeder dulu.');
             return;
         }
 

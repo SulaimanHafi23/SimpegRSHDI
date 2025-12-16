@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\DocumentType;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DocumentTypeSeeder extends Seeder
 {
@@ -12,71 +13,143 @@ class DocumentTypeSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->command->info('📄 Starting DocumentTypeSeeder...');
+
         $documentTypes = [
             [
+                'id' => Str::uuid()->toString(),
                 'name' => 'KTP',
                 'description' => 'Kartu Tanda Penduduk',
-                'file_format' => 'jpg,png,pdf',
+                'file_format' => 'pdf,jpg,jpeg,png',
                 'max_file_size' => 2048,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
+                'id' => Str::uuid()->toString(),
+                'name' => 'NPWP',
+                'description' => 'Nomor Pokok Wajib Pajak',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 2048,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'Ijazah',
+                'description' => 'Ijazah Pendidikan Terakhir',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 5120,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
                 'name' => 'Kartu Keluarga',
                 'description' => 'Kartu Keluarga (KK)',
-                'file_format' => 'jpg,png,pdf',
+                'file_format' => 'pdf,jpg,jpeg,png',
                 'max_file_size' => 2048,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Ijazah',
-                'description' => 'Ijazah pendidikan terakhir',
-                'file_format' => 'pdf',
-                'max_file_size' => 5120,
-            ],
-            [
-                'name' => 'Transkrip Nilai',
-                'description' => 'Transkrip nilai pendidikan',
-                'file_format' => 'pdf',
-                'max_file_size' => 5120,
-            ],
-            [
-                'name' => 'SKCK',
-                'description' => 'Surat Keterangan Catatan Kepolisian',
-                'file_format' => 'pdf',
-                'max_file_size' => 2048,
-            ],
-            [
-                'name' => 'Sertifikat Kompetensi',
-                'description' => 'Sertifikat kompetensi/pelatihan',
-                'file_format' => 'pdf',
-                'max_file_size' => 3072,
-            ],
-            [
-                'name' => 'STR',
-                'description' => 'Surat Tanda Registrasi (untuk tenaga kesehatan)',
-                'file_format' => 'pdf',
-                'max_file_size' => 2048,
-            ],
-            [
-                'name' => 'SIP',
-                'description' => 'Surat Izin Praktik (untuk tenaga kesehatan)',
-                'file_format' => 'pdf',
-                'max_file_size' => 2048,
-            ],
-            [
+                'id' => Str::uuid()->toString(),
                 'name' => 'Surat Keterangan Sehat',
-                'description' => 'Surat keterangan sehat dari dokter',
-                'file_format' => 'pdf',
+                'description' => 'Surat Keterangan Sehat dari Dokter',
+                'file_format' => 'pdf,jpg,jpeg,png',
                 'max_file_size' => 2048,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Pas Foto',
-                'description' => 'Pas foto 4x6',
-                'file_format' => 'jpg,png',
+                'id' => Str::uuid()->toString(),
+                'name' => 'Surat Keterangan Catatan Kepolisian (SKCK)',
+                'description' => 'SKCK dari Kepolisian',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 2048,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'Sertifikat Kompetensi',
+                'description' => 'Sertifikat Kompetensi/Keahlian Profesional',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 5120,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'STR (Surat Tanda Registrasi)',
+                'description' => 'STR untuk Tenaga Kesehatan',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 5120,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'SIP (Surat Izin Praktik)',
+                'description' => 'SIP untuk Tenaga Kesehatan',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 5120,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'CV (Curriculum Vitae)',
+                'description' => 'Riwayat Hidup',
+                'file_format' => 'pdf,doc,docx',
+                'max_file_size' => 5120,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'Foto 3x4',
+                'description' => 'Pas Foto ukuran 3x4',
+                'file_format' => 'jpg,jpeg,png',
                 'max_file_size' => 1024,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'BPJS Kesehatan',
+                'description' => 'Kartu BPJS Kesehatan',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 2048,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'BPJS Ketenagakerjaan',
+                'description' => 'Kartu BPJS Ketenagakerjaan',
+                'file_format' => 'pdf,jpg,jpeg,png',
+                'max_file_size' => 2048,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 
-        foreach ($documentTypes as $type) {
-            DocumentType::create($type);
-        }
+        DB::table('document_types')->insert($documentTypes);
+
+        $this->command->info('✅ Created ' . count($documentTypes) . ' document types');
     }
 }

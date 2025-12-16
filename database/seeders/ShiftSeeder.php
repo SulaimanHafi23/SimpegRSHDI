@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Shift;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ShiftSeeder extends Seeder
 {
@@ -12,32 +13,61 @@ class ShiftSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->command->info('⏰ Starting ShiftSeeder...');
+
         $shifts = [
             [
-                'name' => 'Pagi',
-                'start_time' => '07:00:00',
-                'end_time' => '15:00:00',
+                'id' => Str::uuid()->toString(),
+                'name' => 'Shift Pagi',
+                'start_time' => '08:00:00',
+                'end_time' => '16:00:00',
                 'total_hours' => 8,
-                'description' => 'Shift pagi',
+                'grace_period_minutes' => 15,
+                'is_overnight' => false,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Siang',
-                'start_time' => '15:00:00',
-                'end_time' => '23:00:00',
+                'id' => Str::uuid()->toString(),
+                'name' => 'Shift Siang',
+                'start_time' => '14:00:00',
+                'end_time' => '22:00:00',
                 'total_hours' => 8,
-                'description' => 'Shift siang',
+                'grace_period_minutes' => 15,
+                'is_overnight' => false,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Malam',
-                'start_time' => '23:00:00',
-                'end_time' => '07:00:00',
+                'id' => Str::uuid()->toString(),
+                'name' => 'Shift Malam',
+                'start_time' => '22:00:00',
+                'end_time' => '06:00:00',
                 'total_hours' => 8,
-                'description' => 'Shift malam',
+                'grace_period_minutes' => 15,
+                'is_overnight' => true,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid()->toString(),
+                'name' => 'Shift Reguler',
+                'start_time' => '08:00:00',
+                'end_time' => '16:00:00',
+                'total_hours' => 8,
+                'grace_period_minutes' => 15,
+                'is_overnight' => false,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ];
 
-        foreach ($shifts as $shift) {
-            Shift::create($shift);
-        }
+        DB::table('shifts')->insert($shifts);
+
+        $this->command->info('✅ Created ' . count($shifts) . ' shifts');
     }
 }

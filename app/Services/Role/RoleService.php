@@ -2,7 +2,7 @@
 
 namespace App\Services\Role;
 
-use App\DTOs\Role\RoleDTO;
+use App\DTOs\RoleDTO;
 use App\Repositories\Contracts\Role\RoleRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;

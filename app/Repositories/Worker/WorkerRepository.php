@@ -2,155 +2,126 @@
 
 namespace App\Repositories\Worker;
 
+use App\DTOs\WorkerDTO;
 use App\Models\Worker;
 use App\Repositories\Contracts\Worker\WorkerRepositoryInterface;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class WorkerRepository implements WorkerRepositoryInterface
 {
     public function __construct(
-        private readonly Worker $model
+        protected Worker $model
     ) {}
 
-    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator
+    public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = $this->model
-            ->with(['gender', 'religion', 'position', 'user']);
-
-        // Apply filters
-        if (!empty($filters['position_id'])) {
-            $query->where('position_id', $filters['position_id']);
-        }
+        $query = $this->model->with(['gender', 'religion', 'department']);
 
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (isset($filters['is_active'])) {
-            $query->where('is_active', $filters['is_active']);
+        if (!empty($filters['employment_status'])) {
+            $query->where('employment_status', $filters['employment_status']);
         }
 
-        return $query
-            ->orderBy('name')
-            ->paginate($perPage);
+        if (!empty($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('nip', 'like', "%{$filters['search']}%")
+                    ->orWhere('name', 'like', "%{$filters['search']}%")
+                    ->orWhere('email', 'like', "%{$filters['search']}%");
+            });
+        }
+
+        return $query->latest()->paginate($filters['per_page'] ?? 15);
     }
 
-    public function all(): Collection
+    public function getAllActive(): Collection
     {
-        return $this->model
-            ->with(['gender', 'religion', 'position'])
-            ->orderBy('name')
+        return $this->model->where('status', 'active')
+            ->with(['gender', 'religion', 'department'])
             ->get();
     }
 
-    public function active(): Collection
+    public function getById(string $id): ?object
     {
-        return $this->model
-            ->with(['gender', 'religion', 'position'])
-            ->where('is_active', true)
-            ->orderBy('name')
+        return $this->model->with([
+            'gender',
+            'religion',
+            'department',
+            'user',
+            'activeWorkerShift.shift'
+        ])->find($id);
+    }
+
+    public function getByNip(string $nip): ?object
+    {
+        return $this->model->where('nip', $nip)->first();
+    }
+
+    public function getByEmail(string $email): ?object
+    {
+        return $this->model->where('email', $email)->first();
+    }
+
+    public function getByDepartment(string $departmentId): Collection
+    {
+        return $this->model->where('department_id', $departmentId)
+            ->where('status', 'active')
+            ->with(['gender', 'religion'])
             ->get();
     }
 
-    public function findById(string $id)
+    public function create(WorkerDTO $dto): object
     {
-        return $this->model
-            ->with([
-                'gender',
-                'religion',
-                'position',
-                'user.roles',
-                'absents' => fn($q) => $q->latest()->limit(10),
-                'berkas',
-                'salary'
-            ])
-            ->findOrFail($id);
+        return $this->model->create($dto->toArray());
     }
 
-    public function findByNik(string $nik)
-    {
-        return $this->model
-            ->where('nik', $nik)
-            ->first();
-    }
-
-    public function findByEmail(string $email)
-    {
-        return $this->model
-            ->where('email', $email)
-            ->first();
-    }
-
-    public function create(array $data)
-    {
-        return $this->model->create($data);
-    }
-
-    public function update(string $id, array $data): bool
+    public function update(string $id, WorkerDTO $dto): object
     {
         $worker = $this->model->findOrFail($id);
-        return $worker->update($data);
+        $worker->update($dto->toArray());
+        return $worker->fresh();
     }
 
     public function delete(string $id): bool
     {
+        return $this->model->findOrFail($id)->delete();
+    }
+
+    public function resign(string $id, string $resignDate): object
+    {
         $worker = $this->model->findOrFail($id);
-        return $worker->delete();
+        $worker->update([
+            'status' => 'resigned',
+            'resign_date' => $resignDate,
+        ]);
+        return $worker->fresh();
     }
 
-    public function search(string $keyword, int $perPage = 15): LengthAwarePaginator
+    public function restore(string $id): object
     {
-        return $this->model
-            ->with(['gender', 'religion', 'position', 'user'])
-            ->where(function ($query) use ($keyword) {
-                $query->where('nik', 'like', "%{$keyword}%")
-                    ->orWhere('name', 'like', "%{$keyword}%")
-                    ->orWhere('email', 'like', "%{$keyword}%")
-                    ->orWhere('phone', 'like', "%{$keyword}%")
-                    ->orWhereHas('position', function ($q) use ($keyword) {
-                        $q->where('name', 'like', "%{$keyword}%");
-                    });
-            })
-            ->orderBy('name')
-            ->paginate($perPage);
+        $worker = $this->model->withTrashed()->findOrFail($id);
+        $worker->restore();
+        return $worker->fresh();
     }
 
-    public function getByPosition(string $positionId): Collection
+    public function updateStatus(string $id, string $status): object
     {
-        return $this->model
-            ->where('position_id', $positionId)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        $worker = $this->model->findOrFail($id);
+        $worker->update(['status' => $status]);
+        return $worker->fresh();
     }
 
-    public function getByStatus(string $status): Collection
+    public function updatePhoto(string $id, string $photoUrl): object
     {
-        return $this->model
-            ->where('status', $status)
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
-    }
-
-    public function getBirthdaysThisMonth(): Collection
-    {
-        $currentMonth = Carbon::now()->month;
-
-        return $this->model
-            ->with(['position'])
-            ->where('is_active', true)
-            ->whereMonth('date_of_birth', $currentMonth)
-            ->orderByRaw('DAY(date_of_birth)')
-            ->get();
-    }
-
-    public function getContractExpiring(int $days = 30): Collection
-    {
-        // This would need a contract_end_date column
-        // For now, return empty collection
-        return collect([]);
+        $worker = $this->model->findOrFail($id);
+        $worker->update(['photo_url' => $photoUrl]);
+        return $worker->fresh();
     }
 }

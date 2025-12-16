@@ -2,22 +2,23 @@
 
 namespace App\Repositories\Contracts\Master;
 
+use App\DTOs\Master\DocumentTypeDTO;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 interface DocumentTypeRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct();
-
+    public function getAll(array $filters = []): LengthAwarePaginator;
     public function paginate(int $perPage = 15): LengthAwarePaginator;
     public function all(): Collection;
-    public function findById(string $id);
-    public function create(array $data);
-    public function update(string $id, array $data): bool;
+    public function active(): Collection;
+    public function required(): Collection;
+    public function findById(string $id): ?object;
+    public function getByName(string $name): ?object;
+    public function getByCode(string $code): ?object;
+    public function create(DocumentTypeDTO $dto): object;
+    public function update(string $id, DocumentTypeDTO $dto): object;
     public function delete(string $id): bool;
+    public function toggleStatus(string $id): object;
     public function search(string $keyword, int $perPage = 15): LengthAwarePaginator;
-    public function withFileRequirements(string $id);
 }

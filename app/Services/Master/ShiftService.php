@@ -14,37 +14,71 @@ class ShiftService
         private readonly ShiftRepositoryInterface $repository
     ) {}
 
+    /**
+     * Get all shifts with pagination
+     */
     public function getAllPaginated(int $perPage = 15)
     {
         return $this->repository->paginate($perPage);
     }
 
+    /**
+     * Get all shifts
+     */
     public function getAll()
     {
         return $this->repository->all();
     }
 
+    /**
+     * Get active shifts
+     */
     public function getActive()
     {
         return $this->repository->active();
     }
 
+    /**
+     * Find shift by ID
+     */
     public function findById(string $id)
     {
-        return $this->repository->findById($id);
+        $shift = $this->repository->findById($id);
+
+        if (!$shift) {
+            throw new \Exception('Shift tidak ditemukan');
+        }
+
+        return $shift;
     }
 
+    /**
+     * Get shift by name
+     */
+    public function getByName(string $name)
+    {
+        return $this->repository->getByName($name);
+    }
+
+    /**
+     * Create new shift
+     */
     public function create(ShiftDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
             // Validate time range
-            if (!$this->isValidTimeRange($dto->startTime, $dto->endTime)) {
-                throw new \Exception('Jam selesai harus lebih besar dari jam mulai (untuk shift yang melewati tengah malam, gunakan format 24 jam)');
+            if (!$this->isValidTimeRange($dto->start_time, $dto->end_time)) {
+                throw new \Exception('Jam selesai harus lebih besar dari jam mulai');
             }
 
-            $shift = $this->repository->create($dto->toArray());
+            // Check if shift name already exists
+            if ($this->repository->getByName($dto->name)) {
+                throw new \Exception('Nama shift sudah digunakan');
+            }
+
+            $shift = $this->repository->create($dto);
 
             DB::commit();
 
@@ -64,27 +98,35 @@ class ShiftService
         }
     }
 
+    /**
+     * Update existing shift
+     */
     public function update(string $id, ShiftDTO $dto): array
     {
         try {
             DB::beginTransaction();
 
+            $shift = $this->findById($id);
+
             // Validate time range
-            if (!$this->isValidTimeRange($dto->startTime, $dto->endTime)) {
-                throw new \Exception('Jam selesai harus lebih besar dari jam mulai (untuk shift yang melewati tengah malam, gunakan format 24 jam)');
+            if (!$this->isValidTimeRange($dto->start_time, $dto->end_time)) {
+                throw new \Exception('Jam selesai harus lebih besar dari jam mulai');
             }
 
-            $updated = $this->repository->update($id, $dto->toArray());
-
-            if (!$updated) {
-                throw new \Exception('Gagal mengupdate data');
+            // Check if name already exists (except current)
+            $existingByName = $this->repository->getByName($dto->name);
+            if ($existingByName && $existingByName->id !== $id) {
+                throw new \Exception('Nama shift sudah digunakan');
             }
+
+            $shift = $this->repository->update($id, $dto);
 
             DB::commit();
 
             return [
                 'success' => true,
-                'message' => 'Shift berhasil diupdate',
+                'message' => 'Shift berhasil diperbarui',
+                'data' => $shift,
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -97,22 +139,22 @@ class ShiftService
         }
     }
 
+    /**
+     * Delete shift
+     */
     public function delete(string $id): array
     {
         try {
             DB::beginTransaction();
 
-            $shift = $this->repository->findById($id);
-            
-            if ($shift->workerShiftSchedules()->exists()) {
-                throw new \Exception('Shift tidak dapat dihapus karena masih digunakan dalam jadwal pegawai');
+            $shift = $this->findById($id);
+
+            // Check if shift has worker shifts
+            if ($shift->workerShifts()->exists()) {
+                throw new \Exception('Shift tidak dapat dihapus karena masih digunakan oleh pegawai');
             }
 
-            $deleted = $this->repository->delete($id);
-
-            if (!$deleted) {
-                throw new \Exception('Gagal menghapus data');
-            }
+            $this->repository->delete($id);
 
             DB::commit();
 
@@ -131,19 +173,64 @@ class ShiftService
         }
     }
 
+    /**
+     * Toggle shift status
+     */
+    public function toggleStatus(string $id): array
+    {
+        try {
+            DB::beginTransaction();
+
+            $shift = $this->repository->toggleStatus($id);
+
+            DB::commit();
+
+            return [
+                'success' => true,
+                'message' => 'Status shift berhasil diubah',
+                'data' => $shift,
+            ];
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error toggling shift status: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Search shifts
+     */
     public function search(string $keyword, int $perPage = 15)
     {
         return $this->repository->search($keyword, $perPage);
     }
 
     /**
-     * Validate time range (allow overnight shifts)
+     * Get overnight shifts
+     */
+    public function getOvernightShifts()
+    {
+        return $this->repository->getOvernightShifts();
+    }
+
+    /**
+     * Validate time range
      */
     private function isValidTimeRange(string $startTime, string $endTime): bool
     {
-        // Allow all time ranges as shifts can be overnight
-        // Example: 23:00 - 07:00 is valid
-        return true;
+        $start = Carbon::createFromFormat('H:i', $startTime);
+        $end = Carbon::createFromFormat('H:i', $endTime);
+
+        // If end time is less than start time, it's an overnight shift
+        if ($end->lessThan($start)) {
+            return true; // Overnight shift is valid
+        }
+
+        return $end->greaterThan($start);
     }
 
     /**
@@ -154,8 +241,8 @@ class ShiftService
         $start = Carbon::createFromFormat('H:i', $startTime);
         $end = Carbon::createFromFormat('H:i', $endTime);
 
-        // If end time is before start time, add a day (overnight shift)
         if ($end->lessThan($start)) {
+            // Overnight shift
             $end->addDay();
         }
 
@@ -163,25 +250,37 @@ class ShiftService
     }
 
     /**
-     * Check if time is within shift range
+     * Check if time is within shift
      */
     public function isTimeInShift(string $shiftId, string $time): bool
     {
         $shift = $this->findById($shiftId);
-        
         $checkTime = Carbon::createFromFormat('H:i', $time);
         $startTime = Carbon::createFromFormat('H:i', $shift->start_time);
         $endTime = Carbon::createFromFormat('H:i', $shift->end_time);
 
-        // Handle overnight shifts
-        if ($endTime->lessThan($startTime)) {
-            $endTime->addDay();
-            
-            if ($checkTime->lessThan($startTime)) {
-                $checkTime->addDay();
-            }
+        if ($shift->is_overnight) {
+            // For overnight shifts
+            return $checkTime->greaterThanOrEqualTo($startTime) || 
+                   $checkTime->lessThanOrEqualTo($endTime);
         }
 
         return $checkTime->between($startTime, $endTime);
+    }
+
+    /**
+     * Get shift statistics
+     */
+    public function getShiftStatistics(string $id): array
+    {
+        $shift = $this->findById($id);
+
+        return [
+            'total_workers' => $shift->workerShifts()->count(),
+            'active_workers' => $shift->workerShifts()->where('is_active', true)->count(),
+            'total_attendances_today' => $shift->attendances()
+                ->whereDate('attendance_date', now())
+                ->count(),
+        ];
     }
 }

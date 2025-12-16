@@ -1,27 +1,23 @@
 <?php
-// filepath: app/Repositories/Contracts/LeaveRequestRepositoryInterface.php
+// filepath: app/Repositories/Contracts/Leave/LeaveRequestRepositoryInterface.php
 
 namespace App\Repositories\Contracts\Leave;
 
+use App\DTOs\LeaveRequestDTO;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 
 interface LeaveRequestRepositoryInterface
 {
-    /**
-     * Create a new class instance.
-     */
-    public function __construct();
-
-    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator;
-    public function findById(string $id);
-    public function getByWorker(string $workerId, ?string $year = null): Collection;
-    public function getPending(): Collection;
-    public function getApproved(): Collection;
-    public function create(array $data);
-    public function update(string $id, array $data): bool;
+    public function getAll(array $filters = []): LengthAwarePaginator;
+    public function getById(string $id): ?object;
+    public function getByWorkerId(string $workerId, array $filters = []): Collection;
+    public function getPendingRequests(): Collection;
+    public function create(LeaveRequestDTO $dto): object;
+    public function update(string $id, LeaveRequestDTO $dto): object;
     public function delete(string $id): bool;
-    public function approve(string $id, string $userId): bool;
-    public function reject(string $id, string $userId, string $reason): bool;
-    public function checkOverlap(string $workerId, string $startDate, string $endDate, ?string $excludeId = null): bool;
+    public function approve(string $id, string $approvedBy): object;
+    public function reject(string $id, string $approvedBy, string $reason): object;
+    public function cancel(string $id): object;
+    public function getWorkerLeaveBalance(string $workerId, string $leaveTypeId, int $year): int;
 }

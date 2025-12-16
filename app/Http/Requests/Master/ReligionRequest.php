@@ -29,8 +29,10 @@ class ReligionRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('religions', 'name')->ignore($religionId),
+                Rule::unique('religions', 'name')->ignore($religionId)->whereNull('deleted_at'),
             ],
+            'description' => 'nullable|string|max:500',
+            'is_active' => 'nullable|boolean',
         ];
     }
 
@@ -40,6 +42,15 @@ class ReligionRequest extends FormRequest
             'name.required' => 'Nama agama harus diisi.',
             'name.unique' => 'Agama ini sudah ada.',
             'name.max' => 'Nama agama maksimal 100 karakter.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'name' => 'Nama Agama',
+            'description' => 'Deskripsi',
+            'is_active' => 'Status Aktif',
         ];
     }
 }

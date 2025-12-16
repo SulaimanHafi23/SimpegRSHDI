@@ -20,7 +20,7 @@ class LoginController extends Controller
      */
     public function showLoginForm(): View
     {
-        return view('welcome');
+        return view('auth.login');
     }
 
     /**
@@ -28,8 +28,6 @@ class LoginController extends Controller
      */
     public function login(LoginRequest $request): RedirectResponse
     {
-
-        // dd($request->validated());
         try {
             // Create DTO from request
             $dto = LoginDTO::fromRequest($request->validated());
@@ -77,15 +75,20 @@ class LoginController extends Controller
      */
     private function getRedirectUrl($user): string
     {
-        $role = $user->roles->first()?->name;
+        // Check if user has roles
+        if (!$user->roles || $user->roles->isEmpty()) {
+            return route('employee.dashboard');
+        }
+
+        $role = $user->roles->first()->name;
 
         return match($role) {
-            'Super Admin' => route('admin.dashboard'),
-            'HR' => route('hr.dashboard'),
-            'Finance' => route('finance.dashboard'),
-            'Manager' => route('manager.dashboard'),
-            'Direktur' => route('direktur.dashboard'),
-            default => route('user.dashboard'),
+            'super-admin' => route('admin.dashboard'),
+            'admin' => route('admin.dashboard'),
+            'hr-manager' => route('admin.dashboard'),
+            'supervisor' => route('admin.dashboard'),
+            'employee' => route('employee.dashboard'),
+            default => route('employee.dashboard'),
         };
     }
 }

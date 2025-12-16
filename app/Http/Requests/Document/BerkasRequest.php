@@ -22,41 +22,32 @@ class BerkasRequest extends FormRequest
 
     public function rules(): array
     {
-        $isUpdate = $this->route('berkas') !== null;
-
         return [
-            'worker_id' => [
-                'required',
-                'uuid',
-                'exists:workers,id',
-            ],
-            'file_requirement_id' => [
-                'required',
-                'uuid',
-                'exists:file_requirments,id',
-            ],
-            'file' => [
-                $isUpdate ? 'nullable' : 'required',
-                'file',
-                'max:5120', // 5MB
-                'mimes:pdf,jpg,jpeg,png,doc,docx',
-            ],
-            'notes' => ['nullable', 'string', 'max:500'],
-            'status' => [
-                'nullable',
-                Rule::in(['pending', 'approved', 'rejected']),
-            ],
+            'worker_id' => ['required', Rule::exists('workers', 'id')],
+            'file_requirement_id' => ['required', Rule::exists('file_requirments', 'id')],
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240', // 10MB
+            'notes' => 'nullable|string|max:1000',
+            'expired_date' => 'nullable|date|after:today',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'worker_id' => 'Pekerja',
+            'file_requirement_id' => 'Jenis Dokumen',
+            'file' => 'File',
+            'notes' => 'Catatan',
+            'expired_date' => 'Tanggal Kadaluarsa',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'worker_id.required' => 'Pegawai harus dipilih.',
-            'file_requirement_id.required' => 'Jenis dokumen harus dipilih.',
-            'file.required' => 'File dokumen harus diupload.',
-            'file.max' => 'Ukuran file maksimal 5MB.',
-            'file.mimes' => 'Format file harus: pdf, jpg, jpeg, png, doc, atau docx.',
+            'file.required' => ':attribute harus diupload',
+            'file.mimes' => ':attribute harus berformat: pdf, doc, docx, jpg, jpeg, png',
+            'file.max' => ':attribute maksimal 10MB',
         ];
     }
 }

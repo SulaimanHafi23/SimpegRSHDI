@@ -26,41 +26,30 @@ class UserRequest extends FormRequest
 
         return [
             'worker_id' => [
-                'required',
-                'uuid',
-                'exists:workers,id',
-                Rule::unique('users', 'worker_id')->ignore($userId),
+                'nullable',
+                'string',
+                Rule::exists('workers', 'id')
             ],
             'email' => [
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('users', 'email')->ignore($userId),
+                Rule::unique('users', 'email')->ignore($userId)
             ],
-            'password' => [
-                $userId ? 'nullable' : 'required',
-                'string',
-                'min:8',
-                'confirmed',
-            ],
-            'is_active' => [
-                'boolean',
-            ],
+            'password' => $userId ? 'nullable|string|min:8' : 'required|string|min:8',
+            'is_active' => 'boolean',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ];
     }
 
-    public function messages(): array
+    public function attributes(): array
     {
         return [
-            'worker_id.required' => 'Pegawai harus dipilih.',
-            'worker_id.exists' => 'Pegawai tidak ditemukan.',
-            'worker_id.unique' => 'Pegawai ini sudah memiliki akun user.',
-            'email.required' => 'Email harus diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah digunakan.',
-            'password.required' => 'Password harus diisi.',
-            'password.min' => 'Password minimal 8 karakter.',
-            'password.confirmed' => 'Konfirmasi password tidak cocok.',
+            'worker_id' => 'Pekerja',
+            'email' => 'Email',
+            'password' => 'Password',
+            'is_active' => 'Status Aktif',
+            'photo' => 'Foto',
         ];
     }
 }

@@ -2,10 +2,11 @@
 
 namespace App\Repositories\Master;
 
+use App\DTOs\Master\GenderDTO;
 use App\Models\Gender;
 use App\Repositories\Contracts\Master\GenderRepositoryInterface;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class GenderRepository implements GenderRepositoryInterface
 {
@@ -13,50 +14,95 @@ class GenderRepository implements GenderRepositoryInterface
      * Create a new class instance.
      */
     public function __construct(
-        private readonly Gender $model
+        protected Gender $model
     ) {}
+
+    public function getAll(array $filters = []): LengthAwarePaginator
+    {
+        $query = $this->model->query()->withCount('workers');
+
+        if (isset($filters['is_active'])) {
+            $query->where('is_active', $filters['is_active']);
+        }
+
+        if (!empty($filters['search'])) {
+            $query->where(function ($q) use ($filters) {
+                $q->where('name', 'like', "%{$filters['search']}%")
+                    ->orWhere('code', 'like', "%{$filters['search']}%");
+            });
+        }
+
+        return $query->latest()->paginate($filters['per_page'] ?? 15);
+    }
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
-        return $this->model
-            ->orderBy('name')
+        return $this->model->withCount('workers')
+            ->latest()
             ->paginate($perPage);
     }
 
     public function all(): Collection
     {
-        return $this->model
+        return $this->model->orderBy('name')->get();
+    }
+
+    public function active(): Collection
+    {
+        return $this->model->where('is_active', true)
             ->orderBy('name')
             ->get();
     }
 
-    public function findById(string $id)
+    public function findById(string $id): ?object
     {
-        return $this->model->findOrFail($id);
+        return $this->model->with(['workers'])
+            ->withCount('workers')
+            ->find($id);
     }
 
-    public function create(array $data)
+    public function getByName(string $name): ?object
     {
-        return $this->model->create($data);
+        return $this->model->where('name', $name)->first();
     }
 
-    public function update(string $id, array $data): bool
+    public function getByCode(string $code): ?object
     {
-        $gender = $this->findById($id);
-        return $gender->update($data);
+        return $this->model->where('code', $code)->first();
+    }
+
+    public function create(GenderDTO $dto): object
+    {
+        return $this->model->create($dto->toArray());
+    }
+
+    public function update(string $id, GenderDTO $dto): object
+    {
+        $gender = $this->model->findOrFail($id);
+        $gender->update($dto->toArray());
+        return $gender->fresh(['workers']);
     }
 
     public function delete(string $id): bool
     {
-        $gender = $this->findById($id);
-        return $gender->delete();
+        return $this->model->findOrFail($id)->delete();
+    }
+
+    public function toggleStatus(string $id): object
+    {
+        $gender = $this->model->findOrFail($id);
+        $gender->update(['is_active' => !$gender->is_active]);
+        return $gender->fresh();
     }
 
     public function search(string $keyword, int $perPage = 15): LengthAwarePaginator
     {
-        return $this->model
-            ->where('name', 'like', "%{$keyword}%")
-            ->orderBy('name')
+        return $this->model->withCount('workers')
+            ->where(function ($query) use ($keyword) {
+                $query->where('name', 'like', "%{$keyword}%")
+                    ->orWhere('code', 'like', "%{$keyword}%");
+            })
+            ->latest()
             ->paginate($perPage);
     }
 }

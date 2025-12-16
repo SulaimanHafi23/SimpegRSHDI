@@ -2,61 +2,56 @@
 
 namespace App\DTOs;
 
-use Carbon\Carbon;
-
 class LeaveRequestDTO
 {
     public function __construct(
         public readonly ?string $id,
-        public readonly string $workerId,
-        public readonly string $leaveType,
-        public readonly string $startDate,
-        public readonly string $endDate,
-        public readonly int $totalDays,
+        public readonly string $worker_id,
+        public readonly string $leave_type_id,
+        public readonly string $start_date,
+        public readonly string $end_date,
+        public readonly int $total_days,
         public readonly string $reason,
-        public readonly ?string $attachment,
+        public readonly ?string $attachment_path,
         public readonly string $status,
-        public readonly ?string $approvedBy,
-        public readonly ?string $approvedAt,
-        public readonly ?string $rejectionReason,
+        public readonly ?string $approved_by,
+        public readonly ?string $approved_at,
+        public readonly ?string $rejection_reason,
     ) {}
 
     public static function fromRequest(array $data): self
     {
-        $startDate = Carbon::parse($data['start_date']);
-        $endDate = Carbon::parse($data['end_date']);
-        $totalDays = $startDate->diffInDays($endDate) + 1;
-
         return new self(
             id: $data['id'] ?? null,
-            workerId: $data['worker_id'],
-            leaveType: $data['leave_type'],
-            startDate: $data['start_date'],
-            endDate: $data['end_date'],
-            totalDays: $totalDays,
+            worker_id: $data['worker_id'],
+            leave_type_id: $data['leave_type_id'],
+            start_date: $data['start_date'],
+            end_date: $data['end_date'],
+            total_days: $data['total_days'],
             reason: $data['reason'],
-            attachment: $data['attachment'] ?? null,
+            attachment_path: $data['attachment_path'] ?? null,
             status: $data['status'] ?? 'pending',
-            approvedBy: $data['approved_by'] ?? null,
-            approvedAt: $data['approved_at'] ?? null,
-            rejectionReason: $data['rejection_reason'] ?? null,
+            approved_by: $data['approved_by'] ?? null,
+            approved_at: $data['approved_at'] ?? null,
+            rejection_reason: $data['rejection_reason'] ?? null,
         );
     }
 
     public function toArray(): array
     {
         return array_filter([
-            'worker_id' => $this->workerId,
-            'leave_type' => $this->leaveType,
-            'start_date' => $this->startDate,
-            'end_date' => $this->endDate,
-            'total_days' => $this->totalDays,
+            'id' => $this->id,
+            'worker_id' => $this->worker_id,
+            'leave_type_id' => $this->leave_type_id,
+            'start_date' => $this->start_date,
+            'end_date' => $this->end_date,
+            'total_days' => $this->total_days,
             'reason' => $this->reason,
-            'attachment' => $this->attachment,
+            'attachment_path' => $this->attachment_path,
             'status' => $this->status,
-            'approved_by' => $this->approvedBy,
-            'approved_at' => $this->approvedAt,
-            'rejection_reason' => $this->rejectionReason,
-        ], fn($value) => !is_null($value));
+            'approved_by' => $this->approved_by,
+            'approved_at' => $this->approved_at,
+            'rejection_reason' => $this->rejection_reason,
+        ], fn($value) => $value !== null);
     }
 }

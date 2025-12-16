@@ -29,8 +29,10 @@ class GenderRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('genders', 'name')->ignore($genderId),
+                Rule::unique('genders', 'name')->ignore($genderId)->whereNull('deleted_at'),
             ],
+            'description' => 'nullable|string|max:500',
+            'is_active' => 'nullable|boolean',
         ];
     }
 
@@ -40,6 +42,15 @@ class GenderRequest extends FormRequest
             'name.required' => 'Nama jenis kelamin harus diisi.',
             'name.unique' => 'Jenis kelamin ini sudah ada.',
             'name.max' => 'Nama jenis kelamin maksimal 50 karakter.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'name' => 'Nama Jenis Kelamin',
+            'description' => 'Deskripsi',
+            'is_active' => 'Status Aktif',
         ];
     }
 }

@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('genders', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('name')->unique();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

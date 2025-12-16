@@ -1,106 +1,120 @@
 <?php
-// filepath: app/Providers/RepositoryServiceProvider.php
 
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 
-// Master Repositories
-use App\Repositories\Contracts\Master\ReligionRepositoryInterface;
-use App\Repositories\Master\ReligionRepository;
-use App\Repositories\Contracts\Master\GenderRepositoryInterface;
-use App\Repositories\Master\GenderRepository;
-use App\Repositories\Contracts\Master\PositionRepositoryInterface;
-use App\Repositories\Master\PositionRepository;
-use App\Repositories\Contracts\Master\LocationRepositoryInterface;
-use App\Repositories\Master\LocationRepository;
-use App\Repositories\Contracts\Master\DocumentTypeRepositoryInterface;
-use App\Repositories\Master\DocumentTypeRepository;
-use App\Repositories\Contracts\Master\FileRequirementRepositoryInterface;
-use App\Repositories\Master\FileRequirementRepository;
-use App\Repositories\Contracts\Master\ShiftRepositoryInterface;
-use App\Repositories\Master\ShiftRepository;
-use App\Repositories\Contracts\Master\ShiftPatternRepositoryInterface;
-use App\Repositories\Master\ShiftPatternRepository;
-
-// Worker & User Repositories
-use App\Repositories\Contracts\Worker\WorkerRepositoryInterface;
-use App\Repositories\Worker\WorkerRepository;
-use App\Repositories\Contracts\User\UserRepositoryInterface;
-use App\Repositories\User\UserRepository;
-
-// Attendance & Schedule Repositories
-use App\Repositories\Contracts\Attendance\AbsentRepositoryInterface;
-use App\Repositories\Attendance\AbsentRepository;
-use App\Repositories\Contracts\Schedule\WorkerShiftScheduleRepositoryInterface;
-use App\Repositories\Schedule\WorkerShiftScheduleRepository;
-
-// Leave & Overtime Repositories
-use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
-use App\Repositories\Leave\LeaveRequestRepository;
-use App\Repositories\Contracts\Overtime\OvertimeRepositoryInterface;
-use App\Repositories\Overtime\OvertimeRepository;
-
-// Business Trip Repositories
-use App\Repositories\Contracts\BusinessTrip\BusinessTripRepositoryInterface;
-use App\Repositories\BusinessTrip\BusinessTripRepository;
-use App\Repositories\Contracts\BusinessTrip\BusinessTripReportRepositoryInterface;
-use App\Repositories\BusinessTrip\BusinessTripReportRepository;
-
-// Document Repositories
-use App\Repositories\Contracts\Document\BerkasRepositoryInterface;
-use App\Repositories\Document\BerkasRepository;
-
-// Role & Permission Repositories
-use App\Repositories\Contracts\Role\RoleRepositoryInterface;
-use App\Repositories\Role\RoleRepository;
-use App\Repositories\Contracts\Permission\PermissionRepositoryInterface;
-use App\Repositories\Permission\PermissionRepository;
-
 class RepositoryServiceProvider extends ServiceProvider
 {
-    /**
-     * Register services.
-     */
     public function register(): void
     {
-        // ========== MASTER DATA REPOSITORIES ==========
-        $this->app->bind(ReligionRepositoryInterface::class, ReligionRepository::class);
-        $this->app->bind(GenderRepositoryInterface::class, GenderRepository::class);
-        $this->app->bind(PositionRepositoryInterface::class, PositionRepository::class);
-        $this->app->bind(LocationRepositoryInterface::class, LocationRepository::class);
-        $this->app->bind(DocumentTypeRepositoryInterface::class, DocumentTypeRepository::class);
-        $this->app->bind(FileRequirementRepositoryInterface::class, FileRequirementRepository::class);
-        $this->app->bind(ShiftRepositoryInterface::class, ShiftRepository::class);
-        $this->app->bind(ShiftPatternRepositoryInterface::class, ShiftPatternRepository::class);
+        // User
+        $this->app->bind(
+            \App\Repositories\Contracts\User\UserRepositoryInterface::class,
+            \App\Repositories\User\UserRepository::class
+        );
 
-        // ========== WORKER & USER REPOSITORIES ==========
-        $this->app->bind(WorkerRepositoryInterface::class, WorkerRepository::class);
-        $this->app->bind(UserRepositoryInterface::class, UserRepository::class);
+        // Worker
+        $this->app->bind(
+            \App\Repositories\Contracts\Worker\WorkerRepositoryInterface::class,
+            \App\Repositories\Worker\WorkerRepository::class
+        );
 
-        // ========== ATTENDANCE & SCHEDULE REPOSITORIES ==========
-        $this->app->bind(AbsentRepositoryInterface::class, AbsentRepository::class);
-        $this->app->bind(WorkerShiftScheduleRepositoryInterface::class, WorkerShiftScheduleRepository::class);
+        // Attendance
+        $this->app->bind(
+            \App\Repositories\Contracts\Attendance\AttendanceRepositoryInterface::class,
+            \App\Repositories\Attendance\AttendanceRepository::class
+        );
+        
+        $this->app->bind(
+            \App\Repositories\Contracts\Attendance\AttendancePhotoRepositoryInterface::class,
+            \App\Repositories\Attendance\AttendancePhotoRepository::class
+        );
 
-        // ========== LEAVE & OVERTIME REPOSITORIES ==========
-        $this->app->bind(LeaveRequestRepositoryInterface::class, LeaveRequestRepository::class);
-        $this->app->bind(OvertimeRepositoryInterface::class, OvertimeRepository::class);
+        // Worker Shift
+        $this->app->bind(
+            \App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface::class,
+            \App\Repositories\WorkerShift\WorkerShiftRepository::class
+        );
 
-        // ========== BUSINESS TRIP REPOSITORIES ==========
-        $this->app->bind(BusinessTripRepositoryInterface::class, BusinessTripRepository::class);
-        $this->app->bind(BusinessTripReportRepositoryInterface::class, BusinessTripReportRepository::class);
+        // Shift Override
+        $this->app->bind(
+            \App\Repositories\Contracts\ShiftOverride\ShiftOverrideRepositoryInterface::class,
+            \App\Repositories\ShiftOverride\ShiftOverrideRepository::class
+        );
 
-        // ========== DOCUMENT REPOSITORIES ==========
-        $this->app->bind(BerkasRepositoryInterface::class, BerkasRepository::class);
+        // Leave
+        $this->app->bind(
+            \App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface::class,
+            \App\Repositories\Leave\LeaveRequestRepository::class
+        );
 
-        // ========== ROLE & PERMISSION REPOSITORIES ==========
-        $this->app->bind(RoleRepositoryInterface::class, RoleRepository::class);
-        $this->app->bind(PermissionRepositoryInterface::class, PermissionRepository::class);
+        // Overtime
+        $this->app->bind(
+            \App\Repositories\Contracts\Overtime\OvertimeRequestRepositoryInterface::class,
+            \App\Repositories\Overtime\OvertimeRequestRepository::class
+        );
+
+        // Worker Document
+        $this->app->bind(
+            \App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface::class,
+            \App\Repositories\WorkerDocument\WorkerDocumentRepository::class
+        );
+
+        // Role & Permission
+        $this->app->bind(
+            \App\Repositories\Contracts\Role\RoleRepositoryInterface::class,
+            \App\Repositories\Role\RoleRepository::class
+        );
+
+        $this->app->bind(
+            \App\Repositories\Contracts\Permission\PermissionRepositoryInterface::class,
+            \App\Repositories\Permission\PermissionRepository::class
+        );
+
+        // Master - Religion
+        $this->app->bind(
+            \App\Repositories\Contracts\Master\ReligionRepositoryInterface::class,
+            \App\Repositories\Master\ReligionRepository::class
+        );
+
+        // Master - Gender
+        $this->app->bind(
+            \App\Repositories\Contracts\Master\GenderRepositoryInterface::class,
+            \App\Repositories\Master\GenderRepository::class
+        );
+
+        // Master - Department
+        $this->app->bind(
+            \App\Repositories\Contracts\Master\DepartmentRepositoryInterface::class,
+            \App\Repositories\Master\DepartmentRepository::class
+        );
+
+        // Master - Location
+        $this->app->bind(
+            \App\Repositories\Contracts\Master\LocationRepositoryInterface::class,
+            \App\Repositories\Master\LocationRepository::class
+        );
+
+        // Master - Document Type
+        $this->app->bind(
+            \App\Repositories\Contracts\Master\DocumentTypeRepositoryInterface::class,
+            \App\Repositories\Master\DocumentTypeRepository::class
+        );
+
+        // Master - Shift
+        $this->app->bind(
+            \App\Repositories\Contracts\Master\ShiftRepositoryInterface::class,
+            \App\Repositories\Master\ShiftRepository::class
+        );
+
+        // Master - Leave Type
+        $this->app->bind(
+            \App\Repositories\Contracts\Master\LeaveTypeRepositoryInterface::class,
+            \App\Repositories\Master\LeaveTypeRepository::class
+        );
     }
 
-    /**
-     * Bootstrap services.
-     */
     public function boot(): void
     {
         //

@@ -22,75 +22,53 @@ class WorkerRequest extends FormRequest
 
     public function rules(): array
     {
-        $workerId = $this->route('worker');
+        $workerId = $this->route('id');
 
         return [
-            'nik' => [
+            'nip' => [
                 'required',
                 'string',
-                'max:20',
-                Rule::unique('workers', 'nik')->ignore($workerId),
+                'max:50',
+                Rule::unique('workers', 'nip')->ignore($workerId),
             ],
-            'name' => ['required', 'string', 'max:255'],
+            'name' => 'required|string|max:255',
             'email' => [
                 'required',
                 'email',
                 'max:255',
                 Rule::unique('workers', 'email')->ignore($workerId),
             ],
-            'phone' => [
-                'required',
-                'string',
-                'max:20',
-                'regex:/^[0-9+\-\s()]+$/',
-            ],
-            'gender_id' => ['required', 'uuid', 'exists:genders,id'],
-            'religion_id' => ['required', 'uuid', 'exists:religions,id'],
-            'position_id' => ['required', 'uuid', 'exists:positions,id'],
-            'place_of_birth' => ['required', 'string', 'max:100'],
-            'date_of_birth' => ['required', 'date', 'before:today'],
-            'address' => ['required', 'string', 'max:500'],
-            'hire_date' => ['required', 'date', 'before_or_equal:today'],
-            'status' => [
-                'required',
-                Rule::in(['permanent', 'contract', 'intern', 'outsourcing']),
-            ],
-            'is_active' => ['boolean'],
+            'phone' => 'required|string|max:20',
+            'birth_place' => 'required|string|max:100',
+            'birth_date' => 'required|date|before:today',
+            'address' => 'required|string|max:500',
+            'religion_id' => ['required', Rule::exists('religions', 'id')],
+            'gender_id' => ['required', Rule::exists('genders', 'id')],
+            'department_id' => ['required', Rule::exists('positions', 'id')],
+            'location_id' => ['required', Rule::exists('locations', 'id')],
+            'join_date' => 'required|date',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'is_active' => 'boolean',
         ];
     }
 
-    public function messages(): array
+    public function attributes(): array
     {
         return [
-            'nik.required' => 'NIK harus diisi.',
-            'nik.unique' => 'NIK sudah terdaftar.',
-            'nik.max' => 'NIK maksimal 20 karakter.',
-            'name.required' => 'Nama lengkap harus diisi.',
-            'email.required' => 'Email harus diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah terdaftar.',
-            'phone.required' => 'Nomor telepon harus diisi.',
-            'phone.regex' => 'Format nomor telepon tidak valid.',
-            'gender_id.required' => 'Jenis kelamin harus dipilih.',
-            'religion_id.required' => 'Agama harus dipilih.',
-            'position_id.required' => 'Jabatan harus dipilih.',
-            'place_of_birth.required' => 'Tempat lahir harus diisi.',
-            'date_of_birth.required' => 'Tanggal lahir harus diisi.',
-            'date_of_birth.before' => 'Tanggal lahir harus sebelum hari ini.',
-            'address.required' => 'Alamat harus diisi.',
-            'hire_date.required' => 'Tanggal bergabung harus diisi.',
-            'hire_date.before_or_equal' => 'Tanggal bergabung tidak boleh di masa depan.',
-            'status.required' => 'Status pegawai harus dipilih.',
-            'status.in' => 'Status pegawai tidak valid.',
+            'nip' => 'NIP',
+            'name' => 'Nama',
+            'email' => 'Email',
+            'phone' => 'No. Telepon',
+            'birth_place' => 'Tempat Lahir',
+            'birth_date' => 'Tanggal Lahir',
+            'address' => 'Alamat',
+            'religion_id' => 'Agama',
+            'gender_id' => 'Jenis Kelamin',
+            'position_id' => 'Jabatan',
+            'location_id' => 'Lokasi',
+            'join_date' => 'Tanggal Bergabung',
+            'photo' => 'Foto',
+            'is_active' => 'Status Aktif',
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'is_active' => $this->has('is_active') ? 
-                filter_var($this->is_active, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false : 
-                true,
-        ]);
     }
 }

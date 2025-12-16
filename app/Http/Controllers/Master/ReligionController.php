@@ -2,112 +2,128 @@
 
 namespace App\Http\Controllers\Master;
 
-use App\DTOs\Master\ReligionDTO;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Master\ReligionRequest;
 use App\Services\Master\ReligionService;
+use App\DTOs\Master\ReligionDTO;
 use Illuminate\Http\Request;
-
 
 class ReligionController extends Controller
 {
     public function __construct(
-        private readonly ReligionService $service
+        protected ReligionService $religionService
     ) {
-        $this->middleware(['auth', 'role:Super Admin|HR']);
+        $this->middleware('auth');
+        $this->middleware('permission:religion.view')->only(['index', 'show']);
+        $this->middleware('permission:religion.create')->only(['create', 'store']);
+        $this->middleware('permission:religion.edit')->only(['edit', 'update']);
+        $this->middleware('permission:religion.delete')->only('destroy');
     }
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $keyword = $request->input('search');
-        
-        $religions = $keyword 
-            ? $this->service->search($keyword)
-            : $this->service->getAllPaginated();
+        $perPage = $request->per_page ?? 15;
+        $religions = $this->religionService->getAllPaginated($perPage);
 
-        return view('admin.master.religions.index', compact('religions', 'keyword'));
+        return view('admin.master.religions.index', compact('religions'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         return view('admin.master.religions.create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(ReligionRequest $request)
+    public function store(Request $request)
     {
-        $dto = ReligionDTO::fromRequest($request->validated());
-        $result = $this->service->create($dto);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:religions,name',
+            'is_active' => 'nullable|boolean',
+        ]);
 
-        if ($result['success']) {
-            return redirect()
-                ->route('admin.master.religions.index')
-                ->with('success', $result['message']);
+        try {
+            $dto = ReligionDTO::fromRequest($validated);
+            $result = $this->religionService->create($dto);
+
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.religions.index')
+                    ->with('success', $result['message']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show(string $id)
     {
-        $religion = $this->service->findById($id);
-        return view('admin.master.religions.show', compact('religion'));
+        try {
+            $religion = $this->religionService->findById($id);
+            return view('admin.master.religions.show', compact('religion'));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.master.religions.index')
+                ->with('error', $e->getMessage());
+        }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
-        $religion = $this->service->findById($id);
-        return view('admin.master.religions.edit', compact('religion'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(ReligionRequest $request, string $id)
-    {
-        $dto = ReligionDTO::fromRequest($request->validated());
-        $result = $this->service->update($id, $dto);
-
-        if ($result['success']) {
+        try {
+            $religion = $this->religionService->findById($id);
+            return view('admin.master.religions.edit', compact('religion'));
+        } catch (\Exception $e) {
             return redirect()
                 ->route('admin.master.religions.index')
-                ->with('success', $result['message']);
+                ->with('error', $e->getMessage());
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    public function update(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:religions,name,' . $id,
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        try {
+            $dto = ReligionDTO::fromRequest($validated);
+            $result = $this->religionService->update($id, $dto);
+
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.religions.show', $id)
+                    ->with('success', $result['message']);
+            }
+
+            return back()
+                ->withInput()
+                ->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
     public function destroy(string $id)
     {
-        $result = $this->service->delete($id);
+        try {
+            $result = $this->religionService->delete($id);
 
-        if ($result['success']) {
-            return redirect()
-                ->route('admin.master.religions.index')
-                ->with('success', $result['message']);
+            if ($result['success']) {
+                return redirect()
+                    ->route('admin.master.religions.index')
+                    ->with('success', $result['message']);
+            }
+
+            return back()->with('error', $result['message']);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 }

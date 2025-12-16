@@ -1,62 +1,80 @@
 <?php
-// filepath: app/Repositories/Contracts/UserRepositoryInterface.php
+// filepath: app/Repositories/Contracts/User/UserRepositoryInterface.php
 
 namespace App\Repositories\Contracts\User;
 
-use App\Models\User;
+use App\DTOs\UserDTO;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Database\Eloquent\Collection;
 
 interface UserRepositoryInterface
 {
     /**
-     * Find user by username
+     * Get all users with pagination and filters
      */
-    public function findByUsername(string $username): ?User;
+    public function getAll(array $filters = []): LengthAwarePaginator;
 
     /**
-     * Find user by email
+     * Get user by ID
      */
-    public function findByEmail(string $email): ?User;
+    public function getById(string $id): ?object;
 
     /**
-     * Update user last login
+     * Get user by username
      */
-    public function updateLastLogin(User $user): bool;
+    public function getByUsername(string $username): ?object;
 
     /**
-     * Check if user is active
+     * Get user by email
      */
-    public function isActive(User $user): bool;
+    public function getByEmail(string $email): ?object;
 
     /**
-     * Get user with relationships
+     * Create a new user
      */
-    public function getUserWithRelations(User $user, array $relations = []): User;
+    public function create(UserDTO $dto): object;
 
     /**
-     * Cache user data
+     * Update an existing user
      */
-    public function cacheUserData(User $user, int $ttl = 3600): void;
+    public function update(string $id, UserDTO $dto): object;
 
     /**
-     * Get cached user data
+     * Delete a user
      */
-    public function getCachedUserData(string $userId): ?User;
-
-    /**
-     * Clear user cache
-     */
-    public function clearUserCache(string $userId): void;
-
-    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator;
-    public function getAll(): Collection;
-    public function findById(string $id);
-    public function findByWorkerId(string $workerId);
-    public function create(array $data);
-    public function update(string $id, array $data): bool;
     public function delete(string $id): bool;
-    public function updatePassword(string $id, string $password): bool;
-    public function syncRoles(string $id, array $roles): bool;
-    public function getActiveUsers(): Collection;
+
+    /**
+     * Update user password
+     */
+    public function updatePassword(string $id, string $hashedPassword): object;
+
+    /**
+     * Update last login timestamp for a user
+     */
+    public function updateLastLogin(string $id): object;
+
+    /**
+     * Activate a user
+     */
+    public function activate(string $id): object;
+
+    /**
+     * Deactivate a user
+     */
+    public function deactivate(string $id): object;
+
+    /**
+     * Assign roles to a user
+     */
+    public function assignRoles(string $id, array $roles): object;
+
+    /**
+     * Sync user roles
+     */
+    public function syncRoles(string $id, array $roles): object;
+
+    /**
+     * Remove a role from a user
+     */
+    public function removeRole(string $id, string $role): object;
 }

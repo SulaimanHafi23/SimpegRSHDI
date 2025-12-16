@@ -2,30 +2,54 @@
 
 namespace App\Repositories\Leave;
 
+use App\DTOs\LeaveRequestDTO;
 use App\Models\LeaveRequest;
 use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class LeaveRequestRepository implements LeaveRequestRepositoryInterface
 {
     public function __construct(
-        private readonly LeaveRequest $model
+        protected LeaveRequest $model
     ) {}
 
-    public function paginate(int $perPage = 15, array $filters = []): LengthAwarePaginator
+    public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = $this->model
-            ->with(['worker.position', 'leaveType', 'approver']);
+        $query = $this->model->with(['worker', 'leaveType', 'approver']);
 
         if (!empty($filters['worker_id'])) {
             $query->where('worker_id', $filters['worker_id']);
         }
 
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
         if (!empty($filters['leave_type_id'])) {
             $query->where('leave_type_id', $filters['leave_type_id']);
         }
+
+        if (!empty($filters['date_from'])) {
+            $query->where('start_date', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->where('end_date', '<=', $filters['date_to']);
+        }
+
+        return $query->latest('start_date')->paginate($filters['per_page'] ?? 15);
+    }
+
+    public function getById(string $id): ?object
+    {
+        return $this->model->with(['worker', 'leaveType', 'approver'])->find($id);
+    }
+
+    public function getByWorkerId(string $workerId, array $filters = []): Collection
+    {
+        $query = $this->model->where('worker_id', $workerId)
+            ->with(['leaveType', 'approver']);
 
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -35,109 +59,86 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
             $query->whereYear('start_date', $filters['year']);
         }
 
-        if (!empty($filters['month'])) {
-            $query->whereMonth('start_date', $filters['month']);
-        }
-
-        return $query
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+        return $query->latest('start_date')->get();
     }
 
-    public function findById(string $id)
+    public function getPendingRequests(): Collection
     {
-        return $this->model
-            ->with(['worker.position', 'leaveType', 'approver'])
-            ->findOrFail($id);
-    }
-
-    public function getByWorker(string $workerId, ?string $year = null): Collection
-    {
-        $query = $this->model
-            ->with(['leaveType'])
-            ->where('worker_id', $workerId);
-
-        if ($year) {
-            $query->whereYear('start_date', $year);
-        }
-
-        return $query
-            ->orderBy('start_date', 'desc')
+        return $this->model->where('status', 'pending')
+            ->with(['worker', 'leaveType'])
+            ->latest('start_date')
             ->get();
     }
 
-    public function getPending(): Collection
+    public function create(LeaveRequestDTO $dto): object
     {
-        return $this->model
-            ->with(['worker.position', 'leaveType'])
-            ->where('status', 'pending')
-            ->orderBy('created_at', 'asc')
-            ->get();
+        return $this->model->create($dto->toArray());
     }
 
-    public function getApproved(): Collection
+    public function update(string $id, LeaveRequestDTO $dto): object
     {
-        return $this->model
-            ->with(['worker.position', 'leaveType'])
-            ->where('status', 'approved')
-            ->orderBy('start_date', 'desc')
-            ->get();
-    }
-
-    public function create(array $data)
-    {
-        return $this->model->create($data);
-    }
-
-    public function update(string $id, array $data): bool
-    {
-        $leaveRequest = $this->findById($id);
-        return $leaveRequest->update($data);
+        $leaveRequest = $this->model->findOrFail($id);
+        $leaveRequest->update($dto->toArray());
+        return $leaveRequest->fresh();
     }
 
     public function delete(string $id): bool
     {
-        $leaveRequest = $this->findById($id);
+        $leaveRequest = $this->model->findOrFail($id);
+        
+        // Delete attachment if exists
+        if ($leaveRequest->attachment_path && \Storage::exists($leaveRequest->attachment_path)) {
+            \Storage::delete($leaveRequest->attachment_path);
+        }
+        
         return $leaveRequest->delete();
     }
 
-    public function approve(string $id, string $userId): bool
+    public function approve(string $id, string $approvedBy): object
     {
-        return $this->update($id, [
+        $leaveRequest = $this->model->findOrFail($id);
+        $leaveRequest->update([
             'status' => 'approved',
-            'approved_by' => $userId,
+            'approved_by' => $approvedBy,
             'approved_at' => now(),
+            'rejection_reason' => null,
         ]);
+        return $leaveRequest->fresh();
     }
 
-    public function reject(string $id, string $userId, string $reason): bool
+    public function reject(string $id, string $approvedBy, string $reason): object
     {
-        return $this->update($id, [
+        $leaveRequest = $this->model->findOrFail($id);
+        $leaveRequest->update([
             'status' => 'rejected',
-            'approved_by' => $userId,
+            'approved_by' => $approvedBy,
             'approved_at' => now(),
             'rejection_reason' => $reason,
         ]);
+        return $leaveRequest->fresh();
     }
 
-    public function checkOverlap(string $workerId, string $startDate, string $endDate, ?string $excludeId = null): bool
+    public function cancel(string $id): object
     {
-        $query = $this->model
-            ->where('worker_id', $workerId)
-            ->where('status', '!=', 'rejected')
-            ->where(function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('start_date', [$startDate, $endDate])
-                    ->orWhereBetween('end_date', [$startDate, $endDate])
-                    ->orWhere(function ($q2) use ($startDate, $endDate) {
-                        $q2->where('start_date', '<=', $startDate)
-                            ->where('end_date', '>=', $endDate);
-                    });
-            });
+        $leaveRequest = $this->model->findOrFail($id);
+        $leaveRequest->update(['status' => 'cancelled']);
+        return $leaveRequest->fresh();
+    }
 
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
+    public function getWorkerLeaveBalance(string $workerId, string $leaveTypeId, int $year): int
+    {
+        $leaveType = \App\Models\LeaveType::findOrFail($leaveTypeId);
+        
+        if (!$leaveType->max_days_per_year) {
+            return 0; // Unlimited
         }
 
-        return $query->exists();
+        $usedDays = $this->model->where('worker_id', $workerId)
+            ->where('leave_type_id', $leaveTypeId)
+            ->whereYear('start_date', $year)
+            ->whereIn('status', ['approved', 'pending'])
+            ->sum('total_days');
+
+        return max(0, $leaveType->max_days_per_year - $usedDays);
     }
 }

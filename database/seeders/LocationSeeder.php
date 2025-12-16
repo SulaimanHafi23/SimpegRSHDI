@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Location;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class LocationSeeder extends Seeder
 {
@@ -12,14 +13,31 @@ class LocationSeeder extends Seeder
      */
     public function run(): void
     {
-        Location::create([
-            'name' => 'RS Haji Sulaiman - Kantor Utama',
-            'address' => 'Jl. Rumah Sakit, Banjarmasin, Kalimantan Selatan',
-            'latitude' => config('geofence.lat', -3.5792793888507655),
-            'longitude' => config('geofence.lng', 114.62786483938096),
-            'radius' => config('geofence.radius', 100),
-            'enforce_geofence' => config('geofence.enforce', true),
-            'is_active' => true,
-        ]);
+        $locations = [
+            [
+                'id' => Str::uuid(),
+                'name' => 'Kantor Pusat Jakarta',
+                'address' => 'Jl. Sudirman No. 123, Jakarta Pusat, DKI Jakarta',
+                'latitude' => -6.2088,
+                'longitude' => 106.8456,
+                'radius' => 100,
+                'is_active' => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'id' => Str::uuid(),
+                'name' => 'Cabang Surabaya',
+                'address' => 'Jl. Tunjungan No. 456, Surabaya, Jawa Timur',
+                'latitude' => -7.2575,
+                'longitude' => 112.7521,
+                'radius' => 100,
+                'is_active' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ];
+
+        DB::table('locations')->insert($locations);
     }
 }

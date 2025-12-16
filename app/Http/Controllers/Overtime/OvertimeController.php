@@ -1,21 +1,19 @@
 <?php
 
-// filepath: app/Http/Controllers/OvertimeController.php
-
 namespace App\Http\Controllers\Overtime;
 
-use App\DTOs\OvertimeDTO;
-use App\Http\Requests\Overtime\OvertimeRequest;
-use App\Services\Overtime\OvertimeService;
+use App\DTOs\OvertimeRequestDTO;
+use App\Services\Overtime\OvertimeRequestService;
 use App\Services\Worker\WorkerService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Overtime\OvertimeRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
 class OvertimeController extends Controller
 {
     public function __construct(
-        private readonly OvertimeService $service,
+        private readonly OvertimeRequestService $service,
         private readonly WorkerService $workerService
     ) {
         $this->middleware('auth');
@@ -94,18 +92,18 @@ class OvertimeController extends Controller
     {
         $this->authorizePermission('create-overtimes');
 
-        $dto = OvertimeDTO::fromRequest($request->validated());
-        $result = $this->service->create($dto, $request->file('attachment'));
+        try {
+            $dto = OvertimeDTO::fromRequest($request->validated());
+            $overtime = $this->service->create($dto->toArray());
 
-        if ($result['success']) {
             return redirect()
-                ->route('admin.overtime.show', $result['data']->id)
-                ->with('success', $result['message']);
+                ->route('admin.overtime.show', $overtime->id)
+                ->with('success', 'Pengajuan lembur berhasil ditambahkan');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
     public function edit(string $id)
@@ -132,64 +130,63 @@ class OvertimeController extends Controller
     {
         $this->authorizePermission('edit-overtimes');
 
-        $overtime = $this->service->findById($id);
+        try {
+            $overtime = $this->service->findById($id);
 
-        // Check own data permission
-        if (auth()->user()->can('view-own-overtimes') && 
-            !auth()->user()->can('edit-overtimes') &&
-            !$this->isOwnData($overtime->worker_id)) {
-            abort(403);
-        }
+            // Check own data permission
+            if (auth()->user()->can('view-own-overtimes') && 
+                !auth()->user()->can('edit-overtimes') &&
+                !$this->isOwnData($overtime->worker_id)) {
+                abort(403);
+            }
 
-        $dto = OvertimeDTO::fromRequest($request->validated());
-        $result = $this->service->update($id, $dto, $request->file('attachment'));
+            $dto = OvertimeDTO::fromRequest($request->validated());
+            $this->service->update($id, $dto->toArray());
 
-        if ($result['success']) {
             return redirect()
                 ->route('admin.overtime.show', $id)
-                ->with('success', $result['message']);
+                ->with('success', 'Pengajuan lembur berhasil diupdate');
+        } catch (\Exception $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
-
-        return back()
-            ->withInput()
-            ->withErrors(['error' => $result['message']]);
     }
 
     public function destroy(string $id)
     {
         $this->authorizePermission('delete-overtimes');
 
-        $overtime = $this->service->findById($id);
+        try {
+            $overtime = $this->service->findById($id);
 
-        // Check own data permission
-        if (auth()->user()->can('view-own-overtimes') && 
-            !auth()->user()->can('delete-overtimes') &&
-            !$this->isOwnData($overtime->worker_id)) {
-            abort(403);
-        }
+            // Check own data permission
+            if (auth()->user()->can('view-own-overtimes') && 
+                !auth()->user()->can('delete-overtimes') &&
+                !$this->isOwnData($overtime->worker_id)) {
+                abort(403);
+            }
 
-        $result = $this->service->delete($id);
+            $this->service->delete($id);
 
-        if ($result['success']) {
             return redirect()
                 ->route('admin.overtime.index')
-                ->with('success', $result['message']);
+                ->with('success', 'Pengajuan lembur berhasil dihapus');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 
     public function approve(string $id)
     {
         $this->authorizePermission('approve-overtimes');
 
-        $result = $this->service->approve($id, auth()->id());
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
+        try {
+            $this->service->approve($id, auth()->id());
+            return back()->with('success', 'Pengajuan lembur berhasil disetujui');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 
     public function reject(Request $request, string $id)
@@ -202,13 +199,12 @@ class OvertimeController extends Controller
             'rejection_reason.required' => 'Alasan penolakan harus diisi.',
         ]);
 
-        $result = $this->service->reject($id, auth()->id(), $request->rejection_reason);
-
-        if ($result['success']) {
-            return back()->with('success', $result['message']);
+        try {
+            $this->service->reject($id, auth()->id(), $request->rejection_reason);
+            return back()->with('success', 'Pengajuan lembur berhasil ditolak');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan: ' . $e->getMessage()]);
         }
-
-        return back()->withErrors(['error' => $result['message']]);
     }
 
     public function pending()

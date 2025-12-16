@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Overtime;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class OvertimeRequest extends FormRequest
 {
@@ -22,54 +23,31 @@ class OvertimeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'worker_id' => [
-                'required',
-                'uuid',
-                'exists:workers,id',
-            ],
-            'date' => [
-                'required',
-                'date',
-            ],
-            'start_time' => [
-                'required',
-                'date_format:H:i',
-            ],
-            'end_time' => [
-                'required',
-                'date_format:H:i',
-            ],
-            'reason' => [
-                'required',
-                'string',
-                'max:1000',
-            ],
-            'notes' => [
-                'nullable',
-                'string',
-                'max:1000',
-            ],
-            'attachment' => [
-                'nullable',
-                'file',
-                'max:5120', // 5MB
-                'mimes:pdf,jpg,jpeg,png,doc,docx',
-            ],
+            'worker_id' => ['required', Rule::exists('workers', 'id')],
+            'date' => 'required|date',
+            'start_time' => 'required|date_format:Y-m-d H:i:s',
+            'end_time' => 'required|date_format:Y-m-d H:i:s|after:start_time',
+            'reason' => 'required|string|max:1000',
+            'notes' => 'nullable|string|max:500',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'worker_id' => 'Pekerja',
+            'date' => 'Tanggal',
+            'start_time' => 'Waktu Mulai',
+            'end_time' => 'Waktu Selesai',
+            'reason' => 'Alasan',
+            'notes' => 'Catatan',
         ];
     }
 
     public function messages(): array
     {
         return [
-            'worker_id.required' => 'Pegawai harus dipilih.',
-            'date.required' => 'Tanggal harus diisi.',
-            'start_time.required' => 'Jam mulai harus diisi.',
-            'start_time.date_format' => 'Format jam mulai tidak valid (HH:MM).',
-            'end_time.required' => 'Jam selesai harus diisi.',
-            'end_time.date_format' => 'Format jam selesai tidak valid (HH:MM).',
-            'reason.required' => 'Alasan lembur harus diisi.',
-            'attachment.max' => 'Ukuran file maksimal 5MB.',
-            'attachment.mimes' => 'Format file harus: pdf, jpg, jpeg, png, doc, atau docx.',
+            'end_time.after' => ':attribute harus setelah waktu mulai',
         ];
     }
 }

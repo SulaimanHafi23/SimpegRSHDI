@@ -2,18 +2,19 @@
 
 namespace App\Models;
 
-use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuid, HasRoles;
-
-    protected $guard_name = 'web';
+    use HasFactory, Notifiable, HasApiTokens, HasUuids, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -23,9 +24,11 @@ class User extends Authenticatable
     protected $fillable = [
         'worker_id',
         'email',
+        'username',
         'password',
-        'is_active',
         'email_verified_at',
+        'last_login',
+        'is_active',
     ];
 
     /**
@@ -43,60 +46,38 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_active' => 'boolean',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'last_login' => 'datetime',
+        'is_active' => 'boolean',
+        'password' => 'hashed',
+    ];
 
     /**
      * Get the worker that owns the user.
      */
-    public function worker()
+    public function worker(): BelongsTo
     {
         return $this->belongsTo(Worker::class);
     }
 
-    /**
-     * Check if the user is a Super Admin.
-     */
-    public function isAdmin(): bool
+    public function createdShiftOverrides(): HasMany
     {
-        return $this->hasRole('Super Admin');
+        return $this->hasMany(ShiftOverrides::class, 'created_by');
     }
 
-    /**
-     * Check if the user is in HR.
-     */
-    public function isHR(): bool
+    public function verifiedDocuments(): HasMany
     {
-        return $this->hasRole('HR');
+        return $this->hasMany(WorkerDocument::class, 'verified_by');
     }
 
-    /**
-     * Check if the user is a Manager.
-     */
-    public function isManager(): bool
+    public function approvedLeaveRequests(): HasMany
     {
-        return $this->hasRole('Manager');
+        return $this->hasMany(LeaveRequest::class, 'approved_by');
     }
 
-    /**
-     * Check if the user is an Employee.
-     */
-    public function isEmployee(): bool
+    public function approvedOvertimeRequests(): HasMany
     {
-        return $this->hasRole('Employee');
-    }
-
-    /**
-     * Check if the user can approve.
-     */
-    public function canApprove(): bool
-    {
-        return $this->hasAnyRole(['Super Admin', 'HR', 'Manager']);
+        return $this->hasMany(OvertimeRequest::class, 'approved_by');
     }
 }

@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('attendance_photos', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->foreignUuid('attendance_id')->constrained('attendances')->cascadeOnDelete();
+            $table->string('photo_path');
+            $table->enum('photo_type', ['check_in', 'check_out']);
+            $table->timestamp('taken_at');
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+            $table->timestamp('created_at');
+
+            $table->index('attendance_id');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('attendance_photos');
+    }
+};

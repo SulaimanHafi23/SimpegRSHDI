@@ -2,44 +2,46 @@
 
 namespace App\Models;
 
-use App\Traits\HasUuid;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Shift extends Model
 {
-    use HasUuid;
+    use HasFactory, HasUuids;
 
     protected $fillable = [
         'name',
         'start_time',
         'end_time',
         'total_hours',
-        'description',
+        'grace_period_minutes',
+        'is_overnight',
         'is_active',
     ];
 
     protected $casts = [
+        'start_time' => 'datetime:H:i:s',
+        'end_time' => 'datetime:H:i:s',
+        'total_hours' => 'integer',
+        'grace_period_minutes' => 'integer',
+        'is_overnight' => 'boolean',
         'is_active' => 'boolean',
     ];
 
-    public function positions(): BelongsToMany
+    public function workerShifts(): HasMany
     {
-        return $this->belongsToMany(Position::class, 'position_shift')
-            ->withPivot('is_active')
-            ->withTimestamps();
+        return $this->hasMany(WorkerShift::class);
     }
 
-    public function workers()
+    public function shiftOverrides(): HasMany
     {
-        return $this->belongsToMany(\App\Models\Worker::class, 'worker_shift_assignments')
-                    ->withPivot(['is_default','is_active','priority'])
-                    ->withTimestamps();
+        return $this->hasMany(ShiftOverrides::class);
     }
 
-    public function schedules(): HasMany
+    public function attendances(): HasMany
     {
-        return $this->hasMany(WorkerShiftSchedule::class);
+        return $this->hasMany(Attendance::class);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Worker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class SuperAdminSeeder extends Seeder
 {
@@ -22,14 +23,14 @@ class SuperAdminSeeder extends Seeder
         
         $gender = \App\Models\Gender::firstOrCreate(['name' => 'Laki-laki']);
         $religion = \App\Models\Religion::firstOrCreate(['name' => 'Islam']);
-        $position = \App\Models\Position::firstOrCreate(
+        $department = \App\Models\Department::firstOrCreate(
             ['name' => 'Admin'], 
             ['description' => 'Staff administrasi']
         );
 
         $this->command->info("   ✅ Gender: {$gender->name}");
         $this->command->info("   ✅ Religion: {$religion->name}");
-        $this->command->info("   ✅ Position: {$position->name}");
+        $this->command->info("   ✅ Department: {$department->name}");
 
         // ========== VALIDASI SPATIE ROLE ==========
         
@@ -67,30 +68,31 @@ class SuperAdminSeeder extends Seeder
         try {
             // CREATE WORKER
             $worker = Worker::create([
-                'nip' => 'SA001',
+                'id' => Str::uuid(),
+                'nip' => 'NIP-0001',
                 'name' => 'Super Admin',
-                'frontname' => null,
-                'backname' => null,
-                'email' => 'superadmin@rshdi.com',
-                'phone_number' => '081234567890',  // ✅ FIX: phone_number (bukan phone)
+                'email' => 'superadmin@example.com',
+                'phone_number' => '081234567890',
+                'address' => 'Jakarta',
+                'birth_date' => '1990-01-01',
+                'birth_place' => 'Jakarta',
                 'gender_id' => $gender->id,
                 'religion_id' => $religion->id,
-                'position_id' => $position->id,
-                'birth_place' => 'Jakarta',
-                'birth_date' => '1990-01-01',
-                'address' => 'Kantor RS HDI, Jakarta',
+                'department_id' => $department->id,
                 'hire_date' => now(),
-                'status' => 'Active',
+                'employment_status' => 'permanent',
+                'status' => 'active',
             ]);
 
             $this->command->info("   ✅ Worker created: {$worker->name} (NIP: {$worker->nip})");
 
             // CREATE USER
             $user = User::create([
-                'worker_id' => $worker->id,
-                'email' => 'superadmin@rshdi.com',
-                'username' => 'superadmin',
+                'id' => Str::uuid(),
+                'username' => 'Super Admin',
+                'email' => 'superadmin@example.com',
                 'password' => Hash::make('password'),
+                'worker_id' => $worker->id,
                 'is_active' => true,
             ]);
 

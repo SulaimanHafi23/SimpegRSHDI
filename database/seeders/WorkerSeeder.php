@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\Worker;
+use App\Models\Department;
 use App\Models\Gender;
+use App\Models\Worker;
 use App\Models\Religion;
-use App\Models\Position;
+use Illuminate\Support\Str;
+use Illuminate\Database\Seeder;
 
 class WorkerSeeder extends Seeder
 {
@@ -21,7 +22,7 @@ class WorkerSeeder extends Seeder
         $this->command->info('🔍 Checking master data...');
         $this->command->info('   Genders: ' . Gender::count());
         $this->command->info('   Religions: ' . Religion::count());
-        $this->command->info('   Positions: ' . Position::count());
+        $this->command->info('   Positions: ' . Department::count());
         
         // ✅ AMBIL DATA (pakai firstOrCreate untuk safety)
         $genderLaki = Gender::firstOrCreate(['name' => 'Laki-laki']);
@@ -31,13 +32,13 @@ class WorkerSeeder extends Seeder
         $religionKristen = Religion::firstOrCreate(['name' => 'Kristen']);
         $religionKatolik = Religion::firstOrCreate(['name' => 'Katolik']);
         
-        $positionDokter = Position::firstOrCreate(['name' => 'Dokter'], ['description' => 'Dokter umum dan spesialis']);
-        $positionPerawat = Position::firstOrCreate(['name' => 'Perawat'], ['description' => 'Perawat']);
-        $positionBidan = Position::firstOrCreate(['name' => 'Bidan'], ['description' => 'Bidan']);
-        $positionAdmin = Position::firstOrCreate(['name' => 'Admin'], ['description' => 'Staff administrasi']);
+        $departmentDokter = Department::firstOrCreate(['name' => 'Dokter'], ['description' => 'Dokter umum dan spesialis']);
+        $departmentPerawat = Department::firstOrCreate(['name' => 'Perawat'], ['description' => 'Perawat']);
+        $departmentBidan = Department::firstOrCreate(['name' => 'Bidan'], ['description' => 'Bidan']);
+        $departmentAdmin = Department::firstOrCreate(['name' => 'Admin'], ['description' => 'Staff administrasi']);
 
         // ✅ VALIDASI FINAL
-        if (!$genderLaki || !$religionIslam || !$positionDokter) {
+        if (!$genderLaki || !$religionIslam || !$departmentDokter) {
             $this->command->error('❌ Failed to create/find master data!');
             return;
         }
@@ -57,7 +58,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567801',
                 'gender_id' => $genderLaki->id,
                 'religion_id' => $religionIslam->id,
-                'position_id' => $positionDokter->id,
+                'department_id' => $departmentDokter->id,
                 'birth_place' => 'Jakarta',
                 'birth_date' => '1985-03-15',
                 'address' => 'Jl. Sudirman No. 123, Jakarta',
@@ -71,7 +72,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567802',
                 'gender_id' => $genderPerempuan->id,
                 'religion_id' => $religionIslam->id,
-                'position_id' => $positionDokter->id,
+                'department_id' => $departmentDokter->id,
                 'birth_place' => 'Bandung',
                 'birth_date' => '1988-07-20',
                 'address' => 'Jl. Asia Afrika No. 45, Bandung',
@@ -85,7 +86,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567803',
                 'gender_id' => $genderLaki->id,
                 'religion_id' => $religionKristen->id,
-                'position_id' => $positionDokter->id,
+                'department_id' => $departmentDokter->id,
                 'birth_place' => 'Surabaya',
                 'birth_date' => '1982-11-08',
                 'address' => 'Jl. Pemuda No. 78, Surabaya',
@@ -101,7 +102,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567811',
                 'gender_id' => $genderPerempuan->id,
                 'religion_id' => $religionIslam->id,
-                'position_id' => $positionPerawat->id,
+                'department_id' => $departmentPerawat->id,
                 'birth_place' => 'Yogyakarta',
                 'birth_date' => '1992-05-12',
                 'address' => 'Jl. Malioboro No. 56, Yogyakarta',
@@ -115,7 +116,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567812',
                 'gender_id' => $genderLaki->id,
                 'religion_id' => $religionIslam->id,
-                'position_id' => $positionPerawat->id,
+                'department_id' => $departmentPerawat->id,
                 'birth_place' => 'Medan',
                 'birth_date' => '1990-09-25',
                 'address' => 'Jl. Gatot Subroto No. 12, Medan',
@@ -129,7 +130,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567813',
                 'gender_id' => $genderPerempuan->id,
                 'religion_id' => $religionKristen->id,
-                'position_id' => $positionPerawat->id,
+                'department_id' => $departmentPerawat->id,
                 'birth_place' => 'Semarang',
                 'birth_date' => '1994-02-18',
                 'address' => 'Jl. Pandanaran No. 89, Semarang',
@@ -145,7 +146,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567821',
                 'gender_id' => $genderPerempuan->id,
                 'religion_id' => $religionIslam->id,
-                'position_id' => $positionBidan->id,
+                'department_id' => $departmentBidan->id,
                 'birth_place' => 'Solo',
                 'birth_date' => '1991-04-30',
                 'address' => 'Jl. Slamet Riyadi No. 34, Solo',
@@ -159,7 +160,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567822',
                 'gender_id' => $genderPerempuan->id,
                 'religion_id' => $religionIslam->id,
-                'position_id' => $positionBidan->id,
+                'department_id' => $departmentBidan->id,
                 'birth_place' => 'Malang',
                 'birth_date' => '1993-08-14',
                 'address' => 'Jl. Ijen No. 67, Malang',
@@ -175,7 +176,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567831',
                 'gender_id' => $genderLaki->id,
                 'religion_id' => $religionIslam->id,
-                'position_id' => $positionAdmin->id,
+                'department_id' => $departmentAdmin->id,
                 'birth_place' => 'Jakarta',
                 'birth_date' => '1995-01-20',
                 'address' => 'Jl. Thamrin No. 90, Jakarta',
@@ -189,7 +190,7 @@ class WorkerSeeder extends Seeder
                 'phone_number' => '081234567832',
                 'gender_id' => $genderPerempuan->id,
                 'religion_id' => $religionKatolik->id,
-                'position_id' => $positionAdmin->id,
+                'department_id' => $departmentAdmin->id,
                 'birth_place' => 'Surabaya',
                 'birth_date' => '1996-06-10',
                 'address' => 'Jl. Diponegoro No. 45, Surabaya',

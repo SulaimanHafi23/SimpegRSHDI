@@ -1,68 +1,38 @@
 <?php
+// filepath: app/Http/Requests/BusinessTrip/BusinessTripReportRequest.php
 
 namespace App\Http\Requests\BusinessTrip;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Models\BusinessTripReport;
 
 class BusinessTripReportRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'business_trip_id' => [
-                'required',
-                'uuid',
-                'exists:business_trips,id',
-            ],
-            'report_date' => [
-                'required',
-                'date',
-                'before_or_equal:today',
-            ],
-            'activities' => [
-                'required',
-                'string',
-            ],
-            'results' => [
-                'required',
-                'string',
-            ],
-            'attachment' => [
-                'nullable',
-                'file',
-                'max:10240', // 10MB
-                'mimes:pdf,jpg,jpeg,png,doc,docx',
-            ],
-            'notes' => [
-                'nullable',
-                'string',
-                'max:1000',
-            ],
+            'business_trip_id' => ['required', Rule::exists('business_trips', 'id')],
+            'report_title' => 'required|string|max:255',
+            'report_content' => 'required|string',
+            'status' => ['nullable', Rule::in(array_keys(BusinessTripReport::getStatuses()))],
+            'review_notes' => 'nullable|string|max:1000',
         ];
     }
 
-    public function messages(): array
+    public function attributes(): array
     {
         return [
-            'business_trip_id.required' => 'ID Perjalanan dinas harus ada.',
-            'report_date.required' => 'Tanggal laporan harus diisi.',
-            'report_date.before_or_equal' => 'Tanggal laporan tidak boleh di masa depan.',
-            'activities.required' => 'Kegiatan yang dilakukan harus diisi.',
-            'results.required' => 'Hasil perjalanan dinas harus diisi.',
-            'attachment.max' => 'Ukuran file maksimal 10MB.',
+            'business_trip_id' => 'Perjalanan Dinas',
+            'report_title' => 'Judul Laporan',
+            'report_content' => 'Isi Laporan',
+            'status' => 'Status',
+            'review_notes' => 'Catatan Review',
         ];
     }
 }

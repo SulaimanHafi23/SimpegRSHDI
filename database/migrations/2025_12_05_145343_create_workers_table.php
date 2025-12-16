@@ -13,27 +13,25 @@ return new class extends Migration
     {
         Schema::create('workers', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->string('nip')->unique()->comment('Nomor Induk Pegawai');
-            $table->string('name')->comment('Nama lengkap');
-            $table->string('surname')->nullable()->comment('Nama belakang (opsional)');
-            $table->string('frontname')->nullable()->comment('Gelar depan (Dr., Prof., dll)');
-            $table->string('backname')->nullable()->comment('Gelar belakang (S.Kep, Sp.A, dll)');
+            $table->string('nip')->unique();
+            $table->string('name');
             $table->string('email')->unique();
-            $table->text('address')->comment('Alamat lengkap');
-            $table->date('birth_date')->comment('Tanggal lahir');
-            $table->string('birth_place')->comment('Tempat lahir');
-            $table->foreignUuid('gender_id')->constrained()->restrictOnDelete();
-            $table->foreignUuid('religion_id')->constrained()->restrictOnDelete();
-            $table->foreignUuid('position_id')->constrained()->restrictOnDelete();
             $table->string('phone_number')->unique();
-            $table->enum('status', ['Active', 'Inactive', 'Resigned'])->default('Active');
-            $table->date('hire_date')->comment('Tanggal bergabung');
-            $table->date('resign_date')->nullable()->comment('Tanggal resign');
-            $table->string('photo_url')->nullable()->comment('URL foto profil');
+            $table->text('address')->nullable();
+            $table->date('birth_date');
+            $table->string('birth_place');
+            $table->foreignUuid('gender_id')->constrained('genders')->cascadeOnDelete();
+            $table->foreignUuid('religion_id')->constrained('religions')->cascadeOnDelete();
+            $table->foreignUuid('department_id')->constrained('departments')->cascadeOnDelete();
+            $table->date('hire_date');
+            $table->date('resign_date')->nullable();
+            $table->enum('employment_status', ['permanent', 'contract', 'internship'])->default('contract');
+            $table->enum('status', ['active', 'inactive', 'resigned'])->default('active');
+            $table->string('photo_url')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            $table->index(['status', 'hire_date']);
-            $table->index(['position_id', 'status']);
+
+            $table->index(['status', 'employment_status']);
         });
     }
 
