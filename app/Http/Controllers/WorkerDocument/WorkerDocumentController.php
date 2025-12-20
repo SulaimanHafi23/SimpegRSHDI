@@ -45,14 +45,59 @@ class WorkerDocumentController extends Controller
     {
         $validated = $request->validate([
             'worker_id' => 'required|uuid|exists:workers,id',
-            'document_type_id' => 'required|uuid|exists:document_types,id',
+            'document_type_id' => 'nullable|uuid|exists:document_types,id|required_without:department_document_type_id',
+            'department_document_type_id' => 'nullable|uuid|exists:department_document_type,id',
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'document_number' => 'nullable|string',
-            'issue_date' => 'nullable|date',
-            'expiry_date' => 'nullable|date|after:issue_date',
+            // Align with DB: use `expired_date` (matches worker_documents.expired_date)
+            'expired_date' => 'nullable|date|after:today',
             'notes' => 'nullable|string',
         ]);
 
+        // Defensive: ensure the selected document type is allowed for the worker's department
+        $worker = $this->workerService->getById($validated['worker_id']);
+        if (!$worker) {
+            return back()->withInput()->withErrors(['worker_id' => 'Pegawai tidak ditemukan']);
+        }
+        // If department_document_type_id was not provided, try to resolve it from document_type_id + worker's department
+        if (empty($validated['department_document_type_id']) && !empty($validated['document_type_id'])) {
+            $ddt = \App\Models\DepartmentDocumentType::where('document_type_id', $validated['document_type_id'])
+                ->where('department_id', $worker->department_id)
+                ->first();
+
+            if ($ddt) {
+                $validated['department_document_type_id'] = $ddt->id;
+            }
+        }
+
+        // If department_document_type_id is provided, validate it belongs to worker's department
+        if (!empty($validated['department_document_type_id'])) {
+            $ddt = \App\Models\DepartmentDocumentType::find($validated['department_document_type_id']);
+            if (! $ddt) {
+                return back()->withInput()->withErrors(['department_document_type_id' => 'Tipe dokumen untuk departemen tidak ditemukan']);
+            }
+
+            if ($ddt->department_id !== $worker->department_id) {
+                return back()->withInput()->withErrors(['department_document_type_id' => 'Tipe dokumen ini tidak diperbolehkan untuk departemen pegawai tersebut']);
+            }
+
+            // set document_type_id from the ddt for downstream service compatibility
+            $validated['document_type_id'] = $ddt->document_type_id;
+        } else {
+            // No department mapping: fallback to existing document type behavior
+            try {
+                $documentType = $this->documentTypeService->findById($validated['document_type_id']);
+                if ($documentType->relationLoaded('departments') === false) {
+                    $documentType->load('departments');
+                }
+
+                if ($documentType->departments->isNotEmpty()) {
+                    // Document type is mapped to departments but no matching mapping found for this worker
+                    return back()->withInput()->withErrors(['document_type_id' => 'Tipe dokumen ini tidak diperbolehkan untuk departemen pegawai tersebut']);
+                }
+            } catch (\Exception $e) {
+                return back()->withInput()->withErrors(['document_type_id' => 'Tipe dokumen tidak ditemukan']);
+            }
+        }
         try {
             $this->workerDocumentService->create($validated);
 
@@ -64,6 +109,43 @@ class WorkerDocumentController extends Controller
                 ->withInput()
                 ->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Return allowed document types for a given worker (by worker id).
+     * This is used by the create view to dynamically populate the document type select.
+     */
+    public function documentTypesForWorker(Request $request)
+    {
+        $workerId = $request->worker_id;
+
+        if (! $workerId) {
+            return response()->json(['data' => []]);
+        }
+
+        $worker = $this->workerService->getById($workerId);
+        if (! $worker) {
+            return response()->json(['data' => []]);
+        }
+
+        // Get all active document types and filter by department mapping if present
+        $all = $this->documentTypeService->getAllActive();
+
+        $filtered = $all->filter(function ($dt) use ($worker) {
+            // load departments relationship if not loaded
+            if ($dt->relationLoaded('departments') === false) {
+                $dt->load('departments');
+            }
+
+            // If the document type has no departments assigned, treat it as global/allowed
+            if ($dt->departments->isEmpty()) {
+                return true;
+            }
+
+            return $dt->departments->contains('id', $worker->department_id);
+        })->values();
+
+        return response()->json(['data' => $filtered]);
     }
 
     public function show(string $id)

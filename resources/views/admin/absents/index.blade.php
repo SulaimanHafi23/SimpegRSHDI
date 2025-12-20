@@ -4,132 +4,191 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Data Absensi</h1>
-            <p class="text-sm text-gray-600 mt-1">Kelola data kehadiran pegawai</p>
-        </div>
-        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-            <a href="{{ route('admin.absents.report') }}" 
-               class="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">
-                <i class="fas fa-chart-bar mr-2"></i>Laporan
-            </a>
-            <a href="{{ route('admin.absents.create') }}" 
-               class="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow">
-                <i class="fas fa-plus mr-2"></i>Absen Manual
-            </a>
-        </div>
-    </div>
+    {{-- Page Header --}}
+    <x-page-header 
+        title="Data Absensi" 
+        description="Kelola data kehadiran pegawai"
+        icon="fas fa-calendar-check">
+        <x-slot:actions>
+            @can('view-attendance')
+                <x-button 
+                    variant="primary" 
+                    icon="fas fa-chart-bar"
+                    onclick="window.location.href='{{ route('admin.absents.report') }}'">
+                    Laporan
+                </x-button>
+            @endcan
+            @can('create-attendance')
+                <x-button 
+                    variant="success" 
+                    icon="fas fa-plus"
+                    onclick="window.location.href='{{ route('admin.absents.create') }}'">
+                    Absen Manual
+                </x-button>
+            @endcan
+        </x-slot:actions>
+    </x-page-header>
 
-    <!-- Statistics Cards -->
+    {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-green-100 rounded-full">
-                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Hadir</p>
-                    <p class="text-xl sm:text-2xl font-bold text-green-600">0</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-blue-100 rounded-full">
-                    <i class="fas fa-plane text-blue-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Cuti</p>
-                    <p class="text-xl sm:text-2xl font-bold text-blue-600">0</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-yellow-100 rounded-full">
-                    <i class="fas fa-clock text-yellow-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Terlambat</p>
-                    <p class="text-xl sm:text-2xl font-bold text-yellow-600">0</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-purple-100 rounded-full">
-                    <i class="fas fa-user-md text-purple-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Sakit</p>
-                    <p class="text-xl sm:text-2xl font-bold text-purple-600">0</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-red-100 rounded-full">
-                    <i class="fas fa-times-circle text-red-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Alpha</p>
-                    <p class="text-2xl font-bold text-red-600">0</p>
-                </div>
-            </div>
-        </div>
+        <x-stats-card 
+            title="Hadir" 
+            :value="$stats['present'] ?? 0" 
+            icon="fas fa-check-circle" 
+            color="green" />
+        
+        <x-stats-card 
+            title="Cuti" 
+            :value="$stats['leave'] ?? 0" 
+            icon="fas fa-plane" 
+            color="blue" />
+        
+        <x-stats-card 
+            title="Terlambat" 
+            :value="$stats['late'] ?? 0" 
+            icon="fas fa-clock" 
+            color="yellow" />
+        
+        <x-stats-card 
+            title="Sakit" 
+            :value="$stats['sick'] ?? 0" 
+            icon="fas fa-user-md" 
+            color="purple" />
+        
+        <x-stats-card 
+            title="Alpha" 
+            :value="$stats['absent'] ?? 0" 
+            icon="fas fa-times-circle" 
+            color="red" />
     </div>
 
-    <!-- Search & Filter -->
-    <div class="bg-white rounded-lg shadow p-4">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <input type="text" name="search" placeholder="Cari nama pegawai..." 
-                   class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-            <input type="date" name="start_date" 
-                   class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-            <input type="date" name="end_date" 
-                   class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-            <select name="status" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                <option value="">Semua Status</option>
-                <option value="Present">Hadir</option>
-                <option value="Late">Terlambat</option>
-                <option value="Leave">Cuti</option>
-                <option value="Sick">Sakit</option>
-                <option value="Absent">Alpha</option>
-            </select>
-            <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
-                <i class="fas fa-search mr-2"></i>Cari
-            </button>
-        </form>
-    </div>
+    {{-- Filter Section --}}
+    <x-filter-section action="{{ route('admin.absents.index') }}">
+        <x-form.input 
+            name="search" 
+            label="Pencarian" 
+            placeholder="Cari nama pegawai..."
+            :value="$filters['search'] ?? ''" />
 
-    <!-- Attendance Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pegawai</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Shift</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Masuk</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pulang</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                <tr>
-                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
-                        <i class="fas fa-calendar-check text-5xl mb-4 text-gray-400"></i>
-                        <p>Data absensi akan ditampilkan di sini</p>
-                        <p class="text-sm mt-2">Gunakan filter di atas untuk melihat data absensi</p>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        </div>
-    </div>
+        <x-form.input 
+            name="start_date" 
+            label="Dari Tanggal" 
+            type="date"
+            :value="$filters['start_date'] ?? ''" />
+
+        <x-form.input 
+            name="end_date" 
+            label="Sampai Tanggal" 
+            type="date"
+            :value="$filters['end_date'] ?? ''" />
+
+        <x-form.select 
+            name="status" 
+            label="Status Kehadiran"
+            :options="[
+                'Present' => 'Hadir',
+                'Late' => 'Terlambat',
+                'Leave' => 'Cuti',
+                'Sick' => 'Sakit',
+                'Absent' => 'Alpha'
+            ]"
+            :selected="$filters['status'] ?? ''"
+            placeholder="Semua Status" />
+    </x-filter-section>
+
+    {{-- Attendance Table --}}
+    <x-card>
+        @if(isset($attendances) && $attendances->isEmpty())
+            <x-empty-state 
+                icon="fas fa-calendar-check"
+                title="Data absensi akan ditampilkan di sini"
+                description="Gunakan filter di atas untuk melihat data absensi"
+                actionText="Absen Manual"
+                :actionUrl="route('admin.absents.create')" />
+        @elseif(isset($attendances))
+            <x-table>
+                <x-slot:thead>
+                    <x-table.row>
+                        <x-table.cell header>No</x-table.cell>
+                        <x-table.cell header>Tanggal</x-table.cell>
+                        <x-table.cell header>Pegawai</x-table.cell>
+                        <x-table.cell header>Shift</x-table.cell>
+                        <x-table.cell header>Masuk</x-table.cell>
+                        <x-table.cell header>Pulang</x-table.cell>
+                        <x-table.cell header>Status</x-table.cell>
+                        <x-table.cell header>Aksi</x-table.cell>
+                    </x-table.row>
+                </x-slot:thead>
+
+                @foreach($attendances as $index => $attendance)
+                    <x-table.row>
+                        <x-table.cell>{{ $attendances->firstItem() + $index }}</x-table.cell>
+                        <x-table.cell>{{ $attendance->date ?? '-' }}</x-table.cell>
+                        <x-table.cell>
+                            <div class="font-medium text-gray-900">{{ $attendance->worker->name ?? '-' }}</div>
+                            <div class="text-sm text-gray-500">{{ $attendance->worker->nip ?? '-' }}</div>
+                        </x-table.cell>
+                        <x-table.cell>{{ $attendance->shift->name ?? '-' }}</x-table.cell>
+                        <x-table.cell>{{ $attendance->check_in ?? '-' }}</x-table.cell>
+                        <x-table.cell>{{ $attendance->check_out ?? '-' }}</x-table.cell>
+                        <x-table.cell>
+                            @php
+                                $statusBadges = [
+                                    'Present' => ['variant' => 'success', 'label' => 'Hadir'],
+                                    'Late' => ['variant' => 'warning', 'label' => 'Terlambat'],
+                                    'Leave' => ['variant' => 'primary', 'label' => 'Cuti'],
+                                    'Sick' => ['variant' => 'secondary', 'label' => 'Sakit'],
+                                    'Absent' => ['variant' => 'danger', 'label' => 'Alpha'],
+                                ];
+                                $badge = $statusBadges[$attendance->status] ?? ['variant' => 'secondary', 'label' => $attendance->status];
+                            @endphp
+                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
+                        </x-table.cell>
+                        <x-table.cell>
+                            <div class="flex justify-end space-x-2">
+                                @can('view-attendance')
+                                    <a href="{{ route('admin.absents.show', $attendance->id) }}" 
+                                       class="text-blue-600 hover:text-blue-900" 
+                                       title="Detail">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </a>
+                                @endcan
+
+                                @can('delete-attendance')
+                                    <form action="{{ route('admin.absents.destroy', $attendance->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" 
+                                                class="text-red-600 hover:text-red-900" 
+                                                title="Hapus"
+                                                onclick="return confirm('Yakin ingin menghapus data absensi ini?')">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+                                @endcan
+                            </div>
+                        </x-table.cell>
+                    </x-table.row>
+                @endforeach
+            </x-table>
+
+            {{-- Pagination --}}
+            @if($attendances->hasPages())
+                <div class="mt-4">
+                    <x-pagination :paginator="$attendances" />
+                </div>
+            @endif
+        @else
+            <x-empty-state 
+                icon="fas fa-calendar-check"
+                title="Data absensi akan ditampilkan di sini"
+                description="Gunakan filter di atas untuk melihat data absensi" />
+        @endif
+    </x-card>
 </div>
 @endsection

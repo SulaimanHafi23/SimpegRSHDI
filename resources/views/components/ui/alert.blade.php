@@ -3,6 +3,7 @@
     'type' => 'info', // success, error, warning, info
     'message',
     'dismissible' => true,
+    'autoDismiss' => false,
 ])
 
 @php
@@ -25,6 +26,7 @@ $icons = [
     x-data="{ show: true }"
     x-show="show"
     x-transition
+    @if($autoDismiss) data-auto-dismiss="true" @endif
     {{ $attributes->merge(['class' => 'rounded-lg border-l-4 p-4 mb-4 ' . $styles[$type]]) }}
 >
     <div class="flex items-start">

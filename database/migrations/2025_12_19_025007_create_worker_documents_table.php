@@ -15,6 +15,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('worker_id')->constrained('workers')->cascadeOnDelete();
             $table->foreignUuid('document_type_id')->constrained('document_types')->cascadeOnDelete();
+            // relation to department_document_type pivot (nullable)
+            $table->foreignUuid('department_document_type_id')->nullable()->constrained('department_document_type')->nullOnDelete();
             $table->string('file_name');
             $table->string('file_path');
             $table->bigInteger('file_size')->comment('dalam bytes');
@@ -26,6 +28,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['worker_id', 'document_type_id']);
+            $table->index(['worker_id', 'department_document_type_id']);
             $table->index('status');
         });
     }

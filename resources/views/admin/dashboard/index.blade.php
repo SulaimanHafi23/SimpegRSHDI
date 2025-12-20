@@ -1,140 +1,107 @@
-{{-- filepath: resources/views/admin/dashboard/index.blade.php --}}
 @extends('layouts.admin')
 
 @section('title', 'Dashboard Admin')
-@section('page-title', 'Dashboard Admin')
-@section('page-description', 'Selamat datang di SIMPEGRS RSUD Haji Darlan Ismail')
 
 @section('content')
 <div class="space-y-6">
-    <!-- Statistics Cards -->
+    {{-- Page Header --}}
+    <x-page-header 
+        title="Dashboard Admin" 
+        description="Selamat datang di SIMPEGRS RSUD Haji Darjlan Ismail"
+        icon="fas fa-tachometer-alt" />
+
+    {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <!-- Total Pegawai -->
-        <div class="p-6 text-white transition duration-300 transform shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl hover:scale-105">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="mb-1 text-sm font-medium text-blue-100">Total Pegawai</p>
-                    <h3 class="text-3xl font-bold">{{ $statistics['total_workers'] ?? 0 }}</h3>
-                    <p class="mt-2 text-xs text-blue-100">
-                        <i class="mr-1 fas fa-user-check"></i>
-                        {{ $statistics['active_workers'] ?? 0 }} Aktif
-                    </p>
-                </div>
-                <div class="p-4 rounded-full bg-white/20">
-                    <i class="text-3xl sm:text-4xl fas fa-users"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Hadir Hari Ini -->
-        <div class="p-6 text-white transition duration-300 transform shadow-lg bg-gradient-to-br from-green-500 to-green-600 rounded-xl hover:scale-105">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="mb-1 text-sm font-medium text-green-100">Hadir Hari Ini</p>
-                    <h3 class="text-3xl font-bold">{{ $statistics['present_today'] ?? 0 }}</h3>
-                    <p class="mt-2 text-xs text-green-100">
-                        <i class="mr-1 fas fa-percentage"></i>
-                        {{ $statistics['attendance_rate'] ?? 0 }}% Kehadiran
-                    </p>
-                </div>
-                <div class="p-4 rounded-full bg-white/20">
-                    <i class="text-3xl sm:text-4xl fas fa-clipboard-check"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Cuti Pending -->
-        <div class="p-6 text-white transition duration-300 transform shadow-lg bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl hover:scale-105">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="mb-1 text-sm font-medium text-yellow-100">Permohonan Cuti</p>
-                    <h3 class="text-3xl font-bold">{{ $statistics['pending_leaves'] ?? 0 }}</h3>
-                    <p class="mt-2 text-xs text-yellow-100">
-                        <i class="mr-1 fas fa-clock"></i>
-                        Menunggu Approval
-                    </p>
-                </div>
-                <div class="p-4 rounded-full bg-white/20">
-                    <i class="text-3xl sm:text-4xl fas fa-calendar-times"></i>
-                </div>
-            </div>
-        </div>
-
-        <!-- Lembur Pending -->
-        <div class="p-6 text-white transition duration-300 transform shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl hover:scale-105">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="mb-1 text-sm font-medium text-purple-100">Permohonan Lembur</p>
-                    <h3 class="text-3xl font-bold">{{ $statistics['pending_overtimes'] ?? 0 }}</h3>
-                    <p class="mt-2 text-xs text-purple-100">
-                        <i class="mr-1 fas fa-clock"></i>
-                        Menunggu Approval
-                    </p>
-                </div>
-                <div class="p-4 rounded-full bg-white/20">
-                    <i class="text-3xl sm:text-4xl fas fa-business-time"></i>
-                </div>
-            </div>
-        </div>
+        <x-stats-card 
+            title="Total Pegawai" 
+            :value="$statistics['total_workers'] ?? 0" 
+            icon="fas fa-users" 
+            color="blue"
+            :trend="($statistics['active_workers'] ?? 0) . ' Aktif'"
+            trendUp />
+        
+        <x-stats-card 
+            title="Hadir Hari Ini" 
+            :value="$statistics['present_today'] ?? 0" 
+            icon="fas fa-clipboard-check" 
+            color="green"
+            :trend="($statistics['attendance_rate'] ?? 0) . '% Kehadiran'"
+            trendUp />
+        
+        <x-stats-card 
+            title="Permohonan Cuti" 
+            :value="$statistics['pending_leaves'] ?? 0" 
+            icon="fas fa-calendar-times" 
+            color="yellow"
+            trend="Menunggu Approval" />
+        
+        <x-stats-card 
+            title="Permohonan Lembur" 
+            :value="$statistics['pending_overtimes'] ?? 0" 
+            icon="fas fa-business-time" 
+            color="purple"
+            trend="Menunggu Approval" />
     </div>
 
-    <!-- Charts Row -->
+    {{-- Charts Row --}}
     <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-        <!-- Attendance Chart -->
-        <div class="p-4 sm:p-6 bg-white shadow-lg rounded-xl">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-                <h3 class="text-base sm:text-lg font-bold text-gray-800">
+        {{-- Attendance Chart --}}
+        <x-card title="Grafik Kehadiran Minggu Ini">
+            <x-slot:header>
+                <div class="flex items-center">
                     <i class="mr-2 text-green-600 fas fa-chart-line"></i>
-                    Grafik Kehadiran Minggu Ini
-                </h3>
-                <select class="w-full sm:w-auto px-3 py-2 text-xs sm:text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <span>Grafik Kehadiran Minggu Ini</span>
+                </div>
+                <select class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
                     <option>Minggu Ini</option>
                     <option>Bulan Ini</option>
                     <option>Tahun Ini</option>
                 </select>
-            </div>
-            <div class="flex items-center justify-center h-48 sm:h-64">
+            </x-slot:header>
+            
+            <div class="flex items-center justify-center h-64">
                 <canvas id="attendanceChart"></canvas>
             </div>
-        </div>
+        </x-card>
 
-        <!-- Department Distribution -->
-        <div class="p-4 sm:p-6 bg-white shadow-lg rounded-xl">
-            <div class="flex items-center justify-between mb-4 sm:mb-6">
-                <h3 class="text-base sm:text-lg font-bold text-gray-800">
-                    <i class="mr-2 text-green-600 fas fa-chart-pie"></i>
-                    Distribusi Pegawai per Jabatan
-                </h3>
-            </div>
-            <div class="space-y-4">
-                @forelse($positionDistribution ?? [] as $position)
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm font-medium text-gray-700">{{ $position->name }}</span>
-                        <span class="text-sm font-bold text-gray-900">{{ $position->workers_count }}</span>
-                    </div>
-                    <div class="w-full h-3 bg-gray-200 rounded-full">
-                        <div class="h-3 transition-all duration-500 rounded-full bg-gradient-to-r from-green-500 to-green-600"
-                             style="width: {{ ($position->workers_count / ($statistics['total_workers'] ?? 1)) * 100 }}%">
+        {{-- Department Distribution --}}
+        <x-card>
+            <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                <i class="mr-2 text-green-600 fas fa-chart-pie"></i>
+                Distribusi Pegawai per Departemen
+            </h3>
+            
+            @if(isset($positionDistribution) && count($positionDistribution) > 0)
+                <div class="space-y-4">
+                    @foreach($positionDistribution as $position)
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium text-gray-700">{{ $position->name }}</span>
+                                <span class="text-sm font-bold text-gray-900">{{ $position->workers_count }}</span>
+                            </div>
+                            <div class="w-full h-3 bg-gray-200 rounded-full">
+                                <div class="h-3 transition-all duration-500 rounded-full bg-gradient-to-r from-green-500 to-green-600"
+                                     style="width: {{ ($position->workers_count / max($statistics['total_workers'] ?? 1, 1)) * 100 }}%">
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    @endforeach
                 </div>
-                @empty
-                <div class="py-8 text-center text-gray-500">
-                    <i class="mb-3 text-3xl sm:text-4xl fas fa-inbox"></i>
-                    <p>Belum ada data</p>
-                </div>
-                @endforelse
-            </div>
-        </div>
+            @else
+                <x-empty-state 
+                    icon="fas fa-inbox"
+                    title="Belum ada data"
+                    description="Data distribusi pegawai per departemen akan ditampilkan di sini" />
+            @endif
+        </x-card>
     </div>
 
-    <!-- Recent Activities -->
+    {{-- Recent Activities --}}
     <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-        <!-- Pengajuan Cuti Terbaru -->
-        <div class="p-4 sm:p-6 bg-white shadow-lg rounded-xl">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
-                <h3 class="text-base sm:text-lg font-bold text-gray-800">
+        {{-- Recent Leave Requests --}}
+        <x-card>
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center">
                     <i class="mr-2 text-yellow-600 fas fa-calendar-alt"></i>
                     Pengajuan Cuti Terbaru
                 </h3>
@@ -142,122 +109,139 @@
                     Lihat Semua <i class="ml-1 fas fa-arrow-right"></i>
                 </a>
             </div>
-            <div class="space-y-3">
-                @forelse($recentLeaves ?? [] as $leave)
-                <div class="flex items-center justify-between p-4 transition duration-200 rounded-lg bg-gray-50 hover:bg-gray-100">
-                    <div class="flex items-center space-x-3">
-                        <img src="{{ $leave->worker->photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($leave->worker->name) }}"
-                             alt="{{ $leave->worker->name }}"
-                             class="w-10 h-10 border-2 border-green-200 rounded-full">
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">{{ $leave->worker->name }}</p>
-                            <p class="text-xs text-gray-600">{{ $leave->leave_type }} • {{ $leave->total_days }} hari</p>
+            
+            @if(isset($recentLeaves) && count($recentLeaves) > 0)
+                <div class="space-y-3">
+                    @foreach($recentLeaves as $leave)
+                        <div class="flex items-center justify-between p-4 transition duration-200 rounded-lg bg-gray-50 hover:bg-gray-100">
+                            <div class="flex items-center space-x-3">
+                                @if($leave->worker->photo_url ?? false)
+                                    <img src="{{ Storage::url($leave->worker->photo_url) }}" 
+                                         alt="{{ $leave->worker->name }}"
+                                         class="w-10 h-10 rounded-full object-cover">
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                                        <span class="text-yellow-600 font-semibold">{{ substr($leave->worker->name, 0, 1) }}</span>
+                                    </div>
+                                @endif
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $leave->worker->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $leave->leave_type->name ?? '-' }}</p>
+                                </div>
+                            </div>
+                            <x-badge variant="warning">Pending</x-badge>
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-                            {{ $leave->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                            {{ $leave->status === 'approved' ? 'bg-green-100 text-green-800' : '' }}
-                            {{ $leave->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
-                            {{ ucfirst($leave->status) }}
-                        </span>
-                        <p class="mt-1 text-xs text-gray-500">{{ $leave->created_at->diffForHumans() }}</p>
-                    </div>
+                    @endforeach
                 </div>
-                @empty
-                <div class="py-8 text-center text-gray-500">
-                    <i class="mb-3 text-3xl sm:text-4xl fas fa-inbox"></i>
-                    <p>Belum ada pengajuan cuti</p>
-                </div>
-                @endforelse
-            </div>
-        </div>
+            @else
+                <x-empty-state 
+                    icon="fas fa-calendar-alt"
+                    title="Belum ada pengajuan cuti"
+                    description="Pengajuan cuti terbaru akan ditampilkan di sini" />
+            @endif
+        </x-card>
 
-        <!-- Ulang Tahun Pegawai -->
-        <div class="p-6 bg-white shadow-lg rounded-xl">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-                <h3 class="text-lg font-bold text-gray-800">
-                    <i class="mr-2 text-pink-600 fas fa-birthday-cake"></i>
-                    Ulang Tahun Bulan Ini
+        {{-- Recent Overtime Requests --}}
+        <x-card>
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-bold text-gray-800 flex items-center">
+                    <i class="mr-2 text-purple-600 fas fa-clock"></i>
+                    Pengajuan Lembur Terbaru
                 </h3>
+                <a href="{{ route('admin.overtime.index') }}" class="text-sm font-medium text-green-600 hover:text-green-700">
+                    Lihat Semua <i class="ml-1 fas fa-arrow-right"></i>
+                </a>
             </div>
-            <div class="space-y-3">
-                @forelse($birthdayWorkers ?? [] as $worker)
-                <div class="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-pink-50 to-purple-50">
-                    <div class="flex items-center space-x-3">
-                        <img src="{{ $worker->photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode($worker->name) }}"
-                             alt="{{ $worker->name }}"
-                             class="w-10 h-10 border-2 border-pink-200 rounded-full">
-                        <div>
-                            <p class="text-sm font-semibold text-gray-800">{{ $worker->name }}</p>
-                            <p class="text-xs text-gray-600">{{ $worker->position->name ?? '-' }}</p>
+            
+            @if(isset($recentOvertimes) && count($recentOvertimes) > 0)
+                <div class="space-y-3">
+                    @foreach($recentOvertimes as $overtime)
+                        <div class="flex items-center justify-between p-4 transition duration-200 rounded-lg bg-gray-50 hover:bg-gray-100">
+                            <div class="flex items-center space-x-3">
+                                @if($overtime->worker->photo_url ?? false)
+                                    <img src="{{ Storage::url($overtime->worker->photo_url) }}" 
+                                         alt="{{ $overtime->worker->name }}"
+                                         class="w-10 h-10 rounded-full object-cover">
+                                @else
+                                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                                        <span class="text-purple-600 font-semibold">{{ substr($overtime->worker->name, 0, 1) }}</span>
+                                    </div>
+                                @endif
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $overtime->worker->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $overtime->duration ?? '-' }} jam</p>
+                                </div>
+                            </div>
+                            @if($overtime->status == 'approved')
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>Disetujui
+                            </span>
+                            @elseif($overtime->status == 'rejected')
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle mr-1"></i>Ditolak
+                            </span>
+                            @else
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                <i class="fas fa-clock mr-1"></i>Pending
+                            </span>
+                            @endif
+                            <!-- <x-badge variant="warning">{{ $overtime->status ?? '-' }}</x-badge> -->
                         </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-sm font-bold text-pink-600">{{ $worker->birth_date->format('d M') }}</p>
-                        <p class="text-xs text-gray-500">{{ $worker->birth_date->age }} tahun</p>
-                    </div>
+                    @endforeach
                 </div>
-                @empty
-                <div class="py-8 text-center text-gray-500">
-                    <i class="mb-3 text-3xl sm:text-4xl fas fa-inbox"></i>
-                    <p>Tidak ada ulang tahun bulan ini</p>
-                </div>
-                @endforelse
-            </div>
-        </div>
+            @else
+                <x-empty-state 
+                    icon="fas fa-clock"
+                    title="Belum ada pengajuan lembur"
+                    description="Pengajuan lembur terbaru akan ditampilkan di sini" />
+            @endif
+        </x-card>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="p-6 bg-white shadow-lg rounded-xl">
-        <h3 class="mb-6 text-lg font-bold text-gray-800">
-            <i class="mr-2 text-yellow-500 fas fa-bolt"></i>
-            Quick Actions
-        </h3>
-        <div class="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-6">
-            <a href="{{ route('admin.workers.create') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-md group">
-                <div class="p-3 text-white transition duration-300 bg-blue-500 rounded-full group-hover:scale-110">
-                    <i class="text-xl fas fa-user-plus"></i>
-                </div>
-                <span class="mt-3 text-sm font-medium text-center text-gray-700">Tambah Pegawai</span>
-            </a>
-
-            <a href="{{ route('admin.attendance.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-md group">
-                <div class="p-3 text-white transition duration-300 bg-green-500 rounded-full group-hover:scale-110">
-                    <i class="text-xl fas fa-clipboard-check"></i>
-                </div>
-                <span class="mt-3 text-sm font-medium text-center text-gray-700">Kelola Absensi</span>
-            </a>
-
-            <a href="{{ route('admin.leave.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-yellow-50 to-yellow-100 hover:shadow-md group">
-                <div class="p-3 text-white transition duration-300 bg-yellow-500 rounded-full group-hover:scale-110">
-                    <i class="text-xl fas fa-calendar-check"></i>
-                </div>
-                <span class="mt-3 text-sm font-medium text-center text-gray-700">Approval Cuti</span>
-            </a>
-
-            <a href="{{ route('admin.overtime.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-md group">
-                <div class="p-3 text-white transition duration-300 bg-purple-500 rounded-full group-hover:scale-110">
-                    <i class="text-xl fas fa-business-time"></i>
-                </div>
-                <span class="mt-3 text-sm font-medium text-center text-gray-700">Approval Lembur</span>
-            </a>
-
-            <a href="{{ route('admin.workers.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-red-50 to-red-100 hover:shadow-md group">
-                <div class="p-3 text-white transition duration-300 bg-red-500 rounded-full group-hover:scale-110">
-                    <i class="text-xl fas fa-users"></i>
-                </div>
-                <span class="mt-3 text-sm font-medium text-center text-gray-700">Data Pegawai</span>
-            </a>
-
-            <a href="{{ route('admin.master.shifts.index') }}" class="flex flex-col items-center p-4 transition duration-300 rounded-lg bg-gradient-to-br from-indigo-50 to-indigo-100 hover:shadow-md group">
-                <div class="p-3 text-white transition duration-300 bg-indigo-500 rounded-full group-hover:scale-110">
-                    <i class="text-xl fas fa-cog"></i>
-                </div>
-                <span class="mt-3 text-sm font-medium text-center text-gray-700">Pengaturan</span>
-            </a>
+    {{-- Quick Actions --}}
+    <x-card title="Aksi Cepat">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            @can('create-workers')
+                <x-button 
+                    variant="primary" 
+                    icon="fas fa-user-plus"
+                    onclick="window.location.href='{{ route('admin.workers.create') }}'"
+                    class="w-full justify-center">
+                    Tambah Pegawai
+                </x-button>
+            @endcan
+            
+            @can('create-attendance')
+                <x-button 
+                    variant="success" 
+                    icon="fas fa-clipboard-check"
+                    onclick="window.location.href='{{ route('admin.attendance.create') }}'"
+                    class="w-full justify-center">
+                    Input Absensi
+                </x-button>
+            @endcan
+            
+            @can('view-attendance')
+                <x-button 
+                    variant="warning" 
+                    icon="fas fa-chart-bar"
+                    onclick="window.location.href='{{ route('admin.attendance.report.monthly') }}'"
+                    class="w-full justify-center">
+                    Laporan Absensi
+                </x-button>
+            @endcan
+            
+            @can('view-leave')
+                <x-button 
+                    variant="secondary" 
+                    icon="fas fa-tasks"
+                    onclick="window.location.href='{{ route('admin.leave.index') }}'"
+                    class="w-full justify-center">
+                    Kelola Cuti
+                </x-button>
+            @endcan
         </div>
-    </div>
+    </x-card>
 </div>
 
 @push('scripts')
@@ -269,14 +253,13 @@
         new Chart(ctx, {
             type: 'line',
             data: {
-                labels: {!! json_encode($attendanceChartLabels ?? ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']) !!},
+                labels: {!! json_encode($attendanceChart['labels'] ?? ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']) !!},
                 datasets: [{
-                    label: 'Hadir',
-                    data: {!! json_encode($attendanceChartData ?? [45, 52, 48, 50, 47, 30, 28]) !!},
-                    borderColor: 'rgb(99, 102, 241)',
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    tension: 0.4,
-                    fill: true
+                    label: 'Kehadiran',
+                    data: {!! json_encode($attendanceChart['data'] ?? [0, 0, 0, 0, 0, 0, 0]) !!},
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4
                 }]
             },
             options: {
@@ -285,11 +268,6 @@
                 plugins: {
                     legend: {
                         display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true
                     }
                 }
             }

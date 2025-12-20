@@ -26,4 +26,15 @@ class Department extends Model
     {
         return $this->hasMany(Worker::class);
     }
+
+    /**
+     * Document types that apply to this department
+     */
+    public function documentTypes()
+    {
+        // include pivot id so views can reference DepartmentDocumentType rows directly
+        return $this->belongsToMany(\App\Models\DocumentType::class, 'department_document_type', 'department_id', 'document_type_id')
+                    ->withPivot('id')
+                    ->withTimestamps();
+    }
 }

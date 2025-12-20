@@ -3,218 +3,274 @@
 @section('title', 'Detail Pengajuan Cuti')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="mb-6">
-            <div class="flex items-center text-sm text-gray-600 mb-4">
-                <a href="{{ route('admin.leave.index') }}" class="hover:text-green-600">Manajemen Cuti</a>
-                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-                <span class="text-gray-800">Detail Pengajuan</span>
-            </div>
-            <div class="flex justify-between items-start">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">Detail Pengajuan Cuti</h1>
-                    <p class="text-gray-600 mt-1">Informasi lengkap pengajuan cuti pegawai</p>
-                </div>
-                @if($leaveRequest->status == 'Pending')
-                <div class="flex space-x-2">
-                    <a href="{{ route('admin.leave.edit', $leaveRequest->id) }}" 
-                       class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150">
+<div class="space-y-6">
+    {{-- Page Header --}}
+    <x-page-header 
+        title="Detail Pengajuan Cuti" 
+        description="Informasi lengkap pengajuan cuti pegawai"
+        icon="fas fa-calendar-check">
+        <x-slot:actions>
+            <x-button 
+                variant="secondary" 
+                icon="fas fa-arrow-left"
+                onclick="window.location.href='{{ route('admin.leave.index') }}'">
+                Kembali
+            </x-button>
+            @if($leaveRequest->status == 'Pending')
+                @can('edit-leave')
+                    <x-button 
+                        variant="primary" 
+                        icon="fas fa-edit"
+                        onclick="window.location.href='{{ route('admin.leave.edit', $leaveRequest->id) }}'">
                         Edit
-                    </a>
-                </div>
-                @endif
-            </div>
-        </div>
+                    </x-button>
+                @endcan
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
-        <!-- Status Card -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    @php
-                        $statusConfig = [
-                            'Pending' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                            'Approved' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                            'Rejected' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'icon' => 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                            'Cancelled' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'icon' => 'M6 18L18 6M6 6l12 12'],
-                        ];
-                        $config = $statusConfig[$leaveRequest->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'icon' => ''];
-                    @endphp
-                    <div class="{{ $config['bg'] }} rounded-full p-3">
-                        <svg class="w-8 h-8 {{ $config['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $config['icon'] }}"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Status Pengajuan</p>
-                        <p class="text-xl sm:text-2xl font-bold {{ $config['text'] }}">{{ $leaveRequest->status }}</p>
-                    </div>
-                </div>
+    {{-- Alert Messages --}}
+    @if(session('success'))
+        <x-alert type="success" dismissible>
+            {{ session('success') }}
+        </x-alert>
+    @endif
+
+    @if(session('error'))
+        <x-alert type="danger" dismissible>
+            {{ session('error') }}
+        </x-alert>
+    @endif
+
+    {{-- Status Card --}}
+    <x-card>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                @php
+                    $statusConfig = [
+                        'Pending' => ['variant' => 'warning', 'icon' => 'fas fa-clock', 'label' => 'Menunggu Persetujuan'],
+                        'Approved' => ['variant' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Disetujui'],
+                        'Rejected' => ['variant' => 'danger', 'icon' => 'fas fa-times-circle', 'label' => 'Ditolak'],
+                        'Cancelled' => ['variant' => 'secondary', 'icon' => 'fas fa-ban', 'label' => 'Dibatalkan'],
+                    ];
+                    $config = $statusConfig[$leaveRequest->status] ?? ['variant' => 'secondary', 'icon' => 'fas fa-info-circle', 'label' => $leaveRequest->status];
+                @endphp
                 
-                @if($leaveRequest->status == 'Pending')
-                <div class="flex space-x-2">
-                    <form action="{{ route('admin.leave.approve', $leaveRequest->id) }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" 
-                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150"
-                                onclick="return confirm('Setujui pengajuan cuti ini?')">
-                            Setujui
-                        </button>
-                    </form>
-                    <form action="{{ route('admin.leave.reject', $leaveRequest->id) }}" method="POST" class="inline">
-                        @csrf
-                        <button type="submit" 
-                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150"
-                                onclick="return confirm('Tolak pengajuan cuti ini?')">
-                            Tolak
-                        </button>
-                    </form>
+                <div>
+                    <p class="text-sm text-gray-600 mb-2">Status Pengajuan</p>
+                    <x-badge :variant="$config['variant']" :icon="$config['icon']" size="lg">
+                        {{ $config['label'] }}
+                    </x-badge>
                 </div>
-                @endif
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Main Information -->
-            <div class="md:col-span-2 space-y-6">
-                <!-- Pegawai Info -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Informasi Pegawai</h2>
-                    <div class="flex items-start space-x-4">
-                        @if($leaveRequest->worker->photo)
-                            <img class="h-20 w-20 rounded-lg object-cover" 
-                                 src="{{ Storage::url($leaveRequest->worker->photo) }}" 
-                                 alt="{{ $leaveRequest->worker->name }}">
-                        @else
-                            <div class="h-20 w-20 rounded-lg bg-green-100 flex items-center justify-center">
-                                <span class="text-green-600 font-bold text-3xl">
-                                    {{ substr($leaveRequest->worker->name, 0, 1) }}
-                                </span>
-                            </div>
-                        @endif
-                        <div class="flex-1">
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-800">{{ $leaveRequest->worker->name }}</h3>
-                            <p class="text-gray-600">{{ $leaveRequest->worker->position->name ?? '-' }}</p>
-                            <div class="mt-2 space-y-1">
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">NIP:</span> {{ $leaveRequest->worker->employee_number }}
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Email:</span> {{ $leaveRequest->worker->email }}
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Phone:</span> {{ $leaveRequest->worker->phone }}
-                                </p>
-                            </div>
-                        </div>
+            {{-- Approval Actions --}}
+            @if($leaveRequest->status == 'Pending')
+                @can('approve-leave')
+                    <div class="flex gap-3">
+                        <form action="{{ route('admin.leave.approve', $leaveRequest->id) }}" method="POST" class="inline">
+                            @csrf
+                            <x-button 
+                                type="submit"
+                                variant="success" 
+                                icon="fas fa-check"
+                                onclick="return confirm('Setujui pengajuan cuti ini?')">
+                                Setujui
+                            </x-button>
+                        </form>
+                        <form action="{{ route('admin.leave.reject', $leaveRequest->id) }}" method="POST" class="inline">
+                            @csrf
+                            <x-button 
+                                type="submit"
+                                variant="danger" 
+                                icon="fas fa-times"
+                                onclick="return confirm('Tolak pengajuan cuti ini?')">
+                                Tolak
+                            </x-button>
+                        </form>
                     </div>
-                </div>
+                @endcan
+            @endif
+        </div>
+    </x-card>
 
-                <!-- Leave Details -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Detail Cuti</h2>
-                    <div class="space-y-4">
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Jenis Cuti</span>
-                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-                                {{ $leaveRequest->leave_type }}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- Main Content --}}
+        <div class="lg:col-span-2 space-y-6">
+            {{-- Worker Information --}}
+            <x-card title="Informasi Pegawai">
+                <div class="flex items-start space-x-4">
+                    @if($leaveRequest->worker->photo)
+                        <img class="h-20 w-20 rounded-lg object-cover" 
+                             src="{{ asset('storage/' . $leaveRequest->worker->photo) }}" 
+                             alt="{{ $leaveRequest->worker->name }}">
+                    @else
+                        <div class="h-20 w-20 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <span class="text-blue-600 font-bold text-3xl">
+                                {{ substr($leaveRequest->worker->name, 0, 1) }}
                             </span>
                         </div>
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Tanggal Mulai</span>
-                            <span class="text-gray-800 font-semibold">{{ $leaveRequest->start_date->format('d F Y') }}</span>
+                    @endif
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ $leaveRequest->worker->name }}</h3>
+                        <p class="text-gray-600">{{ $leaveRequest->worker->position->name ?? '-' }}</p>
+                        <p class="text-sm text-gray-500 mt-1">NIP: {{ $leaveRequest->worker->nip ?? '-' }}</p>
+                    </div>
+                </div>
+            </x-card>
+
+            {{-- Leave Details --}}
+            <x-card title="Detail Pengajuan Cuti">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Jenis Cuti</label>
+                            <p class="text-base font-semibold text-gray-900 mt-1">{{ $leaveRequest->leave_type }}</p>
                         </div>
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Tanggal Selesai</span>
-                            <span class="text-gray-800 font-semibold">{{ $leaveRequest->end_date->format('d F Y') }}</span>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Durasi</label>
+                            <p class="text-base font-semibold text-gray-900 mt-1">{{ $leaveRequest->total_days }} Hari</p>
                         </div>
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Total Hari</span>
-                            <span class="text-gray-800 font-bold text-lg">{{ $leaveRequest->total_days }} hari</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Tanggal Mulai</label>
+                            <p class="text-base text-gray-900 mt-1">{{ $leaveRequest->start_date->format('d M Y') }}</p>
                         </div>
-                        <div class="py-3">
-                            <span class="text-gray-600 font-medium block mb-2">Alasan</span>
-                            <p class="text-gray-800 bg-gray-50 p-4 rounded-md">{{ $leaveRequest->reason }}</p>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Tanggal Selesai</label>
+                            <p class="text-base text-gray-900 mt-1">{{ $leaveRequest->end_date->format('d M Y') }}</p>
                         </div>
-                        
-                        @if($leaveRequest->attachment_url)
-                        <div class="py-3">
-                            <span class="text-gray-600 font-medium block mb-2">Lampiran</span>
-                            <a href="{{ route('admin.leave.download-attachment', $leaveRequest->id) }}" 
-                               class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-150">
-                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                </svg>
-                                Download Lampiran
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-200">
+                        <label class="text-sm font-medium text-gray-500">Alasan Cuti</label>
+                        <p class="text-base text-gray-700 mt-2 leading-relaxed">{{ $leaveRequest->reason }}</p>
+                    </div>
+
+                    @if($leaveRequest->attachment)
+                        <div class="pt-3 border-t border-gray-200">
+                            <label class="text-sm font-medium text-gray-500 mb-2 block">Lampiran</label>
+                            <a href="{{ asset('storage/' . $leaveRequest->attachment) }}" 
+                               target="_blank"
+                               class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">
+                                <i class="fas fa-paperclip mr-2"></i>
+                                Lihat Lampiran
                             </a>
                         </div>
-                        @endif
-                    </div>
+                    @endif
                 </div>
+            </x-card>
 
-                @if($leaveRequest->notes)
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Catatan</h2>
-                    <p class="text-gray-800 bg-yellow-50 p-4 rounded-md border-l-4 border-yellow-400">{{ $leaveRequest->notes }}</p>
-                </div>
-                @endif
-            </div>
-
-            <!-- Sidebar -->
-            <div class="space-y-4 sm:space-y-6">
-                <!-- Timeline -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Timeline</h2>
-                    <div class="space-y-4">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm font-medium text-gray-900">Pengajuan Dibuat</p>
-                                <p class="text-xs text-gray-500">{{ $leaveRequest->created_at->format('d M Y, H:i') }}</p>
-                            </div>
-                        </div>
-
+            {{-- Approval History --}}
+            @if($leaveRequest->approved_at || $leaveRequest->rejected_at)
+                <x-card title="Riwayat Persetujuan">
+                    <div class="space-y-3">
                         @if($leaveRequest->approved_at)
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm font-medium text-gray-900">
-                                    @if($leaveRequest->status == 'Approved')
-                                        Disetujui
-                                    @elseif($leaveRequest->status == 'Rejected')
-                                        Ditolak
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Disetujui</p>
+                                    <p class="text-sm text-gray-500">{{ $leaveRequest->approved_at->format('d M Y, H:i') }}</p>
+                                    @if($leaveRequest->approved_by)
+                                        <p class="text-xs text-gray-400 mt-1">Oleh: {{ $leaveRequest->approvedBy->name ?? '-' }}</p>
                                     @endif
-                                </p>
-                                <p class="text-xs text-gray-500">{{ $leaveRequest->approved_at->format('d M Y, H:i') }}</p>
-                                @if($leaveRequest->approver)
-                                <p class="text-xs text-gray-600 mt-1">oleh {{ $leaveRequest->approver->name }}</p>
-                                @endif
+                                </div>
                             </div>
-                        </div>
+                        @endif
+
+                        @if($leaveRequest->rejected_at)
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-times text-red-600"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Ditolak</p>
+                                    <p class="text-sm text-gray-500">{{ $leaveRequest->rejected_at->format('d M Y, H:i') }}</p>
+                                    @if($leaveRequest->rejected_by)
+                                        <p class="text-xs text-gray-400 mt-1">Oleh: {{ $leaveRequest->rejectedBy->name ?? '-' }}</p>
+                                    @endif
+                                    @if($leaveRequest->rejection_reason)
+                                        <p class="text-sm text-gray-700 mt-2 italic">"{{ $leaveRequest->rejection_reason }}"</p>
+                                    @endif
+                                </div>
+                            </div>
                         @endif
                     </div>
-                </div>
+                </x-card>
+            @endif
+        </div>
 
-                <!-- Quick Stats -->
-                <div class="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-md p-6 text-white">
-                    <h2 class="text-base sm:text-lg font-bold mb-4">Durasi Cuti</h2>
-                    <div class="text-center">
-                        <p class="text-5xl font-bold">{{ $leaveRequest->total_days }}</p>
-                        <p class="text-green-100 mt-2">Hari Kerja</p>
+        {{-- Sidebar --}}
+        <div class="lg:col-span-1 space-y-6">
+            {{-- Quick Info --}}
+            <x-card title="Informasi Tambahan">
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-medium text-gray-500">Diajukan Pada</label>
+                        <p class="text-sm text-gray-900 mt-1">{{ $leaveRequest->created_at->format('d M Y, H:i') }}</p>
+                    </div>
+
+                    @if($leaveRequest->updated_at && $leaveRequest->updated_at != $leaveRequest->created_at)
+                        <div class="pt-3 border-t border-gray-200">
+                            <label class="text-xs font-medium text-gray-500">Terakhir Diupdate</label>
+                            <p class="text-sm text-gray-900 mt-1">{{ $leaveRequest->updated_at->format('d M Y, H:i') }}</p>
+                        </div>
+                    @endif
+
+                    <div class="pt-3 border-t border-gray-200">
+                        <label class="text-xs font-medium text-gray-500">ID Pengajuan</label>
+                        <p class="text-sm text-gray-900 mt-1 font-mono">#{{ str_pad($leaveRequest->id, 6, '0', STR_PAD_LEFT) }}</p>
                     </div>
                 </div>
-            </div>
+            </x-card>
+
+            {{-- Quick Actions --}}
+            <x-card title="Aksi Cepat">
+                <div class="space-y-2">
+                    @if($leaveRequest->status == 'Pending')
+                        @can('edit-leave')
+                            <x-button 
+                                variant="outline" 
+                                icon="fas fa-edit"
+                                class="w-full justify-start"
+                                onclick="window.location.href='{{ route('admin.leave.edit', $leaveRequest->id) }}'">
+                                Edit Pengajuan
+                            </x-button>
+                        @endcan
+
+                        @can('delete-leave')
+                            <x-button 
+                                variant="outline" 
+                                icon="fas fa-trash"
+                                class="w-full justify-start text-red-600 hover:bg-red-50"
+                                onclick="if(confirm('Yakin ingin menghapus pengajuan ini?')) { document.getElementById('delete-form').submit(); }">
+                                Hapus Pengajuan
+                            </x-button>
+
+                            <form id="delete-form" action="{{ route('admin.leave.destroy', $leaveRequest->id) }}" method="POST" style="display: none;">
+                                @csrf
+                                @method('DELETE')
+                            </form>
+                        @endcan
+                    @endif
+
+                    <x-button 
+                        variant="outline" 
+                        icon="fas fa-print"
+                        class="w-full justify-start"
+                        onclick="window.print()">
+                        Cetak Detail
+                    </x-button>
+                </div>
+            </x-card>
         </div>
     </div>
 </div>

@@ -117,13 +117,20 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
-                                    @if($workerShift->worker->photo ?? false)
+                                    @php
+                                        $w = $workerShift->worker ?? null;
+                                    @endphp
+                                    @if($w && ($w->photo_url ?? false) && Storage::disk('public')->exists($w->photo_url))
                                         <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ Storage::url($workerShift->worker->photo) }}" 
-                                             alt="{{ $workerShift->worker->name }}">
+                                             src="{{ Storage::url($w->photo_url) }}" 
+                                             alt="{{ $w->name }}">
+                                    @elseif($w && ($w->photo ?? false) && Storage::disk('public')->exists($w->photo))
+                                        <img class="h-10 w-10 rounded-full object-cover" 
+                                             src="{{ Storage::url($w->photo) }}" 
+                                             alt="{{ $w->name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
-                                            {{ substr($workerShift->worker->name, 0, 1) }}
+                                            {{ strtoupper(substr($w->name ?? ($workerShift->worker->employee_number ?? '-'), 0, 1)) }}
                                         </div>
                                     @endif
                                 </div>

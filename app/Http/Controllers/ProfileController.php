@@ -47,44 +47,52 @@ class ProfileController extends Controller
     public function update(UpdateProfileRequest $request)
     {
         $user = auth()->user();
-        
-        // Prepare photo path
-        $photoPath = $user->photo;
-        
+        // Prepare user data for update
+        $userData = [
+            'email' => $request->email,
+            // Don't update password, username, roles, etc. in profile update
+        ];
+
         // Handle photo upload
         if ($request->hasFile('photo')) {
-            // Delete old photo
-            if ($user->photo) {
-                Storage::disk('public')->delete($user->photo);
-            }
+            // If the user is linked to a worker, update the worker's photo instead
+            if ($user->worker_id) {
+                // Delegate to WorkerService which handles deleting old photo and saving new one
+                try {
+                    $this->workerService->update($user->worker_id, [
+                        'photo' => $request->file('photo'),
+                    ]);
+                } catch (\Exception $e) {
+                    return back()->withErrors(['photo' => 'Gagal menyimpan foto pegawai: ' . $e->getMessage()])->withInput();
+                }
+            } else {
+                // Delete old user photo (public disk)
+                try {
+                    if ($user->photo) {
+                        Storage::disk('public')->delete($user->photo);
+                    }
 
-            $photoPath = $request->file('photo')->store('profile-photos', 'public');
+                    $photoPath = $request->file('photo')->store('profile-photos', 'public');
+                    $userData['photo'] = $photoPath;
+                } catch (\Exception $e) {
+                    return back()->withErrors(['photo' => 'Gagal menyimpan foto profil: ' . $e->getMessage()])->withInput();
+                }
+            }
         }
 
-        // Create DTO with all required fields
-        $dto = new UserDTO(
-            id: $user->id,
-            workerId: $user->worker_id,
-            email: $request->email,
-            password: null, // Don't update password here
-            emailVerifiedAt: $user->email_verified_at?->toDateTimeString(),
-            isActive: $user->is_active,
-            photo: $photoPath,
-        );
-
         // Update user
-        $this->userService->update($user->id, $dto);
+        $this->userService->update($user->id, $userData);
 
-        // If user has worker data, update worker info
-        if ($user->worker_id && ($request->has('name') || $request->has('phone'))) {
+        // If user has worker data, update worker info (name/phone/address)
+        if ($user->worker_id && ($request->has('name') || $request->has('phone') || $request->has('address'))) {
             $workerData = array_filter([
                 'name' => $request->name,
-                'phone' => $request->phone,
+                'phone_number' => $request->phone ?? $request->phone_number ?? null,
                 'address' => $request->address,
             ]);
 
             if (!empty($workerData)) {
-                $this->workerService->updateProfile($user->worker_id, $workerData);
+                $this->workerService->update($user->worker_id, $workerData);
             }
         }
 
@@ -97,17 +105,22 @@ class ProfileController extends Controller
     {
         $user = auth()->user();
 
-        // Verify current password
-        if (!Hash::check($request->current_password, $user->password)) {
+        try {
+            // Use changePassword method which verifies current password internally
+            // The UpdatePasswordRequest validates 'password' (confirmed) so use that field
+            $this->userService->changePassword(
+                $user->id,
+                $request->current_password,
+                $request->password
+            );
+
+            return redirect()
+                ->route('profile.show')
+                ->with('success', 'Password berhasil diperbarui');
+        } catch (\Exception $e) {
             return back()->withErrors([
-                'current_password' => 'Password saat ini tidak sesuai'
+                'current_password' => $e->getMessage()
             ]);
         }
-
-        $this->userService->updatePassword($user->id, $request->new_password);
-
-        return redirect()
-            ->route('profile.show')
-            ->with('success', 'Password berhasil diperbarui');
     }
 }

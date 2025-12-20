@@ -4,158 +4,302 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
+    {{-- Page Header with Back Button --}}
     <div class="flex items-center space-x-3">
-        <a href="{{ route('admin.workers.index') }}" class="text-gray-600 hover:text-gray-900">
-            <i class="fas fa-arrow-left"></i>
-        </a>
+        <x-button 
+            variant="secondary" 
+            size="sm"
+            icon="fas fa-arrow-left"
+            onclick="window.location.href='{{ route('admin.workers.index') }}'">
+        </x-button>
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Data Pegawai</h1>
             <p class="text-sm text-gray-600 mt-1">Perbarui informasi pegawai</p>
         </div>
     </div>
 
-    <form action="{{ route('admin.workers.update', 1) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+    <form action="{{ route('admin.workers.update', $worker->id ?? 1) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
         
-        <!-- Photo Upload -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Foto Pegawai</h3>
-            <div x-data="{ preview: null }" class="flex items-start space-x-6">
-                <div class="flex-shrink-0">
-                    <div class="w-32 h-32 rounded-lg border-2 border-gray-300 overflow-hidden bg-gray-100 flex items-center justify-center">
-                        <template x-if="preview">
-                            <img :src="preview" class="w-full h-full object-cover">
-                        </template>
-                        <template x-if="!preview">
-                            <i class="fas fa-user text-4xl text-gray-400"></i>
-                        </template>
-                    </div>
-                </div>
-                <div class="flex-grow">
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Ganti Foto</label>
-                    <input type="file" name="photo" accept="image/*"
-                           @change="preview = $event.target.files[0] ? URL.createObjectURL($event.target.files[0]) : null"
-                           class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                    <p class="mt-2 text-xs text-gray-500">Format: JPG, PNG (Max: 2MB) - Kosongkan jika tidak ingin mengubah</p>
-                </div>
-            </div>
-        </div>
+        {{-- Photo Upload --}}
+        <x-card title="Foto Pegawai">
+            <x-form.file 
+                name="photo" 
+                label="Ganti Foto"
+                accept="image/*"
+                preview
+                :currentFile="$worker->photo_url && Storage::disk('public')->exists($worker->photo_url) ? asset('storage/' . $worker->photo_url) : null"
+                help="Format: JPG, PNG (Max: 2MB) - Kosongkan jika tidak ingin mengubah" />
+        </x-card>
 
-        <!-- Personal Information -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Data Pribadi</h3>
+        {{-- Personal Information --}}
+        <x-card title="Data Pribadi">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
-                    <input type="text" name="name" value="" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">NIK <span class="text-red-500">*</span></label>
-                    <input type="text" name="nik" value="" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Tempat Lahir <span class="text-red-500">*</span></label>
-                    <input type="text" name="place_of_birth" value="" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Tanggal Lahir <span class="text-red-500">*</span></label>
-                    <input type="date" name="date_of_birth" value="" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Jenis Kelamin <span class="text-red-500">*</span></label>
-                    <select name="gender_id" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="">Pilih Jenis Kelamin</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Agama <span class="text-red-500">*</span></label>
-                    <select name="religion_id" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="">Pilih Agama</option>
-                    </select>
-                </div>
+                <x-form.input 
+                    name="nip" 
+                    label="NIP" 
+                    :value="old('nip', $worker->nip ?? '')"
+                    required 
+                    :error="$errors->first('nip')" 
+                    placeholder="Masukkan NIP" />
+
+                <x-form.input 
+                    name="name" 
+                    label="Nama Lengkap" 
+                    :value="old('name', $worker->name ?? '')"
+                    required 
+                    :error="$errors->first('name')" 
+                    placeholder="Masukkan nama lengkap" />
+
+                <x-form.input 
+                    name="birth_place" 
+                    label="Tempat Lahir" 
+                    :value="old('birth_place', $worker->birth_place ?? '')"
+                    required 
+                    :error="$errors->first('birth_place')" 
+                    placeholder="Masukkan tempat lahir" />
+
+                <x-form.input 
+                    name="birth_date" 
+                    label="Tanggal Lahir" 
+                    type="date" 
+                    :value="old('birth_date', $worker->birth_date?->format('Y-m-d') ?? '')"
+                    required 
+                    :error="$errors->first('birth_date')" />
+
+                <x-form.select 
+                    name="gender_id" 
+                    label="Jenis Kelamin"
+                    required 
+                    :error="$errors->first('gender_id')">
+                    <option value="">Pilih Jenis Kelamin</option>
+                    @foreach($genders as $gender)
+                        <option value="{{ $gender->id }}" {{ old('gender_id', $worker->gender_id ?? '') == $gender->id ? 'selected' : '' }}>
+                            {{ $gender->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+
+                <x-form.select 
+                    name="religion_id" 
+                    label="Agama"
+                    required 
+                    :error="$errors->first('religion_id')">
+                    <option value="">Pilih Agama</option>
+                    @foreach($religions as $religion)
+                        <option value="{{ $religion->id }}" {{ old('religion_id', $worker->religion_id ?? '') == $religion->id ? 'selected' : '' }}>
+                            {{ $religion->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
+
                 <div class="md:col-span-2">
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Alamat <span class="text-red-500">*</span></label>
-                    <textarea name="address" rows="3" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500"></textarea>
+                    <x-form.textarea 
+                        name="address" 
+                        label="Alamat" 
+                        rows="3" 
+                        :value="old('address', $worker->address ?? '')"
+                        :error="$errors->first('address')" 
+                        placeholder="Masukkan alamat lengkap (opsional)" />
                 </div>
             </div>
-        </div>
+        </x-card>
 
-        <!-- Contact Information -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Kontak</h3>
+        {{-- Contact Information --}}
+        <x-card title="Kontak">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">No. Telepon <span class="text-red-500">*</span></label>
-                    <input type="tel" name="phone" value="" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Email</label>
-                    <input type="email" name="email" value="" class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-            </div>
-        </div>
+                <x-form.input 
+                    name="phone_number" 
+                    label="No. Telepon" 
+                    type="tel" 
+                    :value="old('phone_number', $worker->phone_number ?? '')"
+                    required 
+                    :error="$errors->first('phone_number')" 
+                    placeholder="Contoh: 081234567890" />
 
-        <!-- Employment Information -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Data Kepegawaian</h3>
+                <x-form.input 
+                    name="email" 
+                    label="Email" 
+                    type="email" 
+                    :value="old('email', $worker->email ?? '')"
+                    required 
+                    :error="$errors->first('email')" 
+                    placeholder="Contoh: nama@email.com" />
+            </div>
+        </x-card>
+
+        {{-- Employment Information --}}
+        <x-card title="Data Kepegawaian">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Jabatan <span class="text-red-500">*</span></label>
-                    <select name="position_id" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="">Pilih Jabatan</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Lokasi Kerja <span class="text-red-500">*</span></label>
-                    <select name="location_id" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="">Pilih Lokasi</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Tanggal Masuk <span class="text-red-500">*</span></label>
-                    <input type="date" name="hire_date" value="" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Status <span class="text-red-500">*</span></label>
-                    <select name="status" required class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                        <option value="Active">Aktif</option>
-                        <option value="Inactive">Non-Aktif</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+                <x-form.select 
+                    name="department_id" 
+                    label="Departemen"
+                    required 
+                    :error="$errors->first('department_id')">
+                    <option value="">Pilih Departemen</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department->id }}" {{ old('department_id', $worker->department_id ?? '') == $department->id ? 'selected' : '' }}>
+                            {{ $department->name }}
+                        </option>
+                    @endforeach
+                </x-form.select>
 
-        <!-- Bank Information -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-            <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4">Informasi Bank</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Nama Bank</label>
-                    <input type="text" name="bank_name" value="" class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div>
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">No. Rekening</label>
-                    <input type="text" name="bank_account" value="" class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">Atas Nama</label>
-                    <input type="text" name="bank_account_holder" value="" class="w-full px-3 sm:px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                </div>
-            </div>
-        </div>
+                <x-form.select 
+                    name="employment_status" 
+                    label="Status Kepegawaian"
+                    required 
+                    :error="$errors->first('employment_status')">
+                    <option value="">Pilih Status Kepegawaian</option>
+                    <option value="permanent" {{ old('employment_status', $worker->employment_status ?? '') == 'permanent' ? 'selected' : '' }}>Tetap</option>
+                    <option value="contract" {{ old('employment_status', $worker->employment_status ?? 'contract') == 'contract' ? 'selected' : '' }}>Kontrak</option>
+                    <option value="internship" {{ old('employment_status', $worker->employment_status ?? '') == 'internship' ? 'selected' : '' }}>Magang</option>
+                </x-form.select>
 
-        <!-- Action Buttons -->
-        <div class="bg-white rounded-lg shadow p-4 sm:p-6">
+                <x-form.input 
+                    name="hire_date" 
+                    label="Tanggal Masuk" 
+                    type="date" 
+                    :value="old('hire_date', $worker->hire_date?->format('Y-m-d') ?? '')"
+                    required 
+                    :error="$errors->first('hire_date')" />
+
+                <x-form.input 
+                    name="resign_date" 
+                    label="Tanggal Resign (Opsional)" 
+                    type="date" 
+                    :value="old('resign_date', $worker->resign_date?->format('Y-m-d') ?? '')"
+                    :error="$errors->first('resign_date')" 
+                    help="Kosongkan jika pegawai masih aktif" />
+
+                <x-form.select 
+                    name="status" 
+                    label="Status"
+                    required 
+                    :error="$errors->first('status')">
+                    <option value="">Pilih Status</option>
+                    <option value="active" {{ old('status', $worker->status ?? 'active') == 'active' ? 'selected' : '' }}>Aktif</option>
+                    <option value="inactive" {{ old('status', $worker->status ?? '') == 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
+                    <option value="resigned" {{ old('status', $worker->status ?? '') == 'resigned' ? 'selected' : '' }}>Resign</option>
+                </x-form.select>
+            </div>
+        </x-card>
+
+        {{-- Action Buttons --}}
+        <x-card>
             <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-                <a href="{{ route('admin.workers.index') }}" class="px-6 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg">
+                <x-button 
+                    variant="secondary"
+                    onclick="window.location.href='{{ route('admin.workers.index') }}'">
                     Batal
-                </a>
-                <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
-                    <i class="fas fa-save mr-2"></i>Update
-                </button>
+                </x-button>
+                <x-button 
+                    variant="success" 
+                    icon="fas fa-save"
+                    type="submit">
+                    Update
+                </x-button>
             </div>
-        </div>
+        </x-card>
     </form>
 </div>
+
+@push('scripts')
+<script>
+    // Compress image before upload
+    function compressImage(file, maxSizeMB = 0.5) {
+        return new Promise((resolve, reject) => {
+            const maxSize = maxSizeMB * 1024 * 1024;
+            
+            if (file.size <= maxSize) {
+                resolve(file);
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    
+                    const maxDimension = 1200;
+                    if (width > height && width > maxDimension) {
+                        height = (height * maxDimension) / width;
+                        width = maxDimension;
+                    } else if (height > maxDimension) {
+                        width = (width * maxDimension) / height;
+                        height = maxDimension;
+                    }
+                    
+                    canvas.width = width;
+                    canvas.height = height;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    let quality = 0.8;
+                    const tryCompress = () => {
+                        canvas.toBlob((blob) => {
+                            if (blob.size <= maxSize || quality <= 0.1) {
+                                const compressedFile = new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                });
+                                resolve(compressedFile);
+                            } else {
+                                quality -= 0.1;
+                                tryCompress();
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+                    tryCompress();
+                };
+                img.onerror = reject;
+            };
+            reader.onerror = reject;
+        });
+    }
+
+    // Handle photo compression
+    const photoInput = document.querySelector('input[name="photo"]');
+    if (photoInput) {
+        photoInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const form = this.closest('form');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnHTML = submitBtn.innerHTML;
+            
+            try {
+                if (file.size > 2 * 1024 * 1024) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengompres foto...';
+                    
+                    const compressedFile = await compressImage(file, 0.5);
+                    
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(compressedFile);
+                    photoInput.files = dataTransfer.files;
+                    
+                    console.log('Original:', (file.size / 1024 / 1024).toFixed(2), 'MB →', 'Compressed:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+                    
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                }
+            } catch (error) {
+                console.error('Error compressing image:', error);
+                alert('Gagal mengompres foto. Silakan coba dengan foto yang lebih kecil.');
+                photoInput.value = '';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnHTML;
+            }
+        });
+    }
+</script>
+@endpush
 @endsection

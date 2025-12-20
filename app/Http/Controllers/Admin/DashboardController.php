@@ -7,26 +7,39 @@ use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
+use App\Services\Overtime\OvertimeRequestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function __construct()
+    protected OvertimeRequestService $overtimeRequestService;
+
+    public function __construct(OvertimeRequestService $overtimeRequestService)
     {
         $this->middleware('auth');
         // Allow any authenticated user to access dashboard
         // Permission check can be added back if needed: $this->middleware('permission:view-dashboard');
+
+        $this->overtimeRequestService = $overtimeRequestService;
     }
 
     public function index()
     {
-        // Check if user should be redirected to employee dashboard
+        // Check if user should be redirected to employee dashboard.
+        // Prefer explicit admin/superadmin roles; only redirect users who are
+        // employees/workers and do NOT have higher-privilege roles.
         $user = auth()->user();
         if ($user && $user->roles->isNotEmpty()) {
-            $role = $user->roles->first()->name;
-            if (in_array($role, ['employee', 'worker'])) {
+            // normalize role names to lowercase for robust checks
+            $roles = $user->roles->pluck('name')->map(fn($r) => strtolower($r))->toArray();
+
+            // If the user has an administrative role, do not redirect to employee dashboard
+            if (in_array('superadmin', $roles) || in_array('admin', $roles)) {
+                // allow admin to see the admin dashboard
+            } elseif (in_array('employee', $roles) || in_array('worker', $roles)) {
+                // user is an employee/worker and has no admin role -> redirect
                 return redirect()->route('employee.dashboard');
             }
         }
@@ -65,9 +78,10 @@ class DashboardController extends Controller
 
         // Overtime Requests Statistics
         $totalOvertimeRequests = OvertimeRequest::count();
-        $pendingOvertimes = OvertimeRequest::where('status', 'pending')->count();
-        $approvedOvertimes = OvertimeRequest::where('status', 'approved')->count();
-        $rejectedOvertimes = OvertimeRequest::where('status', 'rejected')->count();
+    // Use the service/repository to compute counts so behaviour matches the /overtimes listing
+    $pendingOvertimes = $this->overtimeRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total();
+    $approvedOvertimes = $this->overtimeRequestService->getAll(['status' => 'approved', 'per_page' => 9999])->total();
+    $rejectedOvertimes = $this->overtimeRequestService->getAll(['status' => 'rejected', 'per_page' => 9999])->total();
 
         // ========== RECENT ACTIVITIES ==========
         
@@ -109,6 +123,44 @@ class DashboardController extends Controller
             ->orderBy('start_date')
             ->take(5)
             ->get();
+        // ========== PREPARE VIEW DATA SHAPES EXPECTED BY BLADE ==========
+
+        // Statistics array expected by the view
+        $statistics = [
+            'total_workers' => $totalWorkers,
+            'active_workers' => $activeWorkers,
+            'present_today' => $todayPresent,
+            'attendance_rate' => $totalWorkers > 0 ? round(($todayPresent / max(1, $totalWorkers)) * 100, 1) : 0,
+            'pending_leaves' => $pendingLeaves,
+            'pending_overtimes' => $pendingOvertimes,
+        ];
+
+        // Attendance chart for the last 7 days (labels in Indonesian short form)
+        $labels = [];
+        $data = [];
+        $start = Carbon::today()->subDays(6);
+        $dayNames = [0 => 'Min', 1 => 'Sen', 2 => 'Sel', 3 => 'Rab', 4 => 'Kam', 5 => 'Jum', 6 => 'Sab'];
+        for ($i = 0; $i < 7; $i++) {
+            $date = $start->copy()->addDays($i);
+            $labels[] = $dayNames[$date->dayOfWeek] ?? $date->format('D');
+            $count = Attendance::whereDate('created_at', $date)->where('status', 'present')->count();
+            $data[] = $count;
+        }
+
+        $attendanceChart = [
+            'labels' => $labels,
+            'data' => $data,
+        ];
+
+        // Build a distribution array from department stats so the view can show
+        // "Distribusi Pegawai per Departemen" using the same shape previously used for positions.
+        // $departmentStats comes from getDepartmentStats() and contains objects with 'name' and 'total'.
+        $positionDistribution = collect($departmentStats)->map(function ($d) {
+            return (object) [
+                'name' => $d->name ?? ($d->department_name ?? 'Unknown'),
+                'workers_count' => $d->total ?? ($d->workers_count ?? 0),
+            ];
+        })->toArray();
 
         return view('admin.dashboard.index', compact(
             // Workers
@@ -119,6 +171,9 @@ class DashboardController extends Controller
             'permanentWorkers',
             'contractWorkers',
             'internshipWorkers',
+            // view-friendly aggregates
+            'statistics',
+            'positionDistribution',
             
             // Attendance
             'todayAttendance',
@@ -145,6 +200,7 @@ class DashboardController extends Controller
             
             // Charts
             'attendanceStats',
+            'attendanceChart',
             'leaveStats',
             'departmentStats',
             
@@ -256,11 +312,11 @@ class DashboardController extends Controller
      */
     public function getPendingApprovalsCount()
     {
+        $pendingOvertimes = $this->overtimeRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total();
         $count = [
             'leaves' => LeaveRequest::where('status', 'pending')->count(),
-            'overtimes' => OvertimeRequest::where('status', 'pending')->count(),
-            'total' => LeaveRequest::where('status', 'pending')->count() + 
-                      OvertimeRequest::where('status', 'pending')->count(),
+            'overtimes' => $pendingOvertimes,
+            'total' => LeaveRequest::where('status', 'pending')->count() + $pendingOvertimes,
         ];
         
         return response()->json($count);

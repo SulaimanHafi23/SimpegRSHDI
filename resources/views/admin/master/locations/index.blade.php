@@ -37,7 +37,10 @@
                 <tr>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Lokasi</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jumlah Pegawai</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Koordinat</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Radius</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Geofence</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
                 </tr>
             </thead>
@@ -47,31 +50,69 @@
                     <td class="px-6 py-4 text-sm">{{ $locations->firstItem() + $index }}</td>
                     <td class="px-6 py-4">
                         <div class="flex items-center">
-                            <div class="h-10 w-10 bg-red-100 rounded-full flex items-center justify-center">
-                                <i class="fas fa-map-marker-alt text-red-600"></i>
+                            <div class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-map-marker-alt text-green-600"></i>
                             </div>
-                            <div class="ml-4">
+                            <div class="ml-3">
                                 <div class="text-sm font-medium text-gray-900">{{ $location->name }}</div>
+                                @if($location->address)
+                                <div class="text-xs text-gray-500 mt-1">{{ Str::limit($location->address, 30) }}</div>
+                                @endif
                             </div>
                         </div>
                     </td>
+                    <td class="px-6 py-4">
+                        <div class="text-xs text-gray-600 font-mono">
+                            <div>{{ number_format($location->latitude, 6) }}</div>
+                            <div>{{ number_format($location->longitude, 6) }}</div>
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-sm">
-                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
-                            {{ $location->workers_count ?? 0 }} pegawai
+                        <span class="text-gray-900 font-medium">{{ $location->radius }}m</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        @if($location->enforce_geofence)
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                            <i class="fas fa-shield-alt mr-1"></i>Aktif
                         </span>
+                        @else
+                        <span class="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                            Nonaktif
+                        </span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 text-sm">
+                        @if($location->is_active)
+                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                            <i class="fas fa-check-circle mr-1"></i>Aktif
+                        </span>
+                        @else
+                        <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
+                            <i class="fas fa-times-circle mr-1"></i>Nonaktif
+                        </span>
+                        @endif
                     </td>
                     <td class="px-6 py-4 text-center">
                         <div class="flex justify-center space-x-2">
-                            <a href="{{ route('admin.master.locations.show', $location->id) }}" class="text-blue-600 hover:text-blue-900">
+                            <a href="{{ route('admin.master.locations.show', $location->id) }}" 
+                               class="text-blue-600 hover:text-blue-900" 
+                               title="Detail">
                                 <i class="fas fa-eye"></i>
                             </a>
-                            <a href="{{ route('admin.master.locations.edit', $location->id) }}" class="text-yellow-600 hover:text-yellow-900">
+                            <a href="{{ route('admin.master.locations.edit', $location->id) }}" 
+                               class="text-yellow-600 hover:text-yellow-900"
+                               title="Edit">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <form action="{{ route('admin.master.locations.destroy', $location->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin hapus?')">
+                            <form action="{{ route('admin.master.locations.destroy', $location->id) }}" 
+                                  method="POST" 
+                                  class="inline" 
+                                  onsubmit="return confirm('Yakin ingin menghapus lokasi ini?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="text-red-600 hover:text-red-900">
+                                <button type="submit" 
+                                        class="text-red-600 hover:text-red-900"
+                                        title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </form>
@@ -80,9 +121,12 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="px-6 py-12 text-center">
-                        <i class="fas fa-inbox text-gray-400 text-5xl mb-4"></i>
-                        <p class="text-gray-500">Tidak ada data</p>
+                    <td colspan="7" class="px-6 py-12 text-center">
+                        <div class="flex flex-col items-center">
+                            <i class="fas fa-map-marked-alt text-gray-400 text-5xl mb-4"></i>
+                            <p class="text-gray-500 text-lg">Tidak ada data lokasi</p>
+                            <p class="text-gray-400 text-sm mt-1">Silakan tambahkan lokasi baru</p>
+                        </div>
                     </td>
                 </tr>
                 @endforelse

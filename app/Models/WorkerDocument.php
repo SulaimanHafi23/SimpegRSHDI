@@ -14,6 +14,7 @@ class WorkerDocument extends Model
     protected $fillable = [
         'worker_id',
         'document_type_id',
+        'department_document_type_id',
         'file_name',
         'file_path',
         'file_size',
@@ -38,6 +39,11 @@ class WorkerDocument extends Model
     public function documentType(): BelongsTo
     {
         return $this->belongsTo(DocumentType::class);
+    }
+
+    public function departmentDocumentType(): BelongsTo
+    {
+        return $this->belongsTo(DepartmentDocumentType::class, 'department_document_type_id');
     }
 
     public function verifier(): BelongsTo

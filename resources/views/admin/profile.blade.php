@@ -16,8 +16,11 @@
             <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
                 <div class="text-center">
                     <div class="relative inline-block">
-                        @if($user->photo)
-                            <img src="{{ asset($user->photo) }}" alt="{{ $user->name }}" 
+                        @if($user->worker && $user->worker->photo_url && Storage::disk('public')->exists($user->worker->photo_url))
+                            <img src="{{ Storage::url($user->worker->photo_url) }}" alt="{{ $user->name }}" 
+                                 class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-green-500">
+                        @elseif($user->photo && Storage::disk('public')->exists($user->photo))
+                            <img src="{{ Storage::url($user->photo) }}" alt="{{ $user->name }}" 
                                  class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-green-500">
                         @else
                             <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-green-500 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold border-4 border-green-600">
@@ -49,10 +52,6 @@
                         <div class="flex justify-between">
                             <span class="text-gray-600">NIP:</span>
                             <span class="font-medium">{{ $user->worker->nip }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Jabatan:</span>
-                            <span class="font-medium">{{ $user->worker->position->name ?? '-' }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Status:</span>
@@ -91,17 +90,48 @@
                     <i class="fas fa-user-edit text-green-600 mr-2"></i>Update Profile
                 </h2>
                 
-                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
+                <form id="profileForm" action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
 
                     <div class="space-y-4">
+                        @if($user->worker)
+                        <!-- NIP (readonly) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
+                            <input type="text" value="{{ $user->worker->nip }}" readonly
+                                   class="w-full px-3 py-2 border border-gray-200 bg-gray-100 rounded-lg text-gray-700 cursor-not-allowed">
+                        </div>
+                        <!-- Departemen (readonly) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                            <input type="text" value="{{ $user->worker->department->name ?? '-' }}" readonly
+                                   class="w-full px-3 py-2 border border-gray-200 bg-gray-100 rounded-lg text-gray-700 cursor-not-allowed">
+                        </div>
+                        <!-- Gender (readonly) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
+                            <input type="text" value="{{ $user->worker->gender->name ?? '-' }}" readonly
+                                   class="w-full px-3 py-2 border border-gray-200 bg-gray-100 rounded-lg text-gray-700 cursor-not-allowed">
+                        </div>
+                        <!-- Tanggal Lahir (readonly) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Lahir</label>
+                            <input type="text" value="{{ $user->worker->birth_date?->format('d F Y') ?? '-' }}" readonly
+                                   class="w-full px-3 py-2 border border-gray-200 bg-gray-100 rounded-lg text-gray-700 cursor-not-allowed">
+                        </div>
+                        <!-- Alamat (readonly) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+                            <textarea readonly class="w-full px-3 py-2 border border-gray-200 bg-gray-100 rounded-lg text-gray-700 cursor-not-allowed">{{ $user->worker->address ?? '-' }}</textarea>
+                        </div>
+                        @endif
                         <!-- Name -->
                         <div>
                             <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
                                 Nama Lengkap <span class="text-red-500">*</span>
                             </label>
-                            <input type="text" name="name" id="name" value="{{ old('name', $user->name) }}"
+                            <input type="text" name="name" id="name" value="{{ old('name', $user->username) }}"
                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                    required>
                             @error('name')
@@ -227,24 +257,130 @@
                         </div>
                     </div>
                 </form>
+
+                <!-- Lupa Password -->
+                @if (Route::has('password.request'))
+                    <div class="mt-4 text-center">
+                        <a href="{{ route('password.request') }}" class="text-sm text-blue-600 hover:underline">
+                            <i class="fas fa-question-circle mr-1"></i> Lupa Password?
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
     </div>
 </div>
 
 <script>
-function previewPhoto(event) {
-    const file = event.target.files[0];
-    if (file) {
+document.addEventListener('DOMContentLoaded', function() {
+    // Max allowed size we want to target (bytes). Adjust to your server limits.
+    const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+
+    const form = document.getElementById('profileForm');
+    const fileInput = document.getElementById('photo');
+    const photoPreview = document.getElementById('photoPreview');
+    const previewImg = photoPreview ? photoPreview.querySelector('img') : null;
+
+    // Expose a preview function for the file input onchange (keeps existing behavior)
+    window.previewPhoto = function(event) {
+        const file = event.target.files[0];
+        previewPhotoFile(file);
+    }
+
+    function previewPhotoFile(file) {
+        if (!file) {
+            if (photoPreview) photoPreview.classList.add('hidden');
+            return;
+        }
+        if (!previewImg) return;
         const reader = new FileReader();
         reader.onload = function(e) {
-            const preview = document.getElementById('photoPreview');
-            const img = preview.querySelector('img');
-            img.src = e.target.result;
-            preview.classList.remove('hidden');
+            previewImg.src = e.target.result;
+            photoPreview.classList.remove('hidden');
         }
         reader.readAsDataURL(file);
     }
-}
+
+    async function compressImageFile(file, maxBytes) {
+        // Return compressed Blob or null if cannot compress enough
+        if (!file.type.startsWith('image/')) return null;
+
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = new Image();
+                img.onload = async function() {
+                    // Resize to a max dimension to reduce size
+                    const MAX_DIM = 1200;
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > MAX_DIM || height > MAX_DIM) {
+                        const ratio = Math.min(MAX_DIM / width, MAX_DIM / height);
+                        width = Math.round(width * ratio);
+                        height = Math.round(height * ratio);
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Try decreasing quality until under limit or quality floor
+                    let quality = 0.85;
+                    let blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
+                    // If original format is png and has transparency, converting to jpeg may drop transparency
+                    // but jpeg results in much smaller size for photos. We accept that tradeoff here.
+                    while (blob && blob.size > maxBytes && quality > 0.35) {
+                        quality -= 0.15;
+                        // eslint-disable-next-line no-await-in-loop
+                        blob = await new Promise(r => canvas.toBlob(r, 'image/jpeg', quality));
+                    }
+
+                    if (!blob) return resolve(null);
+                    if (blob.size > maxBytes) return resolve(null);
+                    return resolve(blob);
+                };
+                img.onerror = () => reject(new Error('Gagal memproses gambar'));
+                img.src = ev.target.result;
+            };
+            reader.onerror = () => reject(new Error('Gagal membaca file'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    form.addEventListener('submit', async function(e) {
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+
+        const originalFile = fileInput.files[0];
+        // If file already within limit, proceed. Otherwise try compressing.
+        if (originalFile.size <= MAX_BYTES) return;
+
+        // Try to compress client-side
+        try {
+            const compressedBlob = await compressImageFile(originalFile, MAX_BYTES);
+            if (!compressedBlob) {
+                e.preventDefault();
+                alert('Ukuran file terlalu besar dan tidak dapat dikompres cukup kecil. Silakan pilih gambar yang lebih kecil atau hubungi admin untuk menaikkan limit server.');
+                return;
+            }
+
+            // Create a File from the blob and replace file input
+            const newFile = new File([compressedBlob], (originalFile.name.replace(/\.[^.]+$/, '') + '.jpg'), { type: 'image/jpeg' });
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(newFile);
+            fileInput.files = dataTransfer.files;
+
+            // Update preview to compressed version
+            previewPhotoFile(newFile);
+            // Allow form to submit with compressed file
+        } catch (err) {
+            // If compression fails, prevent the submit and inform user
+            e.preventDefault();
+            console.error('Compression error', err);
+            alert('Terjadi kesalahan saat mengompres gambar. Silakan coba lagi dengan file yang lebih kecil.');
+        }
+    });
+});
 </script>
 @endsection

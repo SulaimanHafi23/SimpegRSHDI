@@ -72,6 +72,12 @@
                 <span>Tipe Dokumen</span>
             </a>
             @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('document-type.view'))
+            <a href="{{ route('admin.master.department-document-types.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-project-diagram w-5"></i>
+                <span>Dokumen posisi</span>
+            </a>
+            @endif
         </div>
 
         <!-- Management Section -->
@@ -93,6 +99,12 @@
             <a href="{{ route('admin.worker-shifts.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
                 <i class="fas fa-user-clock w-5"></i>
                 <span>Jadwal Pegawai</span>
+            </a>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-worker-documents'))
+            <a href="{{ route('admin.worker-documents.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.worker-documents.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-file-alt w-5"></i>
+                <span>Dokumen Pegawai</span>
             </a>
             @endif
         </div>
@@ -138,11 +150,24 @@
     <!-- User Profile -->
     <div class="p-4 border-t border-green-600">
         <div class="flex items-center space-x-3">
-            <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) }}"
+            @php
+                $worker = auth()->user()->worker ?? null;
+                $user = auth()->user();
+                $avatarUrl = null;
+                if ($worker && ($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url)) {
+                    $avatarUrl = Storage::url($worker->photo_url);
+                } elseif (($user->photo ?? false) && Storage::disk('public')->exists($user->photo)) {
+                    $avatarUrl = Storage::url($user->photo);
+                } else {
+                    $nameForAvatar = $worker->name ?? $user->username ?? $user->email ?? $user->name ?? '';
+                    $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($nameForAvatar);
+                }
+            @endphp
+            <img src="{{ $avatarUrl }}"
                  alt="Avatar"
                  class="h-10 w-10 rounded-full border-2 border-yellow-400">
             <div class="flex-1">
-                <p class="text-sm font-semibold">{{ auth()->user()->name }}</p>
+                <p class="text-sm font-semibold">{{ $worker->name ?? auth()->user()->username ?? auth()->user()->name ?? auth()->user()->email }}</p>
                 <p class="text-xs text-yellow-100">{{ auth()->user()->getRoleNames()->first() }}</p>
             </div>
         </div>

@@ -56,7 +56,22 @@ class WorkerController extends Controller
 
         try {
             $worker = $this->service->getById($id);
-            return view('admin.workers.show', compact('worker'));
+            // Attendance this month
+            $month = now()->month;
+            $year = now()->year;
+            $attendanceService = app(\App\Services\Attendance\AttendanceService::class);
+            $attendances = $attendanceService->getByWorkerId($worker->id, [
+                'month' => $month,
+                'year' => $year,
+            ]);
+            $attendanceThisMonth = $attendances->count();
+
+            // Total overtime (approved only)
+            $overtimeService = app(\App\Services\Overtime\OvertimeRequestService::class);
+            $overtimes = $overtimeService->getByWorkerId($worker->id, ['status' => 'approved']);
+            $totalOvertime = $overtimes->sum('total_hours');
+
+            return view('admin.workers.show', compact('worker', 'attendanceThisMonth', 'totalOvertime'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.workers.index')
@@ -70,10 +85,9 @@ class WorkerController extends Controller
 
         $genders = $this->genderService->getAllActive();
         $religions = $this->religionService->getAllActive();
-        $locations = $this->locationService->getAll();
         $departments = $this->departmentService->getAllActive();
 
-        return view('admin.workers.create', compact('genders', 'religions', 'locations', 'departments'));
+        return view('admin.workers.create', compact('genders', 'religions', 'departments'));
     }
 
     public function store(WorkerRequest $request)
@@ -101,10 +115,11 @@ class WorkerController extends Controller
             $worker = $this->service->getById($id);
             $genders = $this->genderService->getAllActive();
             $religions = $this->religionService->getAllActive();
-            $locations = $this->locationService->getAll();
             $departments = $this->departmentService->getAllActive();
 
-            return view('admin.workers.edit', compact('worker', 'genders', 'religions', 'locations', 'departments'));
+            // dd($worker, $genders, $religions, $departments);
+
+            return view('admin.workers.edit', compact('worker', 'genders', 'religions', 'departments'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.workers.index')

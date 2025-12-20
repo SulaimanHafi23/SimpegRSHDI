@@ -36,11 +36,21 @@ class WorkerDocumentService
         $file = $data['file'];
         $workerId = $data['worker_id'];
 
+        // If department_document_type_id provided, resolve document_type_id
+        if (!empty($data['department_document_type_id'])) {
+            $ddt = \App\Models\DepartmentDocumentType::find($data['department_document_type_id']);
+            if (! $ddt) {
+                throw new \Exception('Tipe dokumen untuk departemen tidak ditemukan');
+            }
+            // ensure the base document_type_id is set for backward compatibility
+            $data['document_type_id'] = $ddt->document_type_id;
+        }
+
         // Save file
         $filename = sprintf(
             '%s_%s_%s.%s',
             $workerId,
-            $data['document_type_id'],
+            $data['document_type_id'] ?? 'unknown',
             now()->format('YmdHis'),
             $file->getClientOriginalExtension()
         );
@@ -117,10 +127,21 @@ class WorkerDocumentService
     {
         $document = $this->workerDocumentRepository->getById($id);
 
-        if (!Storage::exists($document->file_path)) {
-            throw new \Exception('File not found.');
+        // Prefer public disk (files are stored using the 'public' disk).
+        $disk = Storage::disk('public');
+
+        if (!$document || !$document->file_path) {
+            throw new \Exception('Dokumen tidak ditemukan.');
         }
 
-        return Storage::download($document->file_path, $document->file_name);
+        if (!$disk->exists($document->file_path)) {
+            // Try default disk as fallback
+            if (!Storage::exists($document->file_path)) {
+                throw new \Exception('File not found.');
+            }
+            return Storage::download($document->file_path, $document->file_name);
+        }
+
+        return $disk->download($document->file_path, $document->file_name);
     }
 }

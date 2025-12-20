@@ -57,6 +57,11 @@ class OvertimeRequestService
             $data['total_hours'] = $endTime->diffInHours($startTime);
         }
 
+        // Remove empty values to prevent overwriting with empty strings
+        $data = array_filter($data, function($value) {
+            return $value !== '' && $value !== null && $value !== [];
+        });
+
         $dto = OvertimeRequestDTO::fromRequest($data);
         return $this->overtimeRequestRepository->update($id, $dto);
     }

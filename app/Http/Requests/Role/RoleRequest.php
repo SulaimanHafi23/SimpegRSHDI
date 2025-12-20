@@ -31,13 +31,22 @@ class RoleRequest extends FormRequest
                 'max:255',
                 Rule::unique('roles', 'name')->ignore($roleId),
             ],
+            'display_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'description' => [
+                'nullable',
+                'string',
+            ],
             'permissions' => [
                 'nullable',
                 'array',
             ],
             'permissions.*' => [
-                'string',
-                'exists:permissions,name',
+                'integer',
+                'exists:permissions,id',
             ],
         ];
     }
@@ -47,6 +56,7 @@ class RoleRequest extends FormRequest
         return [
             'name.required' => 'Nama role harus diisi.',
             'name.unique' => 'Nama role sudah digunakan.',
+            'permissions.*.integer' => 'Permission ID harus berupa angka.',
             'permissions.*.exists' => 'Permission tidak valid.',
         ];
     }

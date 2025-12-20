@@ -70,10 +70,8 @@ class DocumentTypeService
     /**
      * Get document type by code
      */
-    public function getByCode(string $code)
-    {
-        return $this->repository->getByCode($code);
-    }
+    // Note: document_types table does not have a `code` column in current schema.
+    // No getByCode helper is provided for document types.
 
     /**
      * Create new document type
@@ -88,10 +86,7 @@ class DocumentTypeService
                 throw new \Exception('Nama tipe dokumen sudah digunakan');
             }
 
-            // Check if code already exists
-            if ($this->repository->getByCode($dto->code)) {
-                throw new \Exception('Kode tipe dokumen sudah digunakan');
-            }
+            // Note: migration does not include a `code` column; skip code uniqueness check
 
             $documentType = $this->repository->create($dto);
 
@@ -129,11 +124,7 @@ class DocumentTypeService
                 throw new \Exception('Nama tipe dokumen sudah digunakan');
             }
 
-            // Check if code already exists (except current)
-            $existingByCode = $this->repository->getByCode($dto->code);
-            if ($existingByCode && $existingByCode->id !== $id) {
-                throw new \Exception('Kode tipe dokumen sudah digunakan');
-            }
+            // No code uniqueness check: document_types table has no `code` column in this schema
 
             $documentType = $this->repository->update($id, $dto);
 
