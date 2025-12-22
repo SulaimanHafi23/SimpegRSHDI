@@ -9,7 +9,11 @@
 
             <!-- Logo & Greeting -->
             <div class="flex-1">
-                <h1 class="text-lg font-bold">Hi, {{ auth()->user()->worker->name ?? auth()->user()->name }} 👋</h1>
+                @php
+                    $worker = auth()->user()->worker ?? null;
+                    $displayName = $worker->name ?? auth()->user()->username ?? auth()->user()->name ?? auth()->user()->email ?? '';
+                @endphp
+                <h1 class="text-lg font-bold">Hi, {{ $displayName }} 👋</h1>
                 <p class="text-xs text-yellow-100">{{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM YYYY') }}</p>
             </div>
 
@@ -59,7 +63,17 @@
                 <!-- Profile Dropdown -->
                 <div class="relative hidden sm:block" x-data="{ open: false }">
                     <button @click="open = !open" class="flex items-center p-2 space-x-2 transition duration-200 rounded-lg hover:bg-green-500">
-                        <img src="{{ auth()->user()->worker->photo_url ? Storage::url(auth()->user()->worker->photo_url) : 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) }}"
+                        @php
+                            $user = auth()->user();
+                            if ($worker && ($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url)) {
+                                $avatarUrl = Storage::url($worker->photo_url);
+                            } elseif (($user->photo ?? false) && Storage::disk('public')->exists($user->photo)) {
+                                $avatarUrl = Storage::url($user->photo);
+                            } else {
+                                $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($displayName);
+                            }
+                        @endphp
+                        <img src="{{ $avatarUrl }}"
                              alt="Avatar"
                              class="object-cover w-8 h-8 border-2 border-yellow-300 rounded-full">
                         <i class="text-xs fas fa-chevron-down"></i>

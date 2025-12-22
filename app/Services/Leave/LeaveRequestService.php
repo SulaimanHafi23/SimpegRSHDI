@@ -94,6 +94,11 @@ class LeaveRequestService
             $data['attachment_path'] = $this->saveAttachment($data['attachment'], $leaveRequest->worker_id);
         }
 
+        // Remove empty values to prevent overwriting with empty strings
+        $data = array_filter($data, function($value) {
+            return $value !== '' && $value !== null && $value !== [];
+        });
+
         $dto = LeaveRequestDTO::fromRequest($data);
         return $this->leaveRequestRepository->update($id, $dto);
     }

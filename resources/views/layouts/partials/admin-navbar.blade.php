@@ -23,7 +23,20 @@
             <!-- Profile Dropdown -->
             <div class="relative" x-data="{ open: false }">
                 <button @click="open = !open" class="flex items-center space-x-2 sm:space-x-3 p-2 rounded-lg hover:bg-green-50 transition duration-200">
-                    <img src="{{ auth()->user()->avatar ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->name) }}"
+                    @php
+                        $worker = auth()->user()->worker ?? null;
+                        $user = auth()->user();
+                        $avatarUrl = null;
+                        if ($worker && ($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url)) {
+                            $avatarUrl = Storage::url($worker->photo_url);
+                        } elseif (($user->photo ?? false) && Storage::disk('public')->exists($user->photo)) {
+                            $avatarUrl = Storage::url($user->photo);
+                        } else {
+                            $nameForAvatar = $worker->name ?? $user->username ?? $user->email ?? $user->name ?? '';
+                            $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($nameForAvatar);
+                        }
+                    @endphp
+                    <img src="{{ $avatarUrl }}"
                          alt="Avatar"
                          class="h-8 w-8 sm:h-10 sm:w-10 rounded-full border-2 border-green-500">
                     <div class="text-left hidden sm:block">

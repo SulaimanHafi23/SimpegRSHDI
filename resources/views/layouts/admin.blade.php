@@ -95,9 +95,9 @@
                 overlay.addEventListener('click', toggleSidebar);
             }
 
-            // Auto-dismiss alerts after 3 seconds
-            const alerts = document.querySelectorAll('.bg-green-100, .bg-red-100, .bg-yellow-100');
-            alerts.forEach(function(alert) {
+            // Auto-dismiss alerts only when explicitly marked with data-auto-dismiss="true"
+            const autoAlerts = document.querySelectorAll('[data-auto-dismiss="true"]');
+            autoAlerts.forEach(function(alert) {
                 setTimeout(function() {
                     alert.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
                     alert.style.opacity = '0';

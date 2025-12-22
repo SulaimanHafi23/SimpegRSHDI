@@ -30,4 +30,12 @@ class DocumentType extends Model
     {
         return $this->hasMany(WorkerDocument::class);
     }
+
+    /**
+     * Departments that this document type applies to
+     */
+    public function departments()
+    {
+        return $this->belongsToMany(Department::class, 'department_document_type', 'document_type_id', 'department_id')->withTimestamps();
+    }
 }

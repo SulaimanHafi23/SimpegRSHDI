@@ -4,203 +4,223 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Data Pegawai</h1>
-            <p class="text-sm text-gray-600 mt-1">Kelola data seluruh pegawai</p>
-        </div>
-        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
-            <a href="{{ route('admin.workers.export') }}" 
-               class="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">
-                <i class="fas fa-file-excel mr-2"></i>Export
-            </a>
-            <a href="{{ route('admin.workers.create') }}" 
-               class="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow">
-                <i class="fas fa-plus mr-2"></i>Tambah Pegawai
-            </a>
-        </div>
-    </div>
+    {{-- Page Header --}}
+    <x-page-header 
+        title="Data Pegawai" 
+        description="Kelola data seluruh pegawai"
+        icon="fas fa-users">
+        <x-slot:actions>
+            @can('view-workers')
+                <x-button 
+                    variant="primary" 
+                    icon="fas fa-file-excel"
+                    onclick="window.location.href='{{ route('admin.workers.export') }}'">
+                    Export
+                </x-button>
+            @endcan
+            @can('create-workers')
+                <x-button 
+                    variant="success" 
+                    icon="fas fa-plus"
+                    onclick="window.location.href='{{ route('admin.workers.create') }}'">
+                    Tambah Pegawai
+                </x-button>
+            @endcan
+        </x-slot:actions>
+    </x-page-header>
 
-    <!-- Statistics Cards -->
+    {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-blue-100 rounded-full">
-                    <i class="fas fa-users text-blue-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Total Pegawai</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $workers->total() }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-green-100 rounded-full">
-                    <i class="fas fa-user-check text-green-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Aktif</p>
-                    <p class="text-xl sm:text-2xl font-bold text-green-600">{{ $workers->where('status', 'active')->count() }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-yellow-100 rounded-full">
-                    <i class="fas fa-user-clock text-yellow-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Kontrak</p>
-                    <p class="text-xl sm:text-2xl font-bold text-yellow-600">{{ $workers->where('employment_status', 'contract')->count() }}</p>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center">
-                <div class="p-3 bg-red-100 rounded-full">
-                    <i class="fas fa-user-times text-red-600 text-xl"></i>
-                </div>
-                <div class="ml-4">
-                    <p class="text-sm text-gray-600">Non-Aktif</p>
-                    <p class="text-2xl font-bold text-red-600">{{ $workers->where('status', 'inactive')->count() }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search & Filter -->
-    <div class="bg-white rounded-lg shadow p-4">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-5 gap-3">
-            <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Cari nama/NIP..." 
-                   class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-            
-            <select name="department_id" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                <option value="">Semua Departemen</option>
-                @foreach($departments as $department)
-                    <option value="{{ $department->id }}" {{ ($filters['department_id'] ?? '') == $department->id ? 'selected' : '' }}>
-                        {{ $department->name }}
-                    </option>
-                @endforeach
-            </select>
-            
-            <select name="employment_status" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                <option value="">Semua Status Kepegawaian</option>
-                <option value="permanent" {{ ($filters['employment_status'] ?? '') == 'permanent' ? 'selected' : '' }}>Tetap</option>
-                <option value="contract" {{ ($filters['employment_status'] ?? '') == 'contract' ? 'selected' : '' }}>Kontrak</option>
-                <option value="probation" {{ ($filters['employment_status'] ?? '') == 'probation' ? 'selected' : '' }}>Probation</option>
-                <option value="internship" {{ ($filters['employment_status'] ?? '') == 'internship' ? 'selected' : '' }}>Magang</option>
-            </select>
-            
-            <select name="status" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-                <option value="">Semua Status</option>
-                <option value="active" {{ ($filters['status'] ?? '') == 'active' ? 'selected' : '' }}>Aktif</option>
-                <option value="inactive" {{ ($filters['status'] ?? '') == 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
-            </select>
-            
-            <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
-                <i class="fas fa-search mr-2"></i>Cari
-            </button>
-        </form>
-    </div>
-
-    <!-- Workers Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pegawai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">NIP</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Departemen</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status Kepegawaian</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($workers as $index => $worker)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $workers->firstItem() + $index }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="h-10 w-10 flex-shrink-0">
-                                        @if($worker->photo_url)
-                                            <img class="h-10 w-10 rounded-full object-cover" src="{{ Storage::url($worker->photo_url) }}" alt="{{ $worker->name }}">
-                                        @else
-                                            <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                                                <span class="text-gray-600 font-medium">{{ substr($worker->name, 0, 1) }}</span>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">{{ $worker->name }}</div>
-                                        <div class="text-sm text-gray-500">{{ $worker->email }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $worker->nip }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ $worker->department->name ?? '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    @if($worker->employment_status == 'permanent') bg-green-100 text-green-800
-                                    @elseif($worker->employment_status == 'contract') bg-yellow-100 text-yellow-800
-                                    @elseif($worker->employment_status == 'probation') bg-blue-100 text-blue-800
-                                    @else bg-gray-100 text-gray-800
-                                    @endif">
-                                    {{ ucfirst($worker->employment_status) }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {{ $worker->status == 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
-                                    {{ $worker->status == 'active' ? 'Aktif' : 'Non-Aktif' }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <a href="{{ route('admin.workers.show', $worker->id) }}" 
-                                   class="text-blue-600 hover:text-blue-900 mr-3" title="Detail">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a href="{{ route('admin.workers.edit', $worker->id) }}" 
-                                   class="text-yellow-600 hover:text-yellow-900 mr-3" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <form action="{{ route('admin.workers.destroy', $worker->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="text-red-600 hover:text-red-900" 
-                                            onclick="return confirm('Apakah Anda yakin ingin menghapus pegawai ini?')" title="Hapus">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-gray-500">
-                                <i class="fas fa-users text-5xl mb-4 text-gray-400"></i>
-                                <p>Tidak ada data pegawai</p>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-stats-card 
+            title="Total Pegawai" 
+            :value="$workers->total()" 
+            icon="fas fa-users" 
+            color="blue" />
         
-        <!-- Pagination -->
-        @if($workers->hasPages())
-            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-                {{ $workers->links() }}
-            </div>
-        @endif
+        <x-stats-card 
+            title="Aktif" 
+            :value="$workers->where('status', 'active')->count()" 
+            icon="fas fa-user-check" 
+            color="green" />
+        
+        <x-stats-card 
+            title="Kontrak" 
+            :value="$workers->where('employment_status', 'contract')->count()" 
+            icon="fas fa-user-clock" 
+            color="yellow" />
+        
+        <x-stats-card 
+            title="Non-Aktif" 
+            :value="$workers->where('status', 'inactive')->count()" 
+            icon="fas fa-user-times" 
+            color="red" />
     </div>
+
+    {{-- Filter Section --}}
+    <x-filter-section action="{{ route('admin.workers.index') }}">
+        <x-form.input 
+            name="search" 
+            label="Pencarian" 
+            placeholder="Cari nama/NIP..."
+            :value="$filters['search'] ?? ''" />
+
+        <x-form.select 
+            name="department_id" 
+            label="Departemen"
+            :selected="$filters['department_id'] ?? ''"
+            placeholder="Semua Departemen">
+            @foreach($departments as $department)
+                <option value="{{ $department->id }}">{{ $department->name }}</option>
+            @endforeach
+        </x-form.select>
+
+        <x-form.select 
+            name="employment_status" 
+            label="Status Kepegawaian"
+            :options="[
+                'permanent' => 'Tetap',
+                'contract' => 'Kontrak',
+                'probation' => 'Probation',
+                'internship' => 'Magang'
+            ]"
+            :selected="$filters['employment_status'] ?? ''"
+            placeholder="Semua Status Kepegawaian" />
+
+        <x-form.select 
+            name="status" 
+            label="Status"
+            :options="[
+                'active' => 'Aktif',
+                'inactive' => 'Non-Aktif'
+            ]"
+            :selected="$filters['status'] ?? ''"
+            placeholder="Semua Status" />
+    </x-filter-section>
+
+    {{-- Workers Table --}}
+    <x-card>
+        @if($workers->isEmpty())
+            <x-empty-state 
+                icon="fas fa-users"
+                title="Tidak ada data pegawai"
+                description="Silakan tambahkan data pegawai baru"
+                actionText="Tambah Pegawai"
+                :actionUrl="route('admin.workers.create')" />
+        @else
+            <x-table>
+                <x-slot:thead>
+                    <x-table.row>
+                        <x-table.cell header>No</x-table.cell>
+                        <x-table.cell header>Pegawai</x-table.cell>
+                        <x-table.cell header>NIP</x-table.cell>
+                        <x-table.cell header>Departemen</x-table.cell>
+                        <x-table.cell header>Status Kepegawaian</x-table.cell>
+                        <x-table.cell header>Status</x-table.cell>
+                        <x-table.cell header>Aksi</x-table.cell>
+                    </x-table.row>
+                </x-slot:thead>
+
+                @foreach($workers as $index => $worker)
+                    <x-table.row>
+                        <x-table.cell>
+                            {{ $workers->firstItem() + $index }}
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 flex-shrink-0">
+                                    @if($worker->photo_url)
+                                        <img class="h-10 w-10 rounded-full object-cover" 
+                                             src="{{ Storage::url($worker->photo_url) }}" 
+                                             alt="{{ $worker->name }}">
+                                    @else
+                                        <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                            <span class="text-gray-600 font-medium">{{ substr($worker->name, 0, 1) }}</span>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ $worker->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $worker->email }}</div>
+                                </div>
+                            </div>
+                        </x-table.cell>
+
+                        <x-table.cell>{{ $worker->nip }}</x-table.cell>
+
+                        <x-table.cell>{{ $worker->department->name ?? '-' }}</x-table.cell>
+
+                        <x-table.cell>
+                            @php
+                                $employmentBadges = [
+                                    'permanent' => ['variant' => 'success', 'label' => 'Tetap'],
+                                    'contract' => ['variant' => 'warning', 'label' => 'Kontrak'],
+                                    'probation' => ['variant' => 'primary', 'label' => 'Probation'],
+                                    'internship' => ['variant' => 'secondary', 'label' => 'Magang'],
+                                ];
+                                $badge = $employmentBadges[$worker->employment_status] ?? ['variant' => 'secondary', 'label' => ucfirst($worker->employment_status)];
+                            @endphp
+                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            <x-badge :variant="$worker->status == 'active' ? 'success' : 'danger'">
+                                {{ $worker->status == 'active' ? 'Aktif' : 'Non-Aktif' }}
+                            </x-badge>
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            <div class="flex justify-end space-x-2">
+                                @can('view-workers')
+                                    <a href="{{ route('admin.workers.show', $worker->id) }}" 
+                                       class="text-blue-600 hover:text-blue-900" 
+                                       title="Detail">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                    </a>
+                                @endcan
+
+                                @can('edit-workers')
+                                    <a href="{{ route('admin.workers.edit', $worker->id) }}" 
+                                       class="text-indigo-600 hover:text-indigo-900" 
+                                       title="Edit">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                    </a>
+                                @endcan
+
+                                @can('delete-workers')
+                                    <button onclick="if(confirm('Apakah Anda yakin ingin menghapus pegawai ini?')) { document.getElementById('delete-form-{{ $worker->id }}').submit(); }" 
+                                            class="text-red-600 hover:text-red-900" 
+                                            title="Hapus">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                    <form id="delete-form-{{ $worker->id }}" 
+                                          action="{{ route('admin.workers.destroy', $worker->id) }}" 
+                                          method="POST" 
+                                          style="display: none;">
+                                        @csrf
+                                        @method('DELETE')
+                                    </form>
+                                @endcan
+                            </div>
+                        </x-table.cell>
+                    </x-table.row>
+                @endforeach
+            </x-table>
+
+            {{-- Pagination --}}
+            @if($workers->hasPages())
+                <div class="mt-4">
+                    <x-pagination :paginator="$workers" />
+                </div>
+            @endif
+        @endif
+    </x-card>
 </div>
 @endsection

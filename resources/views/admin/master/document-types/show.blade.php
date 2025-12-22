@@ -40,21 +40,44 @@
             </div>
         </div>
 
-        <div class="border-t pt-6 grid grid-cols-2 gap-6">
+        <div class="border-t pt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <p class="text-sm font-medium text-gray-500 mb-1">Status</p>
-                <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    Aktif
-                </span>
+                @if(!empty($documentType->is_active))
+                    <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">Aktif</span>
+                @else
+                    <span class="inline-flex px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">Tidak Aktif</span>
+                @endif
             </div>
+
             <div>
                 <p class="text-sm font-medium text-gray-500 mb-1">Kategori</p>
                 <p class="text-base text-gray-900">Dokumen Pegawai</p>
             </div>
+
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Format File</p>
+                @if(!empty($documentType->file_format))
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(explode(',', $documentType->file_format) as $fmt)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-sm bg-blue-50 text-blue-700">{{ trim($fmt) }}</span>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-base text-gray-900">-</p>
+                @endif
+            </div>
+
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Ukuran Maks (KB)</p>
+                <p class="text-base text-gray-900">{{ $documentType->max_file_size ? $documentType->max_file_size . ' KB' : '-' }}</p>
+            </div>
+
             <div>
                 <p class="text-sm font-medium text-gray-500 mb-1">Dibuat Pada</p>
                 <p class="text-base text-gray-900">{{ $documentType->created_at->format('d F Y, H:i') }}</p>
             </div>
+
             <div>
                 <p class="text-sm font-medium text-gray-500 mb-1">Terakhir Diubah</p>
                 <p class="text-base text-gray-900">{{ $documentType->updated_at->format('d F Y, H:i') }}</p>

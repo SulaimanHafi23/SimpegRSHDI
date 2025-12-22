@@ -40,8 +40,20 @@ class AttendanceController extends Controller
     {
         $workers = $this->workerService->getAllActive();
         $locations = $this->locationService->getAllActive();
+        
+        // Format locations for JavaScript validation
+        $locationsData = $locations->mapWithKeys(function($loc) {
+            return [$loc->id => [
+                'id' => $loc->id,
+                'name' => $loc->name,
+                'latitude' => (float)$loc->latitude,
+                'longitude' => (float)$loc->longitude,
+                'radius' => (int)$loc->radius,
+                'enforce_geofence' => (bool)$loc->enforce_geofence
+            ]];
+        });
 
-        return view('admin.attendance.create', compact('workers', 'locations'));
+        return view('admin.attendance.create', compact('workers', 'locations', 'locationsData'));
     }
 
     public function checkIn(Request $request)
@@ -51,7 +63,7 @@ class AttendanceController extends Controller
             'location_id' => 'required|uuid|exists:locations,id',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'photo' => 'nullable|image|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
@@ -61,6 +73,11 @@ class AttendanceController extends Controller
                 ->route('admin.attendance.show', $attendance->id)
                 ->with('success', 'Check-in berhasil dicatat');
         } catch (\Exception $e) {
+            \Log::error('Check-in error: ' . $e->getMessage(), [
+                'worker_id' => $request->worker_id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());
@@ -73,7 +90,7 @@ class AttendanceController extends Controller
             'location_id' => 'required|uuid|exists:locations,id',
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
-            'photo' => 'nullable|image|max:2048',
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
@@ -83,6 +100,11 @@ class AttendanceController extends Controller
                 ->route('admin.attendance.show', $attendance->id)
                 ->with('success', 'Check-out berhasil dicatat');
         } catch (\Exception $e) {
+            \Log::error('Checkout error: ' . $e->getMessage(), [
+                'attendance_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());
@@ -99,7 +121,21 @@ class AttendanceController extends Controller
                 ->with('error', 'Data absensi tidak ditemukan');
         }
 
-        return view('admin.attendance.show', compact('attendance'));
+        $locations = $this->locationService->getAllActive();
+        
+        // Format locations for JavaScript validation
+        $locationsData = $locations->mapWithKeys(function($loc) {
+            return [$loc->id => [
+                'id' => $loc->id,
+                'name' => $loc->name,
+                'latitude' => (float)$loc->latitude,
+                'longitude' => (float)$loc->longitude,
+                'radius' => (int)$loc->radius,
+                'enforce_geofence' => (bool)$loc->enforce_geofence
+            ]];
+        });
+
+        return view('admin.attendance.show', compact('attendance', 'locations', 'locationsData'));
     }
 
     public function edit(string $id)

@@ -32,6 +32,7 @@ use App\Http\Controllers\Master\LocationController;
 use App\Http\Controllers\Master\GenderController;
 use App\Http\Controllers\Master\DepartmentController;
 use App\Http\Controllers\Master\DocumentTypeController;
+use App\Http\Controllers\Master\DepartmentDocumentTypeController;
 use App\Http\Controllers\Master\ReligionController;
 use App\Http\Controllers\Master\LeaveTypeController;
 use App\Http\Controllers\Admin\HolidayController;
@@ -186,12 +187,12 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     // });
 
     // ========== REPORT ROUTES ==========
-    // TODO: Create Report Controller
-    // Route::prefix('reports')->name('reports.')->group(function () {
-    //     Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
-    //     Route::get('/leaves', [ReportController::class, 'leaves'])->name('leaves');
-    //     Route::get('/overtimes', [ReportController::class, 'overtimes'])->name('overtimes');
-    // });
+    // ========== REPORT ROUTES ==========
+    // Report pages (some were scaffolded but commented previously). Add specific routes as needed.
+    Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
+    Route::get('/reports/leaves', [ReportController::class, 'leaves'])->name('reports.leaves');
+    Route::get('/reports/overtimes', [ReportController::class, 'overtimes'])->name('reports.overtimes');
+    Route::get('/reports/worker-documents', [ReportController::class, 'workerDocuments'])->name('reports.worker-documents');
 
     // ========== ROLE MANAGEMENT ==========
     Route::resource('roles', RoleController::class)->names('admin.roles');
@@ -218,7 +219,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
         Route::get('/create', [AttendanceController::class, 'create'])->name('create');
         Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');
-        Route::post('/check-out/{id}', [AttendanceController::class, 'checkOut'])->name('check-out');
+        Route::put('/check-out/{id}', [AttendanceController::class, 'checkOut'])->name('check-out');
         Route::get('/{id}', [AttendanceController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [AttendanceController::class, 'edit'])->name('edit');
         Route::put('/{id}', [AttendanceController::class, 'update'])->name('update');
@@ -296,6 +297,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/worker/{workerId}', [WorkerDocumentController::class, 'workerDocuments'])->name('worker-documents');
         Route::get('/expired', [WorkerDocumentController::class, 'expired'])->name('expired');
         Route::get('/expiring', [WorkerDocumentController::class, 'expiring'])->name('expiring');
+        // AJAX: get allowed document types for a given worker
+        Route::get('/document-types-for-worker', [WorkerDocumentController::class, 'documentTypesForWorker'])->name('document-types-for-worker');
     });
 
     // ========== MASTER DATA MANAGEMENT ==========
@@ -318,6 +321,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         
         // Document Types
         Route::resource('document-types', DocumentTypeController::class);
+    // Department <-> Document Type mappings
+    Route::resource('department-document-types', DepartmentDocumentTypeController::class);
         
         // Leave Types
         Route::resource('leave-types', LeaveTypeController::class);

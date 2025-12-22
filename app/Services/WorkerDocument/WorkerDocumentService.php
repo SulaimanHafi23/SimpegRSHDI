@@ -4,14 +4,12 @@ namespace App\Services\WorkerDocument;
 
 use App\DTOs\WorkerDocumentDTO;
 use App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface;
-use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Storage;
 
 class WorkerDocumentService
 {
     public function __construct(
-        protected WorkerDocumentRepositoryInterface $workerDocumentRepository,
-        protected NotificationService $notificationService
+        protected WorkerDocumentRepositoryInterface $workerDocumentRepository
     ) {}
 
     public function getAll(array $filters = [])
@@ -31,10 +29,38 @@ class WorkerDocumentService
 
     public function create(array $data)
     {
-        // Validate required fields (file already uploaded in controller)
-        if (!isset($data['file_name']) || !isset($data['file_path']) || !isset($data['file_size'])) {
-            throw new \Exception('File dokumen wajib diupload.');
+        if (!isset($data['file'])) {
+            throw new \Exception('File is required.');
         }
+
+        $file = $data['file'];
+        $workerId = $data['worker_id'];
+
+        // If department_document_type_id provided, resolve document_type_id
+        if (!empty($data['department_document_type_id'])) {
+            $ddt = \App\Models\DepartmentDocumentType::find($data['department_document_type_id']);
+            if (! $ddt) {
+                throw new \Exception('Tipe dokumen untuk departemen tidak ditemukan');
+            }
+            // ensure the base document_type_id is set for backward compatibility
+            $data['document_type_id'] = $ddt->document_type_id;
+        }
+
+        // Save file
+        $filename = sprintf(
+            '%s_%s_%s.%s',
+            $workerId,
+            $data['document_type_id'] ?? 'unknown',
+            now()->format('YmdHis'),
+            $file->getClientOriginalExtension()
+        );
+
+        $filePath = $file->storeAs('worker-documents', $filename, 'public');
+
+        $data['file_name'] = $file->getClientOriginalName();
+        $data['file_path'] = $filePath;
+        $data['file_size'] = $file->getSize();
+        $data['status'] = 'pending';
 
         $dto = WorkerDocumentDTO::fromRequest($data);
         return $this->workerDocumentRepository->create($dto);
@@ -79,39 +105,12 @@ class WorkerDocumentService
 
     public function verify(string $id, string $verifiedBy, ?string $notes = null)
     {
-        $result = $this->workerDocumentRepository->verify($id, $verifiedBy, $notes);
-        
-        if ($result) {
-            $document = $this->workerDocumentRepository->getById($id);
-            $this->notificationService->notifyDocumentApproved(
-                $document->worker->user_id,
-                [
-                    'id' => $document->id,
-                    'document_type' => $document->documentType->name ?? 'Dokumen',
-                ]
-            );
-        }
-        
-        return $result;
+        return $this->workerDocumentRepository->verify($id, $verifiedBy, $notes);
     }
 
     public function reject(string $id, string $verifiedBy, string $notes)
     {
-        $result = $this->workerDocumentRepository->reject($id, $verifiedBy, $notes);
-        
-        if ($result) {
-            $document = $this->workerDocumentRepository->getById($id);
-            $this->notificationService->notifyDocumentRejected(
-                $document->worker->user_id,
-                [
-                    'id' => $document->id,
-                    'document_type' => $document->documentType->name ?? 'Dokumen',
-                    'rejection_reason' => $notes,
-                ]
-            );
-        }
-        
-        return $result;
+        return $this->workerDocumentRepository->reject($id, $verifiedBy, $notes);
     }
 
     public function getExpiredDocuments()
@@ -128,10 +127,21 @@ class WorkerDocumentService
     {
         $document = $this->workerDocumentRepository->getById($id);
 
-        if (!Storage::exists($document->file_path)) {
-            throw new \Exception('File tidak ditemukan.');
+        // Prefer public disk (files are stored using the 'public' disk).
+        $disk = Storage::disk('public');
+
+        if (!$document || !$document->file_path) {
+            throw new \Exception('Dokumen tidak ditemukan.');
         }
 
-        return Storage::download($document->file_path, $document->file_name);
+        if (!$disk->exists($document->file_path)) {
+            // Try default disk as fallback
+            if (!Storage::exists($document->file_path)) {
+                throw new \Exception('File not found.');
+            }
+            return Storage::download($document->file_path, $document->file_name);
+        }
+
+        return $disk->download($document->file_path, $document->file_name);
     }
 }

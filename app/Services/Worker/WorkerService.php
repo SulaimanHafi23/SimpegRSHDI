@@ -113,6 +113,11 @@ class WorkerService
                 $data['photo_url'] = $this->savePhoto($data['photo'], $worker->nip);
             }
 
+            // Remove empty values to prevent overwriting with empty strings
+            $data = array_filter($data, function($value) {
+                return $value !== '' && $value !== null && $value !== [];
+            });
+
             $dto = WorkerDTO::fromRequest($data);
             $updated = $this->workerRepository->update($id, $dto);
 

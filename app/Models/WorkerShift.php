@@ -16,6 +16,7 @@ class WorkerShift extends Model
         'shift_id',
         'pattern_type',
         'rotating_days',
+        'custom_working_days',
         'effective_from',
         'effective_until',
         'is_active',
@@ -24,6 +25,7 @@ class WorkerShift extends Model
 
     protected $casts = [
         'rotating_days' => 'array',
+        'custom_working_days' => 'array',
         'effective_from' => 'date',
         'effective_until' => 'date',
         'is_active' => 'boolean',
@@ -48,8 +50,19 @@ class WorkerShift extends Model
             return $this->shift_id;
         }
 
+        // Custom pattern: shift applies only on specified working days
+        if ($this->pattern_type === 'custom') {
+            $dayOfWeek = (int) $date->format('N'); // 1 (Monday) to 7 (Sunday)
+            $days = $this->custom_working_days ?? [];
+            if (is_array($days) && in_array($dayOfWeek, $days, true)) {
+                return $this->shift_id;
+            }
+            return null;
+        }
+
+        // Rotating pattern: rotating_days maps dayOfWeek -> shift_id
         if ($this->pattern_type === 'rotating' && $this->rotating_days) {
-            $dayOfWeek = $date->format('N'); // 1 (Monday) to 7 (Sunday)
+            $dayOfWeek = $date->format('N'); // string key like '1'..'7'
             return $this->rotating_days[$dayOfWeek] ?? null;
         }
 

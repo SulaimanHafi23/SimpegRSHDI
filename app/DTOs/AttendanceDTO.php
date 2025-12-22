@@ -62,8 +62,7 @@ class AttendanceDTO
 
     public function toArray(): array
     {
-        return array_filter([
-            'id' => $this->id,
+        return [
             'worker_id' => $this->worker_id,
             'shift_id' => $this->shift_id,
             'location_id' => $this->location_id,
@@ -84,6 +83,6 @@ class AttendanceDTO
             'is_outside_radius' => $this->is_outside_radius,
             'overtime_minutes' => $this->overtime_minutes,
             'notes' => $this->notes,
-        ], fn($value) => $value !== null);
+        ];
     }
 }

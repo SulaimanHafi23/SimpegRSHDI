@@ -6,20 +6,20 @@ class WorkerDTO
 {
     public function __construct(
         public readonly ?string $id,
-        public readonly string $nip,
-        public readonly string $name,
-        public readonly string $email,
-        public readonly string $phone_number,
+        public readonly ?string $nip,
+        public readonly ?string $name,
+        public readonly ?string $email,
+        public readonly ?string $phone_number,
         public readonly ?string $address,
-        public readonly string $birth_date,
-        public readonly string $birth_place,
-        public readonly string $gender_id,
-        public readonly string $religion_id,
-        public readonly string $department_id,
-        public readonly string $hire_date,
+        public readonly ?string $birth_date,
+        public readonly ?string $birth_place,
+        public readonly ?string $gender_id,
+        public readonly ?string $religion_id,
+        public readonly ?string $department_id,
+        public readonly ?string $hire_date,
         public readonly ?string $resign_date,
-        public readonly string $employment_status,
-        public readonly string $status,
+        public readonly ?string $employment_status,
+        public readonly ?string $status,
         public readonly ?string $photo_url,
     ) {}
 
@@ -27,20 +27,20 @@ class WorkerDTO
     {
         return new self(
             id: $data['id'] ?? null,
-            nip: $data['nip'],
-            name: $data['name'],
-            email: $data['email'],
-            phone_number: $data['phone_number'],
+            nip: $data['nip'] ?? null,
+            name: $data['name'] ?? null,
+            email: $data['email'] ?? null,
+            phone_number: $data['phone_number'] ?? null,
             address: $data['address'] ?? null,
-            birth_date: $data['birth_date'],
-            birth_place: $data['birth_place'],
-            gender_id: $data['gender_id'],
-            religion_id: $data['religion_id'],
-            department_id: $data['department_id'],
-            hire_date: $data['hire_date'],
+            birth_date: $data['birth_date'] ?? null,
+            birth_place: $data['birth_place'] ?? null,
+            gender_id: $data['gender_id'] ?? null,
+            religion_id: $data['religion_id'] ?? null,
+            department_id: $data['department_id'] ?? null,
+            hire_date: $data['hire_date'] ?? null,
             resign_date: $data['resign_date'] ?? null,
-            employment_status: $data['employment_status'] ?? 'contract',
-            status: $data['status'] ?? 'active',
+            employment_status: $data['employment_status'] ?? null,
+            status: $data['status'] ?? null,
             photo_url: $data['photo_url'] ?? null,
         );
     }
@@ -64,6 +64,6 @@ class WorkerDTO
             'employment_status' => $this->employment_status,
             'status' => $this->status,
             'photo_url' => $this->photo_url,
-        ], fn($value) => $value !== null);
+        ], fn($value) => $value !== null && $value !== '');
     }
 }

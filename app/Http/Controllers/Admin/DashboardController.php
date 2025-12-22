@@ -7,68 +7,205 @@ use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
-use App\Services\Dashboard\DashboardService;
+use App\Services\Overtime\OvertimeRequestService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function __construct(
-        protected DashboardService $dashboardService
-    ) {
+    protected OvertimeRequestService $overtimeRequestService;
+
+    public function __construct(OvertimeRequestService $overtimeRequestService)
+    {
         $this->middleware('auth');
         // Allow any authenticated user to access dashboard
         // Permission check can be added back if needed: $this->middleware('permission:view-dashboard');
+
+        $this->overtimeRequestService = $overtimeRequestService;
     }
 
-    public function index(Request $request)
+    public function index()
     {
-        // Check if user should be redirected to employee dashboard
+        // Check if user should be redirected to employee dashboard.
+        // Prefer explicit admin/superadmin roles; only redirect users who are
+        // employees/workers and do NOT have higher-privilege roles.
         $user = auth()->user();
         if ($user && $user->roles->isNotEmpty()) {
-            $role = $user->roles->first()->name;
-            if (in_array($role, ['Employee'])) {
+            // normalize role names to lowercase for robust checks
+            $roles = $user->roles->pluck('name')->map(fn($r) => strtolower($r))->toArray();
+
+            // If the user has an administrative role, do not redirect to employee dashboard
+            if (in_array('superadmin', $roles) || in_array('admin', $roles)) {
+                // allow admin to see the admin dashboard
+            } elseif (in_array('employee', $roles) || in_array('worker', $roles)) {
+                // user is an employee/worker and has no admin role -> redirect
                 return redirect()->route('employee.dashboard');
             }
         }
 
         // ========== STATISTICS ==========
-        $statistics = [
-            'total_workers' => $this->dashboardService->getTotalWorkers(),
-            'active_workers' => $this->dashboardService->getActiveWorkers(),
-            'present_today' => $this->dashboardService->getAttendanceStats('today')['on_time'],
-            'attendance_rate' => $this->dashboardService->getTotalWorkers() > 0 
-                ? round(($this->dashboardService->getAttendanceStats('today')['on_time'] / $this->dashboardService->getTotalWorkers()) * 100, 1)
-                : 0,
-            'pending_leaves' => $this->dashboardService->getPendingApprovalsCount()['leaves'],
-            'pending_overtimes' => $this->dashboardService->getPendingApprovalsCount()['overtimes'],
-        ];
+        
+        // Workers Statistics
+        $totalWorkers = Worker::count();
+        $activeWorkers = Worker::where('status', 'active')->count();
+        $inactiveWorkers = Worker::where('status', 'inactive')->count();
+        $resignedWorkers = Worker::where('status', 'resigned')->count();
+        
+        // Workers by Employment Status
+        $permanentWorkers = Worker::where('employment_status', 'permanent')->count();
+        $contractWorkers = Worker::where('employment_status', 'contract')->count();
+        $internshipWorkers = Worker::where('employment_status', 'internship')->count();
 
-        // ========== CHART DATA ==========
-        $attendanceChartData = $this->dashboardService->getAttendanceChartData();
-        $attendanceChartLabels = array_column($attendanceChartData, 'date');
-        $attendanceChartData = array_column($attendanceChartData, 'count');
+        // Attendance Statistics (Today)
+        $today = Carbon::today();
+        $todayAttendance = Attendance::whereDate('created_at', $today)->count();
+        $todayPresent = Attendance::whereDate('created_at', $today)
+            ->where('status', 'present')
+            ->count();
+        $todayLate = Attendance::whereDate('created_at', $today)
+            ->where('status', 'late')
+            ->count();
+        $todayAbsent = Attendance::whereDate('created_at', $today)
+            ->where('status', 'absent')
+            ->count();
 
-        // Position Distribution (empty for now, can be implemented later)
-        $positionDistribution = [];
+        // Leave Requests Statistics
+        $totalLeaveRequests = LeaveRequest::count();
+        $pendingLeaves = LeaveRequest::where('status', 'pending')->count();
+        $approvedLeaves = LeaveRequest::where('status', 'approved')->count();
+        $rejectedLeaves = LeaveRequest::where('status', 'rejected')->count();
 
-        // Recent leaves
+        // Overtime Requests Statistics
+        $totalOvertimeRequests = OvertimeRequest::count();
+    // Use the service/repository to compute counts so behaviour matches the /overtimes listing
+    $pendingOvertimes = $this->overtimeRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total();
+    $approvedOvertimes = $this->overtimeRequestService->getAll(['status' => 'approved', 'per_page' => 9999])->total();
+    $rejectedOvertimes = $this->overtimeRequestService->getAll(['status' => 'rejected', 'per_page' => 9999])->total();
+
+        // ========== RECENT ACTIVITIES ==========
+        
+        // Recent Leave Requests
         $recentLeaves = LeaveRequest::with(['worker', 'leaveType'])
             ->latest()
             ->take(5)
             ->get();
 
-        // Birthday workers this month
-        $birthdayWorkers = [];
+        // Recent Overtime Requests
+        $recentOvertimes = OvertimeRequest::with(['worker'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // Today's Absences
+        $todayAbsences = Attendance::with(['worker'])
+            ->whereDate('created_at', $today)
+            ->where('status', 'absent')
+            ->get();
+
+        // ========== CHARTS DATA ==========
+        
+        // Monthly Attendance Stats (Last 6 Months)
+        $attendanceStats = $this->getMonthlyAttendanceStats();
+        
+        // Leave Stats by Type
+        $leaveStats = $this->getLeaveStatsByType();
+        
+        // Department Statistics
+        $departmentStats = $this->getDepartmentStats();
+
+        // ========== UPCOMING EVENTS ==========
+        
+        // Upcoming Leaves
+        $upcomingLeaves = LeaveRequest::with(['worker', 'leaveType'])
+            ->where('status', 'approved')
+            ->where('start_date', '>=', $today)
+            ->orderBy('start_date')
+            ->take(5)
+            ->get();
+        // ========== PREPARE VIEW DATA SHAPES EXPECTED BY BLADE ==========
+
+        // Statistics array expected by the view
+        $statistics = [
+            'total_workers' => $totalWorkers,
+            'active_workers' => $activeWorkers,
+            'present_today' => $todayPresent,
+            'attendance_rate' => $totalWorkers > 0 ? round(($todayPresent / max(1, $totalWorkers)) * 100, 1) : 0,
+            'pending_leaves' => $pendingLeaves,
+            'pending_overtimes' => $pendingOvertimes,
+        ];
+
+        // Attendance chart for the last 7 days (labels in Indonesian short form)
+        $labels = [];
+        $data = [];
+        $start = Carbon::today()->subDays(6);
+        $dayNames = [0 => 'Min', 1 => 'Sen', 2 => 'Sel', 3 => 'Rab', 4 => 'Kam', 5 => 'Jum', 6 => 'Sab'];
+        for ($i = 0; $i < 7; $i++) {
+            $date = $start->copy()->addDays($i);
+            $labels[] = $dayNames[$date->dayOfWeek] ?? $date->format('D');
+            $count = Attendance::whereDate('created_at', $date)->where('status', 'present')->count();
+            $data[] = $count;
+        }
+
+        $attendanceChart = [
+            'labels' => $labels,
+            'data' => $data,
+        ];
+
+        // Build a distribution array from department stats so the view can show
+        // "Distribusi Pegawai per Departemen" using the same shape previously used for positions.
+        // $departmentStats comes from getDepartmentStats() and contains objects with 'name' and 'total'.
+        $positionDistribution = collect($departmentStats)->map(function ($d) {
+            return (object) [
+                'name' => $d->name ?? ($d->department_name ?? 'Unknown'),
+                'workers_count' => $d->total ?? ($d->workers_count ?? 0),
+            ];
+        })->toArray();
 
         return view('admin.dashboard.index', compact(
+            // Workers
+            'totalWorkers',
+            'activeWorkers',
+            'inactiveWorkers',
+            'resignedWorkers',
+            'permanentWorkers',
+            'contractWorkers',
+            'internshipWorkers',
+            // view-friendly aggregates
             'statistics',
-            'attendanceChartLabels',
-            'attendanceChartData',
             'positionDistribution',
+            
+            // Attendance
+            'todayAttendance',
+            'todayPresent',
+            'todayLate',
+            'todayAbsent',
+            
+            // Leaves
+            'totalLeaveRequests',
+            'pendingLeaves',
+            'approvedLeaves',
+            'rejectedLeaves',
+            
+            // Overtimes
+            'totalOvertimeRequests',
+            'pendingOvertimes',
+            'approvedOvertimes',
+            'rejectedOvertimes',
+            
+            // Recent Activities
             'recentLeaves',
-            'birthdayWorkers'
+            'recentOvertimes',
+            'todayAbsences',
+            
+            // Charts
+            'attendanceStats',
+            'attendanceChart',
+            'leaveStats',
+            'departmentStats',
+            
+            // Upcoming
+            'upcomingLeaves'
         ));
     }
 
@@ -175,11 +312,11 @@ class DashboardController extends Controller
      */
     public function getPendingApprovalsCount()
     {
+        $pendingOvertimes = $this->overtimeRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total();
         $count = [
             'leaves' => LeaveRequest::where('status', 'pending')->count(),
-            'overtimes' => OvertimeRequest::where('status', 'pending')->count(),
-            'total' => LeaveRequest::where('status', 'pending')->count() + 
-                      OvertimeRequest::where('status', 'pending')->count(),
+            'overtimes' => $pendingOvertimes,
+            'total' => LeaveRequest::where('status', 'pending')->count() + $pendingOvertimes,
         ];
         
         return response()->json($count);

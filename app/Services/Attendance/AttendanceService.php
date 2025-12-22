@@ -161,20 +161,31 @@ class AttendanceService
                 : 0;
 
             // Update attendance
-            $attendanceDTO = AttendanceDTO::fromRequest(array_merge(
-                $attendance->toArray(),
-                [
-                    'check_out' => $checkOutTime,
-                    'check_out_latitude' => $data['latitude'],
-                    'check_out_longitude' => $data['longitude'],
-                    'distance_check_out' => $distance,
-                    'is_early_leave' => $isEarlyLeave,
-                    'early_leave_minutes' => $earlyLeaveMinutes,
-                    'overtime_minutes' => $overtimeMinutes,
-                ]
-            ));
+            $attendanceDTO = AttendanceDTO::fromRequest([
+                'id' => $attendance->id,
+                'worker_id' => $attendance->worker_id,
+                'shift_id' => $attendance->shift_id,
+                'location_id' => $attendance->location_id,
+                'attendance_date' => $attendance->attendance_date->format('Y-m-d'),
+                'check_in' => $attendance->check_in?->format('Y-m-d H:i:s'),
+                'check_out' => $checkOutTime->format('Y-m-d H:i:s'),
+                'check_in_latitude' => $attendance->check_in_latitude,
+                'check_in_longitude' => $attendance->check_in_longitude,
+                'check_out_latitude' => $data['latitude'],
+                'check_out_longitude' => $data['longitude'],
+                'distance_check_in' => $attendance->distance_check_in,
+                'distance_check_out' => $distance,
+                'status' => $attendance->status,
+                'is_late' => $attendance->is_late,
+                'late_minutes' => $attendance->late_minutes,
+                'is_early_leave' => $isEarlyLeave,
+                'early_leave_minutes' => $earlyLeaveMinutes,
+                'is_outside_radius' => $attendance->is_outside_radius,
+                'overtime_minutes' => $overtimeMinutes,
+                'notes' => $attendance->notes,
+            ]);
 
-            $this->attendanceRepository->update($attendanceId, $attendanceDTO);
+            $updated = $this->attendanceRepository->update($attendanceId, $attendanceDTO);
 
             // Save photo if provided
             if (isset($data['photo'])) {

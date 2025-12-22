@@ -3,253 +3,302 @@
 @section('title', 'Detail Lembur')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <div class="max-w-4xl mx-auto">
-        <!-- Header -->
-        <div class="mb-6">
-            <div class="flex items-center text-sm text-gray-600 mb-4">
-                <a href="{{ route('admin.overtime.index') }}" class="hover:text-green-600">Manajemen Lembur</a>
-                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-                <span class="text-gray-800">Detail Lembur</span>
-            </div>
-            <div class="flex justify-between items-start">
-                <div>
-                    <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">Detail Lembur</h1>
-                    <p class="text-gray-600 mt-1">Informasi lengkap data lembur pegawai</p>
-                </div>
-                @if($overtime->status == 'Pending')
-                <div class="flex space-x-2">
-                    <a href="{{ route('admin.overtime.edit', $overtime->id) }}" 
-                       class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150">
-                        Edit
-                    </a>
-                </div>
-                @endif
-            </div>
-        </div>
+<div class="space-y-6">
+    {{-- Page Header --}}
+    <x-page-header 
+        title="Detail Data Lembur" 
+        description="Informasi lengkap data lembur pegawai"
+        icon="fas fa-clock">
+        <x-slot:actions>
+            <x-button 
+                variant="secondary" 
+                icon="fas fa-arrow-left"
+                onclick="window.location.href='{{ route('admin.overtime.index') }}'">
+                Kembali
+            </x-button>
+            @if(strtolower($overtime->status) == 'pending')
+                <x-button 
+                    variant="primary" 
+                    icon="fas fa-edit"
+                    onclick="window.location.href='{{ route('admin.overtime.edit', $overtime->id) }}'">
+                    Edit
+                </x-button>
+            @endif
+        </x-slot:actions>
+    </x-page-header>
 
-        <!-- Status Card -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    @php
-                        $statusConfig = [
-                            'Pending' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                            'Approved' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                            'Rejected' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'icon' => 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'],
-                        ];
-                        $config = $statusConfig[$overtime->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'icon' => ''];
-                    @endphp
-                    <div class="{{ $config['bg'] }} rounded-full p-3">
-                        <svg class="w-8 h-8 {{ $config['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $config['icon'] }}"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Status</p>
-                        <p class="text-xl sm:text-2xl font-bold {{ $config['text'] }}">{{ $overtime->status }}</p>
-                    </div>
-                </div>
+    {{-- Alert Messages --}}
+    @if(session('success'))
+        <x-alert type="success" dismissible>
+            {{ session('success') }}
+        </x-alert>
+    @endif
+
+    @if(session('error'))
+        <x-alert type="danger" dismissible>
+            {{ session('error') }}
+        </x-alert>
+    @endif
+
+    {{-- Status Card --}}
+    <x-card>
+        <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                @php
+                    $statusConfig = [
+                        'Pending' => ['variant' => 'warning', 'icon' => 'fas fa-hourglass-half', 'label' => 'Pending'],
+                        'Approved' => ['variant' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Approved'],
+                        'Rejected' => ['variant' => 'danger', 'icon' => 'fas fa-times-circle', 'label' => 'Rejected'],
+                    ];
+                    $config = $statusConfig[$overtime->status] ?? ['variant' => 'secondary', 'icon' => 'fas fa-info-circle', 'label' => $overtime->status];
+                @endphp
                 
-                @if($overtime->status == 'Pending')
-                <div class="flex space-x-2">
+                <div>
+                    <p class="text-sm text-gray-600 mb-2">Status Lembur</p>
+                    <x-badge :variant="$config['variant']" :icon="$config['icon']" size="lg">
+                        {{ $config['label'] }}
+                    </x-badge>
+                </div>
+            </div>
+
+            {{-- Approval Actions --}}
+            @if(strtolower($overtime->status) == 'pending')
+                <div class="flex gap-3">
                     <form action="{{ route('admin.overtime.approve', $overtime->id) }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" 
-                                class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150"
-                                onclick="return confirm('Setujui data lembur ini?')">
+                        <x-button 
+                            type="submit"
+                            variant="success" 
+                            icon="fas fa-check"
+                            onclick="return confirm('Approve data lembur ini?')">
                             Approve
-                        </button>
+                        </x-button>
                     </form>
                     <form action="{{ route('admin.overtime.reject', $overtime->id) }}" method="POST" class="inline">
                         @csrf
-                        <button type="submit" 
-                                class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition duration-150"
-                                onclick="return confirm('Tolak data lembur ini?')">
+                        <x-button 
+                            type="submit"
+                            variant="danger" 
+                            icon="fas fa-times"
+                            onclick="return confirm('Reject data lembur ini?')">
                             Reject
-                        </button>
+                        </x-button>
                     </form>
                 </div>
-                @endif
-            </div>
+            @endif
         </div>
+    </x-card>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Main Information -->
-            <div class="md:col-span-2 space-y-6">
-                <!-- Pegawai Info -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Informasi Pegawai</h2>
-                    <div class="flex items-start space-x-4">
-                        @if($overtime->worker->photo)
-                            <img class="h-20 w-20 rounded-lg object-cover" 
-                                 src="{{ Storage::url($overtime->worker->photo) }}" 
-                                 alt="{{ $overtime->worker->name }}">
-                        @else
-                            <div class="h-20 w-20 rounded-lg bg-green-100 flex items-center justify-center">
-                                <span class="text-green-600 font-bold text-3xl">
-                                    {{ substr($overtime->worker->name, 0, 1) }}
-                                </span>
-                            </div>
-                        @endif
-                        <div class="flex-1">
-                            <h3 class="text-base sm:text-lg font-semibold text-gray-800">{{ $overtime->worker->name }}</h3>
-                            <p class="text-gray-600">{{ $overtime->worker->position->name ?? '-' }}</p>
-                            <div class="mt-2 space-y-1">
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">NIP:</span> {{ $overtime->worker->employee_number }}
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Email:</span> {{ $overtime->worker->email }}
-                                </p>
-                                <p class="text-sm text-gray-600">
-                                    <span class="font-medium">Phone:</span> {{ $overtime->worker->phone }}
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Overtime Details -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Detail Lembur</h2>
-                    <div class="space-y-4">
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Tanggal Lembur</span>
-                            <span class="text-gray-800 font-semibold">{{ $overtime->overtime_date->format('d F Y') }}</span>
-                        </div>
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Waktu Mulai</span>
-                            <span class="text-gray-800 font-semibold">{{ date('H:i', strtotime($overtime->start_time)) }} WIB</span>
-                        </div>
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Waktu Selesai</span>
-                            <span class="text-gray-800 font-semibold">{{ date('H:i', strtotime($overtime->end_time)) }} WIB</span>
-                        </div>
-                        <div class="flex justify-between py-3 border-b border-gray-200">
-                            <span class="text-gray-600 font-medium">Total Jam</span>
-                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-bold">
-                                {{ $overtime->total_hours }} Jam
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- Main Content --}}
+        <div class="lg:col-span-2 space-y-6">
+            {{-- Worker Information --}}
+            <x-card title="Informasi Pegawai">
+                <div class="flex items-start space-x-4">
+                    @if($overtime->worker->photo)
+                        <img class="h-20 w-20 rounded-lg object-cover" 
+                             src="{{ asset('storage/' . $overtime->worker->photo) }}" 
+                             alt="{{ $overtime->worker->name }}">
+                    @else
+                        <div class="h-20 w-20 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <span class="text-blue-600 font-bold text-3xl">
+                                {{ substr($overtime->worker->name, 0, 1) }}
                             </span>
                         </div>
-                        <div class="py-3">
-                            <span class="text-gray-600 font-medium block mb-2">Keterangan/Alasan</span>
-                            <p class="text-gray-800 bg-gray-50 p-4 rounded-md">{{ $overtime->reason }}</p>
-                        </div>
+                    @endif
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900">{{ $overtime->worker->name }}</h3>
+                        <p class="text-gray-600">{{ $overtime->worker->position->name ?? '-' }}</p>
+                        <p class="text-sm text-gray-500 mt-1">NIP: {{ $overtime->worker->nip ?? '-' }}</p>
                     </div>
                 </div>
+            </x-card>
 
-                @if($overtime->approver)
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Approval Information</h2>
-                    <div class="space-y-3">
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                            <div>
-                                <p class="text-sm text-gray-600">Disetujui oleh</p>
-                                <p class="text-gray-800 font-semibold">{{ $overtime->approver->name }}</p>
-                            </div>
+            {{-- Overtime Details --}}
+            <x-card title="Detail Lembur">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Tanggal Lembur</label>
+                            <p class="text-base font-semibold text-gray-900 mt-1">{{ $overtime->overtime_date->format('d M Y') }}</p>
                         </div>
-                        <div class="flex items-center">
-                            <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                            </svg>
-                            <div>
-                                <p class="text-sm text-gray-600">Tanggal Approval</p>
-                                <p class="text-gray-800 font-semibold">{{ $overtime->created_at->format('d M Y, H:i') }}</p>
-                            </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Total Jam</label>
+                            <p class="text-base font-semibold text-gray-900 mt-1">{{ $overtime->total_hours }} Jam</p>
                         </div>
                     </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-3 border-t border-gray-200">
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Waktu Mulai</label>
+                            <p class="text-base text-gray-900 mt-1">{{ $overtime->start_time }}</p>
+                        </div>
+                        <div>
+                            <label class="text-sm font-medium text-gray-500">Waktu Selesai</label>
+                            <p class="text-base text-gray-900 mt-1">{{ $overtime->end_time }}</p>
+                        </div>
+                    </div>
+
+                    <div class="pt-3 border-t border-gray-200">
+                        <label class="text-sm font-medium text-gray-500">Keterangan/Alasan Lembur</label>
+                        <p class="text-base text-gray-700 mt-2 leading-relaxed">{{ $overtime->reason }}</p>
+                    </div>
+
+                    @if($overtime->attachment)
+                        <div class="pt-3 border-t border-gray-200">
+                            <label class="text-sm font-medium text-gray-500 mb-2 block">Lampiran</label>
+                            <a href="{{ asset('storage/' . $overtime->attachment) }}" 
+                               target="_blank"
+                               class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">
+                                <i class="fas fa-paperclip mr-2"></i>
+                                Lihat Lampiran
+                            </a>
+                        </div>
+                    @endif
                 </div>
+            </x-card>
+
+            {{-- Approval Timeline --}}
+            @if($overtime->approved_at || $overtime->rejected_at)
+                <x-card title="Timeline Persetujuan">
+                    <div class="space-y-3">
+                        @if($overtime->approved_at)
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-check text-green-600"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Approved</p>
+                                    <p class="text-sm text-gray-500">{{ $overtime->approved_at->format('d M Y, H:i') }}</p>
+                                    @if($overtime->approved_by)
+                                        <p class="text-xs text-gray-400 mt-1">Oleh: {{ $overtime->approvedBy->name ?? '-' }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($overtime->rejected_at)
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-times text-red-600"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-900">Rejected</p>
+                                    <p class="text-sm text-gray-500">{{ $overtime->rejected_at->format('d M Y, H:i') }}</p>
+                                    @if($overtime->rejected_by)
+                                        <p class="text-xs text-gray-400 mt-1">Oleh: {{ $overtime->rejectedBy->name ?? '-' }}</p>
+                                    @endif
+                                    @if($overtime->rejection_reason)
+                                        <p class="text-sm text-gray-700 mt-2 italic">"{{ $overtime->rejection_reason }}"</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </x-card>
+            @endif
+        </div>
+
+        {{-- Sidebar --}}
+        <div class="lg:col-span-1 space-y-6">
+            {{-- Statistics --}}
+            <div class="grid grid-cols-1 gap-4">
+                <x-stats-card 
+                    title="Total Jam" 
+                    :value="$overtime->total_hours . ' Jam'" 
+                    icon="fas fa-stopwatch" 
+                    color="purple" />
+                
+                @if($overtime->status == 'Approved')
+                    <x-stats-card 
+                        title="Kompensasi" 
+                        :value="'Rp ' . number_format($overtime->total_hours * 50000, 0, ',', '.')" 
+                        icon="fas fa-money-bill-wave" 
+                        color="green" />
                 @endif
             </div>
 
-            <!-- Sidebar -->
-            <div class="space-y-4 sm:space-y-6">
-                <!-- Total Hours Card -->
-                <div class="bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg shadow-md p-6 text-white">
-                    <h2 class="text-base sm:text-lg font-bold mb-4">Total Jam Lembur</h2>
-                    <div class="text-center">
-                        <div class="flex items-baseline justify-center">
-                            <p class="text-5xl font-bold">{{ $overtime->total_hours }}</p>
-                            <p class="text-2xl ml-2">Jam</p>
+            {{-- Quick Info --}}
+            <x-card title="Informasi Tambahan">
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-medium text-gray-500">Diinput Pada</label>
+                        <p class="text-sm text-gray-900 mt-1">{{ $overtime->created_at->format('d M Y, H:i') }}</p>
+                    </div>
+
+                    @if($overtime->updated_at && $overtime->updated_at != $overtime->created_at)
+                        <div class="pt-3 border-t border-gray-200">
+                            <label class="text-xs font-medium text-gray-500">Terakhir Diupdate</label>
+                            <p class="text-sm text-gray-900 mt-1">{{ $overtime->updated_at->format('d M Y, H:i') }}</p>
                         </div>
-                        <p class="text-purple-100 mt-2">{{ $overtime->overtime_date->format('d F Y') }}</p>
+                    @endif
+
+                    <div class="pt-3 border-t border-gray-200">
+                        <label class="text-xs font-medium text-gray-500">ID Lembur</label>
+                        <p class="text-sm text-gray-900 mt-1 font-mono">#{{ str_pad($overtime->id, 6, '0', STR_PAD_LEFT) }}</p>
                     </div>
                 </div>
+            </x-card>
 
-                <!-- Timeline -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">Timeline</h2>
-                    <div class="space-y-4">
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm font-medium text-gray-900">Data Dibuat</p>
-                                <p class="text-xs text-gray-500">{{ $overtime->created_at->format('d M Y, H:i') }}</p>
-                            </div>
-                        </div>
+            {{-- Quick Actions --}}
+            <x-card title="Aksi Cepat">
+                <div class="space-y-2">
+                    @if(strtolower($overtime->status) == 'pending')
+                        <x-button 
+                            variant="outline" 
+                            icon="fas fa-edit"
+                            class="w-full justify-start"
+                            onclick="window.location.href='{{ route('admin.overtime.edit', $overtime->id) }}'">
+                            Edit Lembur
+                        </x-button>
+                        <x-button 
+                            variant="outline" 
+                            icon="fas fa-trash"
+                            class="w-full justify-start text-red-600 hover:bg-red-50"
+                            onclick="if(confirm('Yakin ingin menghapus data lembur ini?')) { document.getElementById('delete-form').submit(); }">
+                            Hapus Data
+                        </x-button>
+                        <form id="delete-form" action="{{ route('admin.overtime.destroy', $overtime->id) }}" method="POST" style="display: none;">
+                            @csrf
+                            @method('DELETE')
+                        </form>
+                        <form action="{{ route('admin.overtime.approve', $overtime->id) }}" method="POST" class="inline">
+                            @csrf
+                            <x-button 
+                                type="submit"
+                                variant="success" 
+                                icon="fas fa-check"
+                                class="w-full justify-start"
+                                onclick="return confirm('Approve data lembur ini?')">
+                                Approve
+                            </x-button>
+                        </form>
+                        <form action="{{ route('admin.overtime.reject', $overtime->id) }}" method="POST" class="inline">
+                            @csrf
+                            <x-button 
+                                type="submit"
+                                variant="danger" 
+                                icon="fas fa-times"
+                                class="w-full justify-start"
+                                onclick="return confirm('Reject data lembur ini?')">
+                                Reject
+                            </x-button>
+                        </form>
+                    @endif
 
-                        @if($overtime->updated_at != $overtime->created_at)
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm font-medium text-gray-900">Terakhir Diperbarui</p>
-                                <p class="text-xs text-gray-500">{{ $overtime->updated_at->format('d M Y, H:i') }}</p>
-                            </div>
-                        </div>
-                        @endif
-
-                        @if($overtime->status == 'Approved' || $overtime->status == 'Rejected')
-                        <div class="flex items-start">
-                            <div class="flex-shrink-0 h-10 w-10 rounded-full {{ $overtime->status == 'Approved' ? 'bg-green-100' : 'bg-red-100' }} flex items-center justify-center">
-                                <svg class="w-5 h-5 {{ $overtime->status == 'Approved' ? 'text-green-600' : 'text-red-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                </svg>
-                            </div>
-                            <div class="ml-3 flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ $overtime->status }}</p>
-                                <p class="text-xs text-gray-500">{{ $overtime->updated_at->format('d M Y, H:i') }}</p>
-                                @if($overtime->approver)
-                                <p class="text-xs text-gray-600 mt-1">oleh {{ $overtime->approver->name }}</p>
-                                @endif
-                            </div>
-                        </div>
-                        @endif
-                    </div>
+                    <x-button 
+                        variant="outline" 
+                        icon="fas fa-print"
+                        class="w-full justify-start"
+                        onclick="window.print()">
+                        Cetak Detail
+                    </x-button>
                 </div>
-
-                <!-- Quick Info -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-base sm:text-lg font-bold text-gray-800 mb-3">Informasi Cepat</h2>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Hari</span>
-                            <span class="font-semibold text-gray-800">{{ $overtime->overtime_date->format('l') }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Durasi</span>
-                            <span class="font-semibold text-gray-800">{{ $overtime->total_hours }} jam</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-600">Bulan</span>
-                            <span class="font-semibold text-gray-800">{{ $overtime->overtime_date->format('F Y') }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            </x-card>
         </div>
     </div>
 </div>

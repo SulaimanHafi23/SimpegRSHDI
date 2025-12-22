@@ -119,9 +119,9 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
-                                    @if($attendance->worker->photo ?? false)
+                                    @if($attendance->worker->photo_url && Storage::disk('public')->exists($attendance->worker->photo_url))
                                         <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ Storage::url($attendance->worker->photo) }}" 
+                                             src="{{ asset('storage/' . $attendance->worker->photo_url) }}" 
                                              alt="{{ $attendance->worker->name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
@@ -131,18 +131,18 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $attendance->worker->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $attendance->worker->employee_number ?? '-' }}</div>
+                                    <div class="text-sm text-gray-500">{{ $attendance->worker->nip ?? '-' }}</div>
                                 </div>
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $attendance->date->format('d M Y') }}</div>
+                            <div class="text-sm text-gray-900">{{ $attendance->attendance_date?->format('d M Y') ?? '-' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $attendance->check_in_time ?? '-' }}</div>
+                            <div class="text-sm text-gray-900">{{ $attendance->check_in?->format('H:i') ?? '-' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ $attendance->check_out_time ?? '-' }}</div>
+                            <div class="text-sm text-gray-900">{{ $attendance->check_out?->format('H:i') ?? '-' }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             @php

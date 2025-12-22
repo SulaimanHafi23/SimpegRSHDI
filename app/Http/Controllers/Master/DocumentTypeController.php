@@ -25,7 +25,6 @@ class DocumentTypeController extends Controller
     {
         $filters = [
             'search' => $request->search,
-            'is_required' => $request->is_required,
             'per_page' => $request->per_page ?? 15,
         ];
 
@@ -43,12 +42,9 @@ class DocumentTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:document_types,name',
-            'code' => 'required|string|max:50|unique:document_types,code',
             'description' => 'nullable|string',
-            'is_required' => 'nullable|boolean',
-            'has_expiry' => 'nullable|boolean',
+            'file_format' => 'nullable|string',
             'max_file_size' => 'nullable|integer|min:1',
-            'allowed_extensions' => 'nullable|string',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -100,12 +96,9 @@ class DocumentTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:document_types,name,' . $id,
-            'code' => 'required|string|max:50|unique:document_types,code,' . $id,
             'description' => 'nullable|string',
-            'is_required' => 'nullable|boolean',
-            'has_expiry' => 'nullable|boolean',
+            'file_format' => 'nullable|string',
             'max_file_size' => 'nullable|integer|min:1',
-            'allowed_extensions' => 'nullable|string',
             'is_active' => 'nullable|boolean',
         ]);
 

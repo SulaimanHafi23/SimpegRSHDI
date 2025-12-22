@@ -67,7 +67,15 @@ class RoleRepository implements RoleRepositoryInterface
     public function syncPermissions(string $id, array $permissions): bool
     {
         $role = $this->findById($id);
+        
+        // Spatie Laravel Permission accepts permission IDs or names
+        // If we receive IDs (integers), convert them to Permission models
+        if (!empty($permissions) && is_numeric($permissions[0])) {
+            $permissions = \Spatie\Permission\Models\Permission::whereIn('id', $permissions)->pluck('name')->toArray();
+        }
+        
         $role->syncPermissions($permissions);
+        
         return true;
     }
 

@@ -9,7 +9,8 @@ class DocumentTypeDTO
         public readonly ?string $id,
         public readonly string $name,
         public readonly ?string $description,
-        public readonly bool $is_required,
+        public readonly ?string $file_format,
+        public readonly ?int $max_file_size,
         public readonly bool $is_active,
     ) {}
 
@@ -19,7 +20,8 @@ class DocumentTypeDTO
             id: $data['id'] ?? null,
             name: $data['name'],
             description: $data['description'] ?? null,
-            is_required: $data['is_required'] ?? false,
+            file_format: $data['file_format'] ?? ($data['allowed_extensions'] ?? null),
+            max_file_size: isset($data['max_file_size']) ? (int) $data['max_file_size'] : null,
             is_active: $data['is_active'] ?? true,
         );
     }
@@ -30,7 +32,8 @@ class DocumentTypeDTO
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'is_required' => $this->is_required,
+            'file_format' => $this->file_format,
+            'max_file_size' => $this->max_file_size,
             'is_active' => $this->is_active,
         ], fn($value) => $value !== null);
     }

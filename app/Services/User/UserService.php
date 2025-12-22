@@ -57,6 +57,11 @@ class UserService
             $data['password'] = Hash::make($data['password']);
         }
 
+        // Remove empty values to prevent overwriting with empty strings
+        $data = array_filter($data, function($value) {
+            return $value !== '' && $value !== null && $value !== [];
+        });
+
         $dto = UserDTO::fromRequest($data);
         $user = $this->userRepository->update($id, $dto);
 

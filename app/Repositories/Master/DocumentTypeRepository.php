@@ -85,7 +85,15 @@ class DocumentTypeRepository implements DocumentTypeRepositoryInterface
 
     public function getByCode(string $code): ?object
     {
-        return $this->model->where('code', $code)->first();
+        // Some schemas may not include a 'code' column. Safely return null if column missing.
+        try {
+            if (!\Illuminate\Support\Facades\Schema::hasColumn($this->model->getTable(), 'code')) {
+                return null;
+            }
+            return $this->model->where('code', $code)->first();
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     public function create(DocumentTypeDTO $dto): object

@@ -44,11 +44,33 @@ class WorkerShiftController extends Controller
     public function store(WorkerShiftScheduleRequest $request)
     {
         try {
-            $this->workerShiftService->create($request->validated());
+            $data = $request->validated();
+
+            // Support multiple worker_ids[] or single worker_id
+            $workerIds = $data['worker_ids'] ?? null;
+            if (empty($workerIds) && !empty($data['worker_id'])) {
+                $workerIds = [$data['worker_id']];
+            }
+
+            if (empty($workerIds) || !is_array($workerIds)) {
+                throw new \Exception('Tidak ada pegawai yang dipilih.');
+            }
+
+            $created = 0;
+            foreach ($workerIds as $workerId) {
+                // Prepare per-worker payload
+                $payload = $data;
+                $payload['worker_id'] = $workerId;
+                // Remove worker_ids to avoid confusion
+                unset($payload['worker_ids']);
+
+                $this->workerShiftService->create($payload);
+                $created++;
+            }
 
             return redirect()
                 ->route('admin.worker-shifts.index')
-                ->with('success', 'Jadwal shift berhasil ditambahkan');
+                ->with('success', "Jadwal shift berhasil ditambahkan untuk {$created} pegawai");
         } catch (\Exception $e) {
             return back()
                 ->withInput()
