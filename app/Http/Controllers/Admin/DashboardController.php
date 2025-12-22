@@ -7,149 +7,68 @@ use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
+use App\Services\Dashboard\DashboardService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected DashboardService $dashboardService
+    ) {
         $this->middleware('auth');
         // Allow any authenticated user to access dashboard
         // Permission check can be added back if needed: $this->middleware('permission:view-dashboard');
     }
 
-    public function index()
+    public function index(Request $request)
     {
         // Check if user should be redirected to employee dashboard
         $user = auth()->user();
         if ($user && $user->roles->isNotEmpty()) {
             $role = $user->roles->first()->name;
-            if (in_array($role, ['employee', 'worker'])) {
+            if (in_array($role, ['Employee'])) {
                 return redirect()->route('employee.dashboard');
             }
         }
 
         // ========== STATISTICS ==========
-        
-        // Workers Statistics
-        $totalWorkers = Worker::count();
-        $activeWorkers = Worker::where('status', 'active')->count();
-        $inactiveWorkers = Worker::where('status', 'inactive')->count();
-        $resignedWorkers = Worker::where('status', 'resigned')->count();
-        
-        // Workers by Employment Status
-        $permanentWorkers = Worker::where('employment_status', 'permanent')->count();
-        $contractWorkers = Worker::where('employment_status', 'contract')->count();
-        $internshipWorkers = Worker::where('employment_status', 'internship')->count();
+        $statistics = [
+            'total_workers' => $this->dashboardService->getTotalWorkers(),
+            'active_workers' => $this->dashboardService->getActiveWorkers(),
+            'present_today' => $this->dashboardService->getAttendanceStats('today')['on_time'],
+            'attendance_rate' => $this->dashboardService->getTotalWorkers() > 0 
+                ? round(($this->dashboardService->getAttendanceStats('today')['on_time'] / $this->dashboardService->getTotalWorkers()) * 100, 1)
+                : 0,
+            'pending_leaves' => $this->dashboardService->getPendingApprovalsCount()['leaves'],
+            'pending_overtimes' => $this->dashboardService->getPendingApprovalsCount()['overtimes'],
+        ];
 
-        // Attendance Statistics (Today)
-        $today = Carbon::today();
-        $todayAttendance = Attendance::whereDate('created_at', $today)->count();
-        $todayPresent = Attendance::whereDate('created_at', $today)
-            ->where('status', 'present')
-            ->count();
-        $todayLate = Attendance::whereDate('created_at', $today)
-            ->where('status', 'late')
-            ->count();
-        $todayAbsent = Attendance::whereDate('created_at', $today)
-            ->where('status', 'absent')
-            ->count();
+        // ========== CHART DATA ==========
+        $attendanceChartData = $this->dashboardService->getAttendanceChartData();
+        $attendanceChartLabels = array_column($attendanceChartData, 'date');
+        $attendanceChartData = array_column($attendanceChartData, 'count');
 
-        // Leave Requests Statistics
-        $totalLeaveRequests = LeaveRequest::count();
-        $pendingLeaves = LeaveRequest::where('status', 'pending')->count();
-        $approvedLeaves = LeaveRequest::where('status', 'approved')->count();
-        $rejectedLeaves = LeaveRequest::where('status', 'rejected')->count();
+        // Position Distribution (empty for now, can be implemented later)
+        $positionDistribution = [];
 
-        // Overtime Requests Statistics
-        $totalOvertimeRequests = OvertimeRequest::count();
-        $pendingOvertimes = OvertimeRequest::where('status', 'pending')->count();
-        $approvedOvertimes = OvertimeRequest::where('status', 'approved')->count();
-        $rejectedOvertimes = OvertimeRequest::where('status', 'rejected')->count();
-
-        // ========== RECENT ACTIVITIES ==========
-        
-        // Recent Leave Requests
+        // Recent leaves
         $recentLeaves = LeaveRequest::with(['worker', 'leaveType'])
             ->latest()
             ->take(5)
             ->get();
 
-        // Recent Overtime Requests
-        $recentOvertimes = OvertimeRequest::with(['worker'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Today's Absences
-        $todayAbsences = Attendance::with(['worker'])
-            ->whereDate('created_at', $today)
-            ->where('status', 'absent')
-            ->get();
-
-        // ========== CHARTS DATA ==========
-        
-        // Monthly Attendance Stats (Last 6 Months)
-        $attendanceStats = $this->getMonthlyAttendanceStats();
-        
-        // Leave Stats by Type
-        $leaveStats = $this->getLeaveStatsByType();
-        
-        // Department Statistics
-        $departmentStats = $this->getDepartmentStats();
-
-        // ========== UPCOMING EVENTS ==========
-        
-        // Upcoming Leaves
-        $upcomingLeaves = LeaveRequest::with(['worker', 'leaveType'])
-            ->where('status', 'approved')
-            ->where('start_date', '>=', $today)
-            ->orderBy('start_date')
-            ->take(5)
-            ->get();
+        // Birthday workers this month
+        $birthdayWorkers = [];
 
         return view('admin.dashboard.index', compact(
-            // Workers
-            'totalWorkers',
-            'activeWorkers',
-            'inactiveWorkers',
-            'resignedWorkers',
-            'permanentWorkers',
-            'contractWorkers',
-            'internshipWorkers',
-            
-            // Attendance
-            'todayAttendance',
-            'todayPresent',
-            'todayLate',
-            'todayAbsent',
-            
-            // Leaves
-            'totalLeaveRequests',
-            'pendingLeaves',
-            'approvedLeaves',
-            'rejectedLeaves',
-            
-            // Overtimes
-            'totalOvertimeRequests',
-            'pendingOvertimes',
-            'approvedOvertimes',
-            'rejectedOvertimes',
-            
-            // Recent Activities
+            'statistics',
+            'attendanceChartLabels',
+            'attendanceChartData',
+            'positionDistribution',
             'recentLeaves',
-            'recentOvertimes',
-            'todayAbsences',
-            
-            // Charts
-            'attendanceStats',
-            'leaveStats',
-            'departmentStats',
-            
-            // Upcoming
-            'upcomingLeaves'
+            'birthdayWorkers'
         ));
     }
 

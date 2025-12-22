@@ -31,7 +31,22 @@ class WorkerDocumentRepository implements WorkerDocumentRepositoryInterface
             $query->where('document_type_id', $filters['document_type_id']);
         }
 
-        return $query->latest()->paginate($filters['per_page'] ?? 15);
+        // Advanced search
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('document_number', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhere('notes', 'like', "%{$search}%")
+                  ->orWhereHas('documentType', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        return $query->latest()
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
     }
 
     public function getById(string $id): ?object

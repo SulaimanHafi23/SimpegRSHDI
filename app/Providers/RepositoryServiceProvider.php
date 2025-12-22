@@ -113,6 +113,12 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Contracts\Master\LeaveTypeRepositoryInterface::class,
             \App\Repositories\Master\LeaveTypeRepository::class
         );
+
+        // Notification
+        $this->app->bind(
+            \App\Repositories\Contracts\Notification\NotificationRepositoryInterface::class,
+            \App\Repositories\Notification\NotificationRepository::class
+        );
     }
 
     public function boot(): void

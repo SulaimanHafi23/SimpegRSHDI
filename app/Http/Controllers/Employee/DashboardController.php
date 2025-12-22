@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Worker\WorkerService;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Leave\LeaveRequestService;
+use App\Services\Dashboard\EmployeeDashboardService;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -13,7 +14,8 @@ class DashboardController extends Controller
     public function __construct(
         private readonly WorkerService $workerService,
         private readonly AttendanceService $attendanceService,
-        private readonly LeaveRequestService $leaveService
+        private readonly LeaveRequestService $leaveService,
+        private readonly EmployeeDashboardService $dashboardService
     ) {
         $this->middleware('auth');
     }
@@ -30,21 +32,23 @@ class DashboardController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan. Silakan hubungi administrator.');
         }
 
-        // Get attendance summary for current month
-        $currentMonth = now()->format('Y-m');
-        $attendances = $this->attendanceService->getAll([
-            'worker_id' => $worker->id,
-            'date_from' => now()->startOfMonth()->format('Y-m-d'),
-            'date_to' => now()->endOfMonth()->format('Y-m-d'),
-        ]);
+        // Get attendance summary
+        $attendanceSummary = $this->dashboardService->getAttendanceSummary($worker->id, 'month');
         
-        // Calculate attendance statistics
-        $attendanceSummary = [
-            'present' => $attendances->where('status', 'present')->count(),
-            'late' => $attendances->where('is_late', true)->count(),
-            'absent' => $attendances->where('status', 'absent')->count(),
-            'total_working_days' => now()->day,
-        ];
+        // Get attendance chart data
+        $attendanceChart = $this->dashboardService->getAttendanceChart($worker->id, 7);
+        
+        // Get leave summary
+        $leaveSummary = $this->dashboardService->getLeaveSummary($worker->id);
+        
+        // Get overtime summary
+        $overtimeSummary = $this->dashboardService->getOvertimeSummary($worker->id, 'month');
+        
+        // Get recent activities
+        $recentActivities = $this->dashboardService->getRecentActivities($worker->id, 5);
+        
+        // Get upcoming leaves
+        $upcomingLeaves = $this->dashboardService->getUpcomingLeaves($worker->id, 5);
         
         // Get recent leave requests
         $recentLeaves = $this->leaveService->getAll([
@@ -52,27 +56,19 @@ class DashboardController extends Controller
             'per_page' => 5,
         ]);
         
-        // Get leave balance (simplified)
-        $leaveBalance = [
-            'annual_leave' => 12, // Default, should be calculated from database
-            'sick_leave' => 12,
-            'used_annual' => $this->leaveService->getAll([
-                'worker_id' => $worker->id,
-                'leave_type' => 'annual',
-                'status' => 'approved',
-            ])->count(),
-            'used_sick' => $this->leaveService->getAll([
-                'worker_id' => $worker->id,
-                'leave_type' => 'sick',
-                'status' => 'approved',
-            ])->count(),
-        ];
+        // Get leave balance with quota
+        $leaveBalances = $this->dashboardService->getLeaveBalance($worker->id);
 
         return view('employee.dashboard.index', compact(
             'worker',
             'attendanceSummary',
-            'leaveBalance',
-            'recentLeaves'
+            'attendanceChart',
+            'leaveSummary',
+            'overtimeSummary',
+            'recentActivities',
+            'upcomingLeaves',
+            'recentLeaves',
+            'leaveBalances'
         ));
     }
 }

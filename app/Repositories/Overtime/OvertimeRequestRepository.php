@@ -38,7 +38,27 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
             $query->where('overtime_date', '<=', $filters['date_to']);
         }
 
-        return $query->latest('overtime_date')->paginate($filters['per_page'] ?? 15);
+        if (!empty($filters['year'])) {
+            $query->whereYear('overtime_date', $filters['year']);
+        }
+
+        // Advanced search
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('overtime_date', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhere('total_hours', 'like', "%{$search}%")
+                  ->orWhereHas('worker', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        return $query->latest('overtime_date')
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
     }
 
     public function getById(string $id): ?object

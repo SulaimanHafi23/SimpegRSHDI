@@ -38,6 +38,14 @@ class DocumentTypeService
     }
 
     /**
+     * Alias for getAllActive
+     */
+    public function getActive()
+    {
+        return $this->getAllActive();
+    }
+
+    /**
      * Get all required document types
      */
     public function getRequired()

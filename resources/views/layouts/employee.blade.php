@@ -36,21 +36,21 @@
             <div class="max-w-7xl mx-auto">
                 <!-- Alert Messages -->
                 @if(session('success'))
-                    <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center shadow-md">
+                    <div class="alert-dismissible mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center shadow-md">
                         <i class="fas fa-check-circle mr-3"></i>
                         <span>{{ session('success') }}</span>
                     </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center shadow-md">
+                    <div class="alert-dismissible mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center shadow-md">
                         <i class="fas fa-exclamation-circle mr-3"></i>
                         <span>{{ session('error') }}</span>
                     </div>
                 @endif
 
                 @if(session('warning'))
-                    <div class="mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg flex items-center shadow-md">
+                    <div class="alert-dismissible mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg flex items-center shadow-md">
                         <i class="fas fa-exclamation-triangle mr-3"></i>
                         <span>{{ session('warning') }}</span>
                     </div>
@@ -93,26 +93,32 @@
             }
         }
 
-        // Initialize overlay click handler
+        // Initialize overlay click handler and auto-dismiss alerts
         document.addEventListener('DOMContentLoaded', function() {
+            // Overlay handler
             const overlay = document.getElementById('employee-sidebar-overlay');
             if (overlay) {
                 overlay.addEventListener('click', toggleEmployeeSidebar);
             }
-        });
-        // Auto-dismiss alerts after 3 seconds
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerts = document.querySelectorAll('.bg-green-100, .bg-red-100, .bg-yellow-100');
-            alerts.forEach(function(alert) {
-                setTimeout(function() {
-                    alert.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
-                    alert.style.opacity = '0';
-                    alert.style.transform = 'translateY(-10px)';
+
+            // Auto-dismiss alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            if (alerts.length > 0) {
+                alerts.forEach(function(alert) {
                     setTimeout(function() {
-                        alert.remove();
-                    }, 500);
-                }, 3000);
-            });
+                        if (alert && alert.parentNode) {
+                            alert.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+                            alert.style.opacity = '0';
+                            alert.style.transform = 'translateY(-10px)';
+                            setTimeout(function() {
+                                if (alert && alert.parentNode) {
+                                    alert.remove();
+                                }
+                            }, 500);
+                        }
+                    }, 5000);
+                });
+            }
         });    </script>
 </body>
 </html>

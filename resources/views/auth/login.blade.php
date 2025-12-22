@@ -53,7 +53,7 @@
                             <div class="aspect-video bg-white/10 rounded-xl flex items-center justify-center overflow-hidden ring-2 ring-yellow-400/20">
                                 <!-- Replace with actual hospital image -->
                                 <img
-                                    src="{{ asset('images/hospital.jpg') }}"
+                                    src="{{ asset('images/login.jpeg') }}"
                                     alt="RSUD Haji Darlan Ismail"
                                     class="w-full h-full object-cover"
                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
@@ -123,7 +123,7 @@
             <!-- Background Image with Opacity -->
             <div class="absolute inset-0 z-0">
                 <img
-                    src="{{ asset('images/login.jpeg') }}"
+                    src="{{ asset('images/hospital.jpg') }}"
                     alt="Background"
                     class="w-full h-full object-cover"
                     onerror="this.style.display='none';"

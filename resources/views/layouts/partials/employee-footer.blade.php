@@ -15,8 +15,8 @@
         </a>
 
         <!-- Absen -->
-        <a href="{{ route('admin.attendance.index') }}" class="flex flex-col items-center {{ request()->routeIs('admin.attendance.*') ? '-mt-8' : 'space-y-1' }} transition duration-200">
-            @if(request()->routeIs('admin.attendance.*'))
+        <a href="{{ route('employee.attendance.index') }}" class="flex flex-col items-center {{ request()->routeIs('employee.attendance.*') ? '-mt-8' : 'space-y-1' }} transition duration-200">
+            @if(request()->routeIs('employee.attendance.*'))
                 <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition duration-200 ring-4 ring-yellow-300/30">
                     <i class="fas fa-camera text-2xl"></i>
                 </div>
@@ -28,8 +28,8 @@
         </a>
 
         <!-- Jadwal -->
-        <a href="{{ route('admin.worker-shifts.index') }}" class="flex flex-col items-center {{ request()->routeIs('admin.worker-shifts.*') ? '-mt-8' : 'space-y-1' }} transition duration-200">
-            @if(request()->routeIs('admin.worker-shifts.*'))
+        <a href="{{ route('employee.shifts.index') }}" class="flex flex-col items-center {{ request()->routeIs('employee.shifts.*') ? '-mt-8' : 'space-y-1' }} transition duration-200">
+            @if(request()->routeIs('employee.shifts.*'))
                 <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition duration-200 ring-4 ring-yellow-300/30">
                     <i class="fas fa-calendar-alt text-2xl"></i>
                 </div>
@@ -41,8 +41,8 @@
         </a>
 
         <!-- Profile -->
-        <a href="{{ route('profile.show') }}" class="flex flex-col items-center {{ request()->routeIs('profile.*') ? '-mt-8' : 'space-y-1' }} transition duration-200">
-            @if(request()->routeIs('profile.*'))
+        <a href="{{ route('employee.profile.show') }}" class="flex flex-col items-center {{ request()->routeIs('employee.profile.*') ? '-mt-8' : 'space-y-1' }} transition duration-200">
+            @if(request()->routeIs('employee.profile.*'))
                 <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition duration-200 ring-4 ring-yellow-300/30">
                     <i class="fas fa-user text-2xl"></i>
                 </div>

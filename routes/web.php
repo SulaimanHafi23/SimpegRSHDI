@@ -34,10 +34,17 @@ use App\Http\Controllers\Master\DepartmentController;
 use App\Http\Controllers\Master\DocumentTypeController;
 use App\Http\Controllers\Master\ReligionController;
 use App\Http\Controllers\Master\LeaveTypeController;
+use App\Http\Controllers\Admin\HolidayController;
 
 // Dashboard Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
+use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
+use App\Http\Controllers\Employee\ShiftController as EmployeeShiftController;
+use App\Http\Controllers\Employee\LeaveController as EmployeeLeaveController;
+use App\Http\Controllers\Employee\OvertimeController as EmployeeOvertimeController;
+use App\Http\Controllers\Employee\DocumentController as EmployeeDocumentController;
+use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
 
 // Profile Controller
 use App\Http\Controllers\ProfileController;
@@ -65,11 +72,84 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->name('logout');
 
 // ========== AUTHENTICATED ROUTES ==========
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'redirect_role'])->group(function () {
     
     // ========== DASHBOARDS ==========
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::get('/employee/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('role:Super Admin|HR|Manager')->name('admin.dashboard');
+    
+    // ========== EMPLOYEE ROUTES ==========
+    Route::prefix('employee')->name('employee.')->middleware('role:Employee')->group(function () {
+        Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
+        // Attendance for employees
+        Route::prefix('attendance')->name('attendance.')->group(function () {
+            Route::get('/', [EmployeeAttendanceController::class, 'index'])->name('index');
+            Route::get('/export-pdf', [EmployeeAttendanceController::class, 'exportPdf'])->name('export-pdf');
+            Route::get('/check-in', [EmployeeAttendanceController::class, 'checkInForm'])->name('check-in-form');
+            Route::post('/check-in', [EmployeeAttendanceController::class, 'checkIn'])->name('check-in');
+            Route::post('/check-out/{id}', [EmployeeAttendanceController::class, 'checkOut'])->name('check-out');
+            Route::get('/{id}', [EmployeeAttendanceController::class, 'show'])->name('show');
+        });
+
+        // Shifts for employees
+        Route::prefix('shifts')->name('shifts.')->group(function () {
+            Route::get('/', [EmployeeShiftController::class, 'index'])->name('index');
+            Route::get('/show', [EmployeeShiftController::class, 'show'])->name('show');
+        });
+
+        // Leave requests for employees
+        Route::prefix('leaves')->name('leaves.')->group(function () {
+            Route::get('/', [EmployeeLeaveController::class, 'index'])->name('index');
+            Route::get('/export-pdf', [EmployeeLeaveController::class, 'exportPdf'])->name('export-pdf');
+            Route::get('/create', [EmployeeLeaveController::class, 'create'])->name('create');
+            Route::post('/', [EmployeeLeaveController::class, 'store'])->name('store');
+            Route::get('/{id}', [EmployeeLeaveController::class, 'show'])->name('show');
+            Route::delete('/{id}', [EmployeeLeaveController::class, 'cancel'])->name('cancel');
+        });
+
+        // Overtime requests for employees
+        Route::prefix('overtimes')->name('overtimes.')->group(function () {
+            Route::get('/', [EmployeeOvertimeController::class, 'index'])->name('index');
+            Route::get('/export-pdf', [EmployeeOvertimeController::class, 'exportPdf'])->name('export-pdf');
+            Route::get('/create', [EmployeeOvertimeController::class, 'create'])->name('create');
+            Route::post('/', [EmployeeOvertimeController::class, 'store'])->name('store');
+            Route::get('/{id}', [EmployeeOvertimeController::class, 'show'])->name('show');
+            Route::delete('/{id}', [EmployeeOvertimeController::class, 'cancel'])->name('cancel');
+        });
+
+        // Documents for employees
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/', [EmployeeDocumentController::class, 'index'])->name('index');
+            Route::get('/create', [EmployeeDocumentController::class, 'create'])->name('create');
+            Route::post('/', [EmployeeDocumentController::class, 'store'])->name('store');
+            Route::get('/{id}', [EmployeeDocumentController::class, 'show'])->name('show');
+            Route::get('/{id}/download', [EmployeeDocumentController::class, 'download'])->name('download');
+            Route::delete('/{id}', [EmployeeDocumentController::class, 'destroy'])->name('destroy');
+        });
+
+        // Profile for employees
+        Route::prefix('profile')->name('profile.')->group(function () {
+            Route::get('/', [EmployeeProfileController::class, 'show'])->name('show');
+            Route::get('/edit', [EmployeeProfileController::class, 'edit'])->name('edit');
+            Route::put('/', [EmployeeProfileController::class, 'update'])->name('update');
+            Route::put('/password', [EmployeeProfileController::class, 'updatePassword'])->name('update-password');
+        });
+
+        // Notifications for employees
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Employee\NotificationController::class, 'index'])->name('index');
+            Route::get('/unread', [\App\Http\Controllers\Employee\NotificationController::class, 'getUnread'])->name('unread');
+            Route::get('/unread-count', [\App\Http\Controllers\Employee\NotificationController::class, 'getUnreadCount'])->name('unread-count');
+            Route::post('/{id}/mark-read', [\App\Http\Controllers\Employee\NotificationController::class, 'markAsRead'])->name('mark-read');
+            Route::post('/mark-all-read', [\App\Http\Controllers\Employee\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+            Route::delete('/{id}', [\App\Http\Controllers\Employee\NotificationController::class, 'destroy'])->name('destroy');
+        });
+
+        // Calendar for employees
+        Route::prefix('calendar')->name('calendar.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('index');
+            Route::get('/events', [\App\Http\Controllers\Employee\CalendarController::class, 'events'])->name('events');
+        });
+    });
 
     // ========== PROFILE ROUTES ==========
     Route::prefix('profile')->name('profile.')->group(function () {
@@ -241,6 +321,18 @@ Route::middleware(['auth'])->group(function () {
         
         // Leave Types
         Route::resource('leave-types', LeaveTypeController::class);
+    });
+
+    // ========== HOLIDAYS MANAGEMENT ==========
+    Route::prefix('holidays')->name('admin.holidays.')->middleware(['auth', 'role:Super Admin|HR'])->group(function () {
+        Route::get('/', [HolidayController::class, 'index'])->name('index');
+        Route::get('/create', [HolidayController::class, 'create'])->name('create');
+        Route::post('/', [HolidayController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [HolidayController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [HolidayController::class, 'update'])->name('update');
+        Route::delete('/{id}', [HolidayController::class, 'destroy'])->name('destroy');
+        Route::get('/bulk-create', [HolidayController::class, 'bulkCreate'])->name('bulk-create');
+        Route::post('/bulk-store', [HolidayController::class, 'bulkStore'])->name('bulk-store');
     });
 });
 

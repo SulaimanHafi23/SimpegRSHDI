@@ -4,12 +4,14 @@ namespace App\Services\WorkerDocument;
 
 use App\DTOs\WorkerDocumentDTO;
 use App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Storage;
 
 class WorkerDocumentService
 {
     public function __construct(
-        protected WorkerDocumentRepositoryInterface $workerDocumentRepository
+        protected WorkerDocumentRepositoryInterface $workerDocumentRepository,
+        protected NotificationService $notificationService
     ) {}
 
     public function getAll(array $filters = [])
@@ -29,28 +31,10 @@ class WorkerDocumentService
 
     public function create(array $data)
     {
-        if (!isset($data['file'])) {
-            throw new \Exception('File is required.');
+        // Validate required fields (file already uploaded in controller)
+        if (!isset($data['file_name']) || !isset($data['file_path']) || !isset($data['file_size'])) {
+            throw new \Exception('File dokumen wajib diupload.');
         }
-
-        $file = $data['file'];
-        $workerId = $data['worker_id'];
-
-        // Save file
-        $filename = sprintf(
-            '%s_%s_%s.%s',
-            $workerId,
-            $data['document_type_id'],
-            now()->format('YmdHis'),
-            $file->getClientOriginalExtension()
-        );
-
-        $filePath = $file->storeAs('worker-documents', $filename, 'public');
-
-        $data['file_name'] = $file->getClientOriginalName();
-        $data['file_path'] = $filePath;
-        $data['file_size'] = $file->getSize();
-        $data['status'] = 'pending';
 
         $dto = WorkerDocumentDTO::fromRequest($data);
         return $this->workerDocumentRepository->create($dto);
@@ -95,12 +79,39 @@ class WorkerDocumentService
 
     public function verify(string $id, string $verifiedBy, ?string $notes = null)
     {
-        return $this->workerDocumentRepository->verify($id, $verifiedBy, $notes);
+        $result = $this->workerDocumentRepository->verify($id, $verifiedBy, $notes);
+        
+        if ($result) {
+            $document = $this->workerDocumentRepository->getById($id);
+            $this->notificationService->notifyDocumentApproved(
+                $document->worker->user_id,
+                [
+                    'id' => $document->id,
+                    'document_type' => $document->documentType->name ?? 'Dokumen',
+                ]
+            );
+        }
+        
+        return $result;
     }
 
     public function reject(string $id, string $verifiedBy, string $notes)
     {
-        return $this->workerDocumentRepository->reject($id, $verifiedBy, $notes);
+        $result = $this->workerDocumentRepository->reject($id, $verifiedBy, $notes);
+        
+        if ($result) {
+            $document = $this->workerDocumentRepository->getById($id);
+            $this->notificationService->notifyDocumentRejected(
+                $document->worker->user_id,
+                [
+                    'id' => $document->id,
+                    'document_type' => $document->documentType->name ?? 'Dokumen',
+                    'rejection_reason' => $notes,
+                ]
+            );
+        }
+        
+        return $result;
     }
 
     public function getExpiredDocuments()
@@ -118,7 +129,7 @@ class WorkerDocumentService
         $document = $this->workerDocumentRepository->getById($id);
 
         if (!Storage::exists($document->file_path)) {
-            throw new \Exception('File not found.');
+            throw new \Exception('File tidak ditemukan.');
         }
 
         return Storage::download($document->file_path, $document->file_name);

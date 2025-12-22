@@ -38,7 +38,30 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
             $query->where('end_date', '<=', $filters['date_to']);
         }
 
-        return $query->latest('start_date')->paginate($filters['per_page'] ?? 15);
+        if (!empty($filters['year'])) {
+            $query->whereYear('start_date', $filters['year']);
+        }
+
+        // Advanced search
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('reason', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhere('start_date', 'like', "%{$search}%")
+                  ->orWhere('end_date', 'like', "%{$search}%")
+                  ->orWhereHas('leaveType', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('worker', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        return $query->latest('start_date')
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
     }
 
     public function getById(string $id): ?object

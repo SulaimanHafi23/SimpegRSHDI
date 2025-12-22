@@ -4,11 +4,13 @@ namespace App\Services\Overtime;
 
 use App\DTOs\OvertimeRequestDTO;
 use App\Repositories\Contracts\Overtime\OvertimeRequestRepositoryInterface;
+use App\Services\Notification\NotificationService;
 
 class OvertimeRequestService
 {
     public function __construct(
-        protected OvertimeRequestRepositoryInterface $overtimeRequestRepository
+        protected OvertimeRequestRepositoryInterface $overtimeRequestRepository,
+        protected NotificationService $notificationService
     ) {}
 
     public function getAll(array $filters = [])
@@ -47,7 +49,7 @@ class OvertimeRequestService
         $overtimeRequest = $this->overtimeRequestRepository->getById($id);
 
         if ($overtimeRequest->status !== 'pending') {
-            throw new \Exception('Only pending overtime requests can be updated.');
+            throw new \Exception('Hanya permohonan lembur yang berstatus pending yang dapat diubah.');
         }
 
         // Recalculate total hours if times changed
@@ -71,10 +73,33 @@ class OvertimeRequestService
         $overtimeRequest = $this->overtimeRequestRepository->getById($id);
 
         if ($overtimeRequest->status !== 'pending') {
-            throw new \Exception('Only pending overtime requests can be approved.');
+            throw new \Exception('Hanya permohonan lembur yang berstatus pending yang dapat disetujui.');
         }
 
-        return $this->overtimeRequestRepository->approve($id, $approvedBy);
+        $result = $this->overtimeRequestRepository->approve($id, $approvedBy);
+
+        // Send notification
+        $this->notificationService->notifyOvertimeApproved(
+            $overtimeRequest->worker->user_id,
+            [
+                'id' => $overtimeRequest->id,
+                'overtime_date' => $overtimeRequest->overtime_date,
+            ]
+        );
+
+        $result = $this->overtimeRequestRepository->reject($id, $approvedBy, $reason);
+
+        // Send notification
+        $this->notificationService->notifyOvertimeRejected(
+            $overtimeRequest->worker->user_id,
+            [
+                'id' => $overtimeRequest->id,
+                'overtime_date' => $overtimeRequest->overtime_date,
+            ],
+            $reason
+        );
+
+        return $result;
     }
 
     public function reject(string $id, string $approvedBy, string $reason)
@@ -82,7 +107,7 @@ class OvertimeRequestService
         $overtimeRequest = $this->overtimeRequestRepository->getById($id);
 
         if ($overtimeRequest->status !== 'pending') {
-            throw new \Exception('Only pending overtime requests can be rejected.');
+            throw new \Exception('Hanya permohonan lembur yang berstatus pending yang dapat ditolak.');
         }
 
         return $this->overtimeRequestRepository->reject($id, $approvedBy, $reason);

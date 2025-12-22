@@ -57,13 +57,13 @@ class AttendanceService
             // Check if already checked in today
             $existing = $this->attendanceRepository->getByWorkerAndDate($workerId, $today);
             if ($existing) {
-                throw new \Exception('You have already checked in today.');
+                throw new \Exception('Anda sudah melakukan check-in hari ini.');
             }
 
             // Get worker's shift for today
             $workerShift = $this->workerShiftRepository->getActiveByWorkerId($workerId);
             if (!$workerShift) {
-                throw new \Exception('No active shift assigned to this worker.');
+                throw new \Exception('Tidak ada jadwal shift aktif untuk pegawai ini.');
             }
 
             $shift = $this->shiftRepository->getById($workerShift->shift_id);
@@ -131,11 +131,11 @@ class AttendanceService
             $attendance = $this->attendanceRepository->getById($attendanceId);
             
             if (!$attendance) {
-                throw new \Exception('Attendance record not found.');
+                throw new \Exception('Data absensi tidak ditemukan.');
             }
 
             if ($attendance->check_out) {
-                throw new \Exception('You have already checked out.');
+                throw new \Exception('Anda sudah melakukan check-out.');
             }
 
             // Validate location

@@ -38,6 +38,14 @@ class LeaveTypeService
     }
 
     /**
+     * Alias for getAllActive
+     */
+    public function getActive()
+    {
+        return $this->getAllActive();
+    }
+
+    /**
      * Find leave type by ID
      */
     public function findById(string $id)

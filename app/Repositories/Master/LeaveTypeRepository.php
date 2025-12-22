@@ -70,6 +70,11 @@ class LeaveTypeRepository implements LeaveTypeRepositoryInterface
             ->find($id);
     }
 
+    public function getById(string $id): ?object
+    {
+        return $this->findById($id);
+    }
+
     public function getByName(string $name): ?object
     {
         return $this->model->where('name', $name)->first();

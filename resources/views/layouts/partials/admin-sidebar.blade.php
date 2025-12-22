@@ -72,6 +72,12 @@
                 <span>Tipe Dokumen</span>
             </a>
             @endif
+            @if(auth()->user()->hasRole(['Super Admin', 'HR']))
+            <a href="{{ route('admin.holidays.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.holidays.*') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
+                <i class="fas fa-calendar-day w-5"></i>
+                <span>Libur Nasional</span>
+            </a>
+            @endif
         </div>
 
         <!-- Management Section -->

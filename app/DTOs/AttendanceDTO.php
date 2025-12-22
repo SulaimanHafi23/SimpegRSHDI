@@ -55,6 +55,11 @@ class AttendanceDTO
         );
     }
 
+    public static function fromArray(array $data): self
+    {
+        return self::fromRequest($data);
+    }
+
     public function toArray(): array
     {
         return array_filter([

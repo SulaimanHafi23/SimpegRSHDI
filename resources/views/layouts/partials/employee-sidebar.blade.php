@@ -31,12 +31,12 @@
         <div class="pt-4">
             <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">KEHADIRAN</p>
             
-            <a href="{{ route('admin.attendance.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.attendance.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+            <a href="{{ route('employee.attendance.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.attendance.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-clipboard-check w-5"></i>
                 <span>Absensi Saya</span>
             </a>
 
-            <a href="{{ route('admin.worker-shifts.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+            <a href="{{ route('employee.shifts.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.shifts.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-calendar-alt w-5"></i>
                 <span>Jadwal Kerja</span>
             </a>
@@ -46,19 +46,24 @@
         <div class="pt-4">
             <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">PENGAJUAN</p>
             
-            <a href="{{ route('admin.leave.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+            <a href="{{ route('employee.leaves.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.leaves.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-calendar-times w-5"></i>
                 <span>Cuti Saya</span>
             </a>
 
-            <a href="{{ route('admin.overtime.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+            <a href="{{ route('employee.overtimes.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.overtimes.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-clock w-5"></i>
                 <span>Lembur Saya</span>
             </a>
 
-            <a href="{{ route('admin.worker-documents.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.worker-documents.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+            <a href="{{ route('employee.documents.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.documents.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-file-alt w-5"></i>
                 <span>Dokumen Saya</span>
+            </a>
+
+            <a href="{{ route('employee.calendar.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+                <i class="fas fa-calendar-alt w-5"></i>
+                <span>Kalender Cuti & Lembur</span>
             </a>
         </div>
 
@@ -66,7 +71,7 @@
         <div class="pt-4">
             <p class="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">AKUN</p>
             
-            <a href="{{ route('profile.show') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('profile.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+            <a href="{{ route('employee.profile.show') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.profile.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-user w-5"></i>
                 <span>Profile Saya</span>
             </a>

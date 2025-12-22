@@ -39,8 +39,23 @@ class AttendanceRepository implements AttendanceRepositoryInterface
             $query->where('is_late', $filters['is_late']);
         }
 
+        // Advanced search functionality
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('attendance_date', 'like', "%{$search}%")
+                  ->orWhere('status', 'like', "%{$search}%")
+                  ->orWhere('check_in_time', 'like', "%{$search}%")
+                  ->orWhere('check_out_time', 'like', "%{$search}%")
+                  ->orWhereHas('location', function($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         return $query->latest('attendance_date')
-            ->paginate($filters['per_page'] ?? 15);
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
     }
 
     public function getById(string $id): ?object

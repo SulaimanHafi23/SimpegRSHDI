@@ -5,6 +5,7 @@ namespace App\Services\Leave;
 use App\DTOs\LeaveRequestDTO;
 use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
 use App\Repositories\Contracts\Master\LeaveTypeRepositoryInterface;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Storage;
 
 class LeaveRequestService
@@ -12,6 +13,7 @@ class LeaveRequestService
     public function __construct(
         protected LeaveRequestRepositoryInterface $leaveRequestRepository,
         protected LeaveTypeRepositoryInterface $leaveTypeRepository,
+        protected NotificationService $notificationService,
     ) {}
 
     public function getAll(array $filters = [])
@@ -47,16 +49,23 @@ class LeaveRequestService
             );
 
             if ($balance < $data['total_days']) {
-                throw new \Exception("Insufficient leave balance. Available: {$balance} days");
+                throw new \Exception("Sisa cuti tidak mencukupi. Sisa cuti tersedia: {$balance} hari");
             }
         }
 
         // Validate days notice
-        $startDate = \Carbon\Carbon::parse($data['start_date']);
-        $daysUntilStart = now()->diffInDays($startDate, false);
+        $startDate = \Carbon\Carbon::parse($data['start_date'])->startOfDay();
+        $today = now()->startOfDay();
+        $daysUntilStart = $today->diffInDays($startDate, false);
 
-        if ($daysUntilStart < $leaveType->days_notice) {
-            throw new \Exception("Leave request must be submitted at least {$leaveType->days_notice} days in advance.");
+        // Only validate if start date is in the future and days_notice is required
+        if ($startDate->isFuture() && $daysUntilStart < $leaveType->days_notice) {
+            throw new \Exception("Permohonan cuti harus diajukan minimal {$leaveType->days_notice} hari sebelumnya.");
+        }
+
+        // Don't allow backdated leave requests
+        if ($startDate->isPast()) {
+            throw new \Exception("Tidak dapat mengajukan cuti untuk tanggal yang sudah lewat.");
         }
 
         // Handle attachment
@@ -73,7 +82,7 @@ class LeaveRequestService
         $leaveRequest = $this->leaveRequestRepository->getById($id);
 
         if ($leaveRequest->status !== 'pending') {
-            throw new \Exception('Only pending leave requests can be updated.');
+            throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat diubah.');
         }
 
         // Handle attachment
@@ -99,10 +108,22 @@ class LeaveRequestService
         $leaveRequest = $this->leaveRequestRepository->getById($id);
 
         if ($leaveRequest->status !== 'pending') {
-            throw new \Exception('Only pending leave requests can be approved.');
+            throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat disetujui.');
         }
 
-        return $this->leaveRequestRepository->approve($id, $approvedBy);
+        $result = $this->leaveRequestRepository->approve($id, $approvedBy);
+
+        // Send notification
+        $this->notificationService->notifyLeaveApproved(
+            $leaveRequest->worker->user_id,
+            [
+                'id' => $leaveRequest->id,
+                'start_date' => $leaveRequest->start_date,
+                'end_date' => $leaveRequest->end_date,
+            ]
+        );
+
+        return $result;
     }
 
     public function reject(string $id, string $approvedBy, string $reason)
@@ -110,10 +131,23 @@ class LeaveRequestService
         $leaveRequest = $this->leaveRequestRepository->getById($id);
 
         if ($leaveRequest->status !== 'pending') {
-            throw new \Exception('Only pending leave requests can be rejected.');
+            throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat ditolak.');
         }
 
-        return $this->leaveRequestRepository->reject($id, $approvedBy, $reason);
+        $result = $this->leaveRequestRepository->reject($id, $approvedBy, $reason);
+
+        // Send notification
+        $this->notificationService->notifyLeaveRejected(
+            $leaveRequest->worker->user_id,
+            [
+                'id' => $leaveRequest->id,
+                'start_date' => $leaveRequest->start_date,
+                'end_date' => $leaveRequest->end_date,
+            ],
+            $reason
+        );
+
+        return $result;
     }
 
     public function cancel(string $id)
@@ -121,7 +155,7 @@ class LeaveRequestService
         $leaveRequest = $this->leaveRequestRepository->getById($id);
 
         if (!in_array($leaveRequest->status, ['pending', 'approved'])) {
-            throw new \Exception('Only pending or approved leave requests can be cancelled.');
+            throw new \Exception('Hanya permohonan cuti yang berstatus pending atau approved yang dapat dibatalkan.');
         }
 
         return $this->leaveRequestRepository->cancel($id);

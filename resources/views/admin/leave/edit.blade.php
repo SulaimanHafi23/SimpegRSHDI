@@ -12,7 +12,7 @@
                 <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
-                <a href="{{ route('admin.leave.show', $leaveRequest->id) }}" class="hover:text-green-600">Detail</a>
+                <a href="{{ route('admin.leave.show', $leave->id) }}" class="hover:text-green-600">Detail</a>
                 <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
@@ -24,7 +24,7 @@
 
         <!-- Form -->
         <div class="bg-white rounded-lg shadow-md p-6">
-            <form action="{{ route('admin.leave.update', $leaveRequest->id) }}" method="POST" enctype="multipart/form-data" x-data="leaveForm()">
+            <form action="{{ route('admin.leave.update', $leave->id) }}" method="POST" enctype="multipart/form-data" x-data="leaveForm()">
                 @csrf
                 @method('PUT')
 
@@ -39,7 +39,7 @@
                                 class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('worker_id') border-red-500 @enderror">
                             <option value="">Pilih Pegawai</option>
                             @foreach($workers as $worker)
-                                <option value="{{ $worker->id }}" {{ (old('worker_id', $leaveRequest->worker_id) == $worker->id) ? 'selected' : '' }}>
+                                <option value="{{ $worker->id }}" {{ (old('worker_id', $leave->worker_id) == $worker->id) ? 'selected' : '' }}>
                                     {{ $worker->name }} - {{ $worker->position->name ?? '' }}
                                 </option>
                             @endforeach
@@ -59,7 +59,7 @@
                                 class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('leave_type') border-red-500 @enderror">
                             <option value="">Pilih Jenis Cuti</option>
                             @foreach($leaveTypes as $type)
-                                <option value="{{ $type }}" {{ (old('leave_type', $leaveRequest->leave_type) == $type) ? 'selected' : '' }}>
+                                <option value="{{ $type }}" {{ (old('leave_type', $leave->leave_type) == $type) ? 'selected' : '' }}>
                                     {{ $type }}
                                 </option>
                             @endforeach
@@ -81,7 +81,7 @@
                                    @change="calculateDays"
                                    required
                                    class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('start_date') border-red-500 @enderror"
-                                   value="{{ old('start_date', $leaveRequest->start_date->format('Y-m-d')) }}">
+                                   value="{{ old('start_date', $leave->start_date->format('Y-m-d')) }}">
                             @error('start_date')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -97,7 +97,7 @@
                                    @change="calculateDays"
                                    required
                                    class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('end_date') border-red-500 @enderror"
-                                   value="{{ old('end_date', $leaveRequest->end_date->format('Y-m-d')) }}">
+                                   value="{{ old('end_date', $leave->end_date->format('Y-m-d')) }}">
                             @error('end_date')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
@@ -114,7 +114,7 @@
                                x-model="totalDays"
                                readonly
                                class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md bg-gray-100"
-                               value="{{ old('total_days', $leaveRequest->total_days) }}">
+                               value="{{ old('total_days', $leave->total_days) }}">
                         <p class="mt-1 text-sm text-gray-500">Akan dihitung otomatis berdasarkan tanggal mulai dan selesai</p>
                     </div>
 
@@ -127,14 +127,14 @@
                                   rows="4" 
                                   required
                                   class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('reason') border-red-500 @enderror"
-                                  placeholder="Jelaskan alasan pengajuan cuti...">{{ old('reason', $leaveRequest->reason) }}</textarea>
+                                  placeholder="Jelaskan alasan pengajuan cuti...">{{ old('reason', $leave->reason) }}</textarea>
                         @error('reason')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
                     <!-- Lampiran Existing -->
-                    @if($leaveRequest->attachment_url)
+                    @if($leave->attachment_url)
                     <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
@@ -146,7 +146,7 @@
                                     <p class="text-xs text-gray-600">File sudah diupload sebelumnya</p>
                                 </div>
                             </div>
-                            <a href="{{ route('admin.leave.download-attachment', $leaveRequest->id) }}" 
+                            <a href="{{ route('admin.leave.download-attachment', $leave->id) }}" 
                                class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                 Download
                             </a>
@@ -157,7 +157,7 @@
                     <!-- Lampiran Baru -->
                     <div x-data="{ fileName: '' }">
                         <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                            {{ $leaveRequest->attachment_url ? 'Ganti Lampiran (Opsional)' : 'Lampiran (Opsional)' }}
+                            {{ $leave->attachment_url ? 'Ganti Lampiran (Opsional)' : 'Lampiran (Opsional)' }}
                         </label>
                         <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-green-400 transition-colors">
                             <div class="space-y-1 text-center">
@@ -188,7 +188,7 @@
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
-                    <a href="{{ route('admin.leave.show', $leaveRequest->id) }}" 
+                    <a href="{{ route('admin.leave.show', $leave->id) }}" 
                        class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">
                         Batal
                     </a>
@@ -205,9 +205,9 @@
 <script>
 function leaveForm() {
     return {
-        startDate: '{{ old('start_date', $leaveRequest->start_date->format('Y-m-d')) }}',
-        endDate: '{{ old('end_date', $leaveRequest->end_date->format('Y-m-d')) }}',
-        totalDays: {{ old('total_days', $leaveRequest->total_days) }},
+        startDate: '{{ old('start_date', $leave->start_date->format('Y-m-d')) }}',
+        endDate: '{{ old('end_date', $leave->end_date->format('Y-m-d')) }}',
+        totalDays: {{ old('total_days', $leave->total_days) }},
         
         calculateDays() {
             if (this.startDate && this.endDate) {
