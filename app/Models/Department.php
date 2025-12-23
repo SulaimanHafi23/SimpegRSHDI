@@ -32,8 +32,9 @@ class Department extends Model
      */
     public function documentTypes()
     {
-        // include pivot id so views can reference DepartmentDocumentType rows directly
+        // Use the DepartmentDocumentType model which handles UUID generation
         return $this->belongsToMany(\App\Models\DocumentType::class, 'department_document_type', 'department_id', 'document_type_id')
+                    ->using(\App\Models\DepartmentDocumentType::class)
                     ->withPivot('id')
                     ->withTimestamps();
     }

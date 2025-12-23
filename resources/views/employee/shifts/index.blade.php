@@ -57,6 +57,28 @@
                         {{ $workerShift->shift ? \Carbon\Carbon::parse($workerShift->shift->start_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($workerShift->shift->end_time)->format('H:i') : '' }}
                     </p>
                 </div>
+            @elseif($workerShift->pattern_type === 'custom')
+                <div class="text-sm">
+                    <p class="text-gray-700 mb-2">Pola: <span class="font-medium text-blue-700">Hari Tertentu</span></p>
+                    <p class="text-gray-700 mb-2">Shift: <span class="font-medium text-green-700">{{ $workerShift->shift->name ?? '-' }}</span></p>
+                    <p class="text-gray-700 mb-2">Hari Kerja:</p>
+                    <div class="flex flex-wrap gap-2">
+                        @php
+                            $dayNames = [1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'];
+                            $workingDays = $workerShift->custom_working_days ?? [];
+                        @endphp
+                        @foreach($dayNames as $dayNum => $label)
+                            <span class="px-3 py-1 rounded-full text-xs font-medium {{ in_array($dayNum, $workingDays) ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-500' }}">
+                                {{ $label }}
+                            </span>
+                        @endforeach
+                    </div>
+                    @if($workerShift->shift)
+                        <p class="text-gray-600 mt-2">
+                            Jam: {{ \Carbon\Carbon::parse($workerShift->shift->start_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($workerShift->shift->end_time)->format('H:i') }}
+                        </p>
+                    @endif
+                </div>
             @elseif($workerShift->pattern_type === 'rotating')
                 <div class="text-sm">
                     <p class="text-gray-700 mb-2">Pola: <span class="font-medium text-blue-700">Rotasi</span></p>

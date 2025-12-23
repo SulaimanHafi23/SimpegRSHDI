@@ -15,10 +15,104 @@
         <!-- Right Side -->
         <div class="flex items-center space-x-2 sm:space-x-4">
             <!-- Notifications -->
-            <button class="relative p-2 text-gray-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition duration-200">
-                <i class="fas fa-bell text-lg sm:text-xl"></i>
-                <span class="absolute top-1 right-1 h-2 w-2 bg-yellow-500 rounded-full animate-pulse"></span>
-            </button>
+            <div class="relative" 
+                 x-data="adminNotifications()" 
+                 x-init="loadPendingRequests()"
+                 @click.away="open = false">
+                <button @click="open = !open; if(open) loadPendingRequests()" 
+                        class="relative p-2 text-gray-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition duration-200">
+                    <i class="fas fa-bell text-lg sm:text-xl"></i>
+                    <span x-show="totalPending > 0" 
+                          class="absolute top-1 right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                        <span x-text="totalPending > 9 ? '9+' : totalPending"></span>
+                    </span>
+                </button>
+
+                <!-- Notifications Dropdown -->
+                <div x-show="open"
+                     x-transition
+                     class="absolute right-0 z-50 w-96 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg top-full">
+                    <div class="p-4 border-b border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-semibold text-gray-900">Pengajuan Pending</h3>
+                            <span class="text-xs font-medium text-yellow-600" x-text="totalPending + ' pending'"></span>
+                        </div>
+                    </div>
+                    <div class="overflow-y-auto max-h-96">
+                        <template x-if="pendingLeaves.length === 0 && pendingOvertimes.length === 0 && pendingDocuments.length === 0">
+                            <div class="p-4 text-sm text-center text-gray-500">
+                                Tidak ada pengajuan pending
+                            </div>
+                        </template>
+                        
+                        <!-- Pending Leaves -->
+                        <template x-if="pendingLeaves.length > 0">
+                            <div>
+                                <div class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-50">
+                                    Cuti (<span x-text="pendingLeaves.length"></span>)
+                                </div>
+                                <template x-for="leave in pendingLeaves" :key="leave.id">
+                                    <a :href="'/leaves/' + leave.id" 
+                                       class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-semibold text-gray-900" x-text="leave.worker_name"></h4>
+                                                <p class="mt-1 text-xs text-gray-600" x-text="leave.leave_type + ' - ' + leave.total_days + ' hari'"></p>
+                                                <p class="mt-1 text-xs text-gray-400" x-text="leave.date_range"></p>
+                                            </div>
+                                            <span class="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">Pending</span>
+                                        </div>
+                                    </a>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Pending Overtimes -->
+                        <template x-if="pendingOvertimes.length > 0">
+                            <div>
+                                <div class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-50">
+                                    Lembur (<span x-text="pendingOvertimes.length"></span>)
+                                </div>
+                                <template x-for="overtime in pendingOvertimes" :key="overtime.id">
+                                    <a :href="'/overtimes/' + overtime.id" 
+                                       class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-semibold text-gray-900" x-text="overtime.worker_name"></h4>
+                                                <p class="mt-1 text-xs text-gray-600" x-text="overtime.total_hours + ' jam'"></p>
+                                                <p class="mt-1 text-xs text-gray-400" x-text="overtime.date"></p>
+                                            </div>
+                                            <span class="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">Pending</span>
+                                        </div>
+                                    </a>
+                                </template>
+                            </div>
+                        </template>
+
+                        <!-- Pending Documents -->
+                        <template x-if="pendingDocuments.length > 0">
+                            <div>
+                                <div class="px-4 py-2 text-xs font-semibold text-gray-600 bg-gray-50">
+                                    Dokumen (<span x-text="pendingDocuments.length"></span>)
+                                </div>
+                                <template x-for="doc in pendingDocuments" :key="doc.id">
+                                    <a :href="'/worker-documents/' + doc.id" 
+                                       class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition">
+                                        <div class="flex items-start justify-between">
+                                            <div class="flex-1">
+                                                <h4 class="text-sm font-semibold text-gray-900" x-text="doc.worker_name"></h4>
+                                                <p class="mt-1 text-xs text-gray-600" x-text="doc.document_type"></p>
+                                                <p class="mt-1 text-xs text-gray-400" x-text="doc.file_name"></p>
+                                            </div>
+                                            <span class="px-2 py-1 text-xs font-medium text-yellow-700 bg-yellow-100 rounded-full">Pending</span>
+                                        </div>
+                                    </a>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
 
             <!-- Profile Dropdown -->
             <div class="relative" x-data="{ open: false }">

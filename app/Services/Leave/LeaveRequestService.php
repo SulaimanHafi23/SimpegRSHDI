@@ -40,6 +40,13 @@ class LeaveRequestService
     {
         $leaveType = $this->leaveTypeRepository->getById($data['leave_type_id']);
 
+        // Calculate total days if not provided
+        if (!isset($data['total_days'])) {
+            $startDate = \Carbon\Carbon::parse($data['start_date']);
+            $endDate = \Carbon\Carbon::parse($data['end_date']);
+            $data['total_days'] = $startDate->diffInDays($endDate) + 1;
+        }
+
         // Validate leave balance
         if ($leaveType->max_days_per_year) {
             $balance = $this->leaveRequestRepository->getWorkerLeaveBalance(
@@ -71,6 +78,11 @@ class LeaveRequestService
         // Handle attachment
         if (isset($data['attachment']) && $leaveType->requires_attachment) {
             $data['attachment_path'] = $this->saveAttachment($data['attachment'], $data['worker_id']);
+        }
+
+        // Set default status to pending if not provided
+        if (!isset($data['status']) || empty($data['status'])) {
+            $data['status'] = 'pending';
         }
 
         $dto = LeaveRequestDTO::fromRequest($data);
@@ -118,15 +130,18 @@ class LeaveRequestService
 
         $result = $this->leaveRequestRepository->approve($id, $approvedBy);
 
-        // Send notification
-        $this->notificationService->notifyLeaveApproved(
-            $leaveRequest->worker->user_id,
-            [
-                'id' => $leaveRequest->id,
-                'start_date' => $leaveRequest->start_date,
-                'end_date' => $leaveRequest->end_date,
-            ]
-        );
+        // Send notification - get user_id from worker's user relationship
+        $user = \App\Models\User::where('worker_id', $leaveRequest->worker_id)->first();
+        if ($user) {
+            $this->notificationService->notifyLeaveApproved(
+                $user->id,
+                [
+                    'id' => $leaveRequest->id,
+                    'start_date' => $leaveRequest->start_date,
+                    'end_date' => $leaveRequest->end_date,
+                ]
+            );
+        }
 
         return $result;
     }
@@ -141,16 +156,19 @@ class LeaveRequestService
 
         $result = $this->leaveRequestRepository->reject($id, $approvedBy, $reason);
 
-        // Send notification
-        $this->notificationService->notifyLeaveRejected(
-            $leaveRequest->worker->user_id,
-            [
-                'id' => $leaveRequest->id,
-                'start_date' => $leaveRequest->start_date,
-                'end_date' => $leaveRequest->end_date,
-            ],
-            $reason
-        );
+        // Send notification - get user_id from worker's user relationship
+        $user = \App\Models\User::where('worker_id', $leaveRequest->worker_id)->first();
+        if ($user) {
+            $this->notificationService->notifyLeaveRejected(
+                $user->id,
+                [
+                    'id' => $leaveRequest->id,
+                    'start_date' => $leaveRequest->start_date,
+                    'end_date' => $leaveRequest->end_date,
+                ],
+                $reason
+            );
+        }
 
         return $result;
     }

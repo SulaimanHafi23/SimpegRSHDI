@@ -40,7 +40,21 @@ class DocumentController extends Controller
         ];
 
         $documents = $this->documentService->getAll($filters);
-        $documentTypes = $this->documentTypeService->getActive();
+        
+        // Get document types based on worker's department
+        if ($worker->department_id) {
+            $documentTypes = \App\Models\Department::find($worker->department_id)
+                ?->documentTypes()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+            
+            if (!$documentTypes || $documentTypes->isEmpty()) {
+                $documentTypes = $this->documentTypeService->getActive();
+            }
+        } else {
+            $documentTypes = $this->documentTypeService->getActive();
+        }
 
         // Calculate summary
         $summaryFilters = ['worker_id' => $worker->id];
@@ -67,7 +81,23 @@ class DocumentController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $documentTypes = $this->documentTypeService->getActive();
+        // Get document types based on worker's department
+        if ($worker->department_id) {
+            // Get document types assigned to this department
+            $documentTypes = \App\Models\Department::find($worker->department_id)
+                ?->documentTypes()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get();
+            
+            // If department has no specific document types, use all active
+            if (!$documentTypes || $documentTypes->isEmpty()) {
+                $documentTypes = $this->documentTypeService->getActive();
+            }
+        } else {
+            // Worker has no department, show all active document types
+            $documentTypes = $this->documentTypeService->getActive();
+        }
 
         return view('employee.documents.create', compact('documentTypes'));
     }
@@ -93,24 +123,14 @@ class DocumentController extends Controller
         ]);
 
         try {
-            // Handle file upload first to get file info
-            $file = $request->file('file');
-            $fileName = time() . '_' . $file->getClientOriginalName();
-            $filePath = $file->storeAs('documents', $fileName, 'public');
-            $fileSize = $file->getSize();
-
-            $dto = WorkerDocumentDTO::fromRequest([
+            // Pass file and data to service (service will handle file upload)
+            $document = $this->documentService->create([
                 'worker_id' => $worker->id,
                 'document_type_id' => $validated['document_type_id'],
-                'file_name' => $fileName,
-                'file_path' => $filePath,
-                'file_size' => $fileSize,
+                'file' => $request->file('file'),
                 'expired_date' => $validated['expired_date'] ?? null,
                 'notes' => $validated['notes'] ?? null,
-                'status' => 'pending',
             ]);
-
-            $this->documentService->create($dto->toArray());
 
             return redirect()->route('employee.documents.index')
                 ->with('success', 'Dokumen berhasil diupload!');

@@ -40,6 +40,11 @@ class OvertimeRequestService
         $endTime = \Carbon\Carbon::parse($data['end_time']);
         $data['total_hours'] = $endTime->diffInHours($startTime);
 
+        // Set default status to pending if not provided
+        if (!isset($data['status']) || empty($data['status'])) {
+            $data['status'] = 'pending';
+        }
+
         $dto = OvertimeRequestDTO::fromRequest($data);
         return $this->overtimeRequestRepository->create($dto);
     }
@@ -83,26 +88,17 @@ class OvertimeRequestService
 
         $result = $this->overtimeRequestRepository->approve($id, $approvedBy);
 
-        // Send notification
-        $this->notificationService->notifyOvertimeApproved(
-            $overtimeRequest->worker->user_id,
-            [
-                'id' => $overtimeRequest->id,
-                'overtime_date' => $overtimeRequest->overtime_date,
-            ]
-        );
-
-        $result = $this->overtimeRequestRepository->reject($id, $approvedBy, $reason);
-
-        // Send notification
-        $this->notificationService->notifyOvertimeRejected(
-            $overtimeRequest->worker->user_id,
-            [
-                'id' => $overtimeRequest->id,
-                'overtime_date' => $overtimeRequest->overtime_date,
-            ],
-            $reason
-        );
+        // Send notification - get user_id from worker's user relationship
+        $user = \App\Models\User::where('worker_id', $overtimeRequest->worker_id)->first();
+        if ($user) {
+            $this->notificationService->notifyOvertimeApproved(
+                $user->id,
+                [
+                    'id' => $overtimeRequest->id,
+                    'overtime_date' => $overtimeRequest->overtime_date,
+                ]
+            );
+        }
 
         return $result;
     }
@@ -115,7 +111,22 @@ class OvertimeRequestService
             throw new \Exception('Hanya permohonan lembur yang berstatus pending yang dapat ditolak.');
         }
 
-        return $this->overtimeRequestRepository->reject($id, $approvedBy, $reason);
+        $result = $this->overtimeRequestRepository->reject($id, $approvedBy, $reason);
+
+        // Send notification - get user_id from worker's user relationship
+        $user = \App\Models\User::where('worker_id', $overtimeRequest->worker_id)->first();
+        if ($user) {
+            $this->notificationService->notifyOvertimeRejected(
+                $user->id,
+                [
+                    'id' => $overtimeRequest->id,
+                    'overtime_date' => $overtimeRequest->overtime_date,
+                ],
+                $reason
+            );
+        }
+
+        return $result;
     }
 
     public function bulkApprove(array $ids, string $approvedBy)

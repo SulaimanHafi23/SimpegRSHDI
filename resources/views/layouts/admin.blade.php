@@ -67,6 +67,80 @@
     @stack('scripts')
     
     <script>
+        // Admin Notifications Alpine Component
+        function adminNotifications() {
+            return {
+                open: false,
+                pendingLeaves: [],
+                pendingOvertimes: [],
+                pendingDocuments: [],
+                totalPending: 0,
+
+                loadPendingRequests() {
+                    // Load pending leaves
+                    fetch('/leaves?status=pending&per_page=5')
+                        .then(response => response.ok ? response.json() : Promise.reject('Failed'))
+                        .then(data => {
+                            if (data.data) {
+                                this.pendingLeaves = data.data.map(leave => ({
+                                    id: leave.id,
+                                    worker_name: leave.worker?.name || '-',
+                                    leave_type: leave.leave_type?.name || leave.leave_type || '-',
+                                    total_days: leave.total_days || 0,
+                                    date_range: (leave.start_date || '') + ' s/d ' + (leave.end_date || '')
+                                }));
+                                this.updateTotal();
+                            }
+                        })
+                        .catch(() => {
+                            this.pendingLeaves = [];
+                        });
+
+                    // Load pending overtimes
+                    fetch('/overtimes?status=pending&per_page=5')
+                        .then(response => response.ok ? response.json() : Promise.reject('Failed'))
+                        .then(data => {
+                            if (data.data) {
+                                this.pendingOvertimes = data.data.map(ot => ({
+                                    id: ot.id,
+                                    worker_name: ot.worker?.name || '-',
+                                    total_hours: ot.total_hours || 0,
+                                    date: ot.overtime_date || ot.date || '-'
+                                }));
+                                this.updateTotal();
+                            }
+                        })
+                        .catch(() => {
+                            this.pendingOvertimes = [];
+                        });
+
+                    // Load pending documents
+                    fetch('/worker-documents?status=pending&per_page=5')
+                        .then(response => response.ok ? response.json() : Promise.reject('Failed'))
+                        .then(data => {
+                            if (data.data) {
+                                this.pendingDocuments = data.data.map(doc => ({
+                                    id: doc.id,
+                                    worker_name: doc.worker?.name || '-',
+                                    document_type: doc.document_type?.name || doc.document_type || '-',
+                                    file_name: doc.file_name || '-'
+                                }));
+                                this.updateTotal();
+                            }
+                        })
+                        .catch(() => {
+                            this.pendingDocuments = [];
+                        });
+                },
+
+                updateTotal() {
+                    this.totalPending = this.pendingLeaves.length + 
+                                       this.pendingOvertimes.length + 
+                                       this.pendingDocuments.length;
+                }
+            };
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('admin-sidebar');
             const overlay = document.getElementById('sidebar-overlay');

@@ -48,7 +48,10 @@ class LeaveRequestController extends Controller
             'cancelled' => $this->leaveRequestService->getAll(['status' => 'cancelled', 'per_page' => 9999])->total(),
         ];
 
-        return view('admin.leave.index', compact('leaveRequests', 'workers', 'leaveTypes', 'statistics', 'filters'));
+        // Rename for view compatibility
+        $leaves = $leaveRequests;
+
+        return view('admin.leave.index', compact('leaves', 'leaveRequests', 'workers', 'leaveTypes', 'statistics', 'filters'));
     }
 
     public function create()

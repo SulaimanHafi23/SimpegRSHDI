@@ -129,6 +129,14 @@ class ShiftController extends Controller
                     if ($workerShift->pattern_type === 'fixed') {
                         // Fixed pattern - same shift every day
                         $dayData['shift'] = $workerShift->shift;
+                    } elseif ($workerShift->pattern_type === 'custom' && $workerShift->custom_working_days) {
+                        // Custom pattern - shift only applies on specified working days
+                        $dayOfWeek = $current->dayOfWeekIso; // 1 (Monday) to 7 (Sunday)
+                        $workingDays = $workerShift->custom_working_days ?? [];
+                        
+                        if (in_array($dayOfWeek, $workingDays, true)) {
+                            $dayData['shift'] = $workerShift->shift;
+                        }
                     } elseif ($workerShift->pattern_type === 'rotating' && $workerShift->rotating_days) {
                         // Rotating pattern - different shift per day of week
                         $dayOfWeek = $current->dayOfWeekIso; // 1 (Monday) to 7 (Sunday)

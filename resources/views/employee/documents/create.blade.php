@@ -31,15 +31,25 @@
                         required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('document_type_id') border-red-500 @enderror">
                     <option value="">Pilih Jenis Dokumen</option>
-                    @foreach($documentTypes as $type)
+                    @forelse($documentTypes as $type)
                         <option value="{{ $type->id }}" {{ old('document_type_id') == $type->id ? 'selected' : '' }}>
                             {{ $type->name }}
+                            @if($type->is_required ?? false)
+                                <span class="text-red-500">*</span>
+                            @endif
                         </option>
-                    @endforeach
+                    @empty
+                        <option value="" disabled>Tidak ada dokumen yang tersedia untuk departemen Anda</option>
+                    @endforelse
                 </select>
                 @error('document_type_id')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
+                @if(auth()->user()->worker?->department_id)
+                    <p class="mt-1 text-xs text-gray-500">
+                        <i class="fas fa-info-circle"></i> Menampilkan dokumen untuk departemen: {{ auth()->user()->worker->department->name ?? '-' }}
+                    </p>
+                @endif
             </div>
 
             <!-- Expiry Date -->

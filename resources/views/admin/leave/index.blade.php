@@ -141,22 +141,22 @@
                             <div class="text-sm text-gray-500">{{ $leave->worker->nip ?? '-' }}</div>
                         </x-table.cell>
 
-                        <x-table.cell>{{ $leave->leave_type ?? '-' }}</x-table.cell>
+                        <x-table.cell>{{ $leave->leaveType->name ?? '-' }}</x-table.cell>
 
                         <x-table.cell>
-                            <div class="text-sm">{{ $leave->start_date ?? '-' }}</div>
-                            <div class="text-xs text-gray-500">s/d {{ $leave->end_date ?? '-' }}</div>
+                            <div class="text-sm">{{ \Carbon\Carbon::parse($leave->start_date)->format('d M Y') }}</div>
+                            <div class="text-xs text-gray-500">s/d {{ \Carbon\Carbon::parse($leave->end_date)->format('d M Y') }}</div>
                         </x-table.cell>
 
-                        <x-table.cell>{{ $leave->duration ?? 0 }} hari</x-table.cell>
+                        <x-table.cell>{{ $leave->total_days ?? 0 }} hari</x-table.cell>
 
                         <x-table.cell>
                             @php
                                 $statusBadges = [
-                                    'Pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
-                                    'Approved' => ['variant' => 'success', 'label' => 'Disetujui'],
-                                    'Rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
-                                    'Cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
+                                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                                    'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                                    'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                                    'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
                                 ];
                                 $badge = $statusBadges[$leave->status] ?? ['variant' => 'secondary', 'label' => $leave->status];
                             @endphp
@@ -165,38 +165,35 @@
 
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
-                                @can('view-leave')
-                                    <a href="{{ route('admin.leave.show', $leave->id) }}" 
-                                       class="text-blue-600 hover:text-blue-900" 
-                                       title="Detail">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                    </a>
-                                @endcan
+                                {{-- Always show view button --}}
+                                <a href="{{ route('admin.leave.show', $leave->id) }}" 
+                                   class="text-blue-600 hover:text-blue-900" 
+                                   title="Detail">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                </a>
 
-                                @if($leave->status == 'Pending')
-                                    @can('approve-leave')
-                                        <button onclick="approveLeave({{ $leave->id }})" 
-                                                class="text-green-600 hover:text-green-900" 
-                                                title="Setujui">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                            </svg>
-                                        </button>
-                                        <button onclick="rejectLeave({{ $leave->id }})" 
-                                                class="text-yellow-600 hover:text-yellow-900" 
-                                                title="Tolak">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                        </button>
-                                    @endcan
+                                @if($leave->status == 'pending')
+                                    {{-- Approve button --}}
+                                    <button onclick="approveLeave('{{ $leave->id }}')" 
+                                            class="text-green-600 hover:text-green-900" 
+                                            title="Setujui">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </button>
+                                    <button onclick="rejectLeave('{{ $leave->id }}')" 
+                                            class="text-red-600 hover:text-red-900" 
+                                            title="Tolak">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
                                 @endif
 
-                                @can('edit-leave')
-                                    @if($leave->status == 'Pending')
+                                @if($leave->status == 'pending')
                                         <a href="{{ route('admin.leave.edit', $leave->id) }}" 
                                            class="text-indigo-600 hover:text-indigo-900" 
                                            title="Edit">
@@ -205,9 +202,6 @@
                                             </svg>
                                         </a>
                                     @endif
-                                @endcan
-
-                                @can('delete-leave')
                                     <form action="{{ route('admin.leave.destroy', $leave->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
@@ -220,7 +214,6 @@
                                             </svg>
                                         </button>
                                     </form>
-                                @endcan
                             </div>
                         </x-table.cell>
                     </x-table.row>
@@ -246,15 +239,44 @@
 <script>
     function approveLeave(id) {
         if (confirm('Setujui pengajuan cuti ini?')) {
-            // Implementation for approve action
-            console.log('Approve leave:', id);
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/leaves/${id}/approve`;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken;
+            
+            form.appendChild(csrfInput);
+            document.body.appendChild(form);
+            form.submit();
         }
     }
 
     function rejectLeave(id) {
-        if (confirm('Tolak pengajuan cuti ini?')) {
-            // Implementation for reject action
-            console.log('Reject leave:', id);
+        const reason = prompt('Alasan penolakan:');
+        if (reason && reason.trim() !== '') {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/leaves/${id}/reject`;
+            
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrfToken;
+            
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'rejection_reason';
+            reasonInput.value = reason;
+            
+            form.appendChild(csrfInput);
+            form.appendChild(reasonInput);
+            document.body.appendChild(form);
+            form.submit();
         }
     }
 </script>

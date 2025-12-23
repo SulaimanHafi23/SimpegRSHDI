@@ -4,12 +4,14 @@ namespace App\Services\WorkerDocument;
 
 use App\DTOs\WorkerDocumentDTO;
 use App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Storage;
 
 class WorkerDocumentService
 {
     public function __construct(
-        protected WorkerDocumentRepositoryInterface $workerDocumentRepository
+        protected WorkerDocumentRepositoryInterface $workerDocumentRepository,
+        protected NotificationService $notificationService
     ) {}
 
     public function getAll(array $filters = [])
@@ -105,12 +107,45 @@ class WorkerDocumentService
 
     public function verify(string $id, string $verifiedBy, ?string $notes = null)
     {
-        return $this->workerDocumentRepository->verify($id, $verifiedBy, $notes);
+        $result = $this->workerDocumentRepository->verify($id, $verifiedBy, $notes);
+        
+        if ($result) {
+            $document = $this->workerDocumentRepository->getById($id);
+            $user = \App\Models\User::where('worker_id', $document->worker_id)->first();
+            if ($user) {
+                $this->notificationService->notifyDocumentApproved(
+                    $user->id,
+                    [
+                        'id' => $document->id,
+                        'document_type' => $document->documentType->name ?? 'Dokumen',
+                    ]
+                );
+            }
+        }
+        
+        return $result;
     }
 
     public function reject(string $id, string $verifiedBy, string $notes)
     {
-        return $this->workerDocumentRepository->reject($id, $verifiedBy, $notes);
+        $result = $this->workerDocumentRepository->reject($id, $verifiedBy, $notes);
+        
+        if ($result) {
+            $document = $this->workerDocumentRepository->getById($id);
+            $user = \App\Models\User::where('worker_id', $document->worker_id)->first();
+            if ($user) {
+                $this->notificationService->notifyDocumentRejected(
+                    $user->id,
+                    [
+                        'id' => $document->id,
+                        'document_type' => $document->documentType->name ?? 'Dokumen',
+                        'rejection_reason' => $notes,
+                    ]
+                );
+            }
+        }
+        
+        return $result;
     }
 
     public function getExpiredDocuments()

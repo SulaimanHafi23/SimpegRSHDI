@@ -32,54 +32,73 @@
     @endif
 
     <!-- Filter Section -->
-    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <form method="GET" action="{{ route('admin.worker-shifts.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Pegawai</label>
-                <select name="worker_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
-                    <option value="">Semua Pegawai</option>
-                    @foreach($workers as $worker)
-                        <option value="{{ $worker->id }}" {{ ($filters['worker_id'] ?? '') == $worker->id ? 'selected' : '' }}>
-                            {{ $worker->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+    <div x-data="{ showFilters: false }" class="mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            {{-- Filter Header --}}
+            <button @click="showFilters = !showFilters" 
+                    class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-filter text-indigo-600"></i>
+                    <span class="font-semibold text-gray-900">Filter & Pencarian</span>
+                </div>
+                <i class="fas fa-chevron-down transform transition-transform" 
+                   :class="{ 'rotate-180': showFilters }"></i>
+            </button>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Shift</label>
-                <select name="shift_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
-                    <option value="">Semua Shift</option>
-                    @foreach($shifts as $shift)
-                        <option value="{{ $shift->id }}" {{ ($filters['shift_id'] ?? '') == $shift->id ? 'selected' : '' }}>
-                            {{ $shift->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
+            {{-- Filter Form --}}
+            <div x-show="showFilters" 
+                 x-collapse 
+                 class="border-t border-gray-200">
+                <form method="GET" action="{{ route('admin.worker-shifts.index') }}" class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pegawai</label>
+                            <select name="worker_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Semua Pegawai</option>
+                                @foreach($workers as $worker)
+                                    <option value="{{ $worker->id }}" {{ ($filters['worker_id'] ?? '') == $worker->id ? 'selected' : '' }}>
+                                        {{ $worker->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                <select name="is_active" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
-                    <option value="">Semua Status</option>
-                    <option value="1" {{ ($filters['is_active'] ?? '') === '1' ? 'selected' : '' }}>Aktif</option>
-                    <option value="0" {{ ($filters['is_active'] ?? '') === '0' ? 'selected' : '' }}>Tidak Aktif</option>
-                </select>
-            </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Shift</label>
+                            <select name="shift_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Semua Shift</option>
+                                @foreach($shifts as $shift)
+                                    <option value="{{ $shift->id }}" {{ ($filters['shift_id'] ?? '') == $shift->id ? 'selected' : '' }}>
+                                        {{ $shift->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-            <div class="flex items-end gap-2">
-                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md transition duration-150">
-                    <svg class="w-5 h-5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    Filter
-                </button>
-                <a href="{{ route('admin.worker-shifts.index') }}" 
-                   class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg shadow-md transition duration-150">
-                    Reset
-                </a>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select name="is_active" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Semua Status</option>
+                                <option value="1" {{ ($filters['is_active'] ?? '') === '1' ? 'selected' : '' }}>Aktif</option>
+                                <option value="0" {{ ($filters['is_active'] ?? '') === '0' ? 'selected' : '' }}>Tidak Aktif</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-end gap-2">
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition duration-150 flex items-center">
+                                <i class="fas fa-search mr-2"></i>
+                                Filter
+                            </button>
+                            <a href="{{ route('admin.worker-shifts.index') }}" 
+                               class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg shadow-md transition duration-150 flex items-center">
+                                <i class="fas fa-redo mr-2"></i>
+                                Reset
+                            </a>
+                        </div>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 
     <!-- Worker Shifts Table -->
