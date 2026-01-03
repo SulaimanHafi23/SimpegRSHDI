@@ -167,6 +167,12 @@
                     <span>Lembur</span>
                 </a>
                 @endif
+                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager'))
+                <a href="{{ route('manager.shift-swap-approvals.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-exchange-alt w-4"></i>
+                    <span>Tukar Shift</span>
+                </a>
+                @endif
             </div>
         </div>
 
@@ -185,6 +191,12 @@
             <div x-show="openMenu === 'settings'" 
                  x-collapse 
                  class="ml-4 mt-2 space-y-1">
+                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
+                <a href="{{ route('admin.holidays.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.holidays.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-calendar-day w-4"></i>
+                    <span>Libur Nasional</span>
+                </a>
+                @endif
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-roles'))
                 <a href="{{ route('admin.roles.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.roles.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
                     <i class="fas fa-user-tag w-4"></i>

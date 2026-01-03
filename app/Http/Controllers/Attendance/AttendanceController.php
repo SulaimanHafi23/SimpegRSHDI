@@ -10,6 +10,8 @@ use App\DTOs\AttendanceDTO;
 use App\Http\Requests\Attendance\AttendanceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\AttendanceExport;
 
 class AttendanceController extends Controller
 {
@@ -199,7 +201,19 @@ class AttendanceController extends Controller
 
     public function export(Request $request)
     {
-        // TODO: Implement export functionality
-        return back()->with('info', 'Export functionality coming soon');
+        try {
+            $filters = [
+                'worker_id' => $request->input('worker_id'),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'status' => $request->input('status'),
+            ];
+
+            $filename = 'laporan-absensi-' . now()->format('Y-m-d-His') . '.xlsx';
+            
+            return Excel::download(new AttendanceExport($filters), $filename);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }

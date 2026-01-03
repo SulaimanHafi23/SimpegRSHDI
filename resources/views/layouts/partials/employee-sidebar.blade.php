@@ -40,6 +40,11 @@
                 <i class="fas fa-calendar-alt w-5"></i>
                 <span>Jadwal Kerja</span>
             </a>
+
+            <a href="{{ route('employee.shift-swaps.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+                <i class="fas fa-exchange-alt w-5"></i>
+                <span>Tukar Shift</span>
+            </a>
         </div>
 
         <!-- Request Section -->

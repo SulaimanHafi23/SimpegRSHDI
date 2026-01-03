@@ -41,10 +41,29 @@ class WorkerShiftController extends Controller
         return view('admin.schedules.create', compact('workers', 'shifts'));
     }
 
-    public function store(WorkerShiftScheduleRequest $request)
+    public function store(Request $request)
     {
+        // Validasi manual untuk menghindari konflik 'required_without' 
+        // yang menyebabkan error "Pegawai field is required when Pegawai is not present"
+        $data = $request->validate([
+            'shift_id' => 'required|exists:shifts,id',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'worker_id' => 'nullable|exists:workers,id',
+            'worker_ids' => 'nullable|array',
+            'worker_ids.*' => 'exists:workers,id',
+            'description' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
+            'pattern_type' => 'nullable|string|in:fixed,rotating,custom',
+            'custom_working_days' => 'nullable|array',
+            'rotating_days' => 'nullable|array',
+        ]);
+
+        if (empty($data['worker_id']) && empty($data['worker_ids'])) {
+            return back()->withInput()->withErrors(['worker_id' => 'Harap pilih pegawai.']);
+        }
+
         try {
-            $data = $request->validated();
 
             // Support multiple worker_ids[] or single worker_id
             $workerIds = $data['worker_ids'] ?? null;
@@ -61,6 +80,8 @@ class WorkerShiftController extends Controller
                 // Prepare per-worker payload
                 $payload = $data;
                 $payload['worker_id'] = $workerId;
+                $payload['pattern_type'] = $data['pattern_type'] ?? 'fixed';
+                $payload['is_active'] = $data['is_active'] ?? true;
                 // Remove worker_ids to avoid confusion
                 unset($payload['worker_ids']);
 
@@ -94,10 +115,26 @@ class WorkerShiftController extends Controller
         return view('admin.schedules.edit', compact('workerShift', 'workers', 'shifts'));
     }
 
-    public function update(WorkerShiftScheduleRequest $request, string $id)
+    public function update(Request $request, string $id)
     {
+        // Validasi manual untuk update (bypass WorkerShiftScheduleRequest)
+        $data = $request->validate([
+            'shift_id' => 'required|exists:shifts,id',
+            'start_date' => 'required|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'description' => 'nullable|string',
+            'is_active' => 'nullable|boolean',
+            'pattern_type' => 'nullable|string|in:fixed,rotating,custom',
+            'custom_working_days' => 'nullable|array',
+            'rotating_days' => 'nullable|array',
+        ]);
+
         try {
-            $this->workerShiftService->update($id, $request->validated());
+            // Pastikan pattern_type dan is_active terisi
+            $data['pattern_type'] = $data['pattern_type'] ?? 'fixed';
+            $data['is_active'] = $request->boolean('is_active'); // Mengambil nilai checkbox dengan benar
+
+            $this->workerShiftService->update($id, $data);
 
             return redirect()
                 ->route('admin.worker-shifts.show', $id)

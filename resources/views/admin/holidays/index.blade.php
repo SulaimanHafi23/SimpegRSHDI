@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Kelola Libur Nasional')
 
@@ -14,6 +14,10 @@
             <p class="mt-1 text-sm text-gray-600">Kelola data libur nasional Indonesia untuk kalender karyawan</p>
         </div>
         <div class="flex gap-2">
+            <a href="{{ route('admin.holidays.auto-generate') }}" class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition duration-200 shadow-md">
+                <i class="fas fa-magic mr-2"></i>
+                Auto Generate
+            </a>
             <a href="{{ route('admin.holidays.bulk-create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 shadow-md">
                 <i class="fas fa-layer-group mr-2"></i>
                 Tambah Bulk

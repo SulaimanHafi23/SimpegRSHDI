@@ -208,14 +208,21 @@
     </div>
 
     <!-- Check In Button -->
+    <!-- Action Button (Check In / Check Out) -->
     <div class="mb-6">
-        <a href="{{ route('employee.attendance.check-in-form') }}" 
-           class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Check In
-        </a>
+        @if(isset($activeAttendance) && $activeAttendance)
+            <a href="{{ route('employee.attendance.check-out-form') }}" 
+               class="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
+                <i class="fas fa-sign-out-alt mr-2"></i>
+                Check Out
+            </a>
+        @else
+            <a href="{{ route('employee.attendance.check-in-form') }}" 
+               class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
+                <i class="fas fa-sign-in-alt mr-2"></i>
+                Check In
+            </a>
+        @endif
     </div>
 
     <!-- Attendance Table -->
@@ -288,18 +295,12 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                     </a>
-                                    @if($attendance->check_in && !$attendance->check_out && \Carbon\Carbon::parse($attendance->attendance_date)->isToday())
-                                        <form action="{{ route('employee.attendance.check-out', $attendance->id) }}" method="POST" class="inline">
-                                            @csrf
-                                            <button type="submit" 
-                                                    class="text-red-600 hover:text-red-900" 
-                                                    title="Check Out"
-                                                    onclick="return confirm('Apakah Anda yakin ingin check-out?')">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                                </svg>
-                                            </button>
-                                        </form>
+                                    @if($attendance->check_in && !$attendance->check_out)
+                                        <a href="{{ route('employee.attendance.check-out-form') }}" 
+                                           class="text-red-600 hover:text-red-900" 
+                                           title="Check Out">
+                                            <i class="fas fa-sign-out-alt"></i>
+                                        </a>
                                     @endif
                                 </div>
                             </td>

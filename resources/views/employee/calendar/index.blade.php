@@ -168,7 +168,7 @@ function calendarApp() {
 
         updateCalendar() {
             const year = this.currentDate.getFullYear();
-            const month = this.currentDate.getMonth();
+            const month = this.currentDate.getMonth(); // 0-indexed (0=Jan, 11=Dec)
             
             // Update month/year display
             this.currentMonthYear = this.currentDate.toLocaleDateString('id-ID', { 
@@ -195,9 +195,11 @@ function calendarApp() {
             // Previous month days
             const prevMonthLastDay = new Date(year, month, 0).getDate();
             for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
+                const dayNum = prevMonthLastDay - i;
+                const date = new Date(year, month - 1, dayNum);
                 this.calendarDays.push({
-                    day: prevMonthLastDay - i,
-                    date: new Date(year, month - 1, prevMonthLastDay - i),
+                    day: dayNum,
+                    date: date,
                     isCurrentMonth: false,
                     isToday: false,
                     events: []
@@ -206,8 +208,12 @@ function calendarApp() {
             
             // Current month days
             const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset time for comparison
+            
             for (let i = 1; i <= totalDays; i++) {
                 const date = new Date(year, month, i);
+                date.setHours(0, 0, 0, 0); // Reset time for comparison
+                
                 this.calendarDays.push({
                     day: i,
                     date: date,
@@ -220,9 +226,12 @@ function calendarApp() {
             // Next month days
             const remainingCells = totalCells - this.calendarDays.length;
             for (let i = 1; i <= remainingCells; i++) {
+                const date = new Date(year, month + 1, i);
+                date.setHours(0, 0, 0, 0); // Reset time for comparison
+                
                 this.calendarDays.push({
                     day: i,
-                    date: new Date(year, month + 1, i),
+                    date: date,
                     isCurrentMonth: false,
                     isToday: false,
                     events: []
@@ -238,9 +247,12 @@ function calendarApp() {
             const end = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0)
                 .toISOString().split('T')[0];
 
-            fetch(`{{ route('employee.calendar.events') }}?start=${start}&end=${end}`)
+            // Add cache buster to prevent browser caching
+            const cacheBuster = new Date().getTime();
+            fetch(`{{ route('employee.calendar.events') }}?start=${start}&end=${end}&_=${cacheBuster}`)
                 .then(res => res.json())
                 .then(data => {
+                    console.log('Loaded events:', data); // Debug log
                     this.events = data;
                     this.assignEventsToCalendar();
                 })
@@ -251,11 +263,20 @@ function calendarApp() {
             this.calendarDays.forEach(day => {
                 if (!day.date) return;
                 
+                // Reset day time to midnight for accurate comparison
+                const dayDate = new Date(day.date);
+                dayDate.setHours(0, 0, 0, 0);
+                
                 day.events = this.events.filter(event => {
+                    // Parse event dates and reset to midnight
                     const eventStart = new Date(event.start);
-                    const eventEnd = new Date(event.end);
+                    eventStart.setHours(0, 0, 0, 0);
                     
-                    return day.date >= eventStart && day.date < eventEnd;
+                    const eventEnd = new Date(event.end);
+                    eventEnd.setHours(0, 0, 0, 0);
+                    
+                    // Check if day matches event date range
+                    return dayDate >= eventStart && dayDate < eventEnd;
                 });
             });
         },

@@ -12,6 +12,10 @@ use App\Services\Master\LocationService;
 use App\Services\Master\ReligionService;
 use App\Services\Master\DepartmentService;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\WorkersExport;
+use App\Exports\WorkersTemplateExport;
+use App\Imports\WorkersImport;
 
 class WorkerController extends Controller
 {
@@ -183,15 +187,14 @@ class WorkerController extends Controller
 
         try {
             $filters = [
-                'search' => $request->input('search'),
-                'location_id' => $request->input('location_id'),
                 'status' => $request->input('status'),
                 'employment_status' => $request->input('employment_status'),
                 'department_id' => $request->input('department_id'),
             ];
 
-            // TODO: Implement export functionality
-            return back()->with('info', 'Fitur export sedang dalam pengembangan.');
+            $filename = 'data-pegawai-' . now()->format('Y-m-d-His') . '.xlsx';
+            
+            return Excel::download(new WorkersExport($filters), $filename);
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
@@ -207,7 +210,36 @@ class WorkerController extends Controller
 
         try {
             // TODO: Implement import functionality
-            return back()->with('info', 'Fitur import sedang dalam pengembangan.');
+            $import = new WorkersImport();
+            Excel::import($import, $request->file('file'));
+            
+            $successCount = $import->getSuccessCount();
+            $errors = $import->getErrors();
+            
+            if (!empty($errors)) {
+                $errorMessage = implode('<br>', array_slice($errors, 0, 5));
+                if (count($errors) > 5) {
+                    $errorMessage .= '<br>... dan ' . (count($errors) - 5) . ' error lainnya';
+                }
+                
+                if ($successCount > 0) {
+                    return back()->with('warning', "Berhasil import {$successCount} pegawai, namun ada beberapa error:<br>{$errorMessage}");
+                }
+                return back()->with('error', "Gagal import pegawai:<br>{$errorMessage}");
+            }
+            
+            return back()->with('success', "Berhasil import {$successCount} pegawai"
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function downloadTemplate()
+    {
+        $this->authorizePermission('view-workers');
+
+        try {
+            $filename = 'template-import-pegawai.xlsx';
+            return Excel::download(new WorkersTemplateExport(), $filename);
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }

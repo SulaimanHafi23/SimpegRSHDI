@@ -49,7 +49,7 @@
                 Jadwal Regular Anda:
             </h3>
             
-            @if($workerShift->pattern_type === 'fixed')
+            @if(($workerShift->pattern_type ?? 'fixed') === 'fixed')
                 <div class="text-sm">
                     <p class="text-gray-700">Pola: <span class="font-medium text-blue-700">Tetap</span></p>
                     <p class="text-gray-700 mt-1">Shift: <span class="font-medium text-green-700">{{ $workerShift->shift->name ?? '-' }}</span></p>
