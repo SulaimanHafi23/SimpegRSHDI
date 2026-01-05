@@ -11,6 +11,7 @@ use App\Repositories\Contracts\Master\LocationRepositoryInterface;
 use App\Repositories\Contracts\Master\ShiftRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Intervention\Image\ImageManagerStatic as Image;
 
 class AttendanceService
@@ -67,20 +68,22 @@ class AttendanceService
                 throw new \Exception('Tidak ada jadwal shift aktif untuk pegawai ini.');
             }
 
-            $shift = $this->shiftRepository->getById($workerShift->shift_id);
+            $shift = $this->shiftRepository->findById($workerShift->shift_id);
             
             // Validate location
-            $location = $this->locationRepository->getById($data['location_id']);
-            $distance = $location->calculateDistance($data['latitude'], $data['longitude']);
+            $location = $this->locationRepository->findById($data['location_id']);
+
+            $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
             $isOutsideRadius = $distance > $location->radius;
 
-            // Calculate if late
+            // Calculate if late (construct shift start datetime for today)
             $checkInTime = now();
-            $shiftStartTime = \Carbon\Carbon::parse($shift->start_time);
-            $graceTime = $shiftStartTime->copy()->addMinutes($shift->grace_period_minutes);
-            
+            $shiftStartTimeStr = \Carbon\Carbon::parse($shift->start_time)->format('H:i:s');
+            $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
+            $graceTime = $shiftStartDateTime->copy()->addMinutes($shift->grace_period_minutes);
+
             $isLate = $checkInTime->greaterThan($graceTime);
-            $lateMinutes = $isLate ? $checkInTime->diffInMinutes($shiftStartTime) : 0;
+            $lateMinutes = $isLate ? $checkInTime->diffInMinutes($shiftStartDateTime) : 0;
 
             // Create attendance
             $attendanceDTO = AttendanceDTO::fromRequest([
@@ -140,25 +143,29 @@ class AttendanceService
             }
 
             // Validate location
-            $location = $this->locationRepository->getById($data['location_id']);
-            $distance = $location->calculateDistance($data['latitude'], $data['longitude']);
+            $location = $this->locationRepository->findById($data['location_id']);
+
+            $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
 
             // Calculate early leave
             $checkOutTime = now();
-            $shift = $this->shiftRepository->getById($attendance->shift_id);
-            $shiftEndTime = \Carbon\Carbon::parse($shift->end_time);
-            
-            // Handle overnight shifts
-            if ($shift->is_overnight && $checkOutTime->lt($shiftEndTime)) {
-                $shiftEndTime->subDay();
+            $shift = $this->shiftRepository->findById($attendance->shift_id);
+
+            // Construct shift end datetime based on attendance date and shift end_time (use only time part)
+            $shiftEndTime = \Carbon\Carbon::parse($shift->end_time)->format('H:i:s');
+            $shiftEndDateTime = \Carbon\Carbon::parse($attendance->attendance_date->format('Y-m-d') . ' ' . $shiftEndTime);
+
+            // Jika shift melewati tengah malam, tambahkan satu hari ke tanggal akhir shift
+            if ($shift->is_overnight) {
+                $shiftEndDateTime->addDay();
             }
 
-            $isEarlyLeave = $checkOutTime->lessThan($shiftEndTime);
-            $earlyLeaveMinutes = $isEarlyLeave ? $checkOutTime->diffInMinutes($shiftEndTime) : 0;
+            $isEarlyLeave = $checkOutTime->lessThan($shiftEndDateTime);
+            $earlyLeaveMinutes = $isEarlyLeave ? $checkOutTime->diffInMinutes($shiftEndDateTime) : 0;
 
             // Calculate overtime
-            $overtimeMinutes = $checkOutTime->greaterThan($shiftEndTime) 
-                ? $checkOutTime->diffInMinutes($shiftEndTime) 
+            $overtimeMinutes = $checkOutTime->greaterThan($shiftEndDateTime)
+                ? $checkOutTime->diffInMinutes($shiftEndDateTime)
                 : 0;
 
             // Update attendance

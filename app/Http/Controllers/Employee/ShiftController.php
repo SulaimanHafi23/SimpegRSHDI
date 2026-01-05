@@ -38,8 +38,15 @@ class ShiftController extends Controller
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
 
-        // Get worker shift (regular schedule) - get active one
-        $workerShift = $this->workerShiftService->getActiveByWorkerId($worker->id);
+        // Get all worker shifts to handle date ranges correctly
+        $workerShifts = $this->workerShiftService->getAll([
+            'worker_id' => $worker->id,
+            'per_page' => 1000, // Ensure we get enough records
+        ]);
+
+        if (method_exists($workerShifts, 'items')) {
+            $workerShifts = $workerShifts->items();
+        }
 
         // Get shift overrides for this month
         $shiftOverrides = $this->shiftOverrideService->getAll([
@@ -48,8 +55,24 @@ class ShiftController extends Controller
             'date_to' => $endOfMonth->format('Y-m-d'),
         ]);
 
+        // convert paginator to collection for easier lookup
+        if (method_exists($shiftOverrides, 'items')) {
+            $shiftOverrides = collect($shiftOverrides->items());
+        }
+
         // Build calendar data
-        $calendar = $this->buildCalendar($startOfMonth, $endOfMonth, $workerShift, $shiftOverrides);
+        $calendar = $this->buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides);
+
+        // Urutkan shift dari yang terbaru (effective_from descending) untuk penentuan info header
+        $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
+
+        // Determine current active shift using service helper (more reliable)
+        $workerShift = $this->workerShiftService->getActiveByWorkerId($worker->id);
+
+        // FALLBACK: Jika tidak ada jadwal aktif saat ini, ambil jadwal terakhir (terbaru)
+        if (!$workerShift && count($workerShifts) > 0) {
+            $workerShift = $sortedShifts->first();
+        }
 
         return view('employee.shifts.index', compact(
             'calendar',
@@ -75,8 +98,27 @@ class ShiftController extends Controller
 
         $date = Carbon::parse($request->date);
 
-        // Get worker shift - get active one
-        $workerShift = $this->workerShiftService->getActiveByWorkerId($worker->id);
+        // Get worker shift for specific date
+        $workerShifts = $this->workerShiftService->getAll([
+            'worker_id' => $worker->id,
+            'per_page' => 100,
+        ]);
+
+        if (method_exists($workerShifts, 'items')) {
+            $workerShifts = $workerShifts->items();
+        }
+
+        $workerShift = collect($workerShifts)->first(function ($shift) use ($date) {
+            // Use model helpers to check if this worker shift applies to the requested date
+            if (!($shift->is_active ?? false)) return false;
+            if (!method_exists($shift, 'isActiveOnDate') || !method_exists($shift, 'getShiftForDate')) {
+                return false;
+            }
+
+            if (!$shift->isActiveOnDate($date->toDateTime())) return false;
+            $shiftId = $shift->getShiftForDate($date->toDateTime());
+            return !empty($shiftId);
+        });
 
         // Check for override on this date
         $override = $this->shiftOverrideService->getAll([
@@ -95,10 +137,14 @@ class ShiftController extends Controller
     /**
      * Build calendar array with shift information
      */
-    private function buildCalendar($startOfMonth, $endOfMonth, $workerShift, $shiftOverrides)
+    private function buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides)
     {
         $calendar = [];
         $current = $startOfMonth->copy();
+
+        // Urutkan shift dari yang terbaru (effective_from descending)
+        // Agar jika ada tumpang tindih, jadwal terbaru yang dipakai
+        $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
 
         // Start from the first day of the week containing the 1st (Sunday)
         $current->startOfWeek(Carbon::SUNDAY);
@@ -124,26 +170,16 @@ class ShiftController extends Controller
                 if ($override) {
                     $dayData['shift'] = $override->shift;
                     $dayData['isOverride'] = true;
-                } elseif ($workerShift) {
-                    // Get regular shift for this day
-                    if ($workerShift->pattern_type === 'fixed') {
-                        // Fixed pattern - same shift every day
-                        $dayData['shift'] = $workerShift->shift;
-                    } elseif ($workerShift->pattern_type === 'custom' && $workerShift->custom_working_days) {
-                        // Custom pattern - shift only applies on specified working days
-                        $dayOfWeek = $current->dayOfWeekIso; // 1 (Monday) to 7 (Sunday)
-                        $workingDays = $workerShift->custom_working_days ?? [];
-                        
-                        if (in_array($dayOfWeek, $workingDays, true)) {
-                            $dayData['shift'] = $workerShift->shift;
-                        }
-                    } elseif ($workerShift->pattern_type === 'rotating' && $workerShift->rotating_days) {
-                        // Rotating pattern - different shift per day of week
-                        $dayOfWeek = $current->dayOfWeekIso; // 1 (Monday) to 7 (Sunday)
-                        $shiftId = $workerShift->rotating_days[$dayOfWeek] ?? null;
-                        
+                } else {
+                    // Find applicable shift from list using model helper
+                    $applicableShift = $sortedShifts->first(function ($shift) use ($current) {
+                        if (!method_exists($shift, 'isActiveOnDate')) return false;
+                        return $shift->isActiveOnDate($current->toDateTime());
+                    });
+
+                    if ($applicableShift) {
+                        $shiftId = $applicableShift->getShiftForDate($current->toDateTime());
                         if ($shiftId) {
-                            // Load shift relationship if not already loaded
                             $dayData['shift'] = \App\Models\Shift::find($shiftId);
                         }
                     }

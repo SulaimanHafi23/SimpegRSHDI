@@ -39,13 +39,19 @@ use App\Http\Controllers\Admin\HolidayController;
 
 // Dashboard Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\HR\HRDashboardController;
+use App\Http\Controllers\Manager\ManagerDashboardController;
 use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardController;
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\ShiftController as EmployeeShiftController;
 use App\Http\Controllers\Employee\LeaveController as EmployeeLeaveController;
 use App\Http\Controllers\Employee\OvertimeController as EmployeeOvertimeController;
+use App\Http\Controllers\Employee\BusinessTripController as EmployeeBusinessTripController;
 use App\Http\Controllers\Employee\DocumentController as EmployeeDocumentController;
 use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
+
+// Approval controllers
+use App\Http\Controllers\Approval\BusinessTripApprovalController;
 
 // Profile Controller
 use App\Http\Controllers\ProfileController;
@@ -78,6 +84,12 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     // ========== DASHBOARDS ==========
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('role:Super Admin|HR|Manager')->name('admin.dashboard');
     
+    // HR Dashboard
+    Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->middleware('role:HR')->name('hr.dashboard');
+    
+    // Manager Dashboard
+    Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('role:Manager')->name('manager.dashboard');
+    
     // ========== EMPLOYEE ROUTES ==========
     Route::prefix('employee')->name('employee.')->middleware('role:Employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
@@ -87,8 +99,19 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::get('/export-pdf', [EmployeeAttendanceController::class, 'exportPdf'])->name('export-pdf');
             Route::get('/check-in', [EmployeeAttendanceController::class, 'checkInForm'])->name('check-in-form');
             Route::post('/check-in', [EmployeeAttendanceController::class, 'checkIn'])->name('check-in');
+            Route::get('/check-out', [EmployeeAttendanceController::class, 'checkOutForm'])->name('check-out-form');
             Route::post('/check-out/{id}', [EmployeeAttendanceController::class, 'checkOut'])->name('check-out');
             Route::get('/{id}', [EmployeeAttendanceController::class, 'show'])->name('show');
+        });
+
+        // Shift swaps for employees
+        Route::prefix('shift-swaps')->name('shift-swaps.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'store'])->name('store');
+            Route::post('/{id}/accept', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'accept'])->name('accept');
+            Route::post('/{id}/reject', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'reject'])->name('reject');
+            Route::post('/{id}/cancel', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'cancel'])->name('cancel');
         });
 
         // Shifts for employees
@@ -115,6 +138,15 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::post('/', [EmployeeOvertimeController::class, 'store'])->name('store');
             Route::get('/{id}', [EmployeeOvertimeController::class, 'show'])->name('show');
             Route::delete('/{id}', [EmployeeOvertimeController::class, 'cancel'])->name('cancel');
+        });
+
+        // Business Trip requests for employees
+        Route::prefix('business-trips')->name('business-trips.')->group(function () {
+            Route::get('/', [EmployeeBusinessTripController::class, 'index'])->name('index');
+            Route::get('/create', [EmployeeBusinessTripController::class, 'create'])->name('create');
+            Route::post('/', [EmployeeBusinessTripController::class, 'store'])->name('store');
+            Route::get('/{id}', [EmployeeBusinessTripController::class, 'show'])->name('show');
+            Route::delete('/{id}', [EmployeeBusinessTripController::class, 'cancel'])->name('cancel');
         });
 
         // Documents for employees
@@ -152,6 +184,18 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         });
     });
 
+    // ========== MANAGER ROUTES ==========
+    Route::prefix('manager')->name('manager.')->middleware('role:Manager|HR|Super Admin')->group(function () {
+        // Shift swap approvals
+        Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'index'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'reject'])->name('reject');
+            Route::post('/{id}/execute', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'execute'])->name('execute');
+        });
+    });
+
     // ========== PROFILE ROUTES ==========
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'show'])->name('show');
@@ -161,30 +205,37 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== APPROVAL ROUTES ========== 
-    // TODO: Create Approval Controllers
-    // Route::prefix('approvals')->name('approvals.')->group(function () {
-    //     // Leave Approvals
-    //     Route::prefix('leaves')->name('leaves.')->group(function () {
-    //         Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
-    //         Route::get('/{id}', [LeaveApprovalController::class, 'show'])->name('show');
-    //         Route::post('/{id}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
-    //         Route::post('/{id}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
-    //     });
-    //     // Overtime Approvals
-    //     Route::prefix('overtimes')->name('overtimes.')->group(function () {
-    //         Route::get('/', [OvertimeApprovalController::class, 'index'])->name('index');
-    //         Route::get('/{id}', [OvertimeApprovalController::class, 'show'])->name('show');
-    //         Route::post('/{id}/approve', [OvertimeApprovalController::class, 'approve'])->name('approve');
-    //         Route::post('/{id}/reject', [OvertimeApprovalController::class, 'reject'])->name('reject');
-    //     });
-    //     // Document Approvals
-    //     Route::prefix('documents')->name('documents.')->group(function () {
-    //         Route::get('/', [DocumentApprovalController::class, 'index'])->name('index');
-    //         Route::get('/{id}', [DocumentApprovalController::class, 'show'])->name('show');
-    //         Route::post('/{id}/verify', [DocumentApprovalController::class, 'verify'])->name('verify');
-    //         Route::post('/{id}/reject', [DocumentApprovalController::class, 'reject'])->name('reject');
-    //     });
-    // });
+    Route::prefix('approvals')->name('approvals.')->middleware('role:Manager|HR')->group(function () {
+        // Leave Approvals
+        Route::prefix('leaves')->name('leaves.')->group(function () {
+            Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
+            Route::get('/{id}', [LeaveApprovalController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
+        });
+        // Overtime Approvals
+        Route::prefix('overtimes')->name('overtimes.')->group(function () {
+            Route::get('/', [OvertimeApprovalController::class, 'index'])->name('index');
+            Route::get('/{id}', [OvertimeApprovalController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [OvertimeApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [OvertimeApprovalController::class, 'reject'])->name('reject');
+        });
+        // Document Approvals
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/', [DocumentApprovalController::class, 'index'])->name('index');
+            Route::get('/{id}', [DocumentApprovalController::class, 'show'])->name('show');
+            Route::post('/{id}/verify', [DocumentApprovalController::class, 'verify'])->name('verify');
+            Route::post('/{id}/reject', [DocumentApprovalController::class, 'reject'])->name('reject');
+        });
+
+        // Business Trip Approvals
+        Route::prefix('business-trips')->name('business-trips.')->group(function () {
+            Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
+            Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
+        });
+    });
 
     // ========== REPORT ROUTES ==========
     // ========== REPORT ROUTES ==========
@@ -205,6 +256,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [WorkerController::class, 'index'])->name('index');
         Route::get('/create', [WorkerController::class, 'create'])->name('create');
         Route::get('/export', [WorkerController::class, 'export'])->name('export');
+        Route::get('/template', [WorkerController::class, 'downloadTemplate'])->name('template');
         Route::post('/import', [WorkerController::class, 'import'])->name('import');
         Route::post('/', [WorkerController::class, 'store'])->name('store');
         Route::get('/{id}', [WorkerController::class, 'show'])->name('show');
@@ -339,6 +391,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::delete('/{id}', [HolidayController::class, 'destroy'])->name('destroy');
         Route::get('/bulk-create', [HolidayController::class, 'bulkCreate'])->name('bulk-create');
         Route::post('/bulk-store', [HolidayController::class, 'bulkStore'])->name('bulk-store');
+        Route::get('/auto-generate', [HolidayController::class, 'autoGenerate'])->name('auto-generate');
+        Route::post('/auto-generate', [HolidayController::class, 'storeAutoGenerate'])->name('auto-generate.store');
     });
 });
 

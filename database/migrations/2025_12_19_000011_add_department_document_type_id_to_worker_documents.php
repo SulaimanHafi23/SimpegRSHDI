@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('worker_documents', function (Blueprint $table) {
-            if (!Schema::hasColumn('worker_documents', 'department_document_type_id')) {
-                $table->foreignUuid('department_document_type_id')->nullable()->constrained('department_document_type')->nullOnDelete()->after('document_type_id');
-                $table->index(['worker_id', 'department_document_type_id']);
-            }
-        });
+        if (Schema::hasTable('worker_documents')) {
+            Schema::table('worker_documents', function (Blueprint $table) {
+                if (!Schema::hasColumn('worker_documents', 'department_document_type_id')) {
+                    $table->foreignUuid('department_document_type_id')->nullable()->constrained('department_document_type')->nullOnDelete()->after('document_type_id');
+                    $table->index(['worker_id', 'department_document_type_id']);
+                }
+            });
+        }
     }
 
     /**

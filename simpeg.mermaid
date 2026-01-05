@@ -238,6 +238,8 @@ erDiagram
         uuid id PK
         uuid worker_id FK
         uuid document_type_id FK
+        // optional relation to department_document_type
+        uuid department_document_type_id FK
         string file_name
         string file_path
         integer file_size "bytes"
@@ -246,6 +248,51 @@ erDiagram
         uuid verified_by FK
         timestamp verified_at
         text notes
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    department_document_type {
+        uuid id PK
+        uuid department_id FK
+        uuid document_type_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    %% ===== SHIFT SWAP REQUESTS =====
+    shift_swap_requests {
+        uuid id PK
+        uuid requester_id FK
+        uuid target_worker_id FK
+        uuid requester_shift_id FK
+        uuid target_shift_id FK
+        enum status "pending accepted rejected cancelled awaiting_approval approved executed"
+        boolean requires_manager_approval
+        uuid manager_id FK
+        timestamp manager_approved_at
+        text reason
+        json metadata
+        timestamp requested_at
+        timestamp expires_at
+        uuid executed_by FK
+        timestamp executed_at
+        timestamp deleted_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    shift_swap_audit_logs {
+        uuid id PK
+        uuid shift_swap_request_id FK
+        uuid user_id FK
+        string action
+        string old_status
+        string new_status
+        text notes
+        json metadata
+        string ip_address
+        string user_agent
         timestamp created_at
         timestamp updated_at
     }
@@ -300,3 +347,13 @@ erDiagram
     
     leave_types ||--o{ leave_requests : ""
     document_types ||--o{ worker_documents : ""
+    departments ||--o{ department_document_type : ""
+    document_types ||--o{ department_document_type : ""
+
+    workers ||--o{ shift_swap_requests : "requester"
+    workers ||--o{ shift_swap_requests : "target"
+    worker_shifts ||--o{ shift_swap_requests : "requester_shift"
+    worker_shifts ||--o{ shift_swap_requests : "target_shift"
+    users ||--o{ shift_swap_requests : "manager/executor"
+    shift_swap_requests ||--o{ shift_swap_audit_logs : "audit_logs"
+    users ||--o{ shift_swap_audit_logs : "actor"

@@ -117,7 +117,7 @@ class WorkerDocumentService
                     $user->id,
                     [
                         'id' => $document->id,
-                        'document_type' => $document->documentType->name ?? 'Dokumen',
+                        'document_type' => $document->documentType?->name ?? 'Dokumen',
                     ]
                 );
             }
@@ -138,7 +138,7 @@ class WorkerDocumentService
                     $user->id,
                     [
                         'id' => $document->id,
-                        'document_type' => $document->documentType->name ?? 'Dokumen',
+                        'document_type' => $document->documentType?->name ?? 'Dokumen',
                         'rejection_reason' => $notes,
                     ]
                 );

@@ -105,6 +105,15 @@ class RolePermissionSeeder extends Seeder
             'file-requirement.delete',
         ];
 
+        $holidayPermissions = [
+            'holiday.view',
+            'holiday.create',
+            'holiday.edit',
+            'holiday.delete',
+            'holiday.bulk-create',
+            'holiday.auto-generate',
+        ];
+
         // Worker Management Permissions
         $workerPermissions = [
             'view-workers',
@@ -169,6 +178,20 @@ class RolePermissionSeeder extends Seeder
             'reject-overtimes',
             'view-own-overtimes',
             'view-pending-overtimes',
+        ];
+
+        // Shift Swap Permissions
+        $shiftSwapPermissions = [
+            'view-shift-swaps',
+            'create-shift-swaps',
+            'accept-shift-swaps',
+            'reject-shift-swaps',
+            'cancel-shift-swaps',
+            'view-own-shift-swaps',
+            'approve-shift-swaps',      // Manager only
+            'reject-manager-shift-swaps', // Manager only
+            'execute-shift-swaps',       // Manager only
+            'view-pending-shift-swaps',  // Manager only
         ];
 
         // Business Trip Permissions
@@ -256,12 +279,14 @@ class RolePermissionSeeder extends Seeder
             $documentTypePermissions,
             $positionPermissions,
             $fileRequirementPermissions,
+            $holidayPermissions,
             $workerPermissions,
             $userPermissions,
             $attendancePermissions,
             $schedulePermissions,
             $leavePermissions,
             $overtimePermissions,
+            $shiftSwapPermissions,
             $businessTripPermissions,
             $businessTripReportPermissions,
             $documentPermissions,
@@ -326,6 +351,14 @@ class RolePermissionSeeder extends Seeder
             'file-requirement.create',
             'file-requirement.edit',
             
+            // Holidays
+            'holiday.view',
+            'holiday.create',
+            'holiday.edit',
+            'holiday.delete',
+            'holiday.bulk-create',
+            'holiday.auto-generate',
+            
             // Workers
             'view-workers',
             'create-workers',
@@ -365,6 +398,13 @@ class RolePermissionSeeder extends Seeder
             'approve-overtimes',
             'reject-overtimes',
             'view-pending-overtimes',
+            
+            // Shift Swaps
+            'view-shift-swaps',
+            'view-pending-shift-swaps',
+            'approve-shift-swaps',
+            'reject-manager-shift-swaps',
+            'execute-shift-swaps',
             
             // Business Trips
             'view-business-trips',
@@ -446,6 +486,13 @@ class RolePermissionSeeder extends Seeder
             'reject-overtimes',
             'view-pending-overtimes',
             
+            // Shift Swaps
+            'view-shift-swaps',
+            'view-pending-shift-swaps',
+            'approve-shift-swaps',
+            'reject-manager-shift-swaps',
+            'execute-shift-swaps',
+            
             // Business Trips
             'view-business-trips',
             'approve-business-trips',
@@ -485,6 +532,13 @@ class RolePermissionSeeder extends Seeder
             'view-own-overtimes',
             'create-overtimes',
             'edit-overtimes',
+            
+            // Shift Swaps
+            'view-own-shift-swaps',
+            'create-shift-swaps',
+            'accept-shift-swaps',
+            'reject-shift-swaps',
+            'cancel-shift-swaps',
             
             // Business Trips
             'view-own-business-trips',

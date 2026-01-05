@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Calendar Date Test</title>
+</head>
+<body>
+    <h1>Calendar Date Test - January 2026</h1>
+    <pre id="output"></pre>
+
+    <script>
+        const output = document.getElementById('output');
+        let result = '';
+
+        // Simulate calendar generation for January 2026
+        const year = 2026;
+        const month = 0; // January (0-indexed)
+
+        result += 'Testing January 2026 Calendar Generation\n';
+        result += '=========================================\n\n';
+
+        // Get first day of month
+        const firstDay = new Date(year, month, 1);
+        result += `First day of January 2026: ${firstDay.toISOString()}\n`;
+        result += `Day of week (0=Sun): ${firstDay.getDay()}\n\n`;
+
+        // Generate first 5 days
+        result += 'First 5 days of January 2026:\n';
+        for (let i = 1; i <= 5; i++) {
+            const date = new Date(year, month, i);
+            date.setHours(0, 0, 0, 0);
+            result += `  Day ${i}: ${date.toISOString().split('T')[0]} (${date.toLocaleDateString('id-ID', {weekday: 'short'})})\n`;
+        }
+
+        // Test event matching
+        result += '\n\nTesting Event Matching:\n';
+        result += '======================\n\n';
+
+        // Simulate holidays from API
+        const holidays = [
+            { name: 'Tahun Baru Masehi', start: '2026-01-01', end: '2026-01-02' },
+            { name: 'Isra Mi\'raj', start: '2026-01-16', end: '2026-01-17' }
+        ];
+
+        // Test matching for days 1-17
+        for (let day = 1; day <= 17; day++) {
+            const dayDate = new Date(year, month, day);
+            dayDate.setHours(0, 0, 0, 0);
+            
+            const matchedHolidays = holidays.filter(holiday => {
+                const eventStart = new Date(holiday.start);
+                eventStart.setHours(0, 0, 0, 0);
+                
+                const eventEnd = new Date(holiday.end);
+                eventEnd.setHours(0, 0, 0, 0);
+                
+                return dayDate >= eventStart && dayDate < eventEnd;
+            });
+
+            if (matchedHolidays.length > 0) {
+                result += `Day ${day}: ${matchedHolidays.map(h => h.name).join(', ')}\n`;
+            }
+        }
+
+        output.textContent = result;
+    </script>
+</body>
+</html>
