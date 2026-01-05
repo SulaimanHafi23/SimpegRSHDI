@@ -46,8 +46,12 @@ use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceCont
 use App\Http\Controllers\Employee\ShiftController as EmployeeShiftController;
 use App\Http\Controllers\Employee\LeaveController as EmployeeLeaveController;
 use App\Http\Controllers\Employee\OvertimeController as EmployeeOvertimeController;
+use App\Http\Controllers\Employee\BusinessTripController as EmployeeBusinessTripController;
 use App\Http\Controllers\Employee\DocumentController as EmployeeDocumentController;
 use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
+
+// Approval controllers
+use App\Http\Controllers\Approval\BusinessTripApprovalController;
 
 // Profile Controller
 use App\Http\Controllers\ProfileController;
@@ -136,6 +140,15 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::delete('/{id}', [EmployeeOvertimeController::class, 'cancel'])->name('cancel');
         });
 
+        // Business Trip requests for employees
+        Route::prefix('business-trips')->name('business-trips.')->group(function () {
+            Route::get('/', [EmployeeBusinessTripController::class, 'index'])->name('index');
+            Route::get('/create', [EmployeeBusinessTripController::class, 'create'])->name('create');
+            Route::post('/', [EmployeeBusinessTripController::class, 'store'])->name('store');
+            Route::get('/{id}', [EmployeeBusinessTripController::class, 'show'])->name('show');
+            Route::delete('/{id}', [EmployeeBusinessTripController::class, 'cancel'])->name('cancel');
+        });
+
         // Documents for employees
         Route::prefix('documents')->name('documents.')->group(function () {
             Route::get('/', [EmployeeDocumentController::class, 'index'])->name('index');
@@ -213,6 +226,14 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::get('/{id}', [DocumentApprovalController::class, 'show'])->name('show');
             Route::post('/{id}/verify', [DocumentApprovalController::class, 'verify'])->name('verify');
             Route::post('/{id}/reject', [DocumentApprovalController::class, 'reject'])->name('reject');
+        });
+
+        // Business Trip Approvals
+        Route::prefix('business-trips')->name('business-trips.')->group(function () {
+            Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
+            Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
         });
     });
 

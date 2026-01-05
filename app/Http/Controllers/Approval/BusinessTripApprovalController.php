@@ -18,12 +18,36 @@ class BusinessTripApprovalController extends Controller
     {
         $user = auth()->user();
         $filters = [
-            'status' => $request->input('status', 'pending'),
+            'status' => $request->input('status'),
+            'date_from' => $request->input('date_from'),
+            'date_to' => $request->input('date_to'),
+            'worker_search' => $request->input('worker_search'),
             'per_page' => 20,
         ];
 
-        $query = BusinessTrip::query()->where('status', $filters['status']);
+        $query = BusinessTrip::with(['worker.user', 'worker.department']);
 
+        // Apply status filter
+        if ($filters['status']) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply date filters
+        if ($filters['date_from']) {
+            $query->where('start_date', '>=', $filters['date_from']);
+        }
+        if ($filters['date_to']) {
+            $query->where('end_date', '<=', $filters['date_to']);
+        }
+
+        // Apply worker search
+        if ($filters['worker_search']) {
+            $query->whereHas('worker.user', function ($q) use ($filters) {
+                $q->where('name', 'like', '%' . $filters['worker_search'] . '%');
+            });
+        }
+
+        // Manager can only see trips from their department
         if ($user->hasRole('Manager') && $user->worker) {
             $query->whereHas('worker', function ($q) use ($user) {
                 $q->where('department_id', $user->worker->department_id);
@@ -32,12 +56,27 @@ class BusinessTripApprovalController extends Controller
 
         $trips = $query->orderBy('start_date', 'desc')->paginate($filters['per_page']);
 
-        return view('approvals.business-trips.index', compact('trips'));
+        // Calculate statistics
+        $statsQuery = BusinessTrip::query();
+        if ($user->hasRole('Manager') && $user->worker) {
+            $statsQuery->whereHas('worker', function ($q) use ($user) {
+                $q->where('department_id', $user->worker->department_id);
+            });
+        }
+
+        $statistics = [
+            'total' => $statsQuery->count(),
+            'pending' => $statsQuery->where('status', 'pending')->count(),
+            'approved' => $statsQuery->where('status', 'approved')->count(),
+            'rejected' => $statsQuery->where('status', 'rejected')->count(),
+        ];
+
+        return view('approvals.business-trips.index', compact('trips', 'statistics'));
     }
 
     public function show(string $id)
     {
-        $trip = BusinessTrip::with('worker')->findOrFail($id);
+        $trip = BusinessTrip::with(['worker.user', 'worker.department', 'approvedBy'])->findOrFail($id);
 
         $user = auth()->user();
         if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {

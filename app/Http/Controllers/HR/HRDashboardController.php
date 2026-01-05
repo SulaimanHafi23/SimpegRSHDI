@@ -49,7 +49,7 @@ class HRDashboardController extends Controller
         // ========== ATTENDANCE TODAY ==========
         $today = now()->format('Y-m-d');
         $attendanceToday = Attendance::whereDate('attendance_date', $today)->count();
-        $lateToday = Attendance::whereDate('attendance_date', $today')
+        $lateToday = Attendance::whereDate('attendance_date', $today)
             ->where('is_late', true)
             ->count();
         $absentToday = $activeWorkers - $attendanceToday;

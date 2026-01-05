@@ -66,6 +66,11 @@
                 <span>Dokumen Saya</span>
             </a>
 
+            <a href="{{ route('employee.business-trips.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.business-trips.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+                <i class="fas fa-briefcase w-5"></i>
+                <span>Perjalanan Dinas</span>
+            </a>
+
             <a href="{{ route('employee.calendar.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-calendar-alt w-5"></i>
                 <span>Kalender Cuti & Lembur</span>

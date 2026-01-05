@@ -228,7 +228,8 @@ class WorkerController extends Controller
                 return back()->with('error', "Gagal import pegawai:<br>{$errorMessage}");
             }
             
-            return back()->with('success', "Berhasil import {$successCount} pegawai"
+            return back()->with('success', "Berhasil import {$successCount} pegawai");
+        } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
