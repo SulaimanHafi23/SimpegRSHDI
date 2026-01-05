@@ -182,6 +182,42 @@
             </div>
         </div>
 
+        <!-- Reports Section -->
+        <div class="pt-2">
+            <button @click="openMenu = openMenu === 'reports' ? '' : 'reports'" 
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition duration-200">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-chart-bar w-5"></i>
+                    <span class="font-medium">Laporan</span>
+                </div>
+                <i class="fas fa-chevron-down transform transition-transform" 
+                   :class="{ 'rotate-180': openMenu === 'reports' }"></i>
+            </button>
+            
+            <div x-show="openMenu === 'reports'" 
+                 x-collapse 
+                 class="ml-4 mt-2 space-y-1">
+                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-reports'))
+                <a href="{{ route('reports.attendance') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('reports.attendance') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-clipboard-list w-4"></i>
+                    <span>Attendance</span>
+                </a>
+                <a href="{{ route('reports.leaves') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('reports.leaves') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-calendar-alt w-4"></i>
+                    <span>Cuti</span>
+                </a>
+                <a href="{{ route('reports.overtimes') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('reports.overtimes') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-clock w-4"></i>
+                    <span>Lembur</span>
+                </a>
+                <a href="{{ route('reports.worker-documents') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('reports.worker-documents') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-file-alt w-4"></i>
+                    <span>Dokumen Pegawai</span>
+                </a>
+                @endif
+            </div>
+        </div>
+
         <!-- Settings Section -->
         <div class="pt-2">
             <button @click="openMenu = openMenu === 'settings' ? '' : 'settings'" 
