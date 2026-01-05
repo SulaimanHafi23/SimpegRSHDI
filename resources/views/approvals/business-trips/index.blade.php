@@ -174,10 +174,31 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('approvals.business-trips.show', $trip->id) }}" 
-                               class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                <i class="fas fa-eye mr-2"></i>Detail
-                            </a>
+                            <div class="flex justify-end gap-2">
+                                <a href="{{ route('approvals.business-trips.show', $trip->id) }}" 
+                                   class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                   title="Lihat detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                
+                                @if($trip->status === 'pending')
+                                    <form action="{{ route('approvals.business-trips.approve', $trip->id) }}" method="POST" class="inline-block"
+                                          onsubmit="return confirm('Setujui perjalanan dinas ini?')">
+                                        @csrf
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                                                title="Setujui">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </form>
+                                    
+                                    <button onclick="openRejectModal('{{ $trip->id }}', '{{ $trip->worker->name }}', '{{ $trip->destination }}')"
+                                            class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                                            title="Tolak">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                     @empty
@@ -198,4 +219,73 @@
         @endif
     </div>
 </div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Tolak Perjalanan Dinas</h3>
+                <button onclick="closeRejectModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="rejectForm" method="POST">
+                @csrf
+                @method('PUT')
+                
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600 mb-2">Pegawai: <span id="workerName" class="font-semibold"></span></p>
+                    <p class="text-sm text-gray-600">Tujuan: <span id="destination" class="font-semibold"></span></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="rejection_reason" class="block text-sm font-medium text-gray-700 mb-2">
+                        Alasan Penolakan <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="rejection_reason" 
+                              name="rejection_reason" 
+                              rows="4" 
+                              required
+                              class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                              placeholder="Masukkan alasan penolakan..."></textarea>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button type="button" 
+                            onclick="closeRejectModal()"
+                            class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                        Tolak Pengajuan
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openRejectModal(tripId, workerName, destination) {
+    document.getElementById('rejectModal').classList.remove('hidden');
+    document.getElementById('rejectForm').action = `/approvals/business-trips/${tripId}/reject`;
+    document.getElementById('workerName').textContent = workerName;
+    document.getElementById('destination').textContent = destination;
+    document.getElementById('rejection_reason').value = '';
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRejectModal();
+    }
+});
+</script>
 @endsection

@@ -10,8 +10,7 @@ class BusinessTripApprovalController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('role:Manager|HR');
+        $this->middleware(['auth', 'check.business.trip.approval']);
     }
 
     public function index(Request $request)

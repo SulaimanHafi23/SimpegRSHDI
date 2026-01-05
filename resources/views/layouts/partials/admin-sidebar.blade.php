@@ -21,7 +21,13 @@
 
     <!-- Navigation -->
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto" x-data="{ 
-        openMenu: '{{ request()->routeIs('admin.master.*') ? 'master' : (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*') ? 'management' : (request()->routeIs('admin.leave.*', 'admin.overtime.*') ? 'approval' : (request()->routeIs('admin.roles.*', 'admin.users.*') ? 'settings' : ''))) }}' 
+        openMenu: '{{ 
+            request()->routeIs('admin.master.*') ? 'master' : 
+            (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*') ? 'management' : 
+            (request()->routeIs('admin.leave.*', 'admin.overtime.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' : 
+            (request()->routeIs('reports.*') ? 'reports' : 
+            (request()->routeIs('admin.roles.*', 'admin.users.*', 'admin.holidays.*') ? 'settings' : ''))))
+        }}' 
     }">
         <!-- Dashboard -->
         <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.dashboard') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">

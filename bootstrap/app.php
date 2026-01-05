@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \App\Http\Middleware\CheckPermission::class,
             'role' => \App\Http\Middleware\CheckRole::class,
             'redirect_role' => \App\Http\Middleware\RedirectBasedOnRole::class,
+            'check.business.trip.approval' => \App\Http\Middleware\CheckBusinessTripApprovalAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

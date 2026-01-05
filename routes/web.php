@@ -227,14 +227,14 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::post('/{id}/verify', [DocumentApprovalController::class, 'verify'])->name('verify');
             Route::post('/{id}/reject', [DocumentApprovalController::class, 'reject'])->name('reject');
         });
+    });
 
-        // Business Trip Approvals
-        Route::prefix('business-trips')->name('business-trips.')->group(function () {
-            Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
-            Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
-            Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
-        });
+    // Business Trip Approvals (separate - has its own middleware in controller)
+    Route::prefix('approvals/business-trips')->name('approvals.business-trips.')->middleware('auth')->group(function () {
+        Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
+        Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
     });
 
     // ========== REPORT ROUTES ==========
@@ -244,6 +244,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/reports/leaves', [ReportController::class, 'leaves'])->name('reports.leaves');
     Route::get('/reports/overtimes', [ReportController::class, 'overtimes'])->name('reports.overtimes');
     Route::get('/reports/worker-documents', [ReportController::class, 'workerDocuments'])->name('reports.worker-documents');
+    Route::get('/reports/leaves/export', [ReportController::class, 'exportLeaves'])->name('reports.leaves.export');
+    Route::get('/reports/overtimes/export', [ReportController::class, 'exportOvertimes'])->name('reports.overtimes.export');
 
     // ========== ROLE MANAGEMENT ==========
     Route::resource('roles', RoleController::class)->names('admin.roles');

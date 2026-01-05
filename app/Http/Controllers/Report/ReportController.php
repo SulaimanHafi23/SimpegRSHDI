@@ -77,4 +77,36 @@ class ReportController extends Controller
 
         return view('admin.reports.worker-documents', compact('documents', 'filters'));
     }
+
+    /**
+     * Export leaves to Excel
+     */
+    public function exportLeaves(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->input('start_date'),
+            'date_to' => $request->input('end_date'),
+            'worker_id' => $request->input('worker_id'),
+            'status' => $request->input('status'),
+        ];
+
+        $filename = 'leaves-' . now()->format('Ymd_His') . '.xlsx';
+        return \Maatwebsite\Excel\Excel::download(new \App\Exports\LeavesExport($filters), $filename);
+    }
+
+    /**
+     * Export overtimes to Excel
+     */
+    public function exportOvertimes(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->input('start_date'),
+            'date_to' => $request->input('end_date'),
+            'worker_id' => $request->input('worker_id'),
+            'status' => $request->input('status'),
+        ];
+
+        $filename = 'overtimes-' . now()->format('Ymd_His') . '.xlsx';
+        return \Maatwebsite\Excel\Excel::download(new \App\Exports\OvertimesExport($filters), $filename);
+    }
 }
