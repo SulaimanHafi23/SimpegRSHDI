@@ -2,30 +2,90 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Notification\NotificationService;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {
         $this->middleware('auth');
     }
 
-    public function markAsRead($id)
+    /**
+     * Get all notifications for authenticated user
+     */
+    public function index(Request $request)
     {
-        $notification = auth()->user()->notifications()->where('id', $id)->first();
+        $userId = auth()->id();
+        $filters = [
+            'is_read' => $request->input('is_read'),
+            'type' => $request->input('type'),
+            'per_page' => 15
+        ];
 
-        if ($notification) {
-            $notification->markAsRead();
-        }
+        $notifications = $this->notificationService->getByUserId($userId, $filters);
+        $unreadCount = $this->notificationService->getUnreadCount($userId);
 
-        return back()->with('success', 'Notifikasi ditandai sudah dibaca.');
+        return view('notifications.index', compact('notifications', 'unreadCount'));
     }
 
+    /**
+     * Get unread notifications (for dropdown)
+     */
+    public function unread()
+    {
+        $userId = auth()->id();
+        $notifications = $this->notificationService->getUnreadByUserId($userId);
+        $unreadCount = $this->notificationService->getUnreadCount($userId);
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count' => $unreadCount
+        ]);
+    }
+
+    /**
+     * Mark notification as read
+     */
+    public function markAsRead(string $id)
+    {
+        $this->notificationService->markAsRead($id);
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Notifikasi ditandai sebagai dibaca');
+    }
+
+    /**
+     * Mark all notifications as read
+     */
     public function markAllAsRead()
     {
-        auth()->user()->unreadNotifications->markAsRead();
+        $userId = auth()->id();
+        $this->notificationService->markAllAsRead($userId);
 
-        return back()->with('success', 'Semua notifikasi ditandai sudah dibaca.');
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Semua notifikasi ditandai sebagai dibaca');
+    }
+
+    /**
+     * Delete notification
+     */
+    public function destroy(string $id)
+    {
+        $this->notificationService->delete($id);
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Notifikasi dihapus');
     }
 }
