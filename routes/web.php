@@ -208,6 +208,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/import', [WorkerController::class, 'import'])->name('import');
         Route::post('/', [WorkerController::class, 'store'])->name('store');
         Route::get('/{id}', [WorkerController::class, 'show'])->name('show');
+        Route::get('/{id}/attendance-history', [WorkerController::class, 'attendanceHistory'])->name('attendance-history');
         Route::get('/{id}/edit', [WorkerController::class, 'edit'])->name('edit');
         Route::put('/{id}', [WorkerController::class, 'update'])->name('update');
         Route::delete('/{id}', [WorkerController::class, 'destroy'])->name('destroy');

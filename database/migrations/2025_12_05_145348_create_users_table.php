@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('password');
             $table->timestamp('last_login')->nullable();
-            $table->string('photo')->nullable();
             $table->rememberToken();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

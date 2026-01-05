@@ -79,18 +79,18 @@ class LeaveRequestController extends Controller
 
     public function show(string $id)
     {
-        $leave = $this->leaveRequestService->getById($id);
+        $leaveRequest = $this->leaveRequestService->getById($id);
 
-        return view('admin.leave.show', compact('leave'));
+        return view('admin.leave.show', compact('leaveRequest'));
     }
 
     public function edit(string $id)
     {
-        $leave = $this->leaveRequestService->getById($id);
+        $leaveRequest = $this->leaveRequestService->getById($id);
         $workers = $this->workerService->getAllActive();
         $leaveTypes = $this->leaveTypeService->getAllActive();
 
-        return view('admin.leave.edit', compact('leave', 'workers', 'leaveTypes'));
+        return view('admin.leave.edit', compact('leaveRequest', 'workers', 'leaveTypes'));
     }
 
     public function update(LeaveRequestRequest $request, string $id)

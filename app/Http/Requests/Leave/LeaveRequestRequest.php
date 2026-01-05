@@ -28,9 +28,9 @@ class LeaveRequestRequest extends FormRequest
                 'required',
                 Rule::exists('workers', 'id'),
             ],
-            'leave_type' => [
+            'leave_type_id' => [
                 'required',
-                Rule::in(array_keys(LeaveRequest::getLeaveTypes())),
+                Rule::exists('leave_types', 'id'),
             ],
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
@@ -44,7 +44,7 @@ class LeaveRequestRequest extends FormRequest
     {
         return [
             'worker_id' => 'Pekerja',
-            'leave_type' => 'Jenis Cuti',
+            'leave_type_id' => 'Jenis Cuti',
             'start_date' => 'Tanggal Mulai',
             'end_date' => 'Tanggal Selesai',
             'reason' => 'Alasan',

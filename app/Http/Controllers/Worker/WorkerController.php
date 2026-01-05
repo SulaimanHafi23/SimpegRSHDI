@@ -11,6 +11,7 @@ use App\Services\Worker\WorkerService;
 use App\Services\Master\LocationService;
 use App\Services\Master\ReligionService;
 use App\Services\Master\DepartmentService;
+use App\Services\Role\RoleService;
 use Illuminate\Support\Facades\Storage;
 
 class WorkerController extends Controller
@@ -20,7 +21,8 @@ class WorkerController extends Controller
         private readonly ReligionService $religionService,
         private readonly GenderService $genderService,
         private readonly LocationService $locationService,
-        private readonly DepartmentService $departmentService
+        private readonly DepartmentService $departmentService,
+        private readonly RoleService $roleService
     ) {
         $this->middleware('auth');
         $this->middleware('permission:view-workers')->only(['index', 'export']);
@@ -43,11 +45,12 @@ class WorkerController extends Controller
             'per_page' => $request->input('per_page', 15),
         ];
 
-        $workers = $this->service->getAll($filters);
-        $locations = $this->locationService->getAll();
-        $departments = $this->departmentService->getAllActive();
+    $workers = $this->service->getAll($filters);
+    $locations = $this->locationService->getAll();
+    $departments = $this->departmentService->getAllActive();
+    $roles = $this->roleService->getAll();
 
-        return view('admin.workers.index', compact('workers', 'locations', 'departments', 'filters'));
+    return view('admin.workers.index', compact('workers', 'locations', 'departments', 'filters', 'roles'));
     }
 
     public function show(string $id)
@@ -71,11 +74,113 @@ class WorkerController extends Controller
             $overtimes = $overtimeService->getByWorkerId($worker->id, ['status' => 'approved']);
             $totalOvertime = $overtimes->sum('total_hours');
 
-            return view('admin.workers.show', compact('worker', 'attendanceThisMonth', 'totalOvertime'));
+            // Recent Leave Requests (last 5)
+            $leaveService = app(\App\Services\Leave\LeaveRequestService::class);
+            $leaveRequests = $leaveService->getByWorkerId($worker->id, [
+                'per_page' => 5,
+                'sort' => 'start_date',
+                'order' => 'desc',
+            ]);
+
+            // Recent Overtime Requests (last 5)
+            $overtimeRequests = $overtimeService->getByWorkerId($worker->id, [
+                'per_page' => 5,
+                'sort' => 'overtime_date',
+                'order' => 'desc',
+            ]);
+
+            return view('admin.workers.show', compact(
+                'worker', 
+                'attendanceThisMonth', 
+                'totalOvertime',
+                'leaveRequests',
+                'overtimeRequests'
+            ));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.workers.index')
                 ->with('error', 'Worker tidak ditemukan: ' . $e->getMessage());
+        }
+    }
+
+    public function attendanceHistory(Request $request, string $id)
+    {
+        $this->authorizePermission('view-worker-profile');
+
+        try {
+            $worker = $this->service->getById($id);
+            
+            // Get month and year from request, default to current month
+            $month = $request->input('month', now()->month);
+            $year = $request->input('year', now()->year);
+            
+            // Get attendance data for the month
+            $attendanceService = app(\App\Services\Attendance\AttendanceService::class);
+            $attendances = $attendanceService->getByWorkerId($worker->id, [
+                'month' => $month,
+                'year' => $year,
+                'per_page' => 999, // Get all for the month
+            ]);
+            
+            // Calculate statistics
+            $totalPresent = $attendances->where('status', 'present')->count();
+            $totalAbsent = $attendances->where('status', 'absent')->count();
+            $totalLate = $attendances->where('is_late', true)->count();
+            $totalLeave = $attendances->where('status', 'leave')->count();
+            
+            // Create calendar data structure
+            $startDate = \Carbon\Carbon::create($year, $month, 1);
+            $endDate = $startDate->copy()->endOfMonth();
+            $daysInMonth = $startDate->daysInMonth;
+            
+            // Get worker's active shift with relation
+            $worker->load(['activeWorkerShift.shift']);
+            
+            // Get all shifts for reference
+            $allShifts = \App\Models\Shift::where('is_active', true)
+                ->orderBy('start_time')
+                ->get();
+            
+            // Create calendar array with all dates
+            $calendarData = [];
+            for ($day = 1; $day <= $daysInMonth; $day++) {
+                $date = \Carbon\Carbon::create($year, $month, $day);
+                $dateKey = $date->format('Y-m-d');
+                
+                // Find attendance for this date
+                $attendance = $attendances->firstWhere('attendance_date', $dateKey);
+                
+                // Get shift schedule for this date
+                $shiftId = $worker->getShiftForDate($date);
+                $shift = $shiftId ? \App\Models\Shift::find($shiftId) : null;
+                
+                $calendarData[] = [
+                    'date' => $date,
+                    'day' => $day,
+                    'dayName' => $date->translatedFormat('l'),
+                    'attendance' => $attendance,
+                    'shift' => $shift,
+                    'isWeekend' => $date->isSunday(), // Only Sunday is weekend
+                ];
+            }
+            
+            return view('admin.workers.attendance-history', compact(
+                'worker', 
+                'calendarData', 
+                'month', 
+                'year',
+                'totalPresent',
+                'totalAbsent',
+                'totalLate',
+                'totalLeave',
+                'startDate',
+                'endDate',
+                'allShifts'
+            ));
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('admin.workers.show', $id)
+                ->with('error', 'Gagal memuat riwayat presensi: ' . $e->getMessage());
         }
     }
 

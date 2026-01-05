@@ -208,6 +208,38 @@
                                         @method('DELETE')
                                     </form>
                                 @endcan
+                                {{-- Account management: create or edit user account for this worker --}}
+                                @if($worker->user)
+                                    @can('edit-users')
+                    <button type="button" 
+                        class="text-yellow-600 hover:text-yellow-900 open-account-btn" 
+                        title="Edit Akun"
+                        data-mode="edit"
+                        data-user-id="{{ $worker->user->id }}"
+                        data-email="{{ $worker->user->email }}"
+                        data-username="{{ $worker->user->username }}"
+                        data-roles="{{ $worker->user->roles->pluck('id')->join(',') }}"
+                        data-worker-id="{{ $worker->id }}">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </button>
+                                    @endcan
+                                @else
+                                    @can('create-users')
+                                            <button type="button" 
+                                                    class="text-green-600 hover:text-green-900 open-account-btn" 
+                                                    title="Buat Akun"
+                                                    data-mode="create"
+                                                    data-worker-id="{{ $worker->id }}"
+                                                    data-email="{{ $worker->email ?? '' }}"
+                                                    data-nip="{{ $worker->nip ?? '' }}">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </button>
+                                    @endcan
+                                @endif
                             </div>
                         </x-table.cell>
                     </x-table.row>
@@ -223,4 +255,157 @@
         @endif
     </x-card>
 </div>
+
+{{-- Account modal overlay (create / edit) --}}
+<div id="account-modal" class="fixed inset-0 bg-black/5 backdrop-blur-sm hidden items-center justify-center z-50">
+    <div class="bg-white/60 backdrop-blur-lg rounded-lg w-full max-w-md mx-4 shadow-lg border border-white/20">
+        <div class="p-4 border-b border-white/20 flex items-center justify-between">
+            <h3 id="account-modal-title" class="font-semibold">Kelola Akun Pengguna</h3>
+            <button type="button" id="account-modal-close" class="text-gray-600 hover:text-gray-900">&times;</button>
+        </div>
+        <form id="account-form" method="POST" class="p-4">
+            @csrf
+            <div id="method-spoof"></div>
+            <input type="hidden" name="worker_id" id="account-worker-id">
+
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700">Username</label>
+                <input type="text" name="username" id="account-username" class="mt-1 block w-full border rounded px-3 py-2" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700">Role</label>
+                <input type="text" id="account-roles-search" placeholder="Cari role..." class="mt-1 block w-full border rounded px-3 py-2" />
+                <select name="roles[]" id="account-roles" class="mt-2 block w-full border rounded px-3 py-2" multiple size="6">
+                    @foreach($roles as $role)
+                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                    @endforeach
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Ketik untuk mencari, lalu pilih satu atau lebih role untuk akun ini.</p>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <input type="email" name="email" id="account-email" class="mt-1 block w-full border rounded px-3 py-2" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700">Password</label>
+                <input type="password" name="password" id="account-password" class="mt-1 block w-full border rounded px-3 py-2">
+                <p class="text-xs text-gray-500 mt-1">Kosongkan jika tidak ingin mengubah password ketika melakukan edit.</p>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700">Konfirmasi Password</label>
+                <input type="password" name="password_confirmation" id="account-password-confirmation" class="mt-1 block w-full border rounded px-3 py-2">
+            </div>
+
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="account-cancel" class="px-3 py-2 border rounded">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded" id="account-save">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('account-modal');
+    const closeBtn = document.getElementById('account-modal-close');
+    const cancelBtn = document.getElementById('account-cancel');
+    const form = document.getElementById('account-form');
+    const title = document.getElementById('account-modal-title');
+    const methodSpoof = document.getElementById('method-spoof');
+
+    function openModal(config) {
+        // config: { mode: 'create'|'edit', workerId, userId?, email? }
+        form.reset();
+        methodSpoof.innerHTML = '';
+        if (config.mode === 'create') {
+            title.textContent = 'Buat Akun Pengguna';
+            form.action = "{{ route('admin.users.store') }}";
+            form.querySelector('#account-email').required = true;
+            form.querySelector('#account-password').required = true;
+            form.querySelector('#account-password-confirmation').required = true;
+            document.getElementById('account-worker-id').value = config.workerId;
+            document.getElementById('account-email').value = config.email || '';
+            // prefill username from email local-part or NIP
+            const usernameInput = document.getElementById('account-username');
+            usernameInput.value = '';
+            if (config.email) {
+                usernameInput.value = (config.email.split('@')[0] || '').replace(/[^a-zA-Z0-9._-]/g, '');
+            } else if (config.nip) {
+                usernameInput.value = config.nip;
+            }
+            usernameInput.required = true;
+        } else if (config.mode === 'edit') {
+            title.textContent = 'Edit Akun Pengguna';
+            // use PUT to users.update
+            form.action = `/users/${config.userId}`;
+            methodSpoof.innerHTML = '<input type="hidden" name="_method" value="PUT">';
+            document.getElementById('account-worker-id').value = config.workerId;
+            document.getElementById('account-email').value = config.email || '';
+            // prefill username from existing user
+            document.getElementById('account-username').value = config.username || '';
+            // password optional on edit
+            form.querySelector('#account-password').required = false;
+            form.querySelector('#account-password-confirmation').required = false;
+                // populate roles selection if provided
+                const rolesSelect = document.getElementById('account-roles');
+                // clear previous selection
+                Array.from(rolesSelect.options).forEach(opt => opt.selected = false);
+                if (config.roles) {
+                    const arr = String(config.roles).split(',').filter(Boolean);
+                    arr.forEach(id => {
+                        const opt = rolesSelect.querySelector(`option[value="${id}"]`);
+                        if (opt) opt.selected = true;
+                    });
+                }
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeModal() {
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
+    }
+
+    // Roles select search/filter
+    const rolesSearch = document.getElementById('account-roles-search');
+    const rolesSelect = document.getElementById('account-roles');
+    if (rolesSearch && rolesSelect) {
+        rolesSearch.addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            Array.from(rolesSelect.options).forEach(opt => {
+                const text = opt.text.toLowerCase();
+                opt.hidden = q.length > 0 ? !text.includes(q) : false;
+            });
+        });
+    }
+
+        document.querySelectorAll('.open-account-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const mode = this.dataset.mode;
+                const workerId = this.dataset.workerId;
+                const userId = this.dataset.userId;
+                const email = this.dataset.email;
+                const username = this.dataset.username;
+                const nip = this.dataset.nip;
+                const roles = this.dataset.roles;
+                openModal({ mode, workerId, userId, email, username, nip, roles });
+            });
+        });
+
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+    // close on overlay click
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+    });
+});
+</script>
+@endpush
 @endsection

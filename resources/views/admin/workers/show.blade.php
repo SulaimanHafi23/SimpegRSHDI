@@ -101,17 +101,9 @@
                         <i class="fas fa-file-invoice w-5"></i>
                         <span class="ml-3">Lihat Slip Gaji</span>
                     </a>
-                    <a href="#" class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg text-green-700">
+                    <a href="{{ route('admin.workers.attendance-history', $worker->id) }}" class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg text-green-700">
                         <i class="fas fa-calendar-check w-5"></i>
                         <span class="ml-3">Riwayat Absensi</span>
-                    </a>
-                    <a href="#" class="flex items-center p-3 bg-yellow-50 hover:bg-yellow-100 rounded-lg text-yellow-700">
-                        <i class="fas fa-plane w-5"></i>
-                        <span class="ml-3">Daftar Cuti</span>
-                    </a>
-                    <a href="#" class="flex items-center p-3 bg-purple-50 hover:bg-purple-100 rounded-lg text-purple-700">
-                        <i class="fas fa-clock w-5"></i>
-                        <span class="ml-3">Lembur</span>
                     </a>
                 </div>
             </x-card>
@@ -226,6 +218,121 @@
                     icon="fas fa-clock" 
                     color="green" />
             </div>
+
+            {{-- Daftar Cuti --}}
+            <x-card>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-plane text-yellow-600 mr-2"></i>
+                        Riwayat Cuti
+                    </h3>
+                    <a href="#" class="text-sm text-green-600 hover:text-green-700 font-medium">
+                        Lihat Semua
+                    </a>
+                </div>
+
+                @if(isset($leaveRequests) && $leaveRequests->isNotEmpty())
+                    <div class="space-y-3">
+                        @foreach($leaveRequests->take(5) as $leave)
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">{{ $leave->leaveType->name ?? 'Cuti' }}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            {{ $leave->start_date?->format('d M Y') }} - {{ $leave->end_date?->format('d M Y') }}
+                                            <span class="text-gray-500">({{ $leave->total_days }} hari)</span>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        @php
+                                            $leaveStatusConfig = [
+                                                'pending' => ['variant' => 'warning', 'icon' => 'fas fa-clock', 'label' => 'Menunggu'],
+                                                'approved' => ['variant' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Disetujui'],
+                                                'rejected' => ['variant' => 'danger', 'icon' => 'fas fa-times-circle', 'label' => 'Ditolak'],
+                                                'cancelled' => ['variant' => 'secondary', 'icon' => 'fas fa-ban', 'label' => 'Dibatalkan'],
+                                            ];
+                                            $leaveStatus = $leaveStatusConfig[$leave->status] ?? ['variant' => 'secondary', 'icon' => 'fas fa-question', 'label' => 'Unknown'];
+                                        @endphp
+                                        <x-badge :variant="$leaveStatus['variant']" :icon="$leaveStatus['icon']" size="sm">
+                                            {{ $leaveStatus['label'] }}
+                                        </x-badge>
+                                    </div>
+                                </div>
+                                @if($leave->reason)
+                                    <p class="text-sm text-gray-600 mt-2">
+                                        <i class="fas fa-comment-dots mr-1"></i>
+                                        {{ Str::limit($leave->reason, 100) }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <i class="fas fa-plane text-gray-300 text-5xl mb-3"></i>
+                        <p class="text-gray-500">Belum ada riwayat cuti</p>
+                    </div>
+                @endif
+            </x-card>
+
+            {{-- Daftar Lembur --}}
+            <x-card>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-clock text-purple-600 mr-2"></i>
+                        Riwayat Lembur
+                    </h3>
+                    <a href="#" class="text-sm text-green-600 hover:text-green-700 font-medium">
+                        Lihat Semua
+                    </a>
+                </div>
+
+                @if(isset($overtimeRequests) && $overtimeRequests->isNotEmpty())
+                    <div class="space-y-3">
+                        @foreach($overtimeRequests->take(5) as $overtime)
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">Lembur - {{ $overtime->overtime_date?->format('d M Y') }}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <i class="fas fa-clock mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - 
+                                            {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
+                                            <span class="text-gray-500">({{ $overtime->total_hours }} jam)</span>
+                                        </p>
+                                    </div>
+                                    <div>
+                                        @php
+                                            $overtimeStatusConfig = [
+                                                'pending' => ['variant' => 'warning', 'icon' => 'fas fa-clock', 'label' => 'Menunggu'],
+                                                'approved' => ['variant' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Disetujui'],
+                                                'rejected' => ['variant' => 'danger', 'icon' => 'fas fa-times-circle', 'label' => 'Ditolak'],
+                                                'cancelled' => ['variant' => 'secondary', 'icon' => 'fas fa-ban', 'label' => 'Dibatalkan'],
+                                            ];
+                                            $overtimeStatus = $overtimeStatusConfig[$overtime->status] ?? ['variant' => 'secondary', 'icon' => 'fas fa-question', 'label' => 'Unknown'];
+                                        @endphp
+                                        <x-badge :variant="$overtimeStatus['variant']" :icon="$overtimeStatus['icon']" size="sm">
+                                            {{ $overtimeStatus['label'] }}
+                                        </x-badge>
+                                    </div>
+                                </div>
+                                @if($overtime->description)
+                                    <p class="text-sm text-gray-600 mt-2">
+                                        <i class="fas fa-tasks mr-1"></i>
+                                        {{ Str::limit($overtime->description, 100) }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <i class="fas fa-clock text-gray-300 text-5xl mb-3"></i>
+                        <p class="text-gray-500">Belum ada riwayat lembur</p>
+                    </div>
+                @endif
+            </x-card>
         </div>
     </div>
 </div>

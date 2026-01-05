@@ -19,7 +19,13 @@ class UserController extends Controller
         protected RoleService $roleService
     ) {
         $this->middleware('auth');
-        // Permission check dilakukan di blade dengan @can
+        // Enforce permissions by middleware to match RolePermissionSeeder
+        $this->middleware('permission:view-users')->only(['index', 'show']);
+        $this->middleware('permission:create-users')->only(['create', 'store']);
+        $this->middleware('permission:edit-users')->only(['edit', 'update']);
+        $this->middleware('permission:delete-users')->only(['destroy']);
+        // Only allow role assignment to authorized users
+        $this->middleware('permission:assign-roles')->only(['store', 'update']);
     }
 
     public function index(Request $request)
@@ -49,7 +55,11 @@ class UserController extends Controller
     {
         try {
             $validated = $request->validated();
-            $validated['password'] = Hash::make($validated['password']);
+            // Password will be hashed in the service layer
+            // Ensure roles are integers so spatie/laravel-permission treats them as IDs
+            if (!empty($validated['roles']) && is_array($validated['roles'])) {
+                $validated['roles'] = array_map(fn($r) => is_numeric($r) ? (int) $r : $r, $validated['roles']);
+            }
             $user = $this->userService->create($validated);
 
             return redirect()
@@ -93,11 +103,16 @@ class UserController extends Controller
     {
         try {
             $validated = $request->validated();
-            
+            // Password will be hashed in the service layer; remove if empty
             if (!empty($validated['password'])) {
-                $validated['password'] = Hash::make($validated['password']);
+                // keep as-is, service will hash
             } else {
                 unset($validated['password']);
+            }
+
+            // Ensure roles are integers so spatie/laravel-permission treats them as IDs
+            if (isset($validated['roles']) && is_array($validated['roles'])) {
+                $validated['roles'] = array_map(fn($r) => is_numeric($r) ? (int) $r : $r, $validated['roles']);
             }
 
             $user = $this->userService->update($id, $validated);

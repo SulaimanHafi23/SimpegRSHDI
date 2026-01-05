@@ -76,23 +76,26 @@
                     <x-table.row>
                         <x-table.cell>
                             <div class="flex items-center">
-                                @if($user->worker && $user->worker->photo)
-                                    <img class="h-10 w-10 rounded-full object-cover" 
-                                         src="{{ Storage::url($user->worker->photo) }}" 
-                                         alt="{{ $user->name }}">
-                                @else
-                                    <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                                        <span class="text-green-600 font-semibold text-lg">
-                                            {{ substr($user->name, 0, 1) }}
-                                        </span>
-                                    </div>
-                                @endif
-                                <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
-                                    @if($user->worker)
-                                        <div class="text-sm text-gray-500">{{ $user->worker->position->name ?? '-' }}</div>
+                                <a href="{{ route('admin.users.show', $user->id) }}" class="flex items-center hover:opacity-90" title="Lihat profil {{ $user->name }}">
+                    @if($user->worker && ($user->worker->photo_url ?? false) && Storage::disk('public')->exists($user->worker->photo_url))
+                        <img class="h-10 w-10 rounded-full object-cover" 
+                             src="{{ Storage::url($user->worker->photo_url) }}" 
+                             alt="Foto {{ $user->name }}">
+                        @else
+                                        <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
+                                                <span class="text-green-600 font-semibold text-lg">
+                                                    {{ strtoupper(substr($user->username ?? $user->name ?? '', 0, 1)) }}
+                                                </span>
+                                            </div>
                                     @endif
-                                </div>
+
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                        @if($user->worker)
+                                            <div class="text-sm text-gray-500">{{ $user->worker->position->name ?? '-' }}</div>
+                                        @endif
+                                    </div>
+                                </a>
                             </div>
                         </x-table.cell>
 
