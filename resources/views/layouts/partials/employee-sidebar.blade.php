@@ -71,6 +71,11 @@
                 <span>Perjalanan Dinas</span>
             </a>
 
+            <a href="{{ route('employee.payroll.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.payroll.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
+                <i class="fas fa-money-bill-wave w-5"></i>
+                <span>Payroll Saya</span>
+            </a>
+
             <a href="{{ route('employee.calendar.index') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }} transition duration-200">
                 <i class="fas fa-calendar-alt w-5"></i>
                 <span>Kalender Cuti & Lembur</span>
