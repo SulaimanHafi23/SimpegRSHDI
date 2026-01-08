@@ -140,6 +140,12 @@
                     <span>Dokumen Pegawai</span>
                 </a>
                 @endif
+                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
+                <a href="{{ route('admin.payroll.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.payroll.index') || request()->routeIs('admin.payroll.show') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-money-bill-wave w-4"></i>
+                    <span>Payroll</span>
+                </a>
+                @endif
             </div>
         </div>
 
@@ -223,34 +229,6 @@
                 @endif
             </div>
         </div>
-
-        <!-- Payroll Section -->
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
-        <div class="pt-2">
-            <button @click="openMenu = openMenu === 'payroll' ? '' : 'payroll'" 
-                    class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition duration-200 {{ request()->routeIs('admin.payroll.*') ? 'bg-green-600' : '' }}">
-                <div class="flex items-center space-x-3">
-                    <i class="fas fa-money-bill-wave w-5"></i>
-                    <span class="font-medium">Payroll</span>
-                </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
-                   :class="{ 'rotate-180': openMenu === 'payroll' }"></i>
-            </button>
-            
-            <div x-show="openMenu === 'payroll'" 
-                 x-collapse 
-                 class="ml-4 mt-2 space-y-1">
-                <a href="{{ route('admin.payroll.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.payroll.index') || request()->routeIs('admin.payroll.show') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-list w-4"></i>
-                    <span>Daftar Payroll</span>
-                </a>
-                <a href="{{ route('admin.payroll.generate') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.payroll.generate') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-calculator w-4"></i>
-                    <span>Generate Payroll</span>
-                </a>
-            </div>
-        </div>
-        @endif
 
         <!-- Settings Section -->
         <div class="pt-2">
