@@ -22,12 +22,14 @@ class UserRequest extends FormRequest
      */
     public function rules(): array
     {
-        $userId = $this->route('id');
+    // The route parameter for the resource may be named 'user' (resource) or 'id' in some places.
+    // Accept either so validation can detect if this is an update request.
+    $userId = $this->route('user') ?? $this->route('id');
 
         return [
             'worker_id' => [
-                'nullable',
-                'string',
+                $userId ? 'nullable' : 'required',
+                'uuid',
                 Rule::exists('workers', 'id')
             ],
             'email' => [
@@ -36,9 +38,20 @@ class UserRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($userId)
             ],
-            'password' => $userId ? 'nullable|string|min:8' : 'required|string|min:8',
+            'username' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('users', 'username')->ignore($userId)
+            ],
+            // Require password confirmation when password is provided / required
+            'password' => $userId ? 'nullable|string|min:8|confirmed' : 'required|string|min:8|confirmed',
+            'password_confirmation' => $userId ? 'nullable|string|min:8' : 'required|string|min:8',
             'is_active' => 'boolean',
-            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            // Allow larger uploads (max in kilobytes). Keep validation to prevent huge files
+            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:10240', // 10 MB
+            'roles' => 'nullable|array',
+            'roles.*' => 'integer|exists:roles,id',
         ];
     }
 
@@ -48,6 +61,8 @@ class UserRequest extends FormRequest
             'worker_id' => 'Pekerja',
             'email' => 'Email',
             'password' => 'Password',
+            'username' => 'Username',
+            'password_confirmation' => 'Konfirmasi Password',
             'is_active' => 'Status Aktif',
             'photo' => 'Foto',
         ];

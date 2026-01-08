@@ -10,6 +10,7 @@ use App\Services\Worker\WorkerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class ProfileController extends Controller
 {
@@ -72,8 +73,35 @@ class ProfileController extends Controller
                         Storage::disk('public')->delete($user->photo);
                     }
 
-                    $photoPath = $request->file('photo')->store('profile-photos', 'public');
-                    $userData['photo'] = $photoPath;
+                    $file = $request->file('photo');
+                    $ext = strtolower($file->getClientOriginalExtension() ?? 'jpg');
+                    $filename = sprintf('profile_%s.%s', now()->format('YmdHis'), $ext);
+
+                    try {
+                        if (class_exists('\\Intervention\\Image\\ImageManagerStatic')) {
+                            $img = Image::make($file->getRealPath());
+                            $img->orientate();
+                            if ($img->width() > 1200) {
+                                $img->resize(1200, null, function ($constraint) {
+                                    $constraint->aspectRatio();
+                                    $constraint->upsize();
+                                });
+                            }
+
+                            $encoded = (string) $img->encode($ext, 75);
+                            $path = 'profile-photos/' . $filename;
+                            Storage::disk('public')->put($path, $encoded);
+                            $userData['photo'] = $path;
+                        } else {
+                            // fallback to storing original file
+                            $path = $file->storeAs('profile-photos', $filename, 'public');
+                            $userData['photo'] = $path;
+                        }
+                    } catch (\Throwable $e) {
+                        // fallback
+                        $path = $file->storeAs('profile-photos', $filename, 'public');
+                        $userData['photo'] = $path;
+                    }
                 } catch (\Exception $e) {
                     return back()->withErrors(['photo' => 'Gagal menyimpan foto profil: ' . $e->getMessage()])->withInput();
                 }

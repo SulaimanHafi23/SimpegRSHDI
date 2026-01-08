@@ -13,7 +13,10 @@ class OvertimeRequestController extends Controller
     public function __construct(
         protected OvertimeRequestService $overtimeRequestService,
         protected WorkerService $workerService
-    ) {}
+    ) {
+        $this->middleware(['auth']);
+        $this->middleware('permission:overtime.manage');
+    }
 
     public function index(Request $request)
     {

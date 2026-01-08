@@ -34,6 +34,13 @@ class UserService
             throw new \Exception('Username already exists.');
         }
 
+        // If worker_id provided, ensure the worker doesn't already have a user
+        if (!empty($data['worker_id'])) {
+            if ($this->userRepository->getByWorkerId($data['worker_id'])) {
+                throw new \Exception('A user is already associated with the selected worker.');
+            }
+        }
+
         // Hash password
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);

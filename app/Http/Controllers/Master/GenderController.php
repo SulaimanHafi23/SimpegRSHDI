@@ -13,10 +13,10 @@ class GenderController extends Controller
         protected GenderService $genderService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:gender.view')->only(['index', 'show']);
-        $this->middleware('permission:gender.create')->only(['create', 'store']);
-        $this->middleware('permission:gender.edit')->only(['edit', 'update']);
-        $this->middleware('permission:gender.delete')->only('destroy');
+        $this->middleware('permission:gender.manage')->only(['index', 'show']);
+        $this->middleware('permission:gender.manage')->only(['create', 'store']);
+        $this->middleware('permission:gender.manage')->only(['edit', 'update']);
+        $this->middleware('permission:gender.manage')->only('destroy');
     }
 
     public function index(Request $request)

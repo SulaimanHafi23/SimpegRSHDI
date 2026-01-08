@@ -9,6 +9,12 @@ use Illuminate\Support\Facades\DB;
 
 class HolidayController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware(['auth']);
+        $this->middleware('permission:holiday.manage');
+    }
+
     /**
      * Display holidays list
      */

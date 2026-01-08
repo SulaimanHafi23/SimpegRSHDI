@@ -8,6 +8,8 @@ use App\Repositories\Contracts\Worker\WorkerRepositoryInterface;
 use App\Repositories\Contracts\User\UserRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Intervention\Image\ImageManagerStatic as Image;
+use Illuminate\Support\Facades\Hash;
 
 class WorkerService
 {
@@ -81,11 +83,29 @@ class WorkerService
                     'is_active' => true,
                 ]);
 
-                $user = $this->userRepository->create($userDTO);
+                // Avoid creating duplicate user for the worker if one already exists
+                if ($this->userRepository->getByWorkerId($worker->id)) {
+                    // Option: skip creation and optionally sync roles
+                    if (isset($data['roles'])) {
+                        $existingUser = $this->userRepository->getByWorkerId($worker->id);
+                        $this->userRepository->assignRoles($existingUser->id, $data['roles']);
+                    }
+                } else {
+                        // Hash password before creating user since we're bypassing UserService here
+                        $passwordPlain = $userDTO->password ?? 'password123';
+                        $userDTOHashed = UserDTO::fromRequest([
+                            'worker_id' => $userDTO->worker_id,
+                            'email' => $userDTO->email,
+                            'username' => $userDTO->username,
+                            'password' => Hash::make($passwordPlain),
+                            'is_active' => $userDTO->is_active,
+                        ]);
 
-                // Assign default role
-                if (isset($data['roles'])) {
-                    $this->userRepository->assignRoles($user->id, $data['roles']);
+                        $user = $this->userRepository->create($userDTOHashed);
+                    // Assign default role
+                    if (isset($data['roles'])) {
+                        $this->userRepository->assignRoles($user->id, $data['roles']);
+                    }
                 }
             }
 
@@ -179,13 +199,36 @@ class WorkerService
 
     protected function savePhoto($photo, string $nip): string
     {
-        $filename = sprintf(
-            '%s_photo_%s.%s',
-            $nip,
-            now()->format('YmdHis'),
-            $photo->getClientOriginalExtension()
-        );
+        $ext = strtolower($photo->getClientOriginalExtension() ?? 'jpg');
+        $filename = sprintf('%s_photo_%s.%s', $nip, now()->format('YmdHis'), $ext);
 
+        // Try to process with Intervention Image if available; otherwise fallback to storing original file
+        try {
+            if (class_exists('\\Intervention\\Image\\ImageManagerStatic')) {
+                $img = Image::make($photo->getRealPath());
+                $img->orientate();
+
+                // Resize if wider than 1200px, keep aspect ratio
+                if ($img->width() > 1200) {
+                    $img->resize(1200, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+
+                // Encode with reasonable quality (75)
+                $encoded = (string) $img->encode($ext, 75);
+
+                $path = 'worker-photos/' . $filename;
+                Storage::disk('public')->put($path, $encoded);
+
+                return $path;
+            }
+        } catch (\Throwable $e) {
+            // swallow and fallback
+        }
+
+        // Fallback: store original uploaded file
         return $photo->storeAs('worker-photos', $filename, 'public');
     }
 }

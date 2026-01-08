@@ -48,13 +48,22 @@
         <div class="p-6 space-y-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-sm font-medium text-gray-500 mb-1">Maksimal Hari</label>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Maksimal Hari per Tahun</label>
                     <p class="text-lg font-semibold text-gray-800">
-                        @if($leaveType->max_days)
-                            {{ $leaveType->max_days }} hari
+                        @if($leaveType->max_days_per_year)
+                            <i class="fas fa-calendar-day text-blue-500 mr-1"></i>
+                            {{ $leaveType->max_days_per_year }} hari
                         @else
                             <span class="text-blue-600">Tidak terbatas</span>
                         @endif
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Hari Notice</label>
+                    <p class="text-lg font-semibold text-gray-800">
+                        <i class="fas fa-bell text-purple-500 mr-1"></i>
+                        {{ $leaveType->days_notice ?? 0 }} hari sebelumnya
                     </p>
                 </div>
 
@@ -68,6 +77,21 @@
                         @else
                             <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
                                 <i class="fas fa-bolt mr-1"></i>Otomatis Disetujui
+                            </span>
+                        @endif
+                    </p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-500 mb-1">Lampiran</label>
+                    <p class="text-lg">
+                        @if($leaveType->requires_attachment)
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                <i class="fas fa-paperclip mr-1"></i>Memerlukan Lampiran
+                            </span>
+                        @else
+                            <span class="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm font-medium">
+                                <i class="fas fa-times mr-1"></i>Tidak Perlu
                             </span>
                         @endif
                     </p>

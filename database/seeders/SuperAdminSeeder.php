@@ -71,7 +71,7 @@ class SuperAdminSeeder extends Seeder
                 'id' => Str::uuid(),
                 'nip' => 'NIP-0001',
                 'name' => 'Super Admin',
-                'email' => 'superadmin@example.com',
+                'email' => 'superadmin@rshdi.com',
                 'phone_number' => '081234567890',
                 'address' => 'Jakarta',
                 'birth_date' => '1990-01-01',
@@ -90,7 +90,7 @@ class SuperAdminSeeder extends Seeder
             $user = User::create([
                 'id' => Str::uuid(),
                 'username' => 'Super Admin',
-                'email' => 'superadmin@example.com',
+                'email' => 'superadmin@rshdi.com',
                 'password' => Hash::make('password'),
                 'worker_id' => $worker->id,
                 'is_active' => true,

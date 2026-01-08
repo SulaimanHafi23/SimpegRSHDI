@@ -71,7 +71,8 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($shift->start_time)->diff(\Carbon\Carbon::parse($shift->end_time))->format('%h jam') }}
+                            <i class="fas fa-hourglass-half mr-1"></i>
+                            {{ number_format($shift->total_hours, 2) }} jam
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">

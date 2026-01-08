@@ -50,6 +50,11 @@ class UserRepository implements UserRepositoryInterface
         return $this->model->where('email', $email)->first();
     }
 
+    public function getByWorkerId(string $workerId): ?object
+    {
+        return $this->model->where('worker_id', $workerId)->first();
+    }
+
     public function create(UserDTO $dto): object
     {
         return $this->model->create($dto->toArray());

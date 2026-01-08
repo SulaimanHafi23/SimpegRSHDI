@@ -10,6 +10,14 @@ use Illuminate\Http\Request;
 
 class DepartmentDocumentTypeController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('permission:department-document-type.manage')->only(['index', 'show']);
+        $this->middleware('permission:department-document-type.manage')->only(['create', 'store']);
+        $this->middleware('permission:department-document-type.manage')->only(['edit', 'update']);
+        $this->middleware('permission:department-document-type.manage')->only('destroy');
+    }
     public function index()
     {
         // Show departments that have at least one mapping, display as cards

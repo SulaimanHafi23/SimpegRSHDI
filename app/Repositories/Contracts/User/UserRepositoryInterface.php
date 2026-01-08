@@ -29,6 +29,11 @@ interface UserRepositoryInterface
     public function getByEmail(string $email): ?object;
 
     /**
+     * Get user by worker id
+     */
+    public function getByWorkerId(string $workerId): ?object;
+
+    /**
      * Create a new user
      */
     public function create(UserDTO $dto): object;

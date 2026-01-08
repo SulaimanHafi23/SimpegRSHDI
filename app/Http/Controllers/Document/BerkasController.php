@@ -21,14 +21,14 @@ class BerkasController extends Controller
         private readonly DocumentTypeService $documentTypeService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:view-documents|view-own-documents')->only(['index', 'show']);
-        $this->middleware('permission:upload-documents')->only(['create', 'store']);
-        $this->middleware('permission:edit-documents')->only(['edit', 'update']);
-        $this->middleware('permission:delete-documents')->only(['destroy']);
-        $this->middleware('permission:verify-documents')->only(['verify']);
-        $this->middleware('permission:reject-documents')->only(['reject']);
-        $this->middleware('permission:view-pending-documents')->only(['pending']);
-        $this->middleware('permission:download-documents')->only(['download', 'preview']);
+        $this->middleware('permission:worker-document.manage|view-own-documents')->only(['index', 'show']);
+        $this->middleware('permission:worker-document.manage')->only(['create', 'store']);
+        $this->middleware('permission:worker-document.manage')->only(['edit', 'update']);
+        $this->middleware('permission:worker-document.manage')->only(['destroy']);
+        $this->middleware('permission:worker-document.manage')->only(['verify']);
+        $this->middleware('permission:worker-document.manage')->only(['reject']);
+        $this->middleware('permission:worker-document.manage')->only(['pending']);
+        $this->middleware('permission:worker-document.manage')->only(['download', 'preview']);
     }
 
     public function index(Request $request)
@@ -76,7 +76,7 @@ class BerkasController extends Controller
 
     public function create()
     {
-        $this->authorizePermission('upload-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $workers = auth()->user()->can('view-documents')
             ? $this->workerService->getActive()
@@ -89,11 +89,11 @@ class BerkasController extends Controller
 
     public function store(BerkasRequest $request)
     {
-        $this->authorizePermission('upload-documents');
+        $this->authorizePermission('worker-document.manage');
 
         // Check if user can upload for other workers
         if ($request->worker_id !== auth()->user()->worker_id) {
-            $this->authorizePermission('view-documents');
+            $this->authorizePermission('worker-document.manage');
         }
 
         $dto = BerkasDTO::fromRequest($request->validated());
@@ -112,7 +112,7 @@ class BerkasController extends Controller
 
     public function edit(string $id)
     {
-        $this->authorizePermission('edit-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $document = $this->service->findById($id);
 
@@ -134,7 +134,7 @@ class BerkasController extends Controller
 
     public function update(BerkasRequest $request, string $id)
     {
-        $this->authorizePermission('edit-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $document = $this->service->findById($id);
 
@@ -161,7 +161,7 @@ class BerkasController extends Controller
 
     public function destroy(string $id)
     {
-        $this->authorizePermission('delete-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $document = $this->service->findById($id);
 
@@ -185,7 +185,7 @@ class BerkasController extends Controller
 
     public function verify(string $id)
     {
-        $this->authorizePermission('verify-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $result = $this->service->verify($id, auth()->id());
 
@@ -198,7 +198,7 @@ class BerkasController extends Controller
 
     public function reject(Request $request, string $id)
     {
-        $this->authorizePermission('reject-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $request->validate([
             'rejection_reason' => 'required|string|max:500',
@@ -217,7 +217,7 @@ class BerkasController extends Controller
 
     public function pending()
     {
-        $this->authorizePermission('view-pending-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $pendingDocuments = $this->service->getPending();
         return view('admin.documents.pending', compact('pendingDocuments'));
@@ -228,7 +228,7 @@ class BerkasController extends Controller
         $this->authorizeAnyPermission(['view-documents', 'view-own-documents']);
 
         if (!$this->isOwnData($workerId)) {
-            $this->authorizePermission('view-documents');
+            $this->authorizePermission('worker-document.manage');
         }
 
         $worker = $this->workerService->findById($workerId);
@@ -242,7 +242,7 @@ class BerkasController extends Controller
         $this->authorizeAnyPermission(['view-documents', 'view-own-documents']);
 
         if (!$this->isOwnData($workerId)) {
-            $this->authorizePermission('view-documents');
+            $this->authorizePermission('worker-document.manage');
         }
 
         $worker = $this->workerService->findById($workerId);
@@ -253,13 +253,13 @@ class BerkasController extends Controller
 
     public function download(string $id)
     {
-        $this->authorizePermission('download-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $document = $this->service->findById($id);
 
         // Check own data permission
         if (!$this->isOwnData($document->worker_id)) {
-            $this->authorizePermission('view-documents');
+            $this->authorizePermission('worker-document.manage');
         }
 
         if (!Storage::disk('public')->exists($document->file_path)) {
@@ -271,13 +271,13 @@ class BerkasController extends Controller
 
     public function preview(string $id)
     {
-        $this->authorizePermission('download-documents');
+        $this->authorizePermission('worker-document.manage');
 
         $document = $this->service->findById($id);
 
         // Check own data permission
         if (!$this->isOwnData($document->worker_id)) {
-            $this->authorizePermission('view-documents');
+            $this->authorizePermission('worker-document.manage');
         }
 
         if (!Storage::disk('public')->exists($document->file_path)) {

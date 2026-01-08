@@ -12,6 +12,7 @@ use App\Repositories\Contracts\Master\ShiftRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Intervention\Image\ImageManagerStatic as Image;
 
 class AttendanceService
 {
@@ -242,14 +243,32 @@ class AttendanceService
 
     protected function savePhoto($photo, string $type, string $workerId): string
     {
-        $filename = sprintf(
-            '%s_%s_%s.%s',
-            $workerId,
-            $type,
-            now()->format('YmdHis'),
-            $photo->getClientOriginalExtension()
-        );
+        $ext = strtolower($photo->getClientOriginalExtension() ?? 'jpg');
+        $filename = sprintf('%s_%s_%s.%s', $workerId, $type, now()->format('YmdHis'), $ext);
 
+        // Try to process with Intervention Image if available; otherwise fallback to storing original file
+        try {
+            if (class_exists('\\Intervention\\Image\\ImageManagerStatic')) {
+                $img = Image::make($photo->getRealPath());
+                $img->orientate();
+                if ($img->width() > 1200) {
+                    $img->resize(1200, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+
+                $encoded = (string) $img->encode($ext, 75);
+                $path = 'attendance-photos/' . $filename;
+                Storage::disk('public')->put($path, $encoded);
+
+                return $path;
+            }
+        } catch (\Throwable $e) {
+            // swallow and fallback to storing original
+        }
+
+        // Fallback: store original uploaded file
         return $photo->storeAs('attendance-photos', $filename, 'public');
     }
 }

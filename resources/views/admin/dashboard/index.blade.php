@@ -126,7 +126,7 @@
                                 @endif
                                 <div>
                                     <p class="text-sm font-medium text-gray-900">{{ $leave->worker->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $leave->leave_type->name ?? '-' }}</p>
+                                    <p class="text-xs text-gray-500">{{ $leave->leaveType->name ?? '-' }}</p>
                                 </div>
                             </div>
                             @if($leave->status == 'approved')
@@ -136,6 +136,10 @@
                             @elseif($leave->status == 'rejected')
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                                     <i class="fas fa-times-circle mr-1"></i>Ditolak
+                                </span>
+                            @elseif($leave->status == 'cancelled')
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    <i class="fas fa-ban mr-1"></i>Dibatalkan
                                 </span>
                             @else
                                 <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">

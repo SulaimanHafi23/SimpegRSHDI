@@ -10,7 +10,7 @@ class ShiftDTO
         public readonly string $name,
         public readonly string $start_time,
         public readonly string $end_time,
-        public readonly int $total_hours,
+        public readonly float $total_hours,
         public readonly int $grace_period_minutes,
         public readonly bool $is_overnight,
         public readonly bool $is_active,

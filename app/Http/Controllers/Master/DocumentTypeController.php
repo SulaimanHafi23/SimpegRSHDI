@@ -15,10 +15,10 @@ class DocumentTypeController extends Controller
         protected DocumentTypeService $documentTypeService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:document-type.view')->only(['index', 'show']);
-        $this->middleware('permission:document-type.create')->only(['create', 'store']);
-        $this->middleware('permission:document-type.edit')->only(['edit', 'update']);
-        $this->middleware('permission:document-type.delete')->only('destroy');
+        $this->middleware('permission:document-type.manage')->only(['index', 'show']);
+        $this->middleware('permission:document-type.manage')->only(['create', 'store']);
+        $this->middleware('permission:document-type.manage')->only(['edit', 'update']);
+        $this->middleware('permission:document-type.manage')->only('destroy');
     }
 
     public function index(Request $request)

@@ -13,10 +13,10 @@ class DepartmentController extends Controller
         protected DepartmentService $departmentService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:department.view')->only(['index', 'show']);
-        $this->middleware('permission:department.create')->only(['create', 'store']);
-        $this->middleware('permission:department.edit')->only(['edit', 'update']);
-        $this->middleware('permission:department.delete')->only('destroy');
+        $this->middleware('permission:department.manage')->only(['index', 'show']);
+        $this->middleware('permission:department.manage')->only(['create', 'store']);
+        $this->middleware('permission:department.manage')->only(['edit', 'update']);
+        $this->middleware('permission:department.manage')->only('destroy');
     }
 
     public function index(Request $request)

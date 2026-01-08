@@ -65,13 +65,13 @@
 
                     {{-- Jenis Cuti --}}
                     <x-form.select 
-                        name="leave_type" 
+                        name="leave_type_id" 
                         label="Jenis Cuti"
                         required
                         placeholder="Pilih Jenis Cuti"
-                        :selected="old('leave_type', $leaveRequest->leave_type)">
+                        :selected="old('leave_type_id', $leaveRequest->leave_type_id)">
                         @foreach($leaveTypes as $type)
-                            <option value="{{ $type }}">{{ $type }}</option>
+                            <option value="{{ $type->id }}" @selected(old('leave_type_id', $leaveRequest->leave_type_id) == $type->id)>{{ $type->name }}</option>
                         @endforeach
                     </x-form.select>
 

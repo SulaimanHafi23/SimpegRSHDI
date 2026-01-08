@@ -19,7 +19,10 @@ class AttendanceController extends Controller
         protected AttendanceService $attendanceService,
         protected WorkerService $workerService,
         protected LocationService $locationService
-    ) {}
+    ) {
+        $this->middleware(['auth']);
+        $this->middleware('permission:attendance.manage');
+    }
 
     public function index(Request $request)
     {

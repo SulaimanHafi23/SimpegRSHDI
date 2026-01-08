@@ -16,6 +16,39 @@
         </h1>
     </div>
 
+    <!-- Alert Messages -->
+    @if($errors->any())
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+            <div class="flex items-start">
+                <i class="fas fa-exclamation-circle text-red-500 mt-1 mr-3"></i>
+                <div class="flex-1">
+                    <p class="font-medium text-red-800">Terdapat kesalahan:</p>
+                    <ul class="mt-2 text-sm text-red-700 list-disc list-inside space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    @elseif(session('error'))
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                <p class="text-red-800">{{ session('error') }}</p>
+            </div>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
+            <div class="flex items-center">
+                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                <p class="text-green-800">{{ session('success') }}</p>
+            </div>
+        </div>
+    @endif
+
     <div class="bg-white rounded-lg shadow-md p-6">
         <form action="{{ route('admin.master.leave-types.update', $leaveType->id) }}" method="POST">
             @csrf
@@ -42,10 +75,40 @@
                 </div>
 
                 <div>
-                    <label for="max_days" class="block text-sm font-medium text-gray-700 mb-2">Maksimal Hari</label>
-                    <input type="number" name="max_days" id="max_days" value="{{ old('max_days', $leaveType->max_days) }}"
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                           placeholder="12" min="1">
+                    <label for="max_days_per_year" class="block text-sm font-medium text-gray-700 mb-2">
+                        Maksimal Hari <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" 
+                           name="max_days_per_year" 
+                           id="max_days_per_year" 
+                           value="{{ old('max_days_per_year', $leaveType->max_days_per_year) }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 @error('max_days_per_year') border-red-500 @enderror"
+                           placeholder="12" 
+                           min="1"
+                           required>
+                    @error('max_days_per_year')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label for="days_notice" class="block text-sm font-medium text-gray-700 mb-2">
+                        Hari Notice <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" 
+                           name="days_notice" 
+                           id="days_notice" 
+                           value="{{ old('days_notice', $leaveType->days_notice ?? 0) }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 @error('days_notice') border-red-500 @enderror"
+                           placeholder="0" 
+                           min="0"
+                           required>
+                    @error('days_notice')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-xs text-gray-500">
+                        <i class="fas fa-info-circle"></i> Berapa hari sebelumnya cuti harus diajukan
+                    </p>
                 </div>
 
                 <div class="md:col-span-2">
@@ -60,6 +123,13 @@
                                {{ old('requires_approval', $leaveType->requires_approval) ? 'checked' : '' }}
                                class="w-4 h-4 text-green-600 border-gray-300 rounded">
                         <span class="text-sm font-medium text-gray-700">Memerlukan Persetujuan</span>
+                    </label>
+                    
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" name="requires_attachment" value="1" 
+                               {{ old('requires_attachment', $leaveType->requires_attachment) ? 'checked' : '' }}
+                               class="w-4 h-4 text-green-600 border-gray-300 rounded">
+                        <span class="text-sm font-medium text-gray-700">Memerlukan Lampiran</span>
                     </label>
                     
                     <label class="flex items-center space-x-2">
