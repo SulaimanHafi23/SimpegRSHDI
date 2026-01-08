@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.payroll.process-generate') }}" id="payrollForm">
+    <form method="POST" action="{{ route('admin.payroll.generate.process') }}" id="payrollForm">
         @csrf
 
         <!-- Period Selection -->
