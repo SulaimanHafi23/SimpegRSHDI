@@ -203,6 +203,25 @@
             checkbox.checked = false;
         });
     }
+
+    // Warning before leaving page if form has changes
+    let formChanged = false;
+    const form = document.querySelector('form');
+    
+    form.addEventListener('change', function() {
+        formChanged = true;
+    });
+
+    window.addEventListener('beforeunload', function(e) {
+        if (formChanged) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+
+    form.addEventListener('submit', function() {
+        formChanged = false; // Allow navigation on submit
+    });
 </script>
 @endpush
 @endsection

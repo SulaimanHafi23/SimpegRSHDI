@@ -20,12 +20,12 @@ class UserController extends Controller
     ) {
         $this->middleware('auth');
         // Enforce permissions by middleware to match RolePermissionSeeder
-        $this->middleware('permission:view-users')->only(['index', 'show']);
-        $this->middleware('permission:create-users')->only(['create', 'store']);
-        $this->middleware('permission:edit-users')->only(['edit', 'update']);
-        $this->middleware('permission:delete-users')->only(['destroy']);
+        $this->middleware('permission:user.manage')->only(['index', 'show']);
+        $this->middleware('permission:user.manage')->only(['create', 'store']);
+        $this->middleware('permission:user.manage')->only(['edit', 'update']);
+        $this->middleware('permission:user.manage')->only(['destroy']);
         // Only allow role assignment to authorized users
-        $this->middleware('permission:assign-roles')->only(['store', 'update']);
+        $this->middleware('permission:user.manage')->only(['store', 'update']);
     }
 
     public function index(Request $request)

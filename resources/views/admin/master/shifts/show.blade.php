@@ -69,7 +69,7 @@
                         <label class="text-sm text-gray-600">Durasi Kerja</label>
                         <p class="text-gray-900 font-medium">
                             <i class="fas fa-hourglass-half text-blue-500 mr-1"></i>
-                            {{ \Carbon\Carbon::parse($shift->start_time)->diff(\Carbon\Carbon::parse($shift->end_time))->format('%h jam %i menit') }}
+                            {{ number_format($shift->total_hours, 2) }} jam
                         </p>
                     </div>
                     
@@ -119,7 +119,7 @@
                     <div>
                         <p class="text-sm text-green-700 font-medium">Total Jam Kerja</p>
                         <p class="text-2xl font-bold text-green-700">
-                            {{ \Carbon\Carbon::parse($shift->start_time)->diff(\Carbon\Carbon::parse($shift->end_time))->format('%h') }} Jam
+                            {{ number_format($shift->total_hours, 2) }} Jam
                         </p>
                     </div>
                     <i class="fas fa-clock text-4xl text-green-400"></i>

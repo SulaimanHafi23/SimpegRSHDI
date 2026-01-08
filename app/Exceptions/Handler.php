@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Exceptions\PostTooLargeException;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -35,6 +36,27 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e): Response|RedirectResponse
     {
+        // Handle CSRF token mismatch (419 Page Expired)
+        if ($e instanceof TokenMismatchException) {
+            Log::warning('TokenMismatchException: CSRF token expired for user', [
+                'url' => $request->fullUrl(),
+                'user_id' => auth()->id()
+            ]);
+
+            // If it's an AJAX request, return JSON
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Session Anda telah berakhir. Silakan refresh halaman.',
+                    'error' => 'token_mismatch'
+                ], 419);
+            }
+
+            // Otherwise redirect back with an error flash
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Session Anda telah berakhir. Silakan coba lagi.');
+        }
+
         // Handle oversized POST (HTTP 413) with a friendly message
         if ($e instanceof PostTooLargeException) {
             Log::warning('PostTooLargeException: request exceeded PHP post_max_size or upload_max_filesize');

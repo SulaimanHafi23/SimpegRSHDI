@@ -19,8 +19,7 @@ class DashboardController extends Controller
     public function __construct(OvertimeRequestService $overtimeRequestService)
     {
         $this->middleware('auth');
-        // Allow any authenticated user to access dashboard
-        // Permission check can be added back if needed: $this->middleware('permission:view-dashboard');
+        $this->middleware('permission:dashboard.view');
 
         $this->overtimeRequestService = $overtimeRequestService;
     }

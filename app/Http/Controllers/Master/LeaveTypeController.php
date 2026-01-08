@@ -13,10 +13,10 @@ class LeaveTypeController extends Controller
         protected LeaveTypeService $leaveTypeService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:leave-type.view')->only(['index', 'show']);
-        $this->middleware('permission:leave-type.create')->only(['create', 'store']);
-        $this->middleware('permission:leave-type.edit')->only(['edit', 'update']);
-        $this->middleware('permission:leave-type.delete')->only('destroy');
+        $this->middleware('permission:leave-type.manage')->only(['index', 'show']);
+        $this->middleware('permission:leave-type.manage')->only(['create', 'store']);
+        $this->middleware('permission:leave-type.manage')->only(['edit', 'update']);
+        $this->middleware('permission:leave-type.manage')->only('destroy');
     }
 
     public function index(Request $request)
@@ -39,18 +39,25 @@ class LeaveTypeController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:leave_types,name',
-            'code' => 'required|string|max:50|unique:leave_types,code',
-            'description' => 'nullable|string',
-            'max_days_per_year' => 'required|integer|min:1',
-            'is_paid' => 'nullable|boolean',
-            'requires_approval' => 'nullable|boolean',
-            'requires_attachment' => 'nullable|boolean',
-            'is_active' => 'nullable|boolean',
-        ]);
-
         try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255|unique:leave_types,name',
+                'code' => 'required|string|max:50|unique:leave_types,code',
+                'description' => 'nullable|string',
+                'max_days_per_year' => 'required|integer|min:1',
+                'days_notice' => 'required|integer|min:0',
+                'is_paid' => 'nullable|boolean',
+                'requires_approval' => 'nullable|boolean',
+                'requires_attachment' => 'nullable|boolean',
+                'is_active' => 'nullable|boolean',
+            ]);
+
+            // Convert checkbox values
+            $validated['is_paid'] = $request->has('is_paid') ? true : false;
+            $validated['requires_approval'] = $request->has('requires_approval') ? true : false;
+            $validated['requires_attachment'] = $request->has('requires_attachment') ? true : false;
+            $validated['is_active'] = $request->has('is_active') ? true : false;
+
             $dto = LeaveTypeDTO::fromRequest($validated);
             $result = $this->leaveTypeService->create($dto);
 
@@ -63,7 +70,15 @@ class LeaveTypeController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $result['message']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', 'Validasi gagal. Periksa kembali input Anda.');
         } catch (\Exception $e) {
+            \Log::error('Error creating leave type: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -96,18 +111,25 @@ class LeaveTypeController extends Controller
 
     public function update(Request $request, string $id)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:leave_types,name,' . $id,
-            'code' => 'required|string|max:50|unique:leave_types,code,' . $id,
-            'description' => 'nullable|string',
-            'max_days_per_year' => 'required|integer|min:1',
-            'is_paid' => 'nullable|boolean',
-            'requires_approval' => 'nullable|boolean',
-            'requires_attachment' => 'nullable|boolean',
-            'is_active' => 'nullable|boolean',
-        ]);
-
         try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255|unique:leave_types,name,' . $id,
+                'code' => 'required|string|max:50|unique:leave_types,code,' . $id,
+                'description' => 'nullable|string',
+                'max_days_per_year' => 'required|integer|min:1',
+                'days_notice' => 'required|integer|min:0',
+                'is_paid' => 'nullable|boolean',
+                'requires_approval' => 'nullable|boolean',
+                'requires_attachment' => 'nullable|boolean',
+                'is_active' => 'nullable|boolean',
+            ]);
+
+            // Convert checkbox values
+            $validated['is_paid'] = $request->has('is_paid') ? true : false;
+            $validated['requires_approval'] = $request->has('requires_approval') ? true : false;
+            $validated['requires_attachment'] = $request->has('requires_attachment') ? true : false;
+            $validated['is_active'] = $request->has('is_active') ? true : false;
+
             $dto = LeaveTypeDTO::fromRequest($validated);
             $result = $this->leaveTypeService->update($id, $dto);
 
@@ -120,7 +142,15 @@ class LeaveTypeController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $result['message']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', 'Validasi gagal. Periksa kembali input Anda.');
         } catch (\Exception $e) {
+            \Log::error('Error updating leave type: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

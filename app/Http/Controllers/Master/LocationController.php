@@ -13,10 +13,10 @@ class LocationController extends Controller
         protected LocationService $locationService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:location.view')->only(['index', 'show']);
-        $this->middleware('permission:location.create')->only(['create', 'store']);
-        $this->middleware('permission:location.edit')->only(['edit', 'update']);
-        $this->middleware('permission:location.delete')->only('destroy');
+        $this->middleware('permission:location.manage')->only(['index', 'show']);
+        $this->middleware('permission:location.manage')->only(['create', 'store']);
+        $this->middleware('permission:location.manage')->only(['edit', 'update']);
+        $this->middleware('permission:location.manage')->only('destroy');
     }
 
     public function index(Request $request)

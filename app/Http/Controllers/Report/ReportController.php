@@ -22,7 +22,7 @@ class ReportController extends Controller
     ) {
         $this->middleware('auth');
         // Allow viewing reports and exporting reports (some users may have export permission)
-        $this->middleware('permission:view-reports|export-reports');
+        $this->middleware('permission:report.view');
     }
 
     public function attendance(Request $request)

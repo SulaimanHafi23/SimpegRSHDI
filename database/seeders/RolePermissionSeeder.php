@@ -16,562 +16,113 @@ class RolePermissionSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // ========== CREATE PERMISSIONS ==========
-        
-        // Role & Permission Management
-        $rolePermissions = [
-            'view-roles',
-            'create-roles',
-            'edit-roles',
-            'delete-roles',
-            'assign-permissions-to-roles',
-        ];
+        /**
+         * Module-based Permissions
+         * Format: module.manage (can fully manage the module)
+         */
+        $permissions = [
+            // Dashboard
+            'dashboard.view',
 
-        // Permission Management
-        $permissionManagement = [
-            'view-permissions',
-            'assign-permissions-to-users',
-        ];
+            // Data Master
+            'religion.manage',
+            'gender.manage',
+            'department.manage',
+            'location.manage',
+            'shift.manage',
+            'leave-type.manage',
+            'document-type.manage',
+            'department-document-type.manage',
 
-        // Master Data Permissions - Generic
-        $masterPermissions = [
-            'view-master-data',
-            'create-master-data',
-            'edit-master-data',
-            'delete-master-data',
-        ];
+            // Management
+            'worker.manage',
+            'attendance.manage',
+            'schedule.manage',
+            'worker-document.manage',
 
-        // Master Data Permissions - Specific per entity
-        $departmentPermissions = [
-            'department.view',
-            'department.create',
-            'department.edit',
-            'department.delete',
-        ];
+            // Approval
+            'leave.manage',
+            'overtime.manage',
+            'shift-swap.manage',
+            'business-trip.manage',
+            
+            // Reports
+            'report.view',
 
-        $genderPermissions = [
-            'gender.view',
-            'gender.create',
-            'gender.edit',
-            'gender.delete',
+            // Settings
+            'holiday.manage',
+            'role.manage',
+            'user.manage',
         ];
-
-        $religionPermissions = [
-            'religion.view',
-            'religion.create',
-            'religion.edit',
-            'religion.delete',
-        ];
-
-        $locationPermissions = [
-            'location.view',
-            'location.create',
-            'location.edit',
-            'location.delete',
-        ];
-
-        $shiftPermissions = [
-            'shift.view',
-            'shift.create',
-            'shift.edit',
-            'shift.delete',
-        ];
-
-        $leaveTypePermissions = [
-            'leave-type.view',
-            'leave-type.create',
-            'leave-type.edit',
-            'leave-type.delete',
-        ];
-
-        $documentTypePermissions = [
-            'document-type.view',
-            'document-type.create',
-            'document-type.edit',
-            'document-type.delete',
-        ];
-
-        $positionPermissions = [
-            'position.view',
-            'position.create',
-            'position.edit',
-            'position.delete',
-        ];
-
-        $fileRequirementPermissions = [
-            'file-requirement.view',
-            'file-requirement.create',
-            'file-requirement.edit',
-            'file-requirement.delete',
-        ];
-
-        $holidayPermissions = [
-            'holiday.view',
-            'holiday.create',
-            'holiday.edit',
-            'holiday.delete',
-            'holiday.bulk-create',
-            'holiday.auto-generate',
-        ];
-
-        // Worker Management Permissions
-        $workerPermissions = [
-            'view-workers',
-            'create-workers',
-            'edit-workers',
-            'delete-workers',
-            'view-worker-profile',
-            'view-worker-documents',
-            'view-worker-attendance',
-            'view-worker-leaves',
-        ];
-
-        // User Management Permissions
-        $userPermissions = [
-            'view-users',
-            'create-users',
-            'edit-users',
-            'delete-users',
-            'assign-roles',
-            'toggle-user-status',
-        ];
-
-        // Attendance Permissions
-        $attendancePermissions = [
-            'view-attendance',
-            'create-attendance',
-            'edit-attendance',
-            'delete-attendance',
-            'view-own-attendance',
-            'view-attendance-reports',
-        ];
-
-        // Schedule Permissions
-        $schedulePermissions = [
-            'view-schedules',
-            'create-schedules',
-            'edit-schedules',
-            'delete-schedules',
-            'view-own-schedule',
-            'bulk-create-schedules',
-        ];
-
-        // Leave Request Permissions
-        $leavePermissions = [
-            'view-leave-requests',
-            'create-leave-requests',
-            'edit-leave-requests',
-            'delete-leave-requests',
-            'approve-leave-requests',
-            'reject-leave-requests',
-            'view-own-leave-requests',
-            'view-pending-leaves',
-        ];
-
-        // Overtime Permissions
-        $overtimePermissions = [
-            'view-overtimes',
-            'create-overtimes',
-            'edit-overtimes',
-            'delete-overtimes',
-            'approve-overtimes',
-            'reject-overtimes',
-            'view-own-overtimes',
-            'view-pending-overtimes',
-        ];
-
-        // Shift Swap Permissions
-        $shiftSwapPermissions = [
-            'view-shift-swaps',
-            'create-shift-swaps',
-            'accept-shift-swaps',
-            'reject-shift-swaps',
-            'cancel-shift-swaps',
-            'view-own-shift-swaps',
-            'approve-shift-swaps',      // Manager only
-            'reject-manager-shift-swaps', // Manager only
-            'execute-shift-swaps',       // Manager only
-            'view-pending-shift-swaps',  // Manager only
-        ];
-
-        // Business Trip Permissions
-        $businessTripPermissions = [
-            'view-business-trips',
-            'create-business-trips',
-            'edit-business-trips',
-            'delete-business-trips',
-            'approve-business-trips',
-            'reject-business-trips',
-            'view-own-business-trips',
-            'view-pending-business-trips',
-            'view-active-business-trips',
-        ];
-
-        // Business Trip Report Permissions
-        $businessTripReportPermissions = [
-            'view-business-trip-reports',
-            'create-business-trip-reports',
-            'edit-business-trip-reports',
-            'delete-business-trip-reports',
-            'approve-business-trip-reports',
-            'reject-business-trip-reports',
-        ];
-
-        // Document Permissions
-        $documentPermissions = [
-            'view-documents',
-            'upload-documents',
-            'edit-documents',
-            'delete-documents',
-            'verify-documents',
-            'reject-documents',
-            'view-own-documents',
-            'view-pending-documents',
-            'download-documents',
-        ];
-
-        // Salary Permissions
-        $salaryPermissions = [
-            'view-salaries',
-            'create-salaries',
-            'edit-salaries',
-            'delete-salaries',
-            'view-own-salary',
-            'export-salary-reports',
-        ];
-
-        // Report Permissions
-        $reportPermissions = [
-            'view-reports',
-            'export-reports',
-        ];
-
-        // Dashboard Permissions
-        $dashboardPermissions = [
-            'view-dashboard',
-            'view-admin-dashboard',
-            'view-hr-dashboard',
-            'view-manager-dashboard',
-            'view-employee-dashboard',
-        ];
-
-        // Settings Permissions
-        $settingsPermissions = [
-            'view-settings',
-            'edit-settings',
-            'view-shift-patterns',
-            'create-shift-patterns',
-            'edit-shift-patterns',
-            'delete-shift-patterns',
-        ];
-
-        // Combine all permissions
-        $allPermissions = array_merge(
-            $rolePermissions,
-            $permissionManagement,
-            $masterPermissions,
-            $departmentPermissions,
-            $genderPermissions,
-            $religionPermissions,
-            $locationPermissions,
-            $shiftPermissions,
-            $leaveTypePermissions,
-            $documentTypePermissions,
-            $positionPermissions,
-            $fileRequirementPermissions,
-            $holidayPermissions,
-            $workerPermissions,
-            $userPermissions,
-            $attendancePermissions,
-            $schedulePermissions,
-            $leavePermissions,
-            $overtimePermissions,
-            $shiftSwapPermissions,
-            $businessTripPermissions,
-            $businessTripReportPermissions,
-            $documentPermissions,
-            $salaryPermissions,
-            $reportPermissions,
-            $dashboardPermissions,
-            $settingsPermissions
-        );
 
         // Create permissions
-        foreach ($allPermissions as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission],
-                ['guard_name' => 'web']
-            );
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'web']);
         }
 
-        // ========== CREATE ROLES ==========
+        // Create Roles and Assign Permissions
+        
+        // Super Admin - All permissions
+        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
+        $superAdmin->syncPermissions(Permission::all());
 
-        // 1. Super Admin - Full Access
-        $superAdmin = Role::firstOrCreate(['name' => 'Super Admin']);
-        $superAdmin->givePermissionTo(Permission::all());
-
-        // 2. HR - Human Resource Management
-        $hr = Role::firstOrCreate(['name' => 'HR']);
-        $hr->givePermissionTo([
-            // Role & Permission
-            'view-roles',
-            'view-permissions',
-            
-            // Master Data - Generic
-            'view-master-data',
-            'create-master-data',
-            'edit-master-data',
-            
-            // Master Data - Specific
-            'department.view',
-            'department.create',
-            'department.edit',
-            'gender.view',
-            'gender.create',
-            'gender.edit',
-            'religion.view',
-            'religion.create',
-            'religion.edit',
-            'location.view',
-            'location.create',
-            'location.edit',
-            'shift.view',
-            'shift.create',
-            'shift.edit',
-            'leave-type.view',
-            'leave-type.create',
-            'leave-type.edit',
-            'document-type.view',
-            'document-type.create',
-            'document-type.edit',
-            'position.view',
-            'position.create',
-            'position.edit',
-            'file-requirement.view',
-            'file-requirement.create',
-            'file-requirement.edit',
-            
-            // Holidays
-            'holiday.view',
-            'holiday.create',
-            'holiday.edit',
-            'holiday.delete',
-            'holiday.bulk-create',
-            'holiday.auto-generate',
-            
-            // Workers
-            'view-workers',
-            'create-workers',
-            'edit-workers',
-            'view-worker-profile',
-            'view-worker-documents',
-            'view-worker-attendance',
-            'view-worker-leaves',
-            
-            // Users
-            'view-users',
-            'create-users',
-            'edit-users',
-            'assign-roles',
-            'toggle-user-status',
-            
-            // Attendance
-            'view-attendance',
-            'create-attendance',
-            'edit-attendance',
-            'view-attendance-reports',
-            
-            // Schedules
-            'view-schedules',
-            'create-schedules',
-            'edit-schedules',
-            'bulk-create-schedules',
-            
-            // Leave Requests
-            'view-leave-requests',
-            'approve-leave-requests',
-            'reject-leave-requests',
-            'view-pending-leaves',
-            
-            // Overtimes
-            'view-overtimes',
-            'approve-overtimes',
-            'reject-overtimes',
-            'view-pending-overtimes',
-            
-            // Shift Swaps
-            'view-shift-swaps',
-            'view-pending-shift-swaps',
-            'approve-shift-swaps',
-            'reject-manager-shift-swaps',
-            'execute-shift-swaps',
-            
-            // Business Trips
-            'view-business-trips',
-            'approve-business-trips',
-            'reject-business-trips',
-            'view-pending-business-trips',
-            'view-active-business-trips',
-            
-            // Business Trip Reports
-            'view-business-trip-reports',
-            'approve-business-trip-reports',
-            'reject-business-trip-reports',
-            
-            // Documents
-            'view-documents',
-            'verify-documents',
-            'reject-documents',
-            'view-pending-documents',
-            'download-documents',
-            
-            // Salaries
-            'view-salaries',
-            'create-salaries',
-            'edit-salaries',
-            'export-salary-reports',
-            
+        // HR - Full access to worker management and master data
+        $hr = Role::firstOrCreate(['name' => 'HR', 'guard_name' => 'web']);
+        $hr->syncPermissions([
+            'dashboard.view',
+            // Master Data
+            'religion.manage',
+            'gender.manage',
+            'department.manage',
+            'location.manage',
+            'shift.manage',
+            'leave-type.manage',
+            'document-type.manage',
+            'department-document-type.manage',
+            // Management
+            'worker.manage',
+            'attendance.manage',
+            'schedule.manage',
+            'worker-document.manage',
+            // Approval
+            'leave.manage',
+            'overtime.manage',
+            'business-trip.manage',
+            // Reports
+            'report.view',
             // Settings
-            'view-settings',
-            'edit-settings',
-            'view-shift-patterns',
-            'create-shift-patterns',
-            'edit-shift-patterns',
-            
-            // Reports & Dashboard
-            'view-reports',
-            'export-reports',
-            'view-dashboard',
-            'view-hr-dashboard',
+            'holiday.manage',
+            'user.manage',
         ]);
 
-        // 3. Manager - Department Management
-        $manager = Role::firstOrCreate(['name' => 'Manager']);
-        $manager->givePermissionTo([
-            // Master Data - View Only
-            'view-master-data',
-            'department.view',
-            'gender.view',
-            'religion.view',
-            'location.view',
-            'shift.view',
-            'leave-type.view',
-            'document-type.view',
-            'position.view',
-            'file-requirement.view',
-            
-            // Workers
-            'view-workers',
-            'view-worker-profile',
-            'view-worker-documents',
-            'view-worker-attendance',
-            'view-worker-leaves',
-            
-            // Attendance
-            'view-attendance',
-            'view-attendance-reports',
-            
-            // Schedules
-            'view-schedules',
-            
-            // Leave Requests
-            'view-leave-requests',
-            'approve-leave-requests',
-            'reject-leave-requests',
-            'view-pending-leaves',
-            
-            // Overtimes
-            'view-overtimes',
-            'approve-overtimes',
-            'reject-overtimes',
-            'view-pending-overtimes',
-            
-            // Shift Swaps
-            'view-shift-swaps',
-            'view-pending-shift-swaps',
-            'approve-shift-swaps',
-            'reject-manager-shift-swaps',
-            'execute-shift-swaps',
-            
-            // Business Trips
-            'view-business-trips',
-            'approve-business-trips',
-            'reject-business-trips',
-            'view-pending-business-trips',
-            'view-active-business-trips',
-            
-            // Business Trip Reports
-            'view-business-trip-reports',
-            'approve-business-trip-reports',
-            'reject-business-trip-reports',
-            
-            // Documents
-            'view-documents',
-            'download-documents',
-            
-            // Reports & Dashboard
-            'view-reports',
-            'export-reports',
-            'view-dashboard',
-            'view-manager-dashboard',
+        // Manager - Approval and view access
+        $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
+        $manager->syncPermissions([
+            'dashboard.view',
+            // View only for master data
+            'department.manage',
+            'shift.manage',
+            // Management
+            'worker.manage',
+            'attendance.manage',
+            'schedule.manage',
+            // Approval
+            'leave.manage',
+            'overtime.manage',
+            'shift-swap.manage',
+            'business-trip.manage',
+            // Reports
+            'report.view',
         ]);
 
-        // 4. Employee - Self Service
-        $employee = Role::firstOrCreate(['name' => 'Employee']);
-        $employee->givePermissionTo([
-            // Own Data Only
-            'view-own-attendance',
-            'view-own-schedule',
-            
-            // Leave Requests
-            'view-own-leave-requests',
-            'create-leave-requests',
-            'edit-leave-requests',
-            
-            // Overtimes
-            'view-own-overtimes',
-            'create-overtimes',
-            'edit-overtimes',
-            
-            // Shift Swaps
-            'view-own-shift-swaps',
-            'create-shift-swaps',
-            'accept-shift-swaps',
-            'reject-shift-swaps',
-            'cancel-shift-swaps',
-            
-            // Business Trips
-            'view-own-business-trips',
-            'create-business-trips',
-            'edit-business-trips',
-            
-            // Business Trip Reports
-            'create-business-trip-reports',
-            'edit-business-trip-reports',
-            
-            // Documents
-            'view-own-documents',
-            'upload-documents',
-            'edit-documents',
-            'download-documents',
-            
-            // Salary
-            'view-own-salary',
-            
-            // Dashboard
-            'view-dashboard',
-            'view-employee-dashboard',
+        // Employee - Basic access
+        $employee = Role::firstOrCreate(['name' => 'Employee', 'guard_name' => 'web']);
+        $employee->syncPermissions([
+            'dashboard.view',
         ]);
 
-        $this->command->info('✅ Roles and Permissions created successfully!');
-        $this->command->table(
-            ['Role', 'Permissions Count'],
-            [
-                ['Super Admin', $superAdmin->permissions->count()],
-                ['HR', $hr->permissions->count()],
-                ['Manager', $manager->permissions->count()],
-                ['Employee', $employee->permissions->count()],
-            ]
-        );
+        $this->command->info('✅ Module-based permissions and roles created successfully!');
+        $this->command->info('📊 Total Permissions: ' . count($permissions));
+        $this->command->info('👥 Roles: Super Admin, HR, Manager, Employee');
     }
 }

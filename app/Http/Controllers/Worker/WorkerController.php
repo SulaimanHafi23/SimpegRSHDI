@@ -29,16 +29,12 @@ class WorkerController extends Controller
         private readonly RoleService $roleService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:view-workers')->only(['index', 'export']);
-        $this->middleware('permission:view-worker-profile')->only(['show']);
-        $this->middleware('permission:create-workers')->only(['create', 'store', 'import']);
-        $this->middleware('permission:edit-workers')->only(['edit', 'update', 'resign']);
-        $this->middleware('permission:delete-workers')->only(['destroy']);
+        $this->middleware('permission:worker.manage');
     }
 
     public function index(Request $request)
     {
-        $this->authorizePermission('view-workers');
+        $this->authorizePermission('worker.manage');
 
         $filters = [
             'search' => $request->input('search'),
@@ -59,7 +55,7 @@ class WorkerController extends Controller
 
     public function show(string $id)
     {
-        $this->authorizePermission('view-worker-profile');
+        $this->authorizePermission('worker.manage');
 
         try {
             $worker = $this->service->getById($id);
@@ -109,7 +105,7 @@ class WorkerController extends Controller
 
     public function attendanceHistory(Request $request, string $id)
     {
-        $this->authorizePermission('view-worker-profile');
+        $this->authorizePermission('worker.manage');
 
         try {
             $worker = $this->service->getById($id);
@@ -190,7 +186,7 @@ class WorkerController extends Controller
 
     public function create()
     {
-        $this->authorizePermission('create-workers');
+        $this->authorizePermission('worker.manage');
 
         $genders = $this->genderService->getAllActive();
         $religions = $this->religionService->getAllActive();
@@ -201,7 +197,7 @@ class WorkerController extends Controller
 
     public function store(WorkerRequest $request)
     {
-        $this->authorizePermission('create-workers');
+        $this->authorizePermission('worker.manage');
 
         try {
             $worker = $this->service->create($request->validated());
@@ -218,7 +214,7 @@ class WorkerController extends Controller
 
     public function edit(string $id)
     {
-        $this->authorizePermission('edit-workers');
+        $this->authorizePermission('worker.manage');
 
         try {
             $worker = $this->service->getById($id);
@@ -238,7 +234,7 @@ class WorkerController extends Controller
 
     public function update(WorkerRequest $request, string $id)
     {
-        $this->authorizePermission('edit-workers');
+        $this->authorizePermission('worker.manage');
 
         try {
             $worker = $this->service->update($id, $request->validated());
@@ -255,7 +251,7 @@ class WorkerController extends Controller
 
     public function destroy(string $id)
     {
-        $this->authorizePermission('delete-workers');
+        $this->authorizePermission('worker.manage');
 
         try {
             $this->service->delete($id);
@@ -270,7 +266,7 @@ class WorkerController extends Controller
 
     public function resign(Request $request, string $id)
     {
-        $this->authorizePermission('edit-workers');
+        $this->authorizePermission('worker.manage');
 
         $validated = $request->validate([
             'resign_date' => 'required|date',
@@ -288,7 +284,7 @@ class WorkerController extends Controller
 
     public function export(Request $request)
     {
-        $this->authorizePermission('view-workers');
+        $this->authorizePermission('worker.manage');
 
         try {
             $filters = [
@@ -307,7 +303,7 @@ class WorkerController extends Controller
 
     public function import(Request $request)
     {
-        $this->authorizePermission('create-workers');
+        $this->authorizePermission('worker.manage');
 
         $request->validate([
             'file' => 'required|mimes:xlsx,xls,csv|max:5120',
@@ -341,7 +337,7 @@ class WorkerController extends Controller
 
     public function downloadTemplate()
     {
-        $this->authorizePermission('view-workers');
+        $this->authorizePermission('worker.manage');
 
         try {
             $filename = 'template-import-pegawai.xlsx';

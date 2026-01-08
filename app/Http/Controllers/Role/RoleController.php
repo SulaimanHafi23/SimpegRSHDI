@@ -16,7 +16,7 @@ class RoleController extends Controller
         protected PermissionService $permissionService
     ) {
         $this->middleware(['auth']);
-        // Permission check dilakukan di blade dengan @can
+        $this->middleware('permission:role.manage');
     }
 
     public function index(Request $request)
@@ -36,6 +36,7 @@ class RoleController extends Controller
 
     public function store(RoleRequest $request)
     {
+        // dd($request->all());
         try {
             $dto = \App\DTOs\RoleDTO::fromRequest($request->validated());
             $result = $this->roleService->create($dto);
@@ -84,6 +85,12 @@ class RoleController extends Controller
 
     public function update(RoleRequest $request, string $id)
     {
+        \Log::info('RoleController update() called', [
+            'user' => auth()->user()->email,
+            'role_id' => $id,
+            'data' => $request->all()
+        ]);
+        
         try {
             $dto = \App\DTOs\RoleDTO::fromRequest($request->validated());
             $result = $this->roleService->update($id, $dto);
@@ -98,6 +105,7 @@ class RoleController extends Controller
                 ->withInput()
                 ->with('error', $result['message']);
         } catch (\Exception $e) {
+            \Log::error('Error updating role: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());

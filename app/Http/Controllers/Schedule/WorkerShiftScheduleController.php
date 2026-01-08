@@ -18,11 +18,11 @@ class WorkerShiftScheduleController extends Controller
         private readonly ShiftService $shiftService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:view-schedules|view-own-schedule')->only(['index', 'show', 'calendar', 'workerSchedule']);
-        $this->middleware('permission:create-schedules')->only(['create', 'store']);
-        $this->middleware('permission:edit-schedules')->only(['edit', 'update']);
-        $this->middleware('permission:delete-schedules')->only(['destroy']);
-        $this->middleware('permission:bulk-create-schedules')->only(['bulkCreate']);
+        $this->middleware('permission:schedule.manage|view-own-schedule')->only(['index', 'show', 'calendar', 'workerSchedule']);
+        $this->middleware('permission:schedule.manage')->only(['create', 'store']);
+        $this->middleware('permission:schedule.manage')->only(['edit', 'update']);
+        $this->middleware('permission:schedule.manage')->only(['destroy']);
+        $this->middleware('permission:schedule.manage')->only(['bulkCreate']);
     }
 
     public function index(Request $request)
@@ -74,7 +74,7 @@ class WorkerShiftScheduleController extends Controller
 
     public function create()
     {
-        $this->authorizePermission('create-schedules');
+        $this->authorizePermission('schedule.manage');
 
         $workers = $this->workerService->getActive();
         $shifts = $this->shiftService->getAll();
@@ -84,7 +84,7 @@ class WorkerShiftScheduleController extends Controller
 
     public function store(WorkerShiftScheduleRequest $request)
     {
-        $this->authorizePermission('create-schedules');
+        $this->authorizePermission('schedule.manage');
 
         $dto = WorkerShiftScheduleDTO::fromRequest($request->validated());
         $result = $this->service->create($dto);
@@ -102,7 +102,7 @@ class WorkerShiftScheduleController extends Controller
 
     public function edit(string $id)
     {
-        $this->authorizePermission('edit-schedules');
+        $this->authorizePermission('schedule.manage');
 
         $schedule = $this->service->findById($id);
         $workers = $this->workerService->getActive();
@@ -113,7 +113,7 @@ class WorkerShiftScheduleController extends Controller
 
     public function update(WorkerShiftScheduleRequest $request, string $id)
     {
-        $this->authorizePermission('edit-schedules');
+        $this->authorizePermission('schedule.manage');
 
         $dto = WorkerShiftScheduleDTO::fromRequest($request->validated());
         $result = $this->service->update($id, $dto);
@@ -131,7 +131,7 @@ class WorkerShiftScheduleController extends Controller
 
     public function destroy(string $id)
     {
-        $this->authorizePermission('delete-schedules');
+        $this->authorizePermission('schedule.manage');
 
         $result = $this->service->delete($id);
 
@@ -150,7 +150,7 @@ class WorkerShiftScheduleController extends Controller
 
         // Check permission for viewing other worker's schedule
         if (!$this->isOwnData($workerId)) {
-            $this->authorizePermission('view-schedules');
+            $this->authorizePermission('schedule.manage');
         }
 
         $month = $request->input('month', date('m'));
@@ -164,7 +164,7 @@ class WorkerShiftScheduleController extends Controller
 
     public function bulkCreate(Request $request)
     {
-        $this->authorizePermission('bulk-create-schedules');
+        $this->authorizePermission('schedule.manage');
 
         $request->validate([
             'worker_ids' => 'required|array',

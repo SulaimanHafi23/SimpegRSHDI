@@ -13,10 +13,10 @@ class ReligionController extends Controller
         protected ReligionService $religionService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:religion.view')->only(['index', 'show']);
-        $this->middleware('permission:religion.create')->only(['create', 'store']);
-        $this->middleware('permission:religion.edit')->only(['edit', 'update']);
-        $this->middleware('permission:religion.delete')->only('destroy');
+        $this->middleware('permission:religion.manage')->only(['index', 'show']);
+        $this->middleware('permission:religion.manage')->only(['create', 'store']);
+        $this->middleware('permission:religion.manage')->only(['edit', 'update']);
+        $this->middleware('permission:religion.manage')->only('destroy');
     }
 
     public function index(Request $request)

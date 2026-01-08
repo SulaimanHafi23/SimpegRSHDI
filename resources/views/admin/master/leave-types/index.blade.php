@@ -62,7 +62,8 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {{ $type->max_days ?? '∞' }} hari
+                            <i class="fas fa-calendar-day mr-1"></i>
+                            {{ $type->max_days_per_year ?? '∞' }} hari
                         </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">

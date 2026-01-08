@@ -20,7 +20,7 @@ class LeaveRequestController extends Controller
         protected LeaveTypeService $leaveTypeService
     ) {
         $this->middleware('auth');
-        // Permission check dilakukan di blade dengan @can
+        $this->middleware('permission:leave.manage');
     }
 
     public function index(Request $request)

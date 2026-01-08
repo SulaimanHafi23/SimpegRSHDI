@@ -72,6 +72,27 @@
                     @enderror
                 </div>
 
+                <!-- Total Jam -->
+                <div class="md:col-span-2">
+                    <label for="total_hours" class="block text-sm font-medium text-gray-700 mb-2">
+                        Total Jam <span class="text-red-500">*</span>
+                    </label>
+                    <input type="number" 
+                           name="total_hours" 
+                           id="total_hours" 
+                           value="{{ old('total_hours', $shift->total_hours) }}"
+                           step="0.01"
+                           readonly
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed @error('total_hours') border-red-500 @enderror"
+                           placeholder="Akan dihitung otomatis dari jam masuk dan keluar">
+                    @error('total_hours')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                    <p class="mt-1 text-xs text-gray-500">
+                        <i class="fas fa-info-circle"></i> Total jam akan dihitung otomatis berdasarkan jam masuk dan keluar
+                    </p>
+                </div>
+
                 <!-- Deskripsi -->
                 <div class="md:col-span-2">
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
@@ -114,3 +135,59 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // Function to calculate total hours
+    function calculateTotalHours() {
+        const startTime = document.getElementById('start_time').value;
+        const endTime = document.getElementById('end_time').value;
+        
+        if (startTime && endTime) {
+            // Parse hours and minutes
+            const [startHour, startMinute] = startTime.split(':').map(num => parseInt(num, 10));
+            const [endHour, endMinute] = endTime.split(':').map(num => parseInt(num, 10));
+            
+            // Convert to minutes since midnight
+            let startMinutes = (startHour * 60) + startMinute;
+            let endMinutes = (endHour * 60) + endMinute;
+            
+            // Handle overnight shift (end time is before start time)
+            if (endMinutes <= startMinutes) {
+                endMinutes += (24 * 60); // Add 24 hours in minutes
+            }
+            
+            // Calculate difference in minutes
+            const diffMinutes = endMinutes - startMinutes;
+            
+            // Convert to hours (with 2 decimal places)
+            const totalHours = parseFloat((diffMinutes / 60).toFixed(2));
+            
+            // Update the total_hours field
+            document.getElementById('total_hours').value = totalHours;
+            
+            console.log('Calculation:', {
+                startTime,
+                endTime,
+                startMinutes,
+                endMinutes,
+                diffMinutes,
+                totalHours
+            });
+        }
+    }
+    
+    // Add event listeners when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const startTimeInput = document.getElementById('start_time');
+        const endTimeInput = document.getElementById('end_time');
+        
+        // Calculate on change
+        startTimeInput.addEventListener('change', calculateTotalHours);
+        endTimeInput.addEventListener('change', calculateTotalHours);
+        
+        // Calculate on page load if both values exist (for old input)
+        calculateTotalHours();
+    });
+</script>
+@endpush

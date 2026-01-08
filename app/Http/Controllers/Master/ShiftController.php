@@ -13,10 +13,7 @@ class ShiftController extends Controller
         protected ShiftService $shiftService
     ) {
         $this->middleware('auth');
-        $this->middleware('permission:shift.view')->only(['index', 'show']);
-        $this->middleware('permission:shift.create')->only(['create', 'store']);
-        $this->middleware('permission:shift.edit')->only(['edit', 'update']);
-        $this->middleware('permission:shift.delete')->only('destroy');
+        $this->middleware('permission:shift.manage');
     }
 
     public function index(Request $request)
@@ -39,17 +36,21 @@ class ShiftController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:shifts,name',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
-            'total_hours' => 'required|integer|min:1|max:24',
-            'grace_period_minutes' => 'nullable|integer|min:0|max:60',
-            'is_overnight' => 'nullable|boolean',
-            'is_active' => 'nullable|boolean',
-        ]);
-
         try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255|unique:shifts,name',
+                'start_time' => 'required|date_format:H:i',
+                'end_time' => 'required|date_format:H:i',
+                'total_hours' => 'required|numeric|min:0.01|max:24',
+                'grace_period_minutes' => 'nullable|integer|min:0|max:60',
+                'is_overnight' => 'nullable|boolean',
+                'is_active' => 'nullable|boolean',
+            ]);
+
+            // Convert checkbox value
+            $validated['is_active'] = $request->has('is_active') ? true : false;
+            $validated['is_overnight'] = $request->has('is_overnight') ? true : false;
+
             $dto = ShiftDTO::fromRequest($validated);
             $result = $this->shiftService->create($dto);
 
@@ -62,7 +63,15 @@ class ShiftController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $result['message']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withInput()
+                ->withErrors($e->errors())
+                ->with('error', 'Validasi gagal. Periksa kembali input Anda.');
         } catch (\Exception $e) {
+            \Log::error('Error creating shift: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -101,7 +110,7 @@ class ShiftController extends Controller
             'name' => 'required|string|max:255|unique:shifts,name,' . $id,
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i',
-            'total_hours' => 'required|integer|min:1|max:24',
+            'total_hours' => 'required|numeric|min:0.01|max:24',
             'grace_period_minutes' => 'nullable|integer|min:0|max:60',
             'is_overnight' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
