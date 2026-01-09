@@ -173,12 +173,6 @@
                     <span>Tukar Shift</span>
                 </a>
                 @endif
-                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('business-trip.manage'))
-                <a href="{{ route('approvals.business-trips.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('approvals.business-trips.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-briefcase w-4"></i>
-                    <span>Perjalanan Dinas</span>
-                </a>
-                @endif
             </div>
         </div>
 

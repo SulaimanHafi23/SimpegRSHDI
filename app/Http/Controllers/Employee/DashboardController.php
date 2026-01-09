@@ -18,6 +18,7 @@ class DashboardController extends Controller
         private readonly EmployeeDashboardService $dashboardService
     ) {
         $this->middleware('auth');
+        $this->middleware('permission:dashboard.employee');
     }
 
     public function index()

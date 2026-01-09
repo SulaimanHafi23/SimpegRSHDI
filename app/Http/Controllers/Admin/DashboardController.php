@@ -19,7 +19,7 @@ class DashboardController extends Controller
     public function __construct(OvertimeRequestService $overtimeRequestService)
     {
         $this->middleware('auth');
-        $this->middleware('permission:dashboard.view');
+        $this->middleware('permission:dashboard.admin');
 
         $this->overtimeRequestService = $overtimeRequestService;
     }

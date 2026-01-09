@@ -1,0 +1,51 @@
+```mermaid
+---
+title: Permission Action Flow by Role
+---
+flowchart LR
+    %% Styles
+    classDef admin fill:#dc2626,stroke:#991b1b,color:#fff,stroke-width:2px
+    classDef manage fill:#2563eb,stroke:#1e40af,color:#fff,stroke-width:2px
+    classDef approve fill:#16a34a,stroke:#15803d,color:#fff,stroke-width:2px
+    classDef request fill:#ca8a04,stroke:#a16207,color:#fff,stroke-width:2px
+    classDef view fill:#0891b2,stroke:#0e7490,color:#fff,stroke-width:2px
+    
+    %% Permission Actions
+    START["Permission Actions"]:::admin
+    
+    %% Five Main Actions
+    START --> MANAGE[".manage<br/>Full CRUD<br/>All Data"]:::manage
+    START --> APPROVE[".approve<br/>Approve/Reject<br/>Requests"]:::approve
+    START --> REQUEST[".request<br/>Submit<br/>Requests"]:::request
+    START --> VIEW[".view<br/>View Own<br/>Data"]:::view
+    START --> CHECKIN[".checkin<br/>Check In/Out<br/>Attendance"]:::request
+    
+    %% Who Can Use Each Action
+    MANAGE --> M_SA["✅ Super Admin"]:::admin
+    MANAGE --> M_HR["✅ HR"]:::manage
+    MANAGE --> M_NOTE["Examples:<br/>worker.manage<br/>attendance.manage<br/>leave.manage"]:::manage
+    
+    APPROVE --> A_SA["✅ Super Admin"]:::admin
+    APPROVE --> A_HR["✅ HR<br/>leave.approve<br/>overtime.approve"]:::manage
+    APPROVE --> A_MGR["✅ Manager<br/>All approvals"]:::approve
+    APPROVE --> A_NOTE["Examples:<br/>leave.approve<br/>overtime.approve<br/>shift-swap.approve<br/>business-trip.approve"]:::approve
+    
+    REQUEST --> R_EMP["✅ Employee"]:::request
+    REQUEST --> R_NOTE["Examples:<br/>leave.request<br/>overtime.request<br/>shift-swap.request<br/>business-trip.request"]:::request
+    
+    VIEW --> V_EMP["✅ Employee"]:::request
+    VIEW --> V_MGR["✅ Manager<br/>view team data"]:::approve
+    VIEW --> V_NOTE["Examples:<br/>worker.view<br/>attendance.view<br/>leave.view<br/>overtime.view"]:::view
+    
+    CHECKIN --> C_EMP["✅ Employee Only"]:::request
+    CHECKIN --> C_NOTE["attendance.checkin<br/>Personal attendance"]:::view
+    
+    %% Module Examples
+    subgraph EXAMPLES["📋 Module Examples"]
+        direction TB
+        EX_WORKER["👤 Worker Module<br/>worker.manage<br/>worker.view"]:::view
+        EX_ATT["📋 Attendance Module<br/>attendance.manage<br/>attendance.view<br/>attendance.checkin"]:::view
+        EX_LEAVE["🌴 Leave Module<br/>leave.manage<br/>leave.approve<br/>leave.request<br/>leave.view"]:::view
+        EX_OT["⏰ Overtime Module<br/>overtime.manage<br/>overtime.approve<br/>overtime.request<br/>overtime.view"]:::view
+    end
+```
