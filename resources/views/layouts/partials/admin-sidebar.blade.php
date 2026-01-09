@@ -20,14 +20,14 @@
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto" x-data="{ 
-        openMenu: '{{ 
-            request()->routeIs('admin.master.*') ? 'master' : 
-            (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*') ? 'management' : 
-            (request()->routeIs('admin.leave.*', 'admin.overtime.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' : 
-            (request()->routeIs('reports.*') ? 'reports' : 
+    <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto" x-data="{
+        openMenu: '{{
+            request()->routeIs('admin.master.*') ? 'master' :
+            (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*', 'admin.payroll.*') ? 'management' :
+            (request()->routeIs('admin.leave.*', 'admin.overtime.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' :
+            (request()->routeIs('reports.*') ? 'reports' :
             (request()->routeIs('admin.roles.*', 'admin.users.*', 'admin.holidays.*') ? 'settings' : ''))))
-        }}' 
+        }}'
     }">
         <!-- Dashboard -->
         <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-3 px-4 py-3 rounded-lg {{ request()->routeIs('admin.dashboard') ? 'bg-yellow-500 text-green-900 shadow-lg' : 'hover:bg-green-600' }} transition duration-200">
@@ -37,18 +37,18 @@
 
         <!-- Master Data Section -->
         <div class="pt-2">
-            <button @click="openMenu = openMenu === 'master' ? '' : 'master'" 
+            <button @click="openMenu = openMenu === 'master' ? '' : 'master'"
                     class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition duration-200">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-database w-5"></i>
                     <span class="font-medium">Data Master</span>
                 </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
+                <i class="fas fa-chevron-down transform transition-transform"
                    :class="{ 'rotate-180': openMenu === 'master' }"></i>
             </button>
-            
-            <div x-show="openMenu === 'master'" 
-                 x-collapse 
+
+            <div x-show="openMenu === 'master'"
+                 x-collapse
                  class="ml-4 mt-2 space-y-1">
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('religion.manage'))
                 <a href="{{ route('admin.master.religions.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.master.religions.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
@@ -103,18 +103,18 @@
 
         <!-- Management Section -->
         <div class="pt-2">
-            <button @click="openMenu = openMenu === 'management' ? '' : 'management'" 
+            <button @click="openMenu = openMenu === 'management' ? '' : 'management'"
                     class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition duration-200">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-tasks w-5"></i>
                     <span class="font-medium">Manajemen</span>
                 </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
+                <i class="fas fa-chevron-down transform transition-transform"
                    :class="{ 'rotate-180': openMenu === 'management' }"></i>
             </button>
-            
-            <div x-show="openMenu === 'management'" 
-                 x-collapse 
+
+            <div x-show="openMenu === 'management'"
+                 x-collapse
                  class="ml-4 mt-2 space-y-1">
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <a href="{{ route('admin.workers.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.workers.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
@@ -151,18 +151,18 @@
 
         <!-- Approval Section -->
         <div class="pt-2">
-            <button @click="openMenu = openMenu === 'approval' ? '' : 'approval'" 
+            <button @click="openMenu = openMenu === 'approval' ? '' : 'approval'"
                     class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition duration-200">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-check-circle w-5"></i>
                     <span class="font-medium">Persetujuan</span>
                 </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
+                <i class="fas fa-chevron-down transform transition-transform"
                    :class="{ 'rotate-180': openMenu === 'approval' }"></i>
             </button>
-            
-            <div x-show="openMenu === 'approval'" 
-                 x-collapse 
+
+            <div x-show="openMenu === 'approval'"
+                 x-collapse
                  class="ml-4 mt-2 space-y-1">
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.manage'))
                 <a href="{{ route('admin.leave.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
@@ -196,18 +196,18 @@
 
         <!-- Reports Section -->
         <div class="pt-2">
-            <button @click="openMenu = openMenu === 'reports' ? '' : 'reports'" 
+            <button @click="openMenu = openMenu === 'reports' ? '' : 'reports'"
                     class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition duration-200">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-chart-bar w-5"></i>
                     <span class="font-medium">Laporan</span>
                 </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
+                <i class="fas fa-chevron-down transform transition-transform"
                    :class="{ 'rotate-180': openMenu === 'reports' }"></i>
             </button>
-            
-            <div x-show="openMenu === 'reports'" 
-                 x-collapse 
+
+            <div x-show="openMenu === 'reports'"
+                 x-collapse
                  class="ml-4 mt-2 space-y-1">
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('view-reports'))
                 <a href="{{ route('reports.attendance') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('reports.attendance') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
@@ -232,18 +232,18 @@
 
         <!-- Settings Section -->
         <div class="pt-2">
-            <button @click="openMenu = openMenu === 'settings' ? '' : 'settings'" 
+            <button @click="openMenu = openMenu === 'settings' ? '' : 'settings'"
                     class="w-full flex items-center justify-between px-4 py-3 rounded-lg hover:bg-green-600 transition duration-200">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-cog w-5"></i>
                     <span class="font-medium">Pengaturan</span>
                 </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
+                <i class="fas fa-chevron-down transform transition-transform"
                    :class="{ 'rotate-180': openMenu === 'settings' }"></i>
             </button>
-            
-            <div x-show="openMenu === 'settings'" 
-                 x-collapse 
+
+            <div x-show="openMenu === 'settings'"
+                 x-collapse
                  class="ml-4 mt-2 space-y-1">
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('holiday.manage'))
                 <a href="{{ route('admin.holidays.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.holidays.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">

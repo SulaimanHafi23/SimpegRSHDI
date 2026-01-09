@@ -80,16 +80,16 @@ Route::post('/logout', [LoginController::class, 'logout'])
 
 // ========== AUTHENTICATED ROUTES ==========
 Route::middleware(['auth', 'redirect_role'])->group(function () {
-    
+
     // ========== DASHBOARDS ==========
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('role:Super Admin|HR|Manager')->name('admin.dashboard');
-    
+
     // HR Dashboard
     Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->middleware('role:HR')->name('hr.dashboard');
-    
+
     // Manager Dashboard
     Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('role:Manager')->name('manager.dashboard');
-    
+
     // ========== EMPLOYEE ROUTES ==========
     Route::prefix('employee')->name('employee.')->middleware('role:Employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
@@ -210,7 +210,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('update-password');
     });
 
-    // ========== APPROVAL ROUTES ========== 
+    // ========== APPROVAL ROUTES ==========
     Route::prefix('approvals')->name('approvals.')->middleware('role:Manager|HR')->group(function () {
         // Leave Approvals
         Route::prefix('leaves')->name('leaves.')->group(function () {
@@ -254,7 +254,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/reports/overtimes/export', [ReportController::class, 'exportOvertimes'])->name('reports.overtimes.export');
 
     // ========== ROLE MANAGEMENT ==========
-    Route::resource('roles', RoleController::class)->names('admin.roles');
+    Route::middleware(['permission:role.manage'])->group(function () {
+        Route::resource('roles', RoleController::class)->names('admin.roles');
+    });
 
     // ========== USER MANAGEMENT ==========
     Route::resource('users', UserController::class)->names('admin.users');
@@ -313,7 +315,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::delete('/{id}', [ShiftOverrideController::class, 'destroy'])->name('destroy');
         Route::post('/bulk-create', [ShiftOverrideController::class, 'bulkCreate'])->name('bulk-create');
     });
-    
+
     // ========== LEAVE REQUEST MANAGEMENT ==========
     Route::prefix('leaves')->name('admin.leave.')->group(function () {
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
@@ -328,7 +330,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/{id}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
         Route::get('/worker/{workerId}/balance', [LeaveRequestController::class, 'workerLeaveBalance'])->name('worker-balance');
     });
-    
+
     // ========== OVERTIME MANAGEMENT ==========
     Route::prefix('overtimes')->name('admin.overtime.')->group(function () {
         Route::get('/', [OvertimeRequestController::class, 'index'])->name('index');
@@ -342,7 +344,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/{id}/reject', [OvertimeRequestController::class, 'reject'])->name('reject');
         Route::post('/bulk-approve', [OvertimeRequestController::class, 'bulkApprove'])->name('bulk-approve');
     });
-    
+
     // ========== WORKER DOCUMENT MANAGEMENT ==========
     Route::prefix('worker-documents')->name('admin.worker-documents.')->group(function () {
         Route::get('/', [WorkerDocumentController::class, 'index'])->name('index');
@@ -364,27 +366,27 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
 
     // ========== MASTER DATA MANAGEMENT ==========
     Route::prefix('master')->name('admin.master.')->middleware(['auth'])->group(function () {
-        
+
         // Departments (Pengganti Positions)
         Route::resource('departments', DepartmentController::class);
-        
+
         // Shifts
         Route::resource('shifts', ShiftController::class);
-        
+
         // Locations
         Route::resource('locations', LocationController::class);
-        
+
         // Genders
         Route::resource('genders', GenderController::class);
-        
+
         // Religions
         Route::resource('religions', ReligionController::class);
-        
+
         // Document Types
         Route::resource('document-types', DocumentTypeController::class);
     // Department <-> Document Type mappings
     Route::resource('department-document-types', DepartmentDocumentTypeController::class);
-        
+
         // Leave Types
         Route::resource('leave-types', LeaveTypeController::class);
     });

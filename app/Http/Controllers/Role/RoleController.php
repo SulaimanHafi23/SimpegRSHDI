@@ -16,7 +16,7 @@ class RoleController extends Controller
         protected PermissionService $permissionService
     ) {
         $this->middleware(['auth']);
-        $this->middleware('permission:role.manage');
+        // Permission check handled by route middleware
     }
 
     public function index(Request $request)
@@ -90,7 +90,7 @@ class RoleController extends Controller
             'role_id' => $id,
             'data' => $request->all()
         ]);
-        
+
         try {
             $dto = \App\DTOs\RoleDTO::fromRequest($request->validated());
             $result = $this->roleService->update($id, $dto);
