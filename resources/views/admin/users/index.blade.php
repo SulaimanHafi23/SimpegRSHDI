@@ -10,14 +10,14 @@
         description="Kelola akun pengguna sistem"
         icon="fas fa-users-cog">
         <x-slot:actions>
-            @can('create-users')
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
                 <x-button 
                     variant="success" 
                     icon="fas fa-plus"
                     onclick="window.location.href='{{ route('admin.users.create') }}'">
                     Tambah User
                 </x-button>
-            @endcan
+            @endif
         </x-slot:actions>
     </x-page-header>
 
@@ -124,7 +124,7 @@
 
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
-                                @can('view-users')
+                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
                                     <a href="{{ route('admin.users.show', $user->id) }}" 
                                        class="text-blue-600 hover:text-blue-900" 
                                        title="Detail">
@@ -133,9 +133,9 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                     </a>
-                                @endcan
+                                @endif
 
-                                @can('edit-users')
+                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
                                     <a href="{{ route('admin.users.edit', $user->id) }}" 
                                        class="text-green-600 hover:text-green-900" 
                                        title="Edit">
@@ -143,10 +143,10 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
-                                @endcan
+                                @endif
 
                                 @if($user->id !== auth()->id())
-                                    @can('delete-users')
+                                    @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -159,7 +159,7 @@
                                                 </svg>
                                             </button>
                                         </form>
-                                    @endcan
+                                    @endif
                                 @endif
                             </div>
                         </x-table.cell>

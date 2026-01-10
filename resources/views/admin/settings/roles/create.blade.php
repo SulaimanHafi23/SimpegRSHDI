@@ -117,33 +117,166 @@
                     </x-slot:header>
 
                     @php
-                        $groupedPermissions = $permissions->groupBy(function($permission) {
-                            return explode('-', $permission->name)[1] ?? 'other';
-                        });
+                        // Kelompokkan permissions berdasarkan kategori yang lebih terstruktur
+                        $permissionGroups = [
+                            'dashboard' => [
+                                'title' => '🏠 Dashboard',
+                                'icon' => 'fas fa-tachometer-alt',
+                                'color' => 'purple',
+                                'border' => 'border-purple-200',
+                                'bg' => 'bg-purple-50',
+                                'text' => 'text-purple-900',
+                                'iconColor' => 'text-purple-600',
+                                'permissions' => []
+                            ],
+                            'master' => [
+                                'title' => '📋 Master Data',
+                                'icon' => 'fas fa-database',
+                                'color' => 'blue',
+                                'border' => 'border-blue-200',
+                                'bg' => 'bg-blue-50',
+                                'text' => 'text-blue-900',
+                                'iconColor' => 'text-blue-600',
+                                'permissions' => []
+                            ],
+                            'management' => [
+                                'title' => '👥 Manajemen',
+                                'icon' => 'fas fa-users-cog',
+                                'color' => 'green',
+                                'border' => 'border-green-200',
+                                'bg' => 'bg-green-50',
+                                'text' => 'text-green-900',
+                                'iconColor' => 'text-green-600',
+                                'permissions' => []
+                            ],
+                            'approval' => [
+                                'title' => '✅ Persetujuan',
+                                'icon' => 'fas fa-check-double',
+                                'color' => 'yellow',
+                                'border' => 'border-yellow-200',
+                                'bg' => 'bg-yellow-50',
+                                'text' => 'text-yellow-900',
+                                'iconColor' => 'text-yellow-600',
+                                'permissions' => []
+                            ],
+                            'employee' => [
+                                'title' => '👤 Akses Pegawai',
+                                'icon' => 'fas fa-user',
+                                'color' => 'indigo',
+                                'border' => 'border-indigo-200',
+                                'bg' => 'bg-indigo-50',
+                                'text' => 'text-indigo-900',
+                                'iconColor' => 'text-indigo-600',
+                                'permissions' => []
+                            ],
+                            'report' => [
+                                'title' => '📊 Laporan',
+                                'icon' => 'fas fa-chart-bar',
+                                'color' => 'pink',
+                                'border' => 'border-pink-200',
+                                'bg' => 'bg-pink-50',
+                                'text' => 'text-pink-900',
+                                'iconColor' => 'text-pink-600',
+                                'permissions' => []
+                            ],
+                            'settings' => [
+                                'title' => '⚙️ Pengaturan',
+                                'icon' => 'fas fa-cog',
+                                'color' => 'gray',
+                                'border' => 'border-gray-200',
+                                'bg' => 'bg-gray-50',
+                                'text' => 'text-gray-900',
+                                'iconColor' => 'text-gray-600',
+                                'permissions' => []
+                            ]
+                        ];
+
+                        // Master Data permissions
+                        $masterDataModules = ['religion', 'gender', 'department', 'location', 'shift', 'leave-type', 'document-type', 'department-document-type', 'holiday'];
+                        
+                        // Management permissions
+                        $managementModules = ['worker', 'attendance', 'schedule', 'worker-document'];
+                        
+                        // Approval permissions (yang punya .approve)
+                        $approvalActions = ['.approve'];
+                        
+                        // Employee-specific permissions (yang punya .request, .view, .checkin)
+                        $employeeActions = ['.request', '.view', '.checkin'];
+                        
+                        // Settings permissions
+                        $settingsModules = ['role', 'user'];
+
+                        foreach($permissions as $permission) {
+                            $permName = $permission->name;
+                            
+                            // Dashboard
+                            if (str_contains($permName, 'dashboard')) {
+                                $permissionGroups['dashboard']['permissions'][] = $permission;
+                            }
+                            // Master Data - semua yang manage dan ada di masterDataModules
+                            elseif (collect($masterDataModules)->contains(fn($mod) => str_contains($permName, $mod))) {
+                                $permissionGroups['master']['permissions'][] = $permission;
+                            }
+                            // Management - worker, attendance, schedule, worker-document yang manage
+                            elseif (collect($managementModules)->contains(fn($mod) => str_contains($permName, $mod)) && 
+                                    str_contains($permName, '.manage')) {
+                                $permissionGroups['management']['permissions'][] = $permission;
+                            }
+                            // Approval - semua yang ada .approve
+                            elseif (str_contains($permName, '.approve')) {
+                                $permissionGroups['approval']['permissions'][] = $permission;
+                            }
+                            // Report
+                            elseif (str_contains($permName, 'report')) {
+                                $permissionGroups['report']['permissions'][] = $permission;
+                            }
+                            // Employee Access - .request, .view (except report.view), .checkin
+                            elseif ((str_contains($permName, '.request') || 
+                                    (str_contains($permName, '.view') && !str_contains($permName, 'report')) || 
+                                    str_contains($permName, '.checkin'))) {
+                                $permissionGroups['employee']['permissions'][] = $permission;
+                            }
+                            // Settings - role, user
+                            elseif (collect($settingsModules)->contains(fn($mod) => str_contains($permName, $mod))) {
+                                $permissionGroups['settings']['permissions'][] = $permission;
+                            }
+                        }
                     @endphp
 
-                    <div class="space-y-6">
-                        @foreach($groupedPermissions as $group => $perms)
-                            <div class="border border-gray-200 rounded-lg p-4">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h4 class="text-sm font-semibold text-gray-700 uppercase">
-                                        {{ ucfirst($group) }} Permissions
-                                    </h4>
-                                    <x-badge variant="secondary" size="sm">
-                                        {{ $perms->count() }} items
-                                    </x-badge>
+                    <div class="space-y-4">
+                        @foreach($permissionGroups as $groupKey => $group)
+                            @if(count($group['permissions']) > 0)
+                                <div class="border-2 {{ $group['border'] }} rounded-lg overflow-hidden">
+                                    {{-- Group Header --}}
+                                    <div class="{{ $group['bg'] }} px-4 py-3 border-b {{ $group['border'] }}">
+                                        <div class="flex items-center justify-between">
+                                            <div class="flex items-center gap-2">
+                                                <i class="{{ $group['icon'] }} {{ $group['iconColor'] }}"></i>
+                                                <h4 class="text-sm font-bold {{ $group['text'] }}">
+                                                    {{ $group['title'] }}
+                                                </h4>
+                                            </div>
+                                            <x-badge variant="{{ $group['color'] }}" size="sm">
+                                                {{ count($group['permissions']) }} permissions
+                                            </x-badge>
+                                        </div>
+                                    </div>
+                                    
+                                    {{-- Group Permissions --}}
+                                    <div class="bg-white px-4 py-3">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            @foreach($group['permissions'] as $permission)
+                                                <x-form.checkbox 
+                                                    name="permissions[]" 
+                                                    :label="ucwords(str_replace(['-', '.'], [' ', ' › '], $permission->name))"
+                                                    :value="$permission->id"
+                                                    :checked="in_array($permission->id, old('permissions', []))"
+                                                    class="permission-checkbox" />
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    @foreach($perms as $permission)
-                                        <x-form.checkbox 
-                                            name="permissions[]" 
-                                            :label="ucwords(str_replace('-', ' ', $permission->name))"
-                                            :value="$permission->id"
-                                            :checked="in_array($permission->id, old('permissions', []))"
-                                            class="permission-checkbox" />
-                                    @endforeach
-                                </div>
-                            </div>
+                            @endif
                         @endforeach
                     </div>
 

@@ -10,22 +10,22 @@
         description="Kelola data seluruh pegawai"
         icon="fas fa-users">
         <x-slot:actions>
-            @can('view-workers')
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-button 
                     variant="primary" 
                     icon="fas fa-file-excel"
                     onclick="window.location.href='{{ route('admin.workers.export') }}'">
                     Export
                 </x-button>
-            @endcan
-            @can('create-workers')
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-button 
                     variant="success" 
                     icon="fas fa-plus"
                     onclick="window.location.href='{{ route('admin.workers.create') }}'">
                     Tambah Pegawai
                 </x-button>
-            @endcan
+            @endif
         </x-slot:actions>
     </x-page-header>
 
@@ -171,7 +171,7 @@
 
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
-                                @can('view-workers')
+                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                                     <a href="{{ route('admin.workers.show', $worker->id) }}" 
                                        class="text-blue-600 hover:text-blue-900" 
                                        title="Detail">
@@ -180,9 +180,9 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                     </a>
-                                @endcan
+                                @endif
 
-                                @can('edit-workers')
+                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                                     <a href="{{ route('admin.workers.edit', $worker->id) }}" 
                                        class="text-indigo-600 hover:text-indigo-900" 
                                        title="Edit">
@@ -190,9 +190,9 @@
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
-                                @endcan
+                                @endif
 
-                                @can('delete-workers')
+                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                                     <button onclick="if(confirm('Apakah Anda yakin ingin menghapus pegawai ini?')) { document.getElementById('delete-form-{{ $worker->id }}').submit(); }" 
                                             class="text-red-600 hover:text-red-900" 
                                             title="Hapus">
@@ -210,7 +210,7 @@
                                 @endcan
                                 {{-- Account management: create or edit user account for this worker --}}
                                 @if($worker->user)
-                                    @can('edit-users')
+                                    @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
                     <button type="button" 
                         class="text-yellow-600 hover:text-yellow-900 open-account-btn" 
                         title="Edit Akun"
@@ -224,9 +224,9 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                             </svg>
                                         </button>
-                                    @endcan
+                                    @endif
                                 @else
-                                    @can('create-users')
+                                    @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
                                             <button type="button" 
                                                     class="text-green-600 hover:text-green-900 open-account-btn" 
                                                     title="Buat Akun"

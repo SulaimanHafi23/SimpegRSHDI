@@ -16,7 +16,7 @@ class RoleRequest extends FormRequest
         if (auth()->user()->hasRole('Super Admin')) {
             return true;
         }
-
+        
         return auth()->user()->can('role.manage');
     }
 

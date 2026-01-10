@@ -19,22 +19,22 @@
             </div>
         </div>
         <div class="flex space-x-2 w-full sm:w-auto">
-            @can('edit-workers')
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-button 
                     variant="warning" 
                     icon="fas fa-edit"
                     onclick="window.location.href='{{ route('admin.workers.edit', $worker->id ?? 1) }}'">
                     Edit
                 </x-button>
-            @endcan
-            @can('delete-workers')
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-button 
                     variant="danger" 
                     icon="fas fa-trash"
                     onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()">
                     Hapus
                 </x-button>
-            @endcan
+            @endif
         </div>
     </div>
 
@@ -337,10 +337,10 @@
     </div>
 </div>
 
-@can('delete-workers')
+@if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
     <form id="delete-form" action="{{ route('admin.workers.destroy', $worker->id ?? 1) }}" method="POST" class="hidden">
         @csrf
         @method('DELETE')
     </form>
-@endcan
+@endif
 @endsection

@@ -217,7 +217,7 @@
     {{-- Quick Actions --}}
     <x-card title="Aksi Cepat">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            @can('create-workers')
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-button 
                     variant="primary" 
                     icon="fas fa-user-plus"
@@ -225,9 +225,9 @@
                     class="w-full justify-center">
                     Tambah Pegawai
                 </x-button>
-            @endcan
+            @endif
             
-            @can('create-attendance')
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('attendance.manage'))
                 <x-button 
                     variant="success" 
                     icon="fas fa-clipboard-check"
@@ -235,9 +235,9 @@
                     class="w-full justify-center">
                     Input Absensi
                 </x-button>
-            @endcan
+            @endif
             
-            @can('view-attendance')
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('report.view'))
                 <x-button 
                     variant="warning" 
                     icon="fas fa-chart-bar"
@@ -245,9 +245,9 @@
                     class="w-full justify-center">
                     Laporan Absensi
                 </x-button>
-            @endcan
+            @endif
             
-            @can('view-leave')
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
                 <x-button 
                     variant="secondary" 
                     icon="fas fa-tasks"
@@ -255,7 +255,7 @@
                     class="w-full justify-center">
                     Kelola Cuti
                 </x-button>
-            @endcan
+            @endif
         </div>
     </x-card>
 </div>
