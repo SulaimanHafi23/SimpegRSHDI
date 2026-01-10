@@ -25,9 +25,9 @@
                     <i class="fas fa-calendar-alt text-gray-500 mr-1"></i>
                     Dari
                 </label>
-                <input type="date" 
-                       name="start_date" 
-                       value="{{ $filters['date_from'] ?? '' }}" 
+                <input type="date"
+                       name="start_date"
+                       value="{{ $filters['date_from'] ?? '' }}"
                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
 
@@ -36,9 +36,9 @@
                     <i class="fas fa-calendar-alt text-gray-500 mr-1"></i>
                     Sampai
                 </label>
-                <input type="date" 
-                       name="end_date" 
-                       value="{{ $filters['date_to'] ?? '' }}" 
+                <input type="date"
+                       name="end_date"
+                       value="{{ $filters['date_to'] ?? '' }}"
                        class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
             </div>
 
@@ -47,7 +47,7 @@
                     <i class="fas fa-user text-gray-500 mr-1"></i>
                     Pegawai
                 </label>
-                <select name="worker_id" 
+                <select name="worker_id"
                         class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     <option value="">Semua Pegawai</option>
                     @foreach($workers as $w)
@@ -59,12 +59,12 @@
             </div>
 
             <div class="flex items-end space-x-2">
-                <button type="submit" 
+                <button type="submit"
                         class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition duration-200 flex items-center justify-center">
                     <i class="fas fa-search mr-2"></i>
                     Filter
                 </button>
-                <a href="?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'csv'])) }}" 
+                <a href="?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'csv'])) }}"
                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition duration-200 flex items-center">
                     <i class="fas fa-file-csv mr-2"></i>
                     Export CSV
@@ -88,7 +88,7 @@
                     @if(isset($filters['date_from']) && isset($filters['date_to']))
                     <div class="flex items-center text-sm text-gray-600">
                         <i class="fas fa-calendar-day text-gray-500 mr-2"></i>
-                        {{ \Carbon\Carbon::parse($filters['date_from'])->format('d M Y') }} - 
+                        {{ \Carbon\Carbon::parse($filters['date_from'])->format('d M Y') }} -
                         {{ \Carbon\Carbon::parse($filters['date_to'])->format('d M Y') }}
                     </div>
                     @endif

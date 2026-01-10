@@ -17,21 +17,21 @@
                 Detail Departemen
             </h1>
             <div class="flex space-x-2">
-                <a href="{{ route('admin.master.departments.index') }}" 
+                <a href="{{ route('admin.master.departments.index') }}"
                    class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition duration-200">
                     <i class="fas fa-arrow-left mr-2"></i>Kembali
                 </a>
-                <a href="{{ route('admin.master.departments.edit', $department->id) }}" 
+                <a href="{{ route('admin.master.departments.edit', $department->id) }}"
                    class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition duration-200">
                     <i class="fas fa-edit mr-2"></i>Edit
                 </a>
-                <form action="{{ route('admin.master.departments.destroy', $department->id) }}" 
-                      method="POST" 
+                <form action="{{ route('admin.master.departments.destroy', $department->id) }}"
+                      method="POST"
                       class="inline"
                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus departemen ini?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" 
+                    <button type="submit"
                             class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-200">
                         <i class="fas fa-trash mr-2"></i>Hapus
                     </button>
@@ -46,23 +46,23 @@
         <div class="lg:col-span-2">
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Informasi Departemen</h2>
-                
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm text-gray-600">Kode</label>
                         <p class="text-gray-900 font-medium">{{ $department->code }}</p>
                     </div>
-                    
+
                     <div>
                         <label class="text-sm text-gray-600">Nama Departemen</label>
                         <p class="text-gray-900 font-medium">{{ $department->name }}</p>
                     </div>
-                    
+
                     <div class="col-span-2">
                         <label class="text-sm text-gray-600">Deskripsi</label>
                         <p class="text-gray-900">{{ $department->description ?? '-' }}</p>
                     </div>
-                    
+
                     <div>
                         <label class="text-sm text-gray-600">Status</label>
                         <div>
@@ -77,7 +77,7 @@
                             @endif
                         </div>
                     </div>
-                    
+
                     <div>
                         <label class="text-sm text-gray-600">Jumlah Pegawai</label>
                         <p class="text-gray-900 font-medium">
@@ -126,7 +126,7 @@
             <i class="fas fa-users text-green-600 mr-2"></i>
             Daftar Pegawai
         </h2>
-        
+
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -150,7 +150,7 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $worker->email ?? '-' }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
                                 {{ $worker->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
                                 {{ ucfirst($worker->status) }}
                             </span>
