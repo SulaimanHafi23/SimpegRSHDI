@@ -73,28 +73,29 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-green-600 to-green-700 text-white">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">No</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Tanggal</th>
+                        <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Tanggal</th>
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Nama Libur</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Keterangan</th>
+                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Keterangan</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($holidays as $holiday)
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 text-sm text-gray-900">{{ $loop->iteration + ($holidays->currentPage() - 1) * $holidays->perPage() }}</td>
-                            <td class="px-6 py-4">
+                            <td class="hidden md:table-cell px-6 py-4">
                                 <div class="text-sm font-semibold text-gray-900">{{ $holiday->date->format('d M Y') }}</div>
                                 <div class="text-xs text-gray-500">{{ $holiday->date->isoFormat('dddd') }}</div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center">
                                     <span class="text-2xl mr-2">🇮🇩</span>
-                                    <span class="text-sm font-medium text-gray-900">{{ $holiday->name }}</span>
+                                    <div>
+                                        <span class="text-sm font-medium text-gray-900">{{ $holiday->name }}</span>
+                                        <div class="md:hidden text-xs text-gray-500 mt-1">{{ $holiday->date->format('d M Y') }} • {{ $holiday->date->isoFormat('dddd') }}</div>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-600">{{ $holiday->description }}</td>
+                            <td class="hidden lg:table-cell px-6 py-4 text-sm text-gray-600">{{ $holiday->description }}</td>
                             <td class="px-6 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
                                     <a href="{{ route('admin.holidays.edit', $holiday->id) }}" class="text-blue-600 hover:text-blue-800 transition-colors" title="Edit">

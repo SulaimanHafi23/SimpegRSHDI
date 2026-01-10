@@ -49,9 +49,9 @@
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Shift</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Jam</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Jam</th>
+                        <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
@@ -70,19 +70,28 @@
                                     @if($shift->description)
                                         <div class="text-sm text-gray-500">{{ Str::limit($shift->description, 50) }}</div>
                                     @endif
+                                    <div class="md:hidden text-xs text-gray-600 mt-1">
+                                        {{ date('H:i', strtotime($shift->start_time)) }} - {{ date('H:i', strtotime($shift->end_time)) }} • 
+                                        <span class="font-semibold text-blue-600">{{ $shift->total_hours }}h</span>
+                                        @if($shift->is_active)
+                                            • <span class="text-green-600">Aktif</span>
+                                        @else
+                                            • <span class="text-red-600">Nonaktif</span>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900">{{ date('H:i', strtotime($shift->start_time)) }} - {{ date('H:i', strtotime($shift->end_time)) }}</div>
                             <div class="text-xs text-gray-500">WIB</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                             <span class="px-3 py-1 inline-flex text-sm font-bold rounded-full bg-blue-100 text-blue-800">
                                 {{ $shift->total_hours }} Jam
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                             @if($shift->is_active)
                                 <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                     Aktif

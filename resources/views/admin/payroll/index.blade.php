@@ -4,19 +4,20 @@
 <div class="container mx-auto px-4 py-8">
     <!-- Header -->
     <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
-                <h1 class="text-3xl font-bold text-gray-800 flex items-center">
+                <h1 class="text-xl sm:text-3xl font-bold text-gray-800 flex items-center">
                     <i class="fas fa-money-bill-wave mr-3 text-green-600"></i>
                     Manajemen Payroll
                 </h1>
                 <p class="text-gray-600 mt-2">Kelola gaji karyawan</p>
             </div>
-            <div>
+            <div class="w-full sm:w-auto">
                 <a href="{{ route('admin.payroll.generate') }}" 
-                   class="inline-flex items-center px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-150">
+                   class="inline-flex items-center justify-center w-full sm:w-auto px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-150">
                     <i class="fas fa-cog mr-2"></i>
-                    Generate Payroll
+                    <span class="hidden sm:inline">Generate Payroll</span>
+                    <span class="sm:hidden">Generate</span>
                 </a>
             </div>
         </div>
@@ -81,10 +82,10 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-blue-600 to-blue-700">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Periode</th>
-                        <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">NIP</th>
+                        <th class="hidden md:table-cell px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Periode</th>
+                        <th class="hidden lg:table-cell px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">NIP</th>
                         <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Nama Pegawai</th>
-                        <th class="px-6 py-4 text-right text-xs font-bold text-white uppercase tracking-wider">Gaji Bersih</th>
+                        <th class="hidden md:table-cell px-6 py-4 text-right text-xs font-bold text-white uppercase tracking-wider">Gaji Bersih</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">Status</th>
                         <th class="px-6 py-4 text-center text-xs font-bold text-white uppercase tracking-wider">Aksi</th>
                     </tr>
@@ -92,26 +93,28 @@
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($payrolls as $payroll)
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">
                                     {{ \Carbon\Carbon::createFromFormat('Y-m', $payroll->period)->format('F Y') }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-900">{{ $payroll->worker->nip }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm font-medium text-gray-900">{{ $payroll->worker->name }}</div>
                                 <div class="text-sm text-gray-500">{{ $payroll->worker->department->name ?? '-' }}</div>
+                                <div class="md:hidden text-xs text-green-600 font-bold mt-1">Rp {{ number_format($payroll->net_salary, 0, ',', '.') }}</div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-right">
                                 <div class="text-sm font-bold text-green-600">
                                     Rp {{ number_format($payroll->net_salary, 0, ',', '.') }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $payroll->status_badge }}">
-                                    {{ $payroll->status_label }}
+                                <span class="px-2 sm:px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $payroll->status_badge }}">
+                                    <span class="hidden sm:inline">{{ $payroll->status_label }}</span>
+                                    <i class="sm:hidden fas {{ $payroll->status === 'draft' ? 'fa-file-alt' : ($payroll->status === 'approved' ? 'fa-check-circle' : 'fa-money-bill-wave') }}"></i>
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">

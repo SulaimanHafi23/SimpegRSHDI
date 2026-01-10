@@ -7,7 +7,7 @@
     <x-page-header title="Laporan Pegawai" description="Daftar pegawai dan ekspor" icon="fas fa-user" />
 
     <x-card>
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Departemen</label>
                 <select name="department_id" class="mt-1 block w-full border rounded px-3 py-2">
@@ -32,33 +32,36 @@
                 <input type="text" name="search" value="{{ $filters['search'] ?? '' }}" placeholder="Nama atau NIP" class="mt-1 block w-full border rounded px-3 py-2">
             </div>
 
-            <div class="flex items-end space-x-2">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded">Filter</button>
-                <a href="?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'csv'])) }}" class="px-4 py-2 border rounded">Export CSV</a>
+            <div class="flex items-end gap-2">
+                <button type="submit" class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded text-sm"><i class="fas fa-filter mr-1"></i><span class="hidden sm:inline">Filter</span></button>
+                <a href="?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'csv'])) }}" class="px-4 py-2 border rounded text-sm"><i class="fas fa-file-csv mr-1"></i><span class="hidden sm:inline">CSV</span></a>
             </div>
         </form>
 
         <div class="overflow-x-auto">
-            <table class="w-full table-auto">
-                <thead>
+            <table class="min-w-full">
+                <thead class="bg-gray-50">
                     <tr class="text-left">
-                        <th class="px-3 py-2">Nama</th>
-                        <th class="px-3 py-2">NIP</th>
-                        <th class="px-3 py-2">Email</th>
-                        <th class="px-3 py-2">Departemen</th>
-                        <th class="px-3 py-2">Status Kepegawaian</th>
-                        <th class="px-3 py-2">Status</th>
+                        <th class="px-3 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase">Nama</th>
+                        <th class="px-3 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase hidden md:table-cell">NIP</th>
+                        <th class="px-3 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Email</th>
+                        <th class="px-3 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Departemen</th>
+                        <th class="px-3 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Status Kepegawaian</th>
+                        <th class="px-3 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-200">
                     @foreach($workers as $w)
-                        <tr>
-                            <td class="px-3 py-2">{{ $w->name }}</td>
-                            <td class="px-3 py-2">{{ $w->nip }}</td>
-                            <td class="px-3 py-2">{{ $w->email }}</td>
-                            <td class="px-3 py-2">{{ $w->department->name ?? '-' }}</td>
-                            <td class="px-3 py-2">{{ $w->employment_status ?? '-' }}</td>
-                            <td class="px-3 py-2">{{ $w->status ?? '-' }}</td>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-3 sm:px-6 py-4">
+                                <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $w->name }}</div>
+                                <div class="text-xs text-gray-500 md:hidden">{{ $w->nip }}</div>
+                            </td>
+                            <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden md:table-cell">{{ $w->nip }}</td>
+                            <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden lg:table-cell">{{ $w->email }}</td>
+                            <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden lg:table-cell">{{ $w->department->name ?? '-' }}</td>
+                            <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden lg:table-cell">{{ $w->employment_status ?? '-' }}</td>
+                            <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900">{{ $w->status ?? '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

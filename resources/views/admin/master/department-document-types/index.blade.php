@@ -4,9 +4,14 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl sm:text-2xl font-bold">Document Department / Position</h1>
-        <a href="{{ route('admin.master.department-document-types.create') }}" class="px-4 py-2 bg-green-600 text-white rounded">Tambah Relasi</a>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold">Document Department / Position</h1>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Kelola relasi dokumen per departemen</p>
+        </div>
+        <a href="{{ route('admin.master.department-document-types.create') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+            <i class="fas fa-plus mr-2"></i>Tambah Relasi
+        </a>
     </div>
 
     @if(session('success'))

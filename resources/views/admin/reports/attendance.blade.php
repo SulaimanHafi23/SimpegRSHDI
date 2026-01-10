@@ -60,14 +60,14 @@
 
             <div class="flex items-end space-x-2">
                 <button type="submit"
-                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition duration-200 flex items-center justify-center">
-                    <i class="fas fa-search mr-2"></i>
-                    Filter
+                        class="flex-1 sm:flex-none px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition duration-200 flex items-center justify-center text-sm">
+                    <i class="fas fa-search mr-1"></i>
+                    <span class="hidden sm:inline">Filter</span>
                 </button>
                 <a href="?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'csv'])) }}"
-                   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition duration-200 flex items-center">
-                    <i class="fas fa-file-csv mr-2"></i>
-                    Export CSV
+                   class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition duration-200 flex items-center text-sm">
+                    <i class="fas fa-file-csv mr-1"></i>
+                    <span class="hidden sm:inline">CSV</span>
                 </a>
             </div>
         </form>
@@ -101,75 +101,76 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <i class="fas fa-user mr-1"></i> Pegawai
+                        <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-user mr-1 hidden sm:inline"></i> Pegawai
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                             <i class="fas fa-calendar mr-1"></i> Tanggal
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                             <i class="fas fa-sign-in-alt mr-1"></i> Check In
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                             <i class="fas fa-sign-out-alt mr-1"></i> Check Out
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                             <i class="fas fa-map-marker-alt mr-1"></i> Lokasi
                         </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            <i class="fas fa-info-circle mr-1"></i> Status
+                        <th scope="col" class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <i class="fas fa-info-circle mr-1 hidden sm:inline"></i> Status
                         </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($attendances as $a)
                         <tr class="hover:bg-gray-50 transition duration-150">
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4">
                                 <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <i class="fas fa-user text-blue-600"></i>
+                                    <div class="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user text-blue-600 text-xs sm:text-sm"></i>
                                     </div>
                                     <div class="ml-3">
-                                        <div class="text-sm font-medium text-gray-900">{{ $a->worker->name ?? '-' }}</div>
+                                        <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $a->worker->name ?? '-' }}</div>
                                         <div class="text-xs text-gray-500">{{ $a->worker->nip ?? '-' }}</div>
+                                        <div class="text-xs text-gray-500 md:hidden">{{ $a->attendance_date ? \Carbon\Carbon::parse($a->attendance_date)->format('d M') : '-' }}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">
+                            <td class="px-3 sm:px-6 py-4 hidden md:table-cell">
+                                <div class="text-xs sm:text-sm text-gray-900">
                                     {{ $a->attendance_date ? \Carbon\Carbon::parse($a->attendance_date)->format('d M Y') : '-' }}
                                 </div>
                                 <div class="text-xs text-gray-500">
                                     {{ $a->attendance_date ? \Carbon\Carbon::parse($a->attendance_date)->format('l') : '-' }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 hidden lg:table-cell">
                                 @if($a->check_in)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        <i class="fas fa-clock mr-1"></i>
+                                        <i class="fas fa-clock hidden sm:inline mr-1"></i>
                                         {{ \Carbon\Carbon::parse($a->check_in)->format('H:i') }}
                                     </span>
                                 @else
-                                    <span class="text-sm text-gray-400">-</span>
+                                    <span class="text-xs sm:text-sm text-gray-400">-</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4 hidden lg:table-cell">
                                 @if($a->check_out)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                        <i class="fas fa-clock mr-1"></i>
+                                        <i class="fas fa-clock hidden sm:inline mr-1"></i>
                                         {{ \Carbon\Carbon::parse($a->check_out)->format('H:i') }}
                                     </span>
                                 @else
-                                    <span class="text-sm text-gray-400">-</span>
+                                    <span class="text-xs sm:text-sm text-gray-400">-</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-900 flex items-center">
-                                    <i class="fas fa-map-pin text-gray-400 mr-2"></i>
+                            <td class="px-3 sm:px-6 py-4 hidden lg:table-cell">
+                                <div class="text-xs sm:text-sm text-gray-900 flex items-center">
+                                    <i class="fas fa-map-pin text-gray-400 mr-2 hidden sm:inline"></i>
                                     {{ $a->location->name ?? '-' }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
+                            <td class="px-3 sm:px-6 py-4">
                                 @php
                                     $statusColors = [
                                         'present' => 'bg-green-100 text-green-800',
@@ -191,9 +192,10 @@
                                     ];
                                     $status = strtolower($a->status ?? 'present');
                                 @endphp
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-800' }}">
-                                    <i class="fas {{ $statusIcons[$status] ?? 'fa-question' }} mr-1"></i>
-                                    {{ $statusLabels[$status] ?? ucfirst($status) }}
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {{ $statusColors[$status] ?? 'bg-gray-100 text-gray-800' }}">
+                                    <i class="fas {{ $statusIcons[$status] ?? 'fa-question' }} hidden sm:inline mr-1"></i>
+                                    <span class="hidden sm:inline">{{ $statusLabels[$status] ?? ucfirst($status) }}</span>
+                                    <i class="fas {{ $statusIcons[$status] ?? 'fa-question' }} sm:hidden"></i>
                                 </span>
                             </td>
                         </tr>

@@ -5,17 +5,17 @@
 @section('content')
 <div class="space-y-6">
     <!-- Page Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Laporan Dokumen Pegawai</h1>
-            <p class="text-gray-600 mt-1">Laporan lengkap dokumen karyawan</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Laporan Dokumen Pegawai</h1>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Laporan lengkap dokumen karyawan</p>
         </div>
     </div>
 
     <!-- Filter Section -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
         <form method="GET" class="space-y-4">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
                     <input type="date" 
@@ -40,8 +40,8 @@
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        <i class="fas fa-filter mr-2"></i>Filter
+                    <button type="submit" class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                        <i class="fas fa-filter mr-1"></i><span class="hidden sm:inline">Filter</span>
                     </button>
                 </div>
             </div>
@@ -54,50 +54,55 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pegawai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Dokumen</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama File</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kadaluarsa</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pegawai</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Jenis Dokumen</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Nama File</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Kadaluarsa</th>
+                        <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     @forelse($documents as $doc)
                     <tr class="hover:bg-gray-50 transition">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $loop->iteration }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ optional($doc->worker)->name ?? 'N/A' }}</div>
-                            <div class="text-sm text-gray-500">{{ optional($doc->worker->department)->name ?? 'N/A' }}</div>
+                        <td class="px-3 sm:px-6 py-4">
+                            <div class="text-xs sm:text-sm font-medium text-gray-900">{{ optional($doc->worker)->name ?? 'N/A' }}</div>
+                            <div class="text-xs text-gray-500">{{ optional($doc->worker->department)->name ?? 'N/A' }}</div>
+                            <div class="text-xs text-gray-500 md:hidden">{{ optional($doc->documentType)->name ?? 'N/A' }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden md:table-cell">
                             {{ optional($doc->documentType)->name ?? 'N/A' }}
                         </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">{{ $doc->file_name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden lg:table-cell">{{ $doc->file_name }}</td>
+                        <td class="px-3 sm:px-6 py-4">
                             @if($doc->status === 'pending')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                    <i class="fas fa-clock mr-1"></i>Pending
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <i class="fas fa-clock hidden sm:inline mr-1"></i>
+                                    <span class="hidden sm:inline">Pending</span>
+                                    <i class="fas fa-clock sm:hidden"></i>
                                 </span>
                             @elseif($doc->status === 'verified')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <i class="fas fa-check mr-1"></i>Terverifikasi
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <i class="fas fa-check hidden sm:inline mr-1"></i>
+                                    <span class="hidden sm:inline">Terverifikasi</span>
+                                    <i class="fas fa-check sm:hidden"></i>
                                 </span>
                             @elseif($doc->status === 'rejected')
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    <i class="fas fa-times mr-1"></i>Ditolak
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <i class="fas fa-times hidden sm:inline mr-1"></i>
+                                    <span class="hidden sm:inline">Ditolak</span>
+                                    <i class="fas fa-times sm:hidden"></i>
                                 </span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden lg:table-cell">
                             {{ $doc->expiry_date ? \Carbon\Carbon::parse($doc->expiry_date)->format('d M Y') : '-' }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <td class="px-3 sm:px-6 py-4 text-right">
                             @if($doc->file_path)
                                 <a href="{{ route('admin.worker-documents.download', $doc->id) }}" 
-                                   class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                                    <i class="fas fa-download mr-2"></i>Download
+                                   class="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs">
+                                    <i class="fas fa-download mr-1"></i><span class="hidden sm:inline">Download</span>
                                 </a>
                             @else
                                 <span class="text-gray-400">-</span>

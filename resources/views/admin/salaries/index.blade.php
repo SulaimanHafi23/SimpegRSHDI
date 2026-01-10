@@ -4,19 +4,19 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Data Gaji Pegawai</h1>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Data Gaji Pegawai</h1>
             <p class="text-sm text-gray-600 mt-1">Kelola data gaji dan tunjangan pegawai</p>
         </div>
         <div class="flex flex-wrap gap-2 w-full sm:w-auto">
             <a href="{{ route('admin.salaries.generate') }}" 
-               class="inline-flex items-center px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow">
-                <i class="fas fa-calculator mr-2"></i>Generate Gaji
+               class="inline-flex items-center justify-center flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow text-xs sm:text-sm">
+                <i class="fas fa-calculator mr-2"></i><span class="hidden sm:inline">Generate Gaji</span><span class="sm:hidden">Generate</span>
             </a>
             <a href="{{ route('admin.salaries.create') }}" 
-               class="inline-flex items-center px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow">
-                <i class="fas fa-plus mr-2"></i>Tambah Gaji
+               class="inline-flex items-center justify-center flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow text-xs sm:text-sm">
+                <i class="fas fa-plus mr-2"></i><span class="hidden sm:inline">Tambah Gaji</span><span class="sm:hidden">Tambah</span>
             </a>
         </div>
     </div>
@@ -42,13 +42,12 @@
             <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">No</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pegawai</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Periode</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Gaji Pokok</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tunjangan</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Potongan</th>
-                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                    <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Periode</th>
+                    <th class="hidden lg:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Gaji Pokok</th>
+                    <th class="hidden lg:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tunjangan</th>
+                    <th class="hidden lg:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Potongan</th>
+                    <th class="hidden md:table-cell px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Aksi</th>
                 </tr>
             </thead>
