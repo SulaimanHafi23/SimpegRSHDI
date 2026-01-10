@@ -66,6 +66,26 @@ class RolePermissionSeeder extends Seeder
             'overtime.request',  // Can submit own overtime request
             'overtime.view',     // View own overtime requests only
 
+            // Business Trip Management
+            'business-trip.manage',   // Full CRUD + approve/reject all business trips
+            'business-trip.approve',  // Can approve/reject business trip requests
+            'business-trip.request',  // Can submit own business trip request
+            'business-trip.view',     // View own business trip requests only
+
+            // Shift Swap Management
+            'shift-swap.manage',   // Full CRUD + approve/reject all shift swap
+            'shift-swap.approve',  // Can approve/reject shift swap requests
+            'shift-swap.request',  // Can submit own shift swap request
+            'shift-swap.view',     // View own shift swap requests only
+
+            // Payroll Management
+            'payroll.manage',      // Full CRUD on payroll (generate, approve, edit)
+            'payroll.view',        // View own payroll only
+
+            // Notification Management
+            'notification.manage', // Manage all notifications
+            'notification.view',   // View own notifications only
+
             // Reports - Based on ReportController
             'report.view',           // View reports (attendance, leave, overtime, worker, document)
             'report.export',         // Export reports to CSV/Excel/PDF
@@ -129,6 +149,20 @@ class RolePermissionSeeder extends Seeder
             'overtime.manage',
             'overtime.approve',
             
+            // Business Trip - Manage & Approve
+            'business-trip.manage',
+            'business-trip.approve',
+            
+            // Shift Swap - Manage & Approve
+            'shift-swap.manage',
+            'shift-swap.approve',
+            
+            // Payroll - Full Management
+            'payroll.manage',
+            
+            // Notifications - Manage
+            'notification.manage',
+            
             // Reports - Full Access
             'report.view',
             'report.export',
@@ -164,6 +198,13 @@ class RolePermissionSeeder extends Seeder
             'leave.view',
             'overtime.approve',
             'overtime.view',
+            'business-trip.approve',
+            'business-trip.view',
+            'shift-swap.approve',
+            'shift-swap.view',
+            
+            // Notifications
+            'notification.view',
             
             // Reports - View Only
             'report.view',
@@ -199,6 +240,14 @@ class RolePermissionSeeder extends Seeder
             'leave.view',               // View own leave requests
             'overtime.request',         // Submit overtime requests
             'overtime.view',            // View own overtime requests
+            'business-trip.request',    // Submit business trip requests
+            'business-trip.view',       // View own business trip requests
+            'shift-swap.request',       // Submit shift swap requests
+            'shift-swap.view',          // View own shift swap requests
+            
+            // Payroll & Notifications
+            'payroll.view',             // View own payroll
+            'notification.view',        // View own notifications
         ]);
 
         $this->command->info('✅ Role-based permissions created successfully!');
