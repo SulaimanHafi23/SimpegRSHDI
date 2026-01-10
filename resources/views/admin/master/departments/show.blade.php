@@ -17,6 +17,10 @@
                 Detail Departemen
             </h1>
             <div class="flex space-x-2">
+                <a href="{{ route('admin.master.departments.index') }}" 
+                   class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>Kembali
+                </a>
                 <a href="{{ route('admin.master.departments.edit', $department->id) }}" 
                    class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition duration-200">
                     <i class="fas fa-edit mr-2"></i>Edit
