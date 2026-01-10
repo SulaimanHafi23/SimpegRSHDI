@@ -19,7 +19,7 @@ class RolePermissionSeeder extends Seeder
         /**
          * Module-based Permissions
          * Format: module.manage (can fully manage the module)
-         * 
+         *
          * Permission Structure:
          * - dashboard.admin: Access to admin dashboard with global statistics
          * - dashboard.employee: Access to employee dashboard with personal data
@@ -102,7 +102,7 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Create Roles and Assign Permissions
-        
+
         /**
          * SUPER ADMIN ROLE
          * - Full system access
@@ -125,7 +125,7 @@ class RolePermissionSeeder extends Seeder
         $hr->syncPermissions([
             // Dashboard
             'dashboard.admin',
-            
+
             // Master Data - Full Configuration Access
             'religion.manage',
             'gender.manage',
@@ -136,37 +136,37 @@ class RolePermissionSeeder extends Seeder
             'document-type.manage',
             'department-document-type.manage',
             'holiday.manage',
-            
+
             // Worker Management - Full Access
             'worker.manage',
             'attendance.manage',
             'schedule.manage',
             'worker-document.manage',
-            
+
             // Leave & Overtime - Manage & Approve
             'leave.manage',
             'leave.approve',
             'overtime.manage',
             'overtime.approve',
-            
+
             // Business Trip - Manage & Approve
             'business-trip.manage',
             'business-trip.approve',
-            
+
             // Shift Swap - Manage & Approve
             'shift-swap.manage',
             'shift-swap.approve',
-            
+
             // Payroll - Full Management
             'payroll.manage',
-            
+
             // Notifications - Manage
             'notification.manage',
-            
+
             // Reports - Full Access
             'report.view',
             'report.export',
-            
+
             // User Management (not roles)
             'user.manage',
         ]);
@@ -183,16 +183,16 @@ class RolePermissionSeeder extends Seeder
         $manager->syncPermissions([
             // Dashboard
             'dashboard.admin',
-            
+
             // View Access to Master Data
             'department.manage',  // Can view departments for filtering
             'shift.manage',       // Can view shifts for scheduling
-            
+
             // Worker & Attendance - View Only
             'worker.manage',      // Can view worker lists
             'attendance.manage',  // Can view attendance records
             'schedule.manage',    // Can view and adjust schedules
-            
+
             // Approval Authority
             'leave.approve',
             'leave.view',
@@ -202,10 +202,10 @@ class RolePermissionSeeder extends Seeder
             'business-trip.view',
             'shift-swap.approve',
             'shift-swap.view',
-            
+
             // Notifications
             'notification.view',
-            
+
             // Reports - View Only
             'report.view',
             'report.export',
@@ -223,18 +223,18 @@ class RolePermissionSeeder extends Seeder
         $employee->syncPermissions([
             // Dashboard
             'dashboard.employee',
-            
+
             // Personal Profile & Documents
             'worker.view',              // View own profile
             'worker-document.view',     // View own documents
-            
+
             // Attendance
             'attendance.checkin',       // Can check in/out
             'attendance.view',          // View own attendance history
-            
+
             // Schedule
             'schedule.view',            // View own work schedule
-            
+
             // Request Submissions
             'leave.request',            // Submit leave requests
             'leave.view',               // View own leave requests
@@ -244,7 +244,7 @@ class RolePermissionSeeder extends Seeder
             'business-trip.view',       // View own business trip requests
             'shift-swap.request',       // Submit shift swap requests
             'shift-swap.view',          // View own shift swap requests
-            
+
             // Payroll & Notifications
             'payroll.view',             // View own payroll
             'notification.view',        // View own notifications
