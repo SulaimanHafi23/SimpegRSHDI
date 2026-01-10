@@ -17,63 +17,215 @@ class RolePermissionSeeder extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         /**
-         * Module-based Permissions
-         * Format: module.manage (can fully manage the module)
-         * 
-         * Permission Structure:
-         * - dashboard.admin: Access to admin dashboard with global statistics
-         * - dashboard.employee: Access to employee dashboard with personal data
-         * - *.manage: Full CRUD access to module
-         * - *.view: Read-only access
-         * - *.approve: Approval access for requests
+         * Comprehensive Permissions System
+         * Format: module.action
          */
         $permissions = [
-            // Dashboard Access
-            'dashboard.admin',      // Admin dashboard with global stats, approvals, reports
-            'dashboard.employee',   // Employee dashboard with personal data only
+            // ========== DASHBOARD ==========
+            'dashboard.view',
+            'dashboard.admin',
+            'dashboard.hr',
+            'dashboard.manager',
+            'dashboard.employee',
 
-            // Data Master - Configuration & Setup
+            // ========== DATA MASTER ==========
+            // Religion
+            'religion.view',
+            'religion.create',
+            'religion.edit',
+            'religion.delete',
             'religion.manage',
+
+            // Gender
+            'gender.view',
+            'gender.create',
+            'gender.edit',
+            'gender.delete',
             'gender.manage',
+
+            // Department
+            'department.view',
+            'department.create',
+            'department.edit',
+            'department.delete',
             'department.manage',
+
+            // Location
+            'location.view',
+            'location.create',
+            'location.edit',
+            'location.delete',
             'location.manage',
+
+            // Shift
+            'shift.view',
+            'shift.create',
+            'shift.edit',
+            'shift.delete',
             'shift.manage',
+
+            // Leave Type
+            'leave-type.view',
+            'leave-type.create',
+            'leave-type.edit',
+            'leave-type.delete',
             'leave-type.manage',
+
+            // Document Type
+            'document-type.view',
+            'document-type.create',
+            'document-type.edit',
+            'document-type.delete',
             'document-type.manage',
+
+            // Department Document Type
+            'department-document-type.view',
+            'department-document-type.create',
+            'department-document-type.edit',
+            'department-document-type.delete',
             'department-document-type.manage',
+
+            // ========== MANAJEMEN ==========
+            // Workers
+            'worker.view',
+            'worker.create',
+            'worker.edit',
+            'worker.delete',
+            'worker.resign',
+            'worker.export',
+            'worker.import',
+            'worker.manage',
+
+            // Attendance
+            'attendance.view',
+            'attendance.view-all',
+            'attendance.create',
+            'attendance.edit',
+            'attendance.delete',
+            'attendance.checkin',
+            'attendance.checkout',
+            'attendance.export',
+            'attendance.manage',
+
+            // Schedule / Worker Shifts
+            'schedule.view',
+            'schedule.view-all',
+            'schedule.create',
+            'schedule.edit',
+            'schedule.delete',
+            'schedule.override',
+            'schedule.manage',
+
+            // Worker Documents
+            'worker-document.view',
+            'worker-document.view-all',
+            'worker-document.upload',
+            'worker-document.verify',
+            'worker-document.reject',
+            'worker-document.delete',
+            'worker-document.download',
+            'worker-document.manage',
+
+            // Payroll
+            'payroll.view',
+            'payroll.view-all',
+            'payroll.create',
+            'payroll.edit',
+            'payroll.delete',
+            'payroll.process',
+            'payroll.export',
+            'payroll.manage',
+
+            // ========== PERSETUJUAN ==========
+            // Leave Approval
+            'leave.view',
+            'leave.view-all',
+            'leave.request',
+            'leave.approve',
+            'leave.reject',
+            'leave.cancel',
+            'leave.export',
+            'leave.manage',
+
+            // Overtime Approval
+            'overtime.view',
+            'overtime.view-all',
+            'overtime.request',
+            'overtime.approve',
+            'overtime.reject',
+            'overtime.cancel',
+            'overtime.export',
+            'overtime.manage',
+
+            // Shift Swap Approval
+            'shift-swap.view',
+            'shift-swap.view-all',
+            'shift-swap.request',
+            'shift-swap.approve',
+            'shift-swap.reject',
+            'shift-swap.execute',
+            'shift-swap.cancel',
+            'shift-swap.manage',
+
+            // Business Trip Approval
+            'business-trip.view',
+            'business-trip.view-all',
+            'business-trip.request',
+            'business-trip.approve',
+            'business-trip.reject',
+            'business-trip.cancel',
+            'business-trip.export',
+            'business-trip.manage',
+
+            // ========== LAPORAN ==========
+            'report.view',
+            'report.attendance',
+            'report.leave',
+            'report.overtime',
+            'report.worker-document',
+            'report.payroll',
+            'report.export',
+
+            // ========== PENGATURAN ==========
+            // Holidays
+            'holiday.view',
+            'holiday.create',
+            'holiday.edit',
+            'holiday.delete',
             'holiday.manage',
 
-            // Worker & Attendance Management
-            'worker.manage',           // Full CRUD on all workers
-            'worker.view',             // View own worker profile only
-            'attendance.manage',       // Manage all attendance records
-            'attendance.view',         // View own attendance only
-            'attendance.checkin',      // Can check in/out
-            'schedule.manage',         // Manage work schedules
-            'schedule.view',           // View own schedule only
-            'worker-document.manage',  // Manage all worker documents
-            'worker-document.view',    // View own documents only
+            // Roles
+            'role.view',
+            'role.create',
+            'role.edit',
+            'role.delete',
+            'role.assign-permission',
+            'role.manage',
 
-            // Leave Management
-            'leave.manage',      // Full CRUD + approve/reject all leave requests
-            'leave.approve',     // Can approve/reject leave requests
-            'leave.request',     // Can submit own leave request
-            'leave.view',        // View own leave requests only
+            // Users
+            'user.view',
+            'user.create',
+            'user.edit',
+            'user.delete',
+            'user.activate',
+            'user.deactivate',
+            'user.reset-password',
+            'user.manage',
 
-            // Overtime Management
-            'overtime.manage',   // Full CRUD + approve/reject all overtime
-            'overtime.approve',  // Can approve/reject overtime requests
-            'overtime.request',  // Can submit own overtime request
-            'overtime.view',     // View own overtime requests only
+            // Salary Components
+            'salary-component.view',
+            'salary-component.create',
+            'salary-component.edit',
+            'salary-component.delete',
+            'salary-component.manage',
 
-            // Reports - Based on ReportController
-            'report.view',           // View reports (attendance, leave, overtime, worker, document)
-            'report.export',         // Export reports to CSV/Excel/PDF
-
-            // Settings & Administration
-            'role.manage',            // Manage roles and permissions
-            'user.manage',            // Manage user accounts
-            'system-settings.manage', // Manage system configurations
+            // ========== EMPLOYEE SELF-SERVICE ==========
+            'profile.view',
+            'profile.edit',
+            'profile.change-password',
+            'notification.view',
+            'notification.mark-read',
+            'calendar.view',
         ];
 
         // Create permissions
@@ -82,141 +234,116 @@ class RolePermissionSeeder extends Seeder
         }
 
         // Create Roles and Assign Permissions
-        
-        /**
-         * SUPER ADMIN ROLE
-         * - Full system access
-         * - All permissions including admin dashboard
-         * - Can manage roles, users, and all configurations
-         */
+
+        // ========== SUPER ADMIN - ALL PERMISSIONS ==========
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
         $superAdmin->syncPermissions(Permission::all());
 
-        /**
-         * HR ROLE
-         * - Full worker lifecycle management
-         * - Master data configuration
-         * - Attendance and document management
-         * - Leave and overtime approval
-         * - Reports access
-         * - User management (except roles)
-         */
+        // ========== HR - FULL WORKER & MASTER DATA MANAGEMENT ==========
         $hr = Role::firstOrCreate(['name' => 'HR', 'guard_name' => 'web']);
         $hr->syncPermissions([
             // Dashboard
-            'dashboard.admin',
-            
-            // Master Data - Full Configuration Access
-            'religion.manage',
-            'gender.manage',
-            'department.manage',
-            'location.manage',
-            'shift.manage',
-            'leave-type.manage',
-            'document-type.manage',
-            'department-document-type.manage',
-            'holiday.manage',
-            
-            // Worker Management - Full Access
-            'worker.manage',
-            'attendance.manage',
-            'schedule.manage',
-            'worker-document.manage',
-            
-            // Leave & Overtime - Manage & Approve
-            'leave.manage',
-            'leave.approve',
-            'overtime.manage',
-            'overtime.approve',
-            
-            // Reports - Full Access
-            'report.view',
-            'report.export',
-            
-            // User Management (not roles)
-            'user.manage',
+            'dashboard.view',
+            'dashboard.hr',
+
+            // Master Data - Full access
+            'religion.view', 'religion.create', 'religion.edit', 'religion.delete', 'religion.manage',
+            'gender.view', 'gender.create', 'gender.edit', 'gender.delete', 'gender.manage',
+            'department.view', 'department.create', 'department.edit', 'department.delete', 'department.manage',
+            'location.view', 'location.create', 'location.edit', 'location.delete', 'location.manage',
+            'shift.view', 'shift.create', 'shift.edit', 'shift.delete', 'shift.manage',
+            'leave-type.view', 'leave-type.create', 'leave-type.edit', 'leave-type.delete', 'leave-type.manage',
+            'document-type.view', 'document-type.create', 'document-type.edit', 'document-type.delete', 'document-type.manage',
+            'department-document-type.view', 'department-document-type.create', 'department-document-type.edit', 'department-document-type.delete', 'department-document-type.manage',
+
+            // Worker Management - Full access
+            'worker.view', 'worker.create', 'worker.edit', 'worker.delete', 'worker.resign', 'worker.export', 'worker.import', 'worker.manage',
+
+            // Attendance - Full access
+            'attendance.view', 'attendance.view-all', 'attendance.create', 'attendance.edit', 'attendance.delete', 'attendance.export', 'attendance.manage',
+
+            // Schedule - Full access
+            'schedule.view', 'schedule.view-all', 'schedule.create', 'schedule.edit', 'schedule.delete', 'schedule.override', 'schedule.manage',
+
+            // Worker Documents - Full access
+            'worker-document.view', 'worker-document.view-all', 'worker-document.upload', 'worker-document.verify', 'worker-document.reject', 'worker-document.delete', 'worker-document.download', 'worker-document.manage',
+
+            // Payroll - Full access
+            'payroll.view', 'payroll.view-all', 'payroll.create', 'payroll.edit', 'payroll.delete', 'payroll.process', 'payroll.export', 'payroll.manage',
+
+            // Approvals - Full access
+            'leave.view', 'leave.view-all', 'leave.approve', 'leave.reject', 'leave.export', 'leave.manage',
+            'overtime.view', 'overtime.view-all', 'overtime.approve', 'overtime.reject', 'overtime.export', 'overtime.manage',
+            'shift-swap.view', 'shift-swap.view-all', 'shift-swap.approve', 'shift-swap.reject', 'shift-swap.execute', 'shift-swap.manage',
+            'business-trip.view', 'business-trip.view-all', 'business-trip.approve', 'business-trip.reject', 'business-trip.export', 'business-trip.manage',
+
+            // Reports - Full access
+            'report.view', 'report.attendance', 'report.leave', 'report.overtime', 'report.worker-document', 'report.payroll', 'report.export',
+
+            // Settings
+            'holiday.view', 'holiday.create', 'holiday.edit', 'holiday.delete', 'holiday.manage',
+            'user.view', 'user.create', 'user.edit', 'user.delete', 'user.activate', 'user.deactivate', 'user.reset-password', 'user.manage',
+            'salary-component.view', 'salary-component.create', 'salary-component.edit', 'salary-component.delete', 'salary-component.manage',
         ]);
 
-        /**
-         * MANAGER ROLE
-         * - Team oversight and approval authority
-         * - View workers and schedules
-         * - Approve leave and overtime
-         * - View reports
-         * - Limited master data access (read-only)
-         */
+        // ========== MANAGER - APPROVAL & VIEW ACCESS ==========
         $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
         $manager->syncPermissions([
             // Dashboard
-            'dashboard.admin',
-            
-            // View Access to Master Data
-            'department.manage',  // Can view departments for filtering
-            'shift.manage',       // Can view shifts for scheduling
-            
-            // Worker & Attendance - View Only
-            'worker.manage',      // Can view worker lists
-            'attendance.manage',  // Can view attendance records
-            'schedule.manage',    // Can view and adjust schedules
-            
-            // Approval Authority
-            'leave.approve',
-            'leave.view',
-            'overtime.approve',
-            'overtime.view',
-            
-            // Reports - View Only
-            'report.view',
-            'report.export',
+            'dashboard.view',
+            'dashboard.manager',
+
+            // Master Data - View only
+            'department.view',
+            'location.view',
+            'shift.view',
+            'leave-type.view',
+
+            // Worker - View only
+            'worker.view',
+            'worker.export',
+
+            // Attendance - View all
+            'attendance.view', 'attendance.view-all', 'attendance.export',
+
+            // Schedule - View all
+            'schedule.view', 'schedule.view-all',
+
+            // Approvals - Full approval access
+            'leave.view', 'leave.view-all', 'leave.approve', 'leave.reject', 'leave.manage',
+            'overtime.view', 'overtime.view-all', 'overtime.approve', 'overtime.reject', 'overtime.manage',
+            'shift-swap.view', 'shift-swap.view-all', 'shift-swap.approve', 'shift-swap.reject', 'shift-swap.execute', 'shift-swap.manage',
+            'business-trip.view', 'business-trip.view-all', 'business-trip.approve', 'business-trip.reject', 'business-trip.manage',
+
+            // Reports - View access
+            'report.view', 'report.attendance', 'report.leave', 'report.overtime', 'report.export',
         ]);
 
-        /**
-         * EMPLOYEE ROLE
-         * - Personal data access only
-         * - Submit requests (leave, overtime)
-         * - View own records and schedule
-         * - Check in/out attendance
-         * - View own documents
-         */
+        // ========== EMPLOYEE - BASIC SELF-SERVICE ==========
         $employee = Role::firstOrCreate(['name' => 'Employee', 'guard_name' => 'web']);
         $employee->syncPermissions([
             // Dashboard
+            'dashboard.view',
             'dashboard.employee',
-            
-            // Personal Profile & Documents
-            'worker.view',              // View own profile
-            'worker-document.view',     // View own documents
-            
-            // Attendance
-            'attendance.checkin',       // Can check in/out
-            'attendance.view',          // View own attendance history
-            
-            // Schedule
-            'schedule.view',            // View own work schedule
-            
-            // Request Submissions
-            'leave.request',            // Submit leave requests
-            'leave.view',               // View own leave requests
-            'overtime.request',         // Submit overtime requests
-            'overtime.view',            // View own overtime requests
+
+            // Self-service
+            'attendance.view', 'attendance.checkin', 'attendance.checkout', 'attendance.export',
+            'schedule.view',
+            'leave.view', 'leave.request', 'leave.cancel',
+            'overtime.view', 'overtime.request', 'overtime.cancel',
+            'shift-swap.view', 'shift-swap.request', 'shift-swap.cancel',
+            'business-trip.view', 'business-trip.request', 'business-trip.cancel',
+            'worker-document.view', 'worker-document.upload', 'worker-document.download',
+            'payroll.view',
+
+            // Profile & notifications
+            'profile.view', 'profile.edit', 'profile.change-password',
+            'notification.view', 'notification.mark-read',
+            'calendar.view',
         ]);
 
-        $this->command->info('✅ Role-based permissions created successfully!');
-        $this->command->info('');
-        $this->command->info('📊 Permission Summary:');
-        $this->command->info('   Total Permissions: ' . count($permissions));
-        $this->command->info('   - Dashboard: 2');
-        $this->command->info('   - Master Data: 9');
-        $this->command->info('   - Worker & Attendance: 9');
-        $this->command->info('   - Leave Management: 4');
-        $this->command->info('   - Overtime Management: 4');
-        $this->command->info('   - Reports: 2');
-        $this->command->info('   - Settings: 2');
-        $this->command->info('');
-        $this->command->info('👥 Roles Created:');
-        $this->command->info('   - Super Admin: ' . $superAdmin->permissions->count() . ' permissions (ALL)');
-        $this->command->info('   - HR: ' . $hr->permissions->count() . ' permissions');
-        $this->command->info('   - Manager: ' . $manager->permissions->count() . ' permissions');
-        $this->command->info('   - Employee: ' . $employee->permissions->count() . ' permissions');
+        $this->command->info('✅ Comprehensive permissions and roles created successfully!');
+        $this->command->info('📊 Total Permissions: ' . count($permissions));
+        $this->command->info('👥 Roles: Super Admin (all), HR (full management), Manager (approvals), Employee (self-service)');
     }
 }
