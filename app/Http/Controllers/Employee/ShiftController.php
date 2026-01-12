@@ -38,6 +38,14 @@ class ShiftController extends Controller
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
 
+        // Get national holidays for this month
+        $holidays = \App\Models\Holiday::where('is_national', true)
+            ->whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->get()
+            ->keyBy(function($holiday) {
+                return $holiday->date->format('Y-m-d');
+            });
+
         // Get all worker shifts to handle date ranges correctly
         $workerShifts = $this->workerShiftService->getAll([
             'worker_id' => $worker->id,
@@ -61,7 +69,7 @@ class ShiftController extends Controller
         }
 
         // Build calendar data
-        $calendar = $this->buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides);
+        $calendar = $this->buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays);
 
         // Urutkan shift dari yang terbaru (effective_from descending) untuk penentuan info header
         $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
@@ -137,7 +145,7 @@ class ShiftController extends Controller
     /**
      * Build calendar array with shift information
      */
-    private function buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides)
+    private function buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays)
     {
         $calendar = [];
         $current = $startOfMonth->copy();
@@ -160,7 +168,20 @@ class ShiftController extends Controller
                     'isToday' => $current->isToday(),
                     'shift' => null,
                     'isOverride' => false,
+                    'isHoliday' => false,
+                    'holidayName' => null,
                 ];
+
+                // Check if this is a national holiday
+                $dateKey = $current->format('Y-m-d');
+                if (isset($holidays[$dateKey])) {
+                    $dayData['isHoliday'] = true;
+                    $dayData['holidayName'] = $holidays[$dateKey]->name;
+                    // On holidays, no shift assignment
+                    $calendar[$week][] = $dayData;
+                    $current->addDay();
+                    continue;
+                }
 
                 // Check if there's an override for this date
                 $override = $shiftOverrides->first(function ($item) use ($current) {

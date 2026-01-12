@@ -23,24 +23,27 @@ class EmployeeDashboardService
                 break;
             case 'month':
                 $query->whereMonth('attendance_date', now()->month)
-                      ->whereYear('attendance_date', now()->year);
+                    ->whereYear('attendance_date', now()->year);
                 break;
             case 'year':
                 $query->whereYear('attendance_date', now()->year);
                 break;
         }
 
-        $total = $query->count();
-        $onTime = $query->where('status', 'Hadir')->count();
-        $late = $query->where('status', 'Terlambat')->count();
-        $absent = $query->where('status', 'Tidak Hadir')->count();
+        // Use the internal status codes stored in the database
+        $attendances = $query->get();
+
+        $total = $attendances->count();
+        $present = $attendances->where('status', 'present')->count();
+        $late = $attendances->where('status', 'late')->count();
+        $absent = $attendances->where('status', 'absent')->count();
 
         return [
             'total' => $total,
-            'on_time' => $onTime,
+            'present' => $present,
             'late' => $late,
             'absent' => $absent,
-            'attendance_rate' => $total > 0 ? round(($onTime / $total) * 100, 1) : 0,
+            'percentage' => $total > 0 ? round(($present / $total) * 100, 1) : 0,
         ];
     }
 
@@ -49,20 +52,29 @@ class EmployeeDashboardService
      */
     public function getAttendanceChart(string $workerId, int $days = 7)
     {
+        $labels = [];
         $data = [];
+
         for ($i = $days - 1; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $attendance = Attendance::where('worker_id', $workerId)
                 ->whereDate('attendance_date', $date)
                 ->first();
-            
-            $data[] = [
-                'date' => $date->format('d M'),
-                'status' => $attendance ? $attendance->status : 'Tidak Hadir',
-                'check_in' => $attendance ? $attendance->check_in_time : null,
-            ];
+
+            $labels[] = $date->format('d M');
+
+            // Count presence for the day (present or late counted as hadir)
+            if ($attendance && in_array($attendance->status, ['present', 'late'])) {
+                $data[] = 1;
+            } else {
+                $data[] = 0;
+            }
         }
-        return $data;
+
+        return [
+            'labels' => $labels,
+            'data' => $data,
+        ];
     }
 
     /**
@@ -117,16 +129,34 @@ class EmployeeDashboardService
             ->limit($limit)
             ->get()
             ->map(function($attendance) {
-                $status = $attendance->status == 'Hadir' ? 'success' : ($attendance->status == 'Terlambat' ? 'late' : 'absent');
+                // Map internal status codes to dashboard status badges and labels
+                switch ($attendance->status) {
+                    case 'present':
+                        $badgeStatus = 'success';
+                        $statusLabel = 'Hadir';
+                        break;
+                    case 'late':
+                        $badgeStatus = 'late';
+                        $statusLabel = 'Terlambat';
+                        break;
+                    case 'absent':
+                    default:
+                        $badgeStatus = 'absent';
+                        $statusLabel = 'Tidak Hadir';
+                        break;
+                }
+
                 return [
                     'type' => 'attendance',
-                    'title' => 'Absensi ' . $attendance->status,
-                    'description' => 'Check-in pada ' . \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i'),
+                    'title' => 'Absensi ' . $statusLabel,
+                    'description' => $attendance->check_in
+                        ? 'Check-in pada ' . \Carbon\Carbon::parse($attendance->check_in)->format('H:i')
+                        : 'Tidak ada data check-in',
                     'date' => $attendance->attendance_date,
                     'time' => \Carbon\Carbon::parse($attendance->created_at)->diffForHumans(),
-                    'status' => $status,
+                    'status' => $badgeStatus,
                     'icon' => 'fa-check-circle',
-                    'color' => $attendance->status == 'Hadir' ? 'green' : ($attendance->status == 'Terlambat' ? 'yellow' : 'red'),
+                    'color' => $attendance->status == 'present' ? 'green' : ($attendance->status == 'late' ? 'yellow' : 'red'),
                 ];
             });
 

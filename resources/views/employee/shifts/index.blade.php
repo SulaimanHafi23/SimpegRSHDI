@@ -3,7 +3,7 @@
 @section('title', 'Jadwal Kerja')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6" x-data="shiftCalendar()" x-init="init()">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div class="flex items-center gap-3">
@@ -21,25 +21,7 @@
         </div>
     @endif
 
-    <!-- Month Navigation -->
-    <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-5 mb-6">
-        <div class="flex items-center justify-between">
-            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->subMonth()->month, 'year' => $date->copy()->subMonth()->year]) }}" 
-               class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition shadow-md hover:shadow-lg">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-            
-            <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <i class="far fa-calendar-alt text-purple-600"></i>
-                {{ $date->format('F Y') }}
-            </h2>
-            
-            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->addMonth()->month, 'year' => $date->copy()->addMonth()->year]) }}" 
-               class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition shadow-md hover:shadow-lg">
-                <i class="fas fa-chevron-right"></i>
-            </a>
-        </div>
-    </div>
+    <!-- Month Navigation (inline with calendar style like Kalender Cuti & Lembur) -->
 
     <!-- Regular Shift Info -->
     @if($workerShift)
@@ -115,65 +97,95 @@
         </div>
     @endif
 
-    <!-- Calendar -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
-        <!-- Calendar Header -->
-        <div class="grid grid-cols-7 bg-gradient-to-r from-gray-50 to-gray-100 text-center font-semibold text-gray-700">
-            <div class="py-4 border-r"><i class="far fa-sun text-yellow-500 mr-1"></i>Min</div>
-            <div class="py-4 border-r">Sen</div>
-            <div class="py-4 border-r">Sel</div>
-            <div class="py-4 border-r">Rab</div>
-            <div class="py-4 border-r">Kam</div>
-            <div class="py-4 border-r">Jum</div>
-            <div class="py-4"><i class="far fa-moon text-purple-500 mr-1"></i>Sab</div>
+    <!-- Calendar (styled similar to Kalender Cuti & Lembur) -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <!-- Calendar Navigation -->
+        <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 flex items-center justify-between">
+            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->subMonth()->month, 'year' => $date->copy()->subMonth()->year]) }}" 
+               class="p-2 hover:bg-green-500 rounded-lg transition">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            <h2 class="text-lg font-bold flex items-center gap-2">
+                <i class="far fa-calendar-alt"></i>
+                {{ $date->translatedFormat('F Y') }}
+            </h2>
+            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->addMonth()->month, 'year' => $date->copy()->addMonth()->year]) }}" 
+               class="p-2 hover:bg-green-500 rounded-lg transition">
+                <i class="fas fa-chevron-right"></i>
+            </a>
         </div>
 
-        <!-- Calendar Body -->
-        @foreach($calendar as $week)
-            <div class="grid grid-cols-7 border-t">
-                @foreach($week as $day)
-                    <div class="min-h-28 p-3 border-r relative {{ !$day['isCurrentMonth'] ? 'bg-gray-50' : 'bg-white hover:bg-gray-50' }} {{ $day['isToday'] ? 'bg-gradient-to-br from-blue-50 to-blue-100' : '' }} transition-colors duration-150">
-                        <!-- Date Number -->
-                        <div class="flex justify-between items-start mb-2">
-                            @if($day['isToday'])
-                                <div class="bg-blue-600 text-white rounded-full w-7 h-7 flex items-center justify-center text-xs shadow-md font-bold">
-                                    {{ $day['date']->day }}
-                                </div>
-                            @else
-                                <span class="text-sm font-semibold {{ !$day['isCurrentMonth'] ? 'text-gray-400' : 'text-gray-700' }}">
-                                    {{ $day['date']->day }}
-                                </span>
-                            @endif
-                            @if($day['isOverride'])
-                                <span class="text-xs bg-gradient-to-r from-orange-500 to-orange-600 text-white px-2 py-0.5 rounded-full shadow-sm" title="Jadwal Override">
-                                    <i class="fas fa-exclamation"></i>
-                                </span>
-                            @endif
-                        </div>
+        <div class="-mx-4 sm:mx-0 overflow-x-auto pb-2">
+            <div class="min-w-[980px] lg:min-w-full p-4">
+                <!-- Day Headers -->
+                <div class="grid grid-cols-7 gap-2 mb-2">
+                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Min</div>
+                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Sen</div>
+                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Sel</div>
+                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Rab</div>
+                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Kam</div>
+                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Jum</div>
+                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Sab</div>
+                </div>
 
-                        <!-- Shift Info -->
-                        @if($day['shift'])
-                            <div class="text-xs bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-2 border border-purple-200">
-                                <div class="font-semibold text-purple-800 truncate flex items-center gap-1">
-                                    <i class="fas fa-clock text-purple-600"></i>
-                                    {{ $day['shift']->name }}
+                <!-- Calendar Days -->
+                @foreach($calendar as $week)
+                    <div class="grid grid-cols-7 gap-2 mb-2">
+                        @foreach($week as $day)
+                            @php
+                                $isToday = $day['isToday'];
+                                $isCurrentMonth = $day['isCurrentMonth'];
+                                $hasShift = !empty($day['shift']);
+                                $isHoliday = $day['isHoliday'] ?? false;
+                            @endphp
+                            <div
+                                class="min-h-24 border rounded-lg p-2 relative cursor-pointer transition
+                                       {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300')) }}
+                                       {{ $isToday ? 'ring-2 ring-green-500' : '' }}"
+                                data-date-label="{{ $day['date']->translatedFormat('l, d F Y') }}"
+                                data-has-shift="{{ $hasShift ? 1 : 0 }}"
+                                data-shift-name="{{ $hasShift ? $day['shift']->name : '' }}"
+                                data-start="{{ $hasShift ? \Carbon\Carbon::parse($day['shift']->start_time)->format('H:i') : '' }}"
+                                data-end="{{ $hasShift ? \Carbon\Carbon::parse($day['shift']->end_time)->format('H:i') : '' }}"
+                                data-is-current="{{ $isCurrentMonth ? 1 : 0 }}"
+                                data-is-override="{{ $day['isOverride'] ? 1 : 0 }}"
+                                data-is-holiday="{{ $isHoliday ? 1 : 0 }}"
+                                data-holiday-name="{{ $isHoliday ? ($day['holidayName'] ?? 'Libur Nasional') : '' }}"
+                                @click="openDay($event.currentTarget)"
+                            >
+                                <!-- Date Number -->
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-sm font-semibold
+                                                 {{ $isCurrentMonth ? 'text-gray-800' : 'text-gray-400' }}">
+                                        {{ $day['date']->day }}
+                                    </span>
+                                    @if($day['isOverride'])
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500 text-white" title="Jadwal Override">
+                                            OVR
+                                        </span>
+                                    @endif
                                 </div>
-                                <div class="text-purple-600 mt-1 font-medium">
-                                    {{ \Carbon\Carbon::parse($day['shift']->start_time)->format('H:i') }} - 
-                                    {{ \Carbon\Carbon::parse($day['shift']->end_time)->format('H:i') }}
-                                </div>
+
+                                <!-- Visual indicator only (no text, just colors/icons) -->
+                                @if($isHoliday)
+                                    <div class="mt-4 flex items-center justify-center">
+                                        <i class="fas fa-flag text-red-600 text-lg"></i>
+                                    </div>
+                                @elseif($hasShift)
+                                    {{-- Working day - blue background only, no text shown --}}
+                                @else
+                                    @if($isCurrentMonth)
+                                        <div class="mt-4 flex items-center justify-center">
+                                            <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span>
+                                        </div>
+                                    @endif
+                                @endif
                             </div>
-                        @else
-                            @if($day['isCurrentMonth'])
-                                <div class="text-xs text-gray-400 bg-gray-100 rounded-lg p-2 text-center">
-                                    <i class="fas fa-umbrella-beach mr-1"></i>Libur
-                                </div>
-                            @endif
-                        @endif
+                        @endforeach
                     </div>
                 @endforeach
             </div>
-        @endforeach
+        </div>
     </div>
 
     <!-- Legend -->
@@ -182,14 +194,22 @@
             <i class="fas fa-info-circle text-purple-600"></i>
             Keterangan:
         </h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded"></div>
-                <span class="text-gray-700">Hari Ini</span>
+                <div class="w-6 h-6 bg-blue-50 border-2 border-blue-300 rounded"></div>
+                <span class="text-gray-700">Hari Kerja</span>
             </div>
             <div class="flex items-center gap-2">
-                <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded"></div>
-                <span class="text-gray-700">Hari Biasa</span>
+                <div class="w-6 h-6 bg-white border-2 border-gray-300 rounded flex items-center justify-center">
+                    <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span>
+                </div>
+                <span class="text-gray-700">Libur</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-red-100 border-2 border-red-400 rounded flex items-center justify-center">
+                    <i class="fas fa-flag text-red-600 text-xs"></i>
+                </div>
+                <span class="text-gray-700">Libur Nasional</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 bg-gray-50 border-2 border-gray-300 rounded"></div>
@@ -197,11 +217,84 @@
             </div>
             <div class="flex items-center gap-2">
                 <span class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-3 py-1 rounded-full shadow-sm text-xs font-medium">
-                    <i class="fas fa-exclamation mr-1"></i>Khusus
+                    <i class="fas fa-exclamation mr-1"></i>OVR
                 </span>
-                <span class="text-gray-700">Jadwal Override</span>
+                <span class="text-gray-700">Override</span>
             </div>
+        </div>
+    </div>
+
+    <!-- Modal for Shift Detail -->
+    <div x-show="showModal" 
+         x-cloak
+         @click.away="showModal = false"
+         x-transition
+         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6" @click.stop>
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900" x-text="modalDate"></h3>
+                    <p class="text-sm text-gray-600 mt-1" x-text="modalTitle"></p>
+                </div>
+                <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <template x-if="modalShiftTime">
+                <p class="text-sm text-gray-800 font-medium mb-2">
+                    <i class="fas fa-clock mr-1 text-blue-500"></i>
+                    <span x-text="modalShiftTime"></span>
+                </p>
+            </template>
+
+            <p class="text-sm text-gray-600" x-text="modalNote"></p>
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+function shiftCalendar() {
+    return {
+        showModal: false,
+        modalDate: '',
+        modalTitle: '',
+        modalShiftTime: '',
+        modalNote: '',
+
+        init() {},
+
+        openDay(el) {
+            const isCurrent = el.dataset.isCurrent === '1';
+            if (!isCurrent) return;
+
+            const isHoliday = el.dataset.isHoliday === '1';
+            const hasShift = el.dataset.hasShift === '1';
+            this.modalDate = el.dataset.dateLabel || '';
+
+            if (isHoliday) {
+                this.modalTitle = '🇮🇩 Libur Nasional';
+                this.modalShiftTime = '';
+                this.modalNote = (el.dataset.holidayName || 'Libur Nasional') + '. Anda tidak perlu melakukan absensi pada hari ini.';
+            } else if (hasShift) {
+                this.modalTitle = el.dataset.shiftName || 'Jadwal Kerja';
+                const start = el.dataset.start || '';
+                const end = el.dataset.end || '';
+                this.modalShiftTime = start && end ? `${start} - ${end}` : '';
+                this.modalNote = el.dataset.isOverride === '1'
+                    ? 'Jadwal ini merupakan override khusus untuk hari ini.'
+                    : 'Anda dijadwalkan bekerja pada hari ini.';
+            } else {
+                this.modalTitle = 'Libur';
+                this.modalShiftTime = '';
+                this.modalNote = 'Anda tidak memiliki jadwal kerja pada hari ini.';
+            }
+
+            this.showModal = true;
+        }
+    }
+}
+</script>
+@endpush

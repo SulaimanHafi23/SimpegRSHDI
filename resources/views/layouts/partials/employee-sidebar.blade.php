@@ -1,6 +1,6 @@
 {{-- filepath: resources/views/layouts/partials/employee-sidebar.blade.php --}}
-<aside x-data="{ openMenu: '{{ request()->routeIs('employee.attendance.*', 'employee.shifts.*', 'employee.shift-swaps.*') ? 'attendance' : (request()->routeIs('employee.leaves.*', 'employee.overtimes.*', 'employee.business-trips.*') ? 'requests' : (request()->routeIs('employee.documents.*', 'employee.payroll.*') ? 'hr' : '')) }}' }" 
-       class="fixed top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0" 
+<aside x-data="{ openMenu: '{{ request()->routeIs('employee.attendance.*', 'employee.shifts.*', 'employee.shift-swaps.*') ? 'attendance' : (request()->routeIs('employee.leaves.*', 'employee.overtimes.*', 'employee.business-trips.*') ? 'requests' : (request()->routeIs('employee.documents.*', 'employee.payroll.*', 'employee.calendar.*') ? 'hr' : '')) }}' }" 
+    class="fixed top-16 lg:top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0" 
        id="employee-sidebar">
     
     <!-- Modern Header with Glassmorphism -->
@@ -29,16 +29,13 @@
     <!-- Navigation with Smooth Scrolling -->
     <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
         
-        <!-- Dashboard - Standalone with Icon Animation -->
+        <!-- Dashboard - Standalone with Icon Animation (no dropdown arrow) -->
         <a href="{{ route('employee.dashboard') }}" 
            class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg {{ request()->routeIs('employee.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'hover:bg-white/10' }} transition-all duration-300">
             <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('employee.dashboard') ? 'bg-white/20' : 'bg-white/5' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
                 <i class="fas fa-th-large text-sm {{ request()->routeIs('employee.dashboard') ? 'text-white' : 'text-green-300' }}"></i>
             </div>
             <span class="font-medium text-sm {{ request()->routeIs('employee.dashboard') ? 'text-white' : 'text-green-100' }}">Dashboard</span>
-            @if(request()->routeIs('employee.dashboard'))
-                <i class="fas fa-chevron-right ml-auto text-white animate-pulse text-xs"></i>
-            @endif
         </a>
 
         <!-- Attendance Section with Dropdown -->
@@ -59,20 +56,20 @@
                  x-collapse
                  class="ml-3 mt-1.5 space-y-1 border-l-2 border-green-500/30 pl-3">
                 <a href="{{ route('employee.attendance.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.attendance.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-clipboard-check text-xs {{ request()->routeIs('employee.attendance.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.attendance.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-clipboard-check text-xs {{ request()->routeIs('employee.attendance.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Absensi Saya</span>
                 </a>
 
                 <a href="{{ route('employee.shifts.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.shifts.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('employee.shifts.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.shifts.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('employee.shifts.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Jadwal Kerja</span>
                 </a>
 
                 <a href="{{ route('employee.shift-swaps.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-exchange-alt text-xs {{ request()->routeIs('employee.shift-swaps.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-exchange-alt text-xs {{ request()->routeIs('employee.shift-swaps.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Tukar Shift</span>
                 </a>
             </div>
@@ -96,20 +93,20 @@
                  x-collapse
                  class="ml-3 mt-1.5 space-y-1 border-l-2 border-green-400/30 pl-3">
                 <a href="{{ route('employee.leaves.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.leaves.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-calendar-times text-xs {{ request()->routeIs('employee.leaves.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.leaves.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-calendar-times text-xs {{ request()->routeIs('employee.leaves.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Cuti Saya</span>
                 </a>
 
                 <a href="{{ route('employee.overtimes.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.overtimes.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-clock text-xs {{ request()->routeIs('employee.overtimes.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.overtimes.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-clock text-xs {{ request()->routeIs('employee.overtimes.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Lembur Saya</span>
                 </a>
 
                 <a href="{{ route('employee.business-trips.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.business-trips.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-plane-departure text-xs {{ request()->routeIs('employee.business-trips.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.business-trips.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-plane-departure text-xs {{ request()->routeIs('employee.business-trips.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Perjalanan Dinas</span>
                 </a>
             </div>
@@ -133,20 +130,20 @@
                  x-collapse
                  class="ml-3 mt-1.5 space-y-1 border-l-2 border-green-600/30 pl-3">
                 <a href="{{ route('employee.documents.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.documents.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-file-alt text-xs {{ request()->routeIs('employee.documents.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.documents.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-file-alt text-xs {{ request()->routeIs('employee.documents.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Dokumen Saya</span>
                 </a>
 
                 <a href="{{ route('employee.payroll.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.payroll.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-money-bill-wave text-xs {{ request()->routeIs('employee.payroll.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.payroll.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-money-bill-wave text-xs {{ request()->routeIs('employee.payroll.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Payroll Saya</span>
                 </a>
 
                 <a href="{{ route('employee.calendar.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-green-500/20 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-calendar-day text-xs {{ request()->routeIs('employee.calendar.*') ? 'text-green-300' : '' }}"></i>
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-calendar-day text-xs {{ request()->routeIs('employee.calendar.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Kalender</span>
                 </a>
             </div>

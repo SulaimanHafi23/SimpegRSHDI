@@ -83,7 +83,7 @@
             </button>
         </div>
 
-        <form method="GET" action="{{ route('employee.documents.index') }}" x-show="showFilters" x-transition>
+        <form method="GET" action="{{ route('employee.documents.index') }}" x-show="showFilters" x-cloak x-transition>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                 <!-- Search -->
                 <div class="lg:col-span-3">
@@ -208,8 +208,63 @@
         </form>
     </div>
 
-    <!-- Documents Table -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- Mobile Cards -->
+    <div class="sm:hidden space-y-4">
+        @forelse($documents as $document)
+            <div class="bg-white rounded-xl shadow-md p-4 space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs text-gray-500">Jenis Dokumen</p>
+                        <p class="font-semibold text-gray-900">{{ $document->documentType->name ?? '-' }}</p>
+                        <p class="text-sm text-gray-700 mt-1">{{ $document->file_name }}</p>
+                    </div>
+                    @if($document->status === 'pending')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                    @elseif($document->status === 'approved')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
+                    @else
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                    <div>
+                        <p class="text-xs text-gray-500">Kadaluarsa</p>
+                        <p class="font-medium">{{ $document->expired_date ? \Carbon\Carbon::parse($document->expired_date)->format('d M Y') : '-' }}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <a href="{{ route('employee.documents.download', $document->id) }}" class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition">
+                            <i class="fas fa-download mr-2"></i>Download
+                        </a>
+                        <a href="{{ route('employee.documents.show', $document->id) }}" class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition">
+                            <i class="fas fa-eye mr-2"></i>Detail
+                        </a>
+                    </div>
+                </div>
+
+                @if($document->status === 'pending')
+                    <div class="flex items-center gap-2">
+                        <form action="{{ route('employee.documents.destroy', $document->id) }}" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition" onclick="return confirm('Yakin ingin menghapus dokumen ini?')">
+                                <i class="fas fa-trash mr-2"></i>Hapus
+                            </button>
+                        </form>
+                    </div>
+                @endif
+            </div>
+        @empty
+            <div class="bg-white rounded-xl shadow-md p-6 text-center">
+                <i class="fas fa-inbox text-gray-300 text-5xl mb-3"></i>
+                <p class="text-gray-600 font-medium">Belum ada dokumen</p>
+                <p class="text-gray-400 text-sm">Upload dokumen untuk melihat data di sini</p>
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="hidden sm:block bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-gray-50 to-gray-100">

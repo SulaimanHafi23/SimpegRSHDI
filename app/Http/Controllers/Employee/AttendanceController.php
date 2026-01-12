@@ -33,29 +33,38 @@ class AttendanceController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
+        // Map status label from UI (Hadir/Terlambat/Tidak Hadir) ke kode internal (present/late/absent)
+        $statusMap = [
+            'Hadir' => 'present',
+            'Terlambat' => 'late',
+            'Tidak Hadir' => 'absent',
+        ];
+
+        $mappedStatus = $request->status ? ($statusMap[$request->status] ?? $request->status) : null;
+
         $filters = [
             'worker_id' => $worker->id,
             'date_from' => $request->date_from ?? now()->startOfMonth()->format('Y-m-d'),
             'date_to' => $request->date_to ?? now()->endOfMonth()->format('Y-m-d'),
-            'status' => $request->status,
+            'status' => $mappedStatus,
             'search' => $request->search,
             'per_page' => $request->per_page ?? 15,
         ];
 
         $attendances = $this->attendanceService->getAll($filters);
-        
-        // Get attendance summary for current month
-        $monthlySummary = $this->attendanceService->getAll([
-            'worker_id' => $worker->id,
-            'date_from' => now()->startOfMonth()->format('Y-m-d'),
-            'date_to' => now()->endOfMonth()->format('Y-m-d'),
-        ]);
-        
+
+        // Ringkasan absensi untuk bulan berjalan menggunakan kode status internal
+        $monthlySummary = $this->attendanceService->getMonthlyReport(
+            $worker->id,
+            now()->month,
+            now()->year
+        );
+
         $summary = [
-            'total_days' => $monthlySummary->total(),
-            'present' => $monthlySummary->where('status', 'Hadir')->count(),
-            'late' => $monthlySummary->where('status', 'Terlambat')->count(),
-            'absent' => $monthlySummary->where('status', 'Tidak Hadir')->count(),
+            'total_days' => $monthlySummary->count(),
+            'present' => $monthlySummary->where('status', 'present')->count(),
+            'late' => $monthlySummary->where('status', 'late')->count(),
+            'absent' => $monthlySummary->where('status', 'absent')->count(),
         ];
 
         // Cek apakah ada sesi absensi yang aktif (Check In tapi belum Check Out)

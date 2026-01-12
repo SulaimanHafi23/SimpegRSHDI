@@ -3,7 +3,7 @@
 @section('title','Tukar Shift')
 
 @section('content')
-<div class="max-w-6xl mx-auto">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <!-- Header -->
     <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-lg p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -39,35 +39,93 @@
         </div>
     @endif
 
-    <!-- Filter Tabs -->
-    <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden" x-data="{ activeTab: 'all' }">
-        <div class="flex border-b border-gray-200 overflow-x-auto">
-            <button @click="activeTab = 'all'" 
-                    :class="activeTab === 'all' ? 'border-b-2 border-green-600 text-green-700' : 'text-gray-600 hover:text-gray-900'"
-                    class="px-6 py-3 font-medium whitespace-nowrap">
-                Semua
-            </button>
-            <button @click="activeTab = 'pending'" 
-                    :class="activeTab === 'pending' ? 'border-b-2 border-green-600 text-green-700' : 'text-gray-600 hover:text-gray-900'"
-                    class="px-6 py-3 font-medium whitespace-nowrap">
-                Menunggu
-            </button>
-            <button @click="activeTab = 'approved'" 
-                    :class="activeTab === 'approved' ? 'border-b-2 border-green-600 text-green-700' : 'text-gray-600 hover:text-gray-900'"
-                    class="px-6 py-3 font-medium whitespace-nowrap">
-                Disetujui
-            </button>
-            <button @click="activeTab = 'executed'" 
-                    :class="activeTab === 'executed' ? 'border-b-2 border-green-600 text-green-700' : 'text-gray-600 hover:text-gray-900'"
-                    class="px-6 py-3 font-medium whitespace-nowrap">
-                Selesai
-            </button>
+    @php
+        $allItems = $items instanceof \Illuminate\Pagination\AbstractPaginator ? $items->getCollection() : collect($items);
+        $summary = [
+            'total' => $allItems->count(),
+            'pending' => $allItems->whereIn('status', ['pending', 'awaiting_approval'])->count(),
+            'approved' => $allItems->whereIn('status', ['accepted', 'approved'])->count(),
+            'history' => $allItems->whereIn('status', ['rejected', 'cancelled', 'executed'])->count(),
+        ];
+    @endphp
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Total</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ $summary['total'] }}</p>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg">
+                    <i class="fas fa-list text-gray-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Menunggu</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ $summary['pending'] }}</p>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-lg">
+                    <i class="fas fa-hourglass-half text-yellow-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Disetujui</p>
+                    <p class="text-2xl font-bold text-green-600">{{ $summary['approved'] }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-5">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 mb-1">Riwayat</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ $summary['history'] }}</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-lg">
+                    <i class="fas fa-history text-purple-600 text-xl"></i>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Swap Requests List -->
-    <div class="space-y-4">
-        @forelse($items as $item)
+    <div class="space-y-4" x-data="{ filter: 'all' }">
+        <!-- Status Filter (client-side) -->
+        <div class="bg-white rounded-lg shadow-md p-4 flex flex-wrap items-center gap-2 mb-2">
+            <span class="text-sm font-medium text-gray-700 mr-2">Tampilkan:</span>
+            <button @click="filter = 'all'"
+                    :class="filter === 'all' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                    class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium">
+                Semua
+            </button>
+            <button @click="filter = 'pending'"
+                    :class="filter === 'pending' ? 'bg-yellow-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                    class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium">
+                Menunggu
+            </button>
+            <button @click="filter = 'approved'"
+                    :class="filter === 'approved' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                    class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium">
+                Disetujui
+            </button>
+            <button @click="filter = 'history'"
+                    :class="filter === 'history' ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                    class="px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium">
+                Riwayat
+            </button>
+        </div>
+
+        <!-- Swap Requests List -->
+        <div class="space-y-4">
+            @forelse($items as $item)
             @php
                 $currentWorkerId = auth()->user()->worker->id;
                 $isRequester = $item->requester_id === $currentWorkerId;
@@ -85,9 +143,15 @@
                 $status = $statusConfig[$item->status] ?? ['color' => 'gray', 'icon' => 'question', 'text' => $item->status];
             @endphp
             
-            <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200 overflow-hidden">
+                <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition duration-200 overflow-hidden"
+                      data-status="{{ $item->status }}"
+                      x-cloak
+                      x-show="filter === 'all'
+                          || (filter === 'pending' && ['pending','awaiting_approval'].includes($el.dataset.status))
+                          || (filter === 'approved' && ['accepted','approved'].includes($el.dataset.status))
+                          || (filter === 'history' && ['rejected','cancelled','executed'].includes($el.dataset.status))">
                 <!-- Card Header with Status -->
-                <div class="bg-{{ $status['color'] }}-50 border-l-4 border-{{ $status['color'] }}-500 px-6 py-3">
+                <div class="bg-{{ $status['color'] }}-50 border-l-4 border-{{ $status['color'] }}-500 px-4 sm:px-6 py-3">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-3">
                             <i class="fas fa-{{ $status['icon'] }} text-{{ $status['color'] }}-600"></i>
@@ -98,24 +162,24 @@
                 </div>
 
                 <!-- Card Body -->
-                <div class="p-6">
-                    <div class="grid md:grid-cols-2 gap-6">
+                <div class="p-4 sm:p-6">
+                    <div class="grid md:grid-cols-2 gap-4 md:gap-6">
                         <!-- Requester Info -->
-                        <div class="space-y-3">
+                        <div class="space-y-3 min-w-0">
                             <div class="flex items-start space-x-3">
                                 <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                                     <i class="fas fa-user text-green-600"></i>
                                 </div>
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-xs text-gray-500 uppercase tracking-wide">Peminta</p>
-                                    <p class="font-semibold text-gray-900">{{ $item->requester->name }}</p>
-                                    <p class="text-sm text-gray-600">{{ $item->requester->department->name ?? '-' }}</p>
+                                    <p class="font-semibold text-gray-900 truncate">{{ $item->requester->name }}</p>
+                                    <p class="text-sm text-gray-600 truncate">{{ $item->requester->department->name ?? '-' }}</p>
                                 </div>
                             </div>
                             
                             <div class="bg-gray-50 rounded-lg p-3">
                                 <p class="text-xs text-gray-500 mb-1">Shift Peminta</p>
-                                <div class="flex items-center space-x-2">
+                                <div class="flex items-center space-x-2 flex-wrap">
                                     <i class="fas fa-clock text-gray-400"></i>
                                     <span class="font-medium text-gray-900">{{ $item->requesterShift?->shift->name ?? 'N/A' }}</span>
                                 </div>
@@ -131,29 +195,26 @@
                         </div>
 
                         <!-- Arrow & Target Info -->
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-center md:hidden my-2">
-                                <i class="fas fa-arrow-down text-gray-400 text-2xl"></i>
-                            </div>
-                            <div class="hidden md:flex items-center justify-center absolute left-1/2 transform -translate-x-1/2 top-24">
-                                <i class="fas fa-arrow-right text-gray-400 text-2xl"></i>
+                        <div class="space-y-3 min-w-0">
+                            <div class="flex items-center justify-center my-2 md:my-0">
+                                <i class="fas fa-arrow-down md:fa-arrow-right text-gray-400 text-2xl"></i>
                             </div>
                             
                             <div class="flex items-start space-x-3">
                                 <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                                     <i class="fas fa-user-friends text-blue-600"></i>
                                 </div>
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-0">
                                     <p class="text-xs text-gray-500 uppercase tracking-wide">Target</p>
-                                    <p class="font-semibold text-gray-900">{{ $item->targetWorker?->name ?? 'Open Request' }}</p>
-                                    <p class="text-sm text-gray-600">{{ $item->targetWorker?->department->name ?? '-' }}</p>
+                                    <p class="font-semibold text-gray-900 truncate">{{ $item->targetWorker?->name ?? 'Open Request' }}</p>
+                                    <p class="text-sm text-gray-600 truncate">{{ $item->targetWorker?->department->name ?? '-' }}</p>
                                 </div>
                             </div>
 
                             @if($item->targetShift)
                                 <div class="bg-gray-50 rounded-lg p-3">
                                     <p class="text-xs text-gray-500 mb-1">Shift Target</p>
-                                    <div class="flex items-center space-x-2">
+                                    <div class="flex items-center space-x-2 flex-wrap">
                                         <i class="fas fa-clock text-gray-400"></i>
                                         <span class="font-medium text-gray-900">{{ $item->targetShift->shift->name ?? 'N/A' }}</span>
                                     </div>
@@ -174,7 +235,7 @@
                     @if($item->reason)
                         <div class="mt-4 p-3 bg-amber-50 border-l-4 border-amber-400 rounded">
                             <p class="text-xs text-amber-700 font-medium mb-1">Alasan:</p>
-                            <p class="text-sm text-amber-900">{{ $item->reason }}</p>
+                            <p class="text-sm text-amber-900 break-words">{{ $item->reason }}</p>
                         </div>
                     @endif
 
@@ -203,27 +264,27 @@
                     <!-- Actions -->
                     <div class="mt-4 flex flex-wrap gap-2">
                         @if($isTarget && $item->status === 'pending')
-                            <form action="{{ route('employee.shift-swaps.accept', $item->id) }}" method="POST" class="inline">
+                            <form action="{{ route('employee.shift-swaps.accept', $item->id) }}" method="POST" class="inline w-full sm:w-auto">
                                 @csrf
-                                <button type="submit" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 shadow-sm">
+                                <button type="submit" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200 shadow-sm">
                                     <i class="fas fa-check mr-2"></i>
                                     Terima
                                 </button>
                             </form>
                             <button type="button" 
                                 onclick="rejectSwap('{{ $item->id }}')" 
-                                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 shadow-sm">
+                                class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition duration-200 shadow-sm">
                                 <i class="fas fa-times mr-2"></i>
                                 Tolak
                             </button>
                         @endif
 
                         @if($isRequester && !in_array($item->status, ['executed', 'cancelled']))
-                            <form action="{{ route('employee.shift-swaps.cancel', $item->id) }}" method="POST" class="inline">
+                            <form action="{{ route('employee.shift-swaps.cancel', $item->id) }}" method="POST" class="inline w-full sm:w-auto">
                                 @csrf
                                 <button type="submit" 
                                     onclick="return confirm('Yakin membatalkan permintaan ini?')"
-                                    class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition duration-200 shadow-sm">
+                                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition duration-200 shadow-sm">
                                     <i class="fas fa-ban mr-2"></i>
                                     Batalkan
                                 </button>
@@ -242,7 +303,8 @@
                     Buat Permintaan Pertama
                 </a>
             </div>
-        @endforelse
+            @endforelse
+        </div>
     </div>
 </div>
 

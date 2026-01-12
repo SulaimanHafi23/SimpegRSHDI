@@ -17,8 +17,17 @@
     </div>
 
     <!-- Filter Section -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <form method="GET" action="{{ route('employee.business-trips.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-lg shadow p-6" x-data="{ showFilters: false }">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <i class="fas fa-filter text-blue-600"></i>Filter
+            </h3>
+            <button @click="showFilters = !showFilters" class="text-gray-600 hover:text-gray-800">
+                <i class="fas" :class="showFilters ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+            </button>
+        </div>
+
+        <form method="GET" action="{{ route('employee.business-trips.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4" x-show="showFilters" x-cloak x-transition>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select name="status" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200">
@@ -54,8 +63,60 @@
         </form>
     </div>
 
-    <!-- Business Trips Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <!-- Mobile Cards -->
+    <div class="sm:hidden space-y-4">
+        @forelse($businessTrips as $trip)
+            <div class="bg-white rounded-lg shadow p-4 space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs text-gray-500">Tujuan</p>
+                        <p class="font-semibold text-gray-900">{{ $trip->destination }}</p>
+                        <p class="text-sm text-gray-700">{{ Str::limit($trip->purpose, 80) }}</p>
+                    </div>
+                    @if($trip->status === 'pending')
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800"><i class="fas fa-clock mr-1"></i>Pending</span>
+                    @elseif($trip->status === 'approved')
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Approved</span>
+                    @elseif($trip->status === 'rejected')
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times mr-1"></i>Rejected</span>
+                    @else
+                        <span class="px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800"><i class="fas fa-ban mr-1"></i>Cancelled</span>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                    <div>
+                        <p class="text-xs text-gray-500">Tanggal</p>
+                        <p class="font-medium">{{ $trip->start_date->format('d M Y') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Durasi</p>
+                        <p class="font-medium">{{ $trip->start_date->diffInDays($trip->end_date) + 1 }} hari</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Estimasi Biaya</p>
+                        <p class="font-medium">Rp {{ number_format($trip->estimated_cost ?? 0, 0, ',', '.') }}</p>
+                    </div>
+                </div>
+
+                <div>
+                    <a href="{{ route('employee.business-trips.show', $trip->id) }}" 
+                       class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-eye mr-2"></i>Detail
+                    </a>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <i class="fas fa-briefcase text-gray-300 text-5xl mb-3"></i>
+                <p class="text-gray-600 font-medium">Belum ada perjalanan dinas</p>
+                <p class="text-gray-400 text-sm">Ajukan perjalanan dinas pertama Anda</p>
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="hidden sm:block bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">

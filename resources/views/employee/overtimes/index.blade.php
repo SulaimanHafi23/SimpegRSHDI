@@ -103,7 +103,7 @@
             </button>
         </div>
 
-        <form method="GET" action="{{ route('employee.overtimes.index') }}" x-show="showFilters" x-transition>
+        <form method="GET" action="{{ route('employee.overtimes.index') }}" x-show="showFilters" x-cloak x-transition>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <!-- Search -->
                 <div class="lg:col-span-4">
@@ -237,8 +237,73 @@
         </form>
     </div>
 
-    <!-- Overtime Table -->
-    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- Mobile Cards -->
+    <div class="sm:hidden space-y-4">
+        @forelse($overtimeRequests as $overtime)
+            <div class="bg-white rounded-xl shadow-md p-4 space-y-3">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs text-gray-500">Tanggal</p>
+                        <p class="font-semibold text-gray-900">{{ \Carbon\Carbon::parse($overtime->overtime_date)->format('d M Y') }}</p>
+                    </div>
+                    @if($overtime->status === 'pending')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                    @elseif($overtime->status === 'approved')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
+                    @else
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 text-sm text-gray-700">
+                    <div>
+                        <p class="text-xs text-gray-500">Waktu</p>
+                        <p class="font-medium">{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</p>
+                    </div>
+                    <div>
+                        @php
+                            $start = \Carbon\Carbon::parse($overtime->start_time);
+                            $end = \Carbon\Carbon::parse($overtime->end_time);
+                            $diff = $start->diff($end);
+                        @endphp
+                        <p class="text-xs text-gray-500">Durasi</p>
+                        <p class="font-medium">{{ $diff->h }} jam {{ $diff->i }} menit</p>
+                    </div>
+                </div>
+
+                @if($overtime->reason)
+                    <div class="text-sm text-gray-700">
+                        <p class="text-xs text-gray-500">Alasan</p>
+                        <p class="font-medium">{{ $overtime->reason }}</p>
+                    </div>
+                @endif
+
+                <div class="flex items-center gap-3 text-sm text-gray-700">
+                    <a href="{{ route('employee.overtimes.show', $overtime->id) }}" class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition">
+                        <i class="fas fa-eye mr-2"></i>Detail
+                    </a>
+                    @if($overtime->status === 'pending')
+                        <form action="{{ route('employee.overtimes.cancel', $overtime->id) }}" method="POST" class="inline">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition" onclick="return confirm('Yakin ingin membatalkan permohonan lembur ini?')">
+                                <i class="fas fa-times mr-2"></i>Batalkan
+                            </button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-xl shadow-md p-6 text-center">
+                <i class="fas fa-inbox text-gray-300 text-5xl mb-3"></i>
+                <p class="text-gray-600 font-medium">Belum ada permohonan lembur</p>
+                <p class="text-gray-400 text-sm">Ajukan permohonan lembur untuk melihat data di sini</p>
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="hidden sm:block bg-white rounded-xl shadow-md overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-gray-50 to-gray-100">

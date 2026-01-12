@@ -1,5 +1,5 @@
 {{-- filepath: resources/views/layouts/partials/employee-navbar.blade.php --}}
-<header class="sticky top-0 z-50 text-white shadow-lg bg-gradient-to-r from-green-600 to-green-700">
+<header class="sticky top-0 z-30 text-white shadow-lg bg-gradient-to-r from-green-600 to-green-700">
     <div class="px-4 py-4">
         <div class="flex items-center justify-between">
             <!-- Mobile Menu Button -->
@@ -20,8 +20,8 @@
             <!-- Right Side Icons -->
             <div class="flex items-center space-x-2">
                 <!-- Notifications -->
-                <div class="relative" 
-                     x-data="notificationWidget()" 
+                <div class="relative"
+                     x-data="notificationWidget()"
                      x-init="loadCount()"
                      @click.away="open = false">
                     <button @click="open = !open; if(open) loadNotifications()" class="relative p-2 transition duration-200 rounded-lg hover:bg-green-500">

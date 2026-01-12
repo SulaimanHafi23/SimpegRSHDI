@@ -62,6 +62,25 @@ class AttendanceService
                 throw new \Exception('Anda sudah melakukan check-in hari ini.');
             }
 
+            // Check if today is a national holiday
+            $holiday = \App\Models\Holiday::where('is_national', true)
+                ->whereDate('date', $today)
+                ->first();
+            if ($holiday) {
+                throw new \Exception('Hari ini adalah libur nasional (' . $holiday->name . '). Anda tidak perlu melakukan absensi.');
+            }
+
+            // Check if worker is on approved leave today
+            $approvedLeave = \App\Models\LeaveRequest::where('worker_id', $workerId)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->first();
+            if ($approvedLeave) {
+                $leaveTypeName = $approvedLeave->leaveType->name ?? 'Cuti';
+                throw new \Exception('Anda sedang cuti (' . $leaveTypeName . '). Tidak perlu melakukan absensi.');
+            }
+
             // Get worker's shift for today
             $workerShift = $this->workerShiftRepository->getActiveByWorkerId($workerId);
             if (!$workerShift) {
