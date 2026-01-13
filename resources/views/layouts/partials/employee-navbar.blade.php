@@ -3,7 +3,7 @@
     <div class="px-4 py-4">
         <div class="flex items-center justify-between">
             <!-- Mobile Menu Button -->
-            <button onclick="toggleEmployeeSidebar()" class="p-2 mr-3 transition duration-200 rounded-lg lg:hidden hover:bg-green-500">
+            <button onclick="toggleUnifiedSidebar()" class="p-2 mr-3 transition duration-200 rounded-lg lg:hidden hover:bg-green-500">
                 <i class="text-xl fas fa-bars"></i>
             </button>
 

@@ -44,12 +44,13 @@ class RedirectBasedOnRole
         
         // If accessing /employee/dashboard or /employee/*
         if (str_starts_with($currentPath, 'employee/')) {
-            if ($isAdmin) {
-                // Admin accessing employee routes - redirect to admin dashboard
-                return redirect()->route('admin.dashboard');
-            } else {
-                // Employee accessing employee routes - allow
+            // Check if user has permission to access employee routes
+            if ($user->hasRole('Employee') || $user->can('dashboard.employee')) {
+                // User has employee role or permission - allow access
                 return $next($request);
+            } elseif ($isAdmin) {
+                // Admin without employee permission - redirect to admin dashboard
+                return redirect()->route('admin.dashboard');
             }
         }
 

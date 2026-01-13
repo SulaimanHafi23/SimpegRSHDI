@@ -22,9 +22,9 @@ class PdfExportService
             'generated_at' => now()->format('d F Y H:i'),
             'summary' => [
                 'total' => $collection->count(),
-                'present' => $collection->where('status', 'Hadir')->count(),
-                'late' => $collection->where('status', 'Terlambat')->count(),
-                'absent' => $collection->where('status', 'Tidak Hadir')->count(),
+                'present' => $collection->where('status', 'present')->count(),
+                'late' => $collection->where('status', 'late')->count(),
+                'absent' => $collection->where('status', 'absent')->count(),
             ]
         ];
 

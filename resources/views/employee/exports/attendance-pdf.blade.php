@@ -197,9 +197,9 @@
                 <td>{{ $attendance->shift->name ?? '-' }}</td>
                 <td style="font-size: 10px;">{{ $attendance->location->name ?? '-' }}</td>
                 <td>
-                    @if($attendance->status == 'Hadir')
+                    @if($attendance->status == 'present')
                         <span class="badge badge-success">Hadir</span>
-                    @elseif($attendance->status == 'Terlambat')
+                    @elseif($attendance->status == 'late')
                         <span class="badge badge-warning">Terlambat</span>
                     @else
                         <span class="badge badge-danger">Tidak Hadir</span>

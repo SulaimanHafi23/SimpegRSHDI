@@ -86,6 +86,13 @@ class RolePermissionSeeder extends Seeder
             'notification.manage', // Manage all notifications
             'notification.view',   // View own notifications only
 
+            // Calendar Management
+            'calendar.view',       // View calendar with events (holidays, leaves, overtimes)
+
+            // Profile Management
+            'profile.view',        // View own profile
+            'profile.edit',        // Edit own profile
+
             // Reports - Based on ReportController
             'report.view',           // View reports (attendance, leave, overtime, worker, document)
             'report.export',         // Export reports to CSV/Excel/PDF
@@ -206,6 +213,13 @@ class RolePermissionSeeder extends Seeder
             // Notifications
             'notification.view',
 
+            // Calendar
+            'calendar.view',
+
+            // Profile
+            'profile.view',
+            'profile.edit',
+
             // Reports - View Only
             'report.view',
             'report.export',
@@ -248,6 +262,11 @@ class RolePermissionSeeder extends Seeder
             // Payroll & Notifications
             'payroll.view',             // View own payroll
             'notification.view',        // View own notifications
+
+            // Calendar & Profile
+            'calendar.view',            // View calendar
+            'profile.view',             // View own profile
+            'profile.edit',             // Edit own profile
         ]);
 
         $this->command->info('✅ Role-based permissions created successfully!');

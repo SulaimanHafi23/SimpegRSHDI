@@ -23,8 +23,13 @@
 </head>
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen flex">
-        <!-- Sidebar - Hidden on mobile, visible on desktop -->
-        @include('layouts.partials.employee-sidebar')
+        <!-- Backdrop Overlay for Mobile -->
+        <div id="sidebar-backdrop" 
+             class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
+             onclick="toggleUnifiedSidebar()"></div>
+        
+        <!-- Unified Sidebar -->
+        @include('layouts.partials.unified-sidebar')
 
         <!-- Main Content -->
         <div class="flex-1 flex flex-col lg:ml-64">

@@ -82,7 +82,7 @@ Route::post('/logout', [LoginController::class, 'logout'])
 Route::middleware(['auth', 'redirect_role'])->group(function () {
 
     // ========== DASHBOARDS ==========
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('role:Super Admin|HR|Manager')->name('admin.dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('role_or_permission:Super Admin|HR|Manager|dashboard.admin')->name('admin.dashboard');
 
     // HR Dashboard
     Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->middleware('role:HR')->name('hr.dashboard');
@@ -91,7 +91,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('role:Manager')->name('manager.dashboard');
 
     // ========== EMPLOYEE ROUTES ==========
-    Route::prefix('employee')->name('employee.')->middleware('role:Employee')->group(function () {
+    Route::prefix('employee')->name('employee.')->middleware('role_or_permission:Employee|dashboard.employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         // Attendance for employees
         Route::prefix('attendance')->name('attendance.')->group(function () {
