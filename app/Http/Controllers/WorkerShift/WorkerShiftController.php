@@ -57,10 +57,21 @@ class WorkerShiftController extends Controller
             'pattern_type' => 'nullable|string|in:fixed,rotating,custom',
             'custom_working_days' => 'nullable|array',
             'rotating_days' => 'nullable|array',
+        ], [
+            'shift_id.required' => 'Shift wajib dipilih.',
+            'shift_id.exists' => 'Shift yang dipilih tidak valid.',
+            'start_date.required' => 'Tanggal mulai wajib diisi.',
+            'start_date.date' => 'Format tanggal mulai tidak valid.',
+            'end_date.date' => 'Format tanggal selesai tidak valid.',
+            'end_date.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+            'worker_id.exists' => 'Pegawai yang dipilih tidak valid.',
+            'worker_ids.array' => 'Format data pegawai tidak valid.',
+            'worker_ids.*.exists' => 'Salah satu pegawai yang dipilih tidak valid.',
+            'pattern_type.in' => 'Tipe pola harus berisi fixed, rotating, atau custom.',
         ]);
 
         if (empty($data['worker_id']) && empty($data['worker_ids'])) {
-            return back()->withInput()->withErrors(['worker_id' => 'Harap pilih pegawai.']);
+            return back()->withInput()->withErrors(['worker_id' => 'Harap pilih minimal satu pegawai.']);
         }
 
         try {
@@ -127,6 +138,14 @@ class WorkerShiftController extends Controller
             'pattern_type' => 'nullable|string|in:fixed,rotating,custom',
             'custom_working_days' => 'nullable|array',
             'rotating_days' => 'nullable|array',
+        ], [
+            'shift_id.required' => 'Shift wajib dipilih.',
+            'shift_id.exists' => 'Shift yang dipilih tidak valid.',
+            'start_date.required' => 'Tanggal mulai wajib diisi.',
+            'start_date.date' => 'Format tanggal mulai tidak valid.',
+            'end_date.date' => 'Format tanggal selesai tidak valid.',
+            'end_date.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+            'pattern_type.in' => 'Tipe pola harus berisi fixed, rotating, atau custom.',
         ]);
 
         try {

@@ -95,7 +95,7 @@
             {{-- Quick Actions --}}
             <x-card title="Quick Actions">
                 <div class="space-y-2">
-                    @can('edit-roles')
+                    @can('role.manage')
                         <x-button 
                             variant="outline" 
                             icon="fas fa-edit"
@@ -113,7 +113,7 @@
                         Lihat Users
                     </x-button>
 
-                    @can('delete-roles')
+                    @can('role.manage')
                         @if($role->users->count() == 0)
                             <x-button 
                                 variant="outline" 

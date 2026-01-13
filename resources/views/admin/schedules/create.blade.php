@@ -21,6 +21,24 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <div class="flex items-start">
+                <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <div>
+                    <strong class="font-bold">Terdapat kesalahan pada form!</strong>
+                    <ul class="mt-2 ml-4 list-disc list-inside text-sm">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <!-- Form -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <form action="{{ route('admin.worker-shifts.store') }}" method="POST" class="p-6">
@@ -32,7 +50,7 @@
                     Pegawai <span class="text-red-500">*</span>
                 </label>
                 <div class="flex gap-2">
-                    <select id="worker_select" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    <select id="worker_select" class="flex-1 px-4 py-2 border @if($errors->has('worker_id') || $errors->has('worker_ids')) border-red-500 @else border-gray-300 @endif rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                         <option value="">-- Pilih Pegawai --</option>
                         @foreach($workers as $worker)
                             <option value="{{ $worker->id }}" data-label="{{ $worker->nip }} - {{ $worker->name }}">{{ $worker->nip }} - {{ $worker->name }}</option>
@@ -56,6 +74,9 @@
                         @endforeach
                     @endif
                 </div>
+                @error('worker_id')
+                    <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                @enderror
                 @error('worker_ids')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
