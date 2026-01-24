@@ -257,8 +257,8 @@
 </div>
 
 {{-- Account modal overlay (create / edit) --}}
-<div id="account-modal" class="fixed inset-0 bg-black/5 backdrop-blur-sm hidden items-center justify-center z-50">
-    <div class="bg-white/60 backdrop-blur-lg rounded-lg w-full max-w-md mx-4 shadow-lg border border-white/20">
+<div id="account-modal" class="fixed inset-0 backdrop-blur-sm bg-white/30 hidden items-center justify-center z-50" onclick="if(event.target === this) document.getElementById('account-modal').classList.add('hidden')">
+    <div class="bg-white/60 backdrop-blur-lg rounded-lg w-full max-w-md mx-4 shadow-lg border border-white/20" onclick="event.stopPropagation()">
         <div class="p-4 border-b border-white/20 flex items-center justify-between">
             <h3 id="account-modal-title" class="font-semibold">Kelola Akun Pengguna</h3>
             <button type="button" id="account-modal-close" class="text-gray-600 hover:text-gray-900">&times;</button>

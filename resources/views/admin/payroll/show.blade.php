@@ -276,8 +276,8 @@
 </div>
 
 <!-- Mark as Paid Modal -->
-<div id="markPaidModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+<div id="markPaidModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) document.getElementById('markPaidModal').classList.add('hidden')">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" onclick="event.stopPropagation()">
         <div class="mt-3">
             <h3 class="text-lg font-bold text-gray-900 mb-4">Tandai Sebagai Dibayar</h3>
             <form action="{{ route('admin.payroll.mark-paid', $payroll) }}" method="POST">

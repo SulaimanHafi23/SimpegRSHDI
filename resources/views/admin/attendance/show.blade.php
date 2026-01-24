@@ -296,8 +296,8 @@
 
 {{-- Check Out Modal --}}
 @if(!$attendance->check_out)
-<div id="checkout-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg max-w-md w-full p-6">
+<div id="checkout-modal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center p-4" onclick="if(event.target === this) document.getElementById('checkout-modal').classList.add('hidden')">
+    <div class="bg-white rounded-lg max-w-md w-full p-6" onclick="event.stopPropagation()">
         <h3 class="text-lg font-semibold mb-4">Check Out</h3>
         <form action="{{ route('admin.attendance.check-out', $attendance->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf

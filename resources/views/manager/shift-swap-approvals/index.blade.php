@@ -202,8 +202,8 @@
 </div>
 
 <!-- Approve Modal -->
-<div id="approveModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+<div id="approveModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeModal('approveModal')">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white" onclick="event.stopPropagation()">
         <form id="approveForm" method="POST">
             @csrf
             <div class="flex items-center justify-between pb-3 border-b">
@@ -238,8 +238,8 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+<div id="rejectModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeModal('rejectModal')">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white" onclick="event.stopPropagation()">
         <form id="rejectForm" method="POST">
             @csrf
             <div class="flex items-center justify-between pb-3 border-b">
@@ -277,8 +277,8 @@
 </div>
 
 <!-- Execute Modal -->
-<div id="executeModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white">
+<div id="executeModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeModal('executeModal')">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white" onclick="event.stopPropagation()">
         <form id="executeForm" method="POST">
             @csrf
             <div class="flex items-center justify-between pb-3 border-b">

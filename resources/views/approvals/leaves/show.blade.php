@@ -316,7 +316,7 @@
          class="fixed inset-0 z-50 overflow-y-auto" 
          style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-black opacity-50" @click="showApproveModal = false"></div>
+            <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showApproveModal = false"></div>
             
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Approve Pengajuan Cuti</h3>
@@ -356,7 +356,7 @@
          class="fixed inset-0 z-50 overflow-y-auto" 
          style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-black opacity-50" @click="showRejectModal = false"></div>
+            <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showRejectModal = false"></div>
             
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Reject Pengajuan Cuti</h3>

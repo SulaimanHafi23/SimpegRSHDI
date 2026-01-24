@@ -101,8 +101,8 @@
 
                         <button onclick="document.getElementById('reject-modal').classList.remove('hidden')" class="px-4 py-2 bg-red-600 text-white rounded">Tolak</button>
 
-                        <div id="reject-modal" class="hidden fixed inset-0 flex items-center justify-center bg-black/40">
-                            <div class="bg-white rounded p-4 w-full max-w-md">
+                        <div id="reject-modal" class="hidden fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-white/30" onclick="if(event.target === this) document.getElementById('reject-modal').classList.add('hidden')">
+                            <div class="bg-white rounded p-4 w-full max-w-md" onclick="event.stopPropagation()">
                                 <form action="{{ route('admin.worker-documents.reject', $document->id) }}" method="POST">
                                     @csrf
                                     <label class="block text-sm">Alasan penolakan</label>

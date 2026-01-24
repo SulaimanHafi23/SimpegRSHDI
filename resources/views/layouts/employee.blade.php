@@ -25,7 +25,7 @@
     <div class="min-h-screen flex">
         <!-- Backdrop Overlay for Mobile -->
         <div id="sidebar-backdrop" 
-             class="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
+             class="fixed inset-0 backdrop-blur-sm bg-white/30 z-30 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
              onclick="toggleUnifiedSidebar()"></div>
         
         <!-- Unified Sidebar -->
@@ -72,7 +72,7 @@
     @include('layouts.partials.employee-footer')
 
     <!-- Mobile Sidebar Overlay -->
-    <div id="employee-sidebar-overlay" class="fixed inset-0 bg-black/50 hidden lg:hidden transition-opacity duration-300" style="z-index: 35;"></div>
+    <div id="employee-sidebar-overlay" class="fixed inset-0 backdrop-blur-sm bg-white/30 hidden lg:hidden transition-opacity duration-300" style="z-index: 35;"></div>
 
     @stack('scripts')
     

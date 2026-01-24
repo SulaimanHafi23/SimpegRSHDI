@@ -81,7 +81,7 @@
 </header>
 
 <!-- Mobile Sidebar Overlay -->
-<div id="mobile-sidebar-overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden hidden"></div>
+<div id="mobile-sidebar-overlay" class="fixed inset-0 backdrop-blur-sm bg-white/30 z-40 lg:hidden hidden"></div>
 
 <!-- Mobile Sidebar -->
 <aside id="mobile-sidebar" class="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg z-50 transform -translate-x-full transition-transform duration-300 lg:hidden">

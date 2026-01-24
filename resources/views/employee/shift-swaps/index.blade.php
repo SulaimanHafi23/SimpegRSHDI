@@ -309,7 +309,7 @@
 </div>
 
 <!-- Reject Modal -->
-<div class="fixed inset-0 bg-black bg-opacity-30 z-50 hidden" id="rejectModal" onclick="if(event.target === this) closeRejectModal()">
+<div class="fixed inset-0 backdrop-blur-sm bg-white/30 z-50 hidden" id="rejectModal" onclick="if(event.target === this) closeRejectModal()">
     <div class="flex items-center justify-center min-h-screen p-4">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full" onclick="event.stopPropagation()">
             <form id="rejectForm" method="POST">

@@ -183,7 +183,7 @@
     <!-- Approve Modal -->
     <div x-show="showApproveModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-black opacity-50" @click="showApproveModal = false"></div>
+            <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showApproveModal = false"></div>
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Approve Pengajuan Lembur</h3>
                 <form method="POST" action="{{ route('approvals.overtimes.approve', $overtime->id) }}">
@@ -198,7 +198,7 @@
     <!-- Reject Modal -->
     <div x-show="showRejectModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-black opacity-50" @click="showRejectModal = false"></div>
+            <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showRejectModal = false"></div>
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Reject Pengajuan Lembur</h3>
                 <form method="POST" action="{{ route('approvals.overtimes.reject', $overtime->id) }}">

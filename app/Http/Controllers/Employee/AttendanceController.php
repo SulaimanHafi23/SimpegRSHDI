@@ -191,7 +191,7 @@ class AttendanceController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'photo' => 'nullable|string', // Changed to accept base64 string
         ]);
 
         try {
@@ -203,6 +203,41 @@ class AttendanceController extends Controller
                 return back()->withInput()->with('error', "Lokasi tidak cukup akurat (±{$accuracy} m). Silakan gunakan ponsel atau pilih lokasi manual.");
             }
 
+            // Handle base64 photo
+            $photoFile = null;
+            if ($request->has('photo') && !empty($request->input('photo'))) {
+                $photoData = $request->input('photo');
+                
+                // Check if it's base64 data
+                if (preg_match('/^data:image\/(\w+);base64,/', $photoData, $type)) {
+                    $photoData = substr($photoData, strpos($photoData, ',') + 1);
+                    $type = strtolower($type[1]); // jpg, png, gif
+                    
+                    if (!in_array($type, ['jpg', 'jpeg', 'png'])) {
+                        return back()->withInput()->with('error', 'Format foto tidak valid. Gunakan JPG atau PNG.');
+                    }
+                    
+                    $photoData = base64_decode($photoData);
+                    
+                    if ($photoData === false) {
+                        return back()->withInput()->with('error', 'Foto tidak valid.');
+                    }
+                    
+                    // Create temporary file
+                    $tmpFile = tempnam(sys_get_temp_dir(), 'photo_');
+                    file_put_contents($tmpFile, $photoData);
+                    
+                    // Create UploadedFile instance
+                    $photoFile = new \Illuminate\Http\UploadedFile(
+                        $tmpFile,
+                        'photo.' . $type,
+                        'image/' . $type,
+                        null,
+                        true
+                    );
+                }
+            }
+
             $data = [
                 'worker_id' => $worker->id,
                 'location_id' => $validated['location_id'],
@@ -210,10 +245,15 @@ class AttendanceController extends Controller
                 'longitude' => $request->input('longitude'),
                 'accuracy' => $accuracy,
                 'notes' => $validated['notes'] ?? null,
-                'photo' => $request->file('photo'),
+                'photo' => $photoFile,
             ];
 
             $attendance = $this->attendanceService->checkIn($data);
+
+            // Clean up temp file if created
+            if ($photoFile && file_exists($photoFile->getRealPath())) {
+                @unlink($photoFile->getRealPath());
+            }
 
             return redirect()->route('employee.attendance.index')
                 ->with('success', 'Check-in berhasil!');
@@ -244,7 +284,7 @@ class AttendanceController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
+            'photo' => 'nullable|string', // Changed to accept base64 string
         ]);
 
         try {
@@ -262,16 +302,56 @@ class AttendanceController extends Controller
                 return back()->withInput()->with('error', "Lokasi tidak cukup akurat (±{$accuracy} m). Silakan gunakan ponsel atau pilih lokasi manual.");
             }
 
+            // Handle base64 photo
+            $photoFile = null;
+            if ($request->has('photo') && !empty($request->input('photo'))) {
+                $photoData = $request->input('photo');
+                
+                // Check if it's base64 data
+                if (preg_match('/^data:image\/(\w+);base64,/', $photoData, $type)) {
+                    $photoData = substr($photoData, strpos($photoData, ',') + 1);
+                    $type = strtolower($type[1]); // jpg, png, gif
+                    
+                    if (!in_array($type, ['jpg', 'jpeg', 'png'])) {
+                        return back()->withInput()->with('error', 'Format foto tidak valid. Gunakan JPG atau PNG.');
+                    }
+                    
+                    $photoData = base64_decode($photoData);
+                    
+                    if ($photoData === false) {
+                        return back()->withInput()->with('error', 'Foto tidak valid.');
+                    }
+                    
+                    // Create temporary file
+                    $tmpFile = tempnam(sys_get_temp_dir(), 'photo_');
+                    file_put_contents($tmpFile, $photoData);
+                    
+                    // Create UploadedFile instance
+                    $photoFile = new \Illuminate\Http\UploadedFile(
+                        $tmpFile,
+                        'photo.' . $type,
+                        'image/' . $type,
+                        null,
+                        true
+                    );
+                }
+            }
+
             $data = [
                 'location_id' => $validated['location_id'],
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
                 'accuracy' => $accuracy,
                 'notes' => $validated['notes'] ?? null,
-                'photo' => $request->file('photo'),
+                'photo' => $photoFile,
             ];
 
             $this->attendanceService->checkOut($id, $data);
+
+            // Clean up temp file if created
+            if ($photoFile && file_exists($photoFile->getRealPath())) {
+                @unlink($photoFile->getRealPath());
+            }
 
             return redirect()->route('employee.attendance.index')
                 ->with('success', 'Check-out berhasil!');

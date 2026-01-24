@@ -89,15 +89,45 @@
                 <div>
                     <div class="bg-gray-50 border border-gray-100 rounded-lg p-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti (Opsional)</label>
-                        <div class="mb-3">
-                            <input type="file" name="photo" id="photo" accept="image/*" class="w-full text-sm text-gray-600" />
-                        </div>
-                        <div class="mb-3">
-                            <img id="photoPreview" src="" alt="Preview" class="hidden w-full h-40 object-cover rounded border" />
-                            <div id="noPhoto" class="text-sm text-gray-400">Tidak ada foto yang dipilih</div>
+                        
+                        <!-- Camera Preview -->
+                        <div class="relative mb-3">
+                            <video id="camera-preview" class="w-full rounded-lg border border-gray-300 bg-gray-900" style="display: none; max-height: 200px;" autoplay playsinline></video>
+                            <canvas id="photo-canvas" class="w-full rounded-lg border border-gray-300" style="display: none; max-height: 200px;"></canvas>
+                            <div id="camera-placeholder" class="w-full h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center">
+                                <i class="fas fa-camera text-gray-400 text-3xl mb-1"></i>
+                                <p class="text-xs text-gray-500">Klik tombol untuk ambil foto</p>
+                            </div>
+                            <!-- Switch Camera Button (shown when camera is active) -->
+                            <button type="button" id="btn-switch-camera" onclick="switchCamera()" style="display: none;"
+                                    class="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white text-gray-700 rounded-full shadow-lg transition text-sm">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
                         </div>
 
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                        <!-- Camera Controls -->
+                        <div class="flex gap-1 mb-3">
+                            <button type="button" id="btn-start-camera" onclick="startCamera()" 
+                                    class="flex-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded transition">
+                                <i class="fas fa-camera mr-1"></i>Buka Kamera
+                            </button>
+                            <button type="button" id="btn-capture" onclick="capturePhoto()" style="display: none;"
+                                    class="flex-1 px-2 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition">
+                                <i class="fas fa-camera-retro mr-1"></i>Ambil
+                            </button>
+                            <button type="button" id="btn-retake" onclick="retakePhoto()" style="display: none;"
+                                    class="flex-1 px-2 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded transition">
+                                <i class="fas fa-redo mr-1"></i>Ulang
+                            </button>
+                            <button type="button" id="btn-remove" onclick="removePhoto()" style="display: none;"
+                                    class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <input type="hidden" name="photo" id="photo-data">
+
+                        <label class="block text-sm font-medium text-gray-700 mb-2 mt-4">Catatan (Opsional)</label>
                         <textarea name="notes" id="notes" rows="4" class="w-full px-3 py-2 border border-gray-200 rounded text-sm" placeholder="Contoh: Pulang cepat karena sakit..."></textarea>
 
                         <div class="mt-4">
@@ -268,26 +298,6 @@
             }
         });
 
-        // Photo preview
-        document.getElementById('photo').addEventListener('change', function(e) {
-            const file = this.files[0];
-            const preview = document.getElementById('photoPreview');
-            const noPhoto = document.getElementById('noPhoto');
-            if (!file) {
-                preview.src = '';
-                preview.classList.add('hidden');
-                noPhoto.classList.remove('hidden');
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-                noPhoto.classList.add('hidden');
-            };
-            reader.readAsDataURL(file);
-        });
-
         // Form submit validation for location and accuracy
         document.getElementById('checkout-form').addEventListener('submit', function(e) {
             const lat = document.getElementById('latitude').value;
@@ -306,6 +316,136 @@
                 return;
             }
         });
+    });
+
+    // ============================================
+    // CAMERA FUNCTIONALITY
+    // ============================================
+    let cameraStream = null;
+    let capturedPhoto = null;
+    let currentFacingMode = 'environment'; // 'environment' for rear, 'user' for front
+
+    // Start Camera
+    async function startCamera() {
+        try {
+            const video = document.getElementById('camera-preview');
+            const placeholder = document.getElementById('camera-placeholder');
+            const canvas = document.getElementById('photo-canvas');
+            
+            // Request camera access with current facing mode
+            const constraints = {
+                video: {
+                    facingMode: currentFacingMode,
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+            
+            cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+            video.srcObject = cameraStream;
+            
+            // Show video, hide others
+            video.style.display = 'block';
+            placeholder.style.display = 'none';
+            canvas.style.display = 'none';
+            
+            // Update buttons
+            document.getElementById('btn-start-camera').style.display = 'none';
+            document.getElementById('btn-capture').style.display = 'block';
+            document.getElementById('btn-retake').style.display = 'none';
+            document.getElementById('btn-remove').style.display = 'none';
+            document.getElementById('btn-switch-camera').style.display = 'block';
+            
+        } catch (error) {
+            console.error('Error accessing camera:', error);
+            alert('Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
+        }
+    }
+
+    // Switch Camera (Front/Rear)
+    async function switchCamera() {
+        // Toggle facing mode
+        currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
+        
+        // Stop current stream
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+        
+        // Restart camera with new facing mode
+        await startCamera();
+    }
+
+    // Capture Photo
+    function capturePhoto() {
+        const video = document.getElementById('camera-preview');
+        const canvas = document.getElementById('photo-canvas');
+        const context = canvas.getContext('2d');
+        
+        // Set canvas size to match video
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        // Draw video frame to canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert canvas to base64
+        capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
+        document.getElementById('photo-data').value = capturedPhoto;
+        
+        // Stop camera stream
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+            cameraStream = null;
+        }
+        
+        // Show canvas, hide video
+        video.style.display = 'none';
+        canvas.style.display = 'block';
+        
+        // Update buttons
+        document.getElementById('btn-start-camera').style.display = 'none';
+        document.getElementById('btn-capture').style.display = 'none';
+        document.getElementById('btn-retake').style.display = 'block';
+        document.getElementById('btn-remove').style.display = 'block';
+        document.getElementById('btn-switch-camera').style.display = 'none';
+    }
+
+    // Retake Photo
+    function retakePhoto() {
+        const canvas = document.getElementById('photo-canvas');
+        const placeholder = document.getElementById('camera-placeholder');
+        
+        // Clear captured photo
+        capturedPhoto = null;
+        document.getElementById('photo-data').value = '';
+        
+        // Hide canvas, show placeholder
+        canvas.style.display = 'none';
+        placeholder.style.display = 'flex';
+        
+        // Update buttons
+        document.getElementById('btn-start-camera').style.display = 'block';
+        document.getElementById('btn-capture').style.display = 'none';
+        document.getElementById('btn-retake').style.display = 'none';
+        document.getElementById('btn-remove').style.display = 'none';
+        document.getElementById('btn-switch-camera').style.display = 'none';
+        
+        // Reset to rear camera
+        currentFacingMode = 'environment';
+    }
+
+    // Remove Photo
+    function removePhoto() {
+        retakePhoto(); // Same as retake
+    }
+
+    // Clean up camera stream when leaving page
+    window.addEventListener('beforeunload', function() {
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
     });
 </script>
 @endsection

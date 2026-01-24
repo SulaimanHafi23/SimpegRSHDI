@@ -171,8 +171,8 @@
 </div>
 
 <!-- Upload Modal -->
-<div id="uploadModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+<div id="uploadModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 z-50 flex items-center justify-center p-4" onclick="if(event.target === this) document.getElementById('uploadModal').classList.add('hidden')">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto" onclick="event.stopPropagation()">
         <div class="p-4 sm:p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg sm:text-xl font-bold text-gray-900">Upload Dokumen Baru</h3>
