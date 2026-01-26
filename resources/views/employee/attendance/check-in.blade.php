@@ -3,38 +3,44 @@
 @section('title', 'Check In')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-2xl">
+<div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
     <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Check In</h1>
-        <p class="text-gray-600 mt-1">Catat kehadiran Anda hari ini</p>
+    <div class="mb-4 sm:mb-6">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Check In Absensi</h1>
+        <p class="text-sm sm:text-base text-gray-600 mt-1">Catat kehadiran Anda hari ini</p>
     </div>
 
     @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
+        <div class="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-3 rounded-lg relative mb-4" role="alert">
+            <span class="block sm:inline text-sm">{{ session('error') }}</span>
+        </div>
+    @endif
+
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-3 sm:px-4 py-3 rounded-lg relative mb-4" role="alert">
+            <span class="block sm:inline text-sm">{{ session('success') }}</span>
         </div>
     @endif
 
     <!-- Check In Form -->
-    <div class="bg-white rounded-lg shadow-md p-6">
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <!-- Instructions -->
-        <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
             <div class="flex items-start">
                 <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-blue-500 text-xl mt-0.5"></i>
+                    <i class="fas fa-info-circle text-blue-500 text-lg sm:text-xl mt-0.5"></i>
                 </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-semibold text-gray-800 mb-2">Cara Check In:</h3>
-                    <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                <div class="ml-2 sm:ml-3">
+                    <h3 class="text-xs sm:text-sm font-semibold text-gray-800 mb-2">Cara Check In:</h3>
+                    <ol class="text-xs sm:text-sm text-gray-700 space-y-1 list-decimal list-inside">
                         <li>Pilih lokasi absensi dari dropdown</li>
-                        <li>Klik tombol "Dapatkan Lokasi" untuk mendapatkan koordinat GPS Anda</li>
-                        <li>Pastikan Anda berada dalam radius lokasi yang dipilih</li>
-                        <li>Upload foto (opsional) dan tambahkan catatan jika diperlukan</li>
-                        <li>Klik "Check In Sekarang" untuk menyelesaikan</li>
+                        <li>Pilih status kehadiran Anda</li>
+                        <li>Klik "Dapatkan Lokasi" untuk GPS</li>
+                        <li>Upload foto (opsional)</li>
+                        <li>Klik "Check In Sekarang"</li>
                     </ol>
                 </div>
             </div>
@@ -44,26 +50,26 @@
             @csrf
 
             <!-- Current Time Display -->
-            <div class="mb-6 p-4 bg-blue-50 rounded-lg text-center">
-                <div class="text-sm text-gray-600 mb-2">Waktu Saat Ini</div>
-                <div class="text-3xl font-bold text-blue-600" id="current-time">{{ now()->format('H:i:s') }}</div>
-                <div class="text-sm text-gray-600 mt-2">{{ now()->format('l, d F Y') }}</div>
+            <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center">
+                <div class="text-xs sm:text-sm text-gray-600 mb-1">Waktu Saat Ini</div>
+                <div class="text-2xl sm:text-3xl font-bold text-blue-600" id="current-time">{{ now()->format('H:i:s') }}</div>
+                <div class="text-xs sm:text-sm text-gray-600 mt-1">{{ now()->format('l, d F Y') }}</div>
             </div>
 
             <!-- Location -->
             <div class="mb-4">
                 <label for="location_id" class="block text-sm font-medium text-gray-700 mb-2">
-                    Lokasi <span class="text-red-500">*</span>
+                    Lokasi Absensi <span class="text-red-500">*</span>
                 </label>
-                <select name="location_id" 
-                        id="location_id" 
+                <select name="location_id"
+                        id="location_id"
                         required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 @error('location_id') border-red-500 @enderror">
-                    <option value="">Pilih Lokasi</option>
+                        class="w-full px-3 py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('location_id') border-red-500 @enderror">
+                    <option value="">-- Pilih Lokasi --</option>
                     @foreach($locations as $location)
-                        <option value="{{ $location->id }}" 
-                                data-lat="{{ $location->latitude }}" 
-                                data-lng="{{ $location->longitude }}" 
+                        <option value="{{ $location->id }}"
+                                data-lat="{{ $location->latitude }}"
+                                data-lng="{{ $location->longitude }}"
                                 data-radius="{{ $location->radius }}"
                                 {{ old('location_id') == $location->id ? 'selected' : '' }}>
                             {{ $location->name }}
@@ -71,64 +77,98 @@
                     @endforeach
                 </select>
                 @error('location_id')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    <p class="mt-1 text-xs sm:text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- Map Container -->
-            <div id="map" class="w-full h-64 rounded-lg border border-gray-300 mb-4 z-0"></div>
-
-            <!-- Photo -->
+            <!-- Status Kehadiran -->
             <div class="mb-4">
-                <label for="photo" class="block text-sm font-medium text-gray-700 mb-2">
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+                    Status Kehadiran <span class="text-red-500">*</span>
+                </label>
+                <select name="status"
+                        id="status"
+                        required
+                        class="w-full px-3 py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('status') border-red-500 @enderror">
+                    <option value="">-- Pilih Status --</option>
+                    <option value="present" {{ old('status') == 'present' ? 'selected' : '' }}>
+                        ✅ Hadir
+                    </option>
+                    <option value="sick" {{ old('status') == 'sick' ? 'selected' : '' }}>
+                        🏥 Sakit
+                    </option>
+                    <option value="permission" {{ old('status') == 'permission' ? 'selected' : '' }}>
+                        📝 Izin
+                    </option>
+                    <option value="leave" {{ old('status') == 'leave' ? 'selected' : '' }}>
+                        🏖️ Cuti
+                    </option>
+                </select>
+                @error('status')
+                    <p class="mt-1 text-xs sm:text-sm text-red-500">{{ $message }}</p>
+                @enderror
+                <p class="mt-2 text-xs text-gray-500">
+                    <strong>Hadir:</strong> Datang ke kantor | <strong>Sakit:</strong> Tidak hadir karena sakit<br class="sm:hidden">
+                    <strong>Izin:</strong> Keperluan pribadi | <strong>Cuti:</strong> Cuti yang disetujui
+                </p>
             </div>
+
+            <!-- Map Container -->
+            <div class="mb-4 relative">
+                <div id="map" class="w-full h-48 sm:h-64 rounded-lg border-2 border-gray-300 overflow-hidden relative z-0"></div>
+                <div class="mt-2 text-xs text-gray-500 flex items-center gap-1">
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                    <span>Klik peta untuk mengaktifkan zoom dengan scroll</span>
+                </div>
+            </div>
+
 
             <!-- Photo Camera -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Foto (Opsional)
                 </label>
-                
+
                 <!-- Camera Preview -->
                 <div class="relative mb-3">
                     <video id="camera-preview" class="w-full rounded-lg border border-gray-300 bg-gray-900" style="display: none; max-height: 300px;" autoplay playsinline></video>
                     <canvas id="photo-canvas" class="w-full rounded-lg border border-gray-300" style="display: none; max-height: 300px;"></canvas>
-                    <div id="camera-placeholder" class="w-full h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center">
-                        <i class="fas fa-camera text-gray-400 text-4xl mb-2"></i>
-                        <p class="text-sm text-gray-500">Klik tombol di bawah untuk mengambil foto</p>
+                    <div id="camera-placeholder" class="w-full h-40 sm:h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center">
+                        <i class="fas fa-camera text-gray-400 text-3xl sm:text-4xl mb-2"></i>
+                        <p class="text-xs sm:text-sm text-gray-500 text-center px-2">Klik tombol untuk mengambil foto</p>
                     </div>
-                    <!-- Switch Camera Button (shown when camera is active) -->
+                    <!-- Switch Camera Button -->
                     <button type="button" id="btn-switch-camera" onclick="switchCamera()" style="display: none;"
                             class="absolute top-2 right-2 p-2 bg-white/90 hover:bg-white text-gray-700 rounded-full shadow-lg transition">
-                        <i class="fas fa-sync-alt"></i>
+                        <i class="fas fa-sync-alt text-sm"></i>
                     </button>
                 </div>
 
                 <!-- Camera Controls -->
-                <div class="flex gap-2">
-                    <button type="button" id="btn-start-camera" onclick="startCamera()" 
-                            class="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition flex items-center justify-center">
+                <div class="grid grid-cols-2 sm:flex gap-2">
+                    <button type="button" id="btn-start-camera" onclick="startCamera()"
+                            class="col-span-2 sm:flex-1 px-3 sm:px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition flex items-center justify-center">
                         <i class="fas fa-camera mr-2"></i>Buka Kamera
                     </button>
                     <button type="button" id="btn-capture" onclick="capturePhoto()" style="display: none;"
-                            class="flex-1 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition flex items-center justify-center">
+                            class="col-span-2 sm:flex-1 px-3 sm:px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm rounded-lg transition flex items-center justify-center">
                         <i class="fas fa-camera-retro mr-2"></i>Ambil Foto
                     </button>
                     <button type="button" id="btn-retake" onclick="retakePhoto()" style="display: none;"
-                            class="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition flex items-center justify-center">
+                            class="sm:flex-1 px-3 sm:px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-lg transition flex items-center justify-center">
                         <i class="fas fa-redo mr-2"></i>Ambil Ulang
                     </button>
                     <button type="button" id="btn-remove" onclick="removePhoto()" style="display: none;"
-                            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition flex items-center justify-center">
-                        <i class="fas fa-trash"></i>
+                            class="px-3 sm:px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition flex items-center justify-center">
+                        <i class="fas fa-trash mr-1 sm:mr-0"></i><span class="sm:hidden">Hapus</span>
                     </button>
                 </div>
 
                 <input type="hidden" name="photo" id="photo-data">
                 @error('photo')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    <p class="mt-1 text-xs sm:text-sm text-red-500">{{ $message }}</p>
                 @enderror
-                <p class="mt-1 text-xs text-gray-500">Foto akan diambil menggunakan kamera perangkat Anda</p>
+                <p class="mt-2 text-xs text-gray-500">Foto akan diambil menggunakan kamera perangkat</p>
             </div>
 
             <!-- Notes -->
@@ -136,59 +176,59 @@
                 <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
                     Catatan (Opsional)
                 </label>
-                <textarea name="notes" 
-                          id="notes" 
-                          rows="3" 
-                          class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 @error('notes') border-red-500 @enderror"
+                <textarea name="notes"
+                          id="notes"
+                          rows="3"
+                          class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('notes') border-red-500 @enderror"
                           placeholder="Tambahkan catatan jika diperlukan">{{ old('notes') }}</textarea>
                 @error('notes')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    <p class="mt-1 text-xs sm:text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Geolocation Info -->
-            <div class="mb-6 p-4 bg-gray-50 rounded-lg">
-                <div class="flex items-center justify-between mb-3">
+            <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-2">
                     <label class="text-sm font-medium text-gray-700">
                         <i class="fas fa-map-marked-alt text-blue-500 mr-1"></i>
                         Koordinat GPS <span class="text-red-500">*</span>
                     </label>
                     <div class="flex items-center gap-2">
-                        <button type="button" 
-                                onclick="getLocation()" 
-                                class="text-xs px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded transition shadow-sm">
+                        <button type="button"
+                                onclick="getLocation()"
+                                class="flex-1 sm:flex-none text-xs px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition shadow-sm">
                             <i class="fas fa-crosshairs mr-1"></i>Dapatkan Lokasi
                         </button>
-                        <button type="button" 
-                                onclick="openPickOnMap()" 
-                                class="text-xs px-3 py-1.5 bg-white border border-gray-300 rounded hover:bg-gray-50 transition shadow-sm">
-                            <i class="fas fa-map-pin mr-1"></i>Pilih pada Peta
+                        <button type="button"
+                                onclick="openPickOnMap()"
+                                class="flex-1 sm:flex-none text-xs px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
+                            <i class="fas fa-map-pin mr-1"></i>Pilih di Peta
                         </button>
                     </div>
                 </div>
-                <div id="locationStatus" class="text-sm text-gray-600">
-                    <i class="fas fa-info-circle mr-1"></i>Klik tombol "Dapatkan Lokasi" setelah memilih lokasi absensi
+                <div id="locationStatus" class="text-xs sm:text-sm text-gray-600 mb-1">
+                    <i class="fas fa-info-circle mr-1"></i>Klik "Dapatkan Lokasi" setelah memilih lokasi
                 </div>
-                <div id="accuracyInfo" class="text-xs text-gray-500 mt-1">Akurasi: —</div>
+                <div id="accuracyInfo" class="text-xs text-gray-500">Akurasi: —</div>
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
                 <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
                 <input type="hidden" name="accuracy" id="accuracy" value="{{ old('accuracy') }}">
                 @error('latitude')
-                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    <p class="mt-1 text-xs sm:text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>
 
             <!-- Submit Buttons -->
-            <div class="flex gap-3">
+            <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                 <button type="submit" id="btn-checkin"
-                        class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="w-full sm:flex-1 px-4 sm:px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md transition duration-150">
+                    <svg class="w-4 h-4 sm:w-5 sm:h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     Check In Sekarang
                 </button>
-                <a href="{{ route('employee.attendance.index') }}" 
-                   class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition duration-150 text-center">
+                <a href="{{ route('employee.attendance.index') }}"
+                   class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm sm:text-base font-semibold rounded-lg transition duration-150 text-center">
                     Batal
                 </a>
             </div>
@@ -218,14 +258,14 @@ let map, userMarker, officeCircle;
 // Get geolocation
 function getLocation(useFallback = false) {
     const statusDiv = document.getElementById('locationStatus');
-    
+
     if (!navigator.geolocation) {
         statusDiv.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i>Browser Anda tidak mendukung geolocation';
         return;
     }
-    
+
     statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mendapatkan lokasi' + (useFallback ? ' (mode cepat)...' : '...');
-    
+
     const options = useFallback ? {
         enableHighAccuracy: false,
         timeout: 15000,
@@ -235,20 +275,20 @@ function getLocation(useFallback = false) {
         timeout: 30000,
         maximumAge: 0
     };
-    
+
     navigator.geolocation.getCurrentPosition(
         function(position) {
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
             const accuracy = position.coords.accuracy;
-            
+
             document.getElementById('latitude').value = latitude;
             document.getElementById('longitude').value = longitude;
             document.getElementById('accuracy').value = accuracy;
             document.getElementById('accuracyInfo').textContent = `Akurasi: ±${Math.round(accuracy)} m`;
-            
+
             statusDiv.innerHTML = `<i class="fas fa-check-circle text-green-500 mr-1"></i>Lokasi berhasil didapat: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`;
-            
+
             updateUserMarker(latitude, longitude, accuracy);
 
             // Enforce accuracy threshold
@@ -270,12 +310,12 @@ function getLocation(useFallback = false) {
                     const lat = parseFloat(selectedOption.dataset.lat);
                     const lng = parseFloat(selectedOption.dataset.lng);
                     const radius = parseFloat(selectedOption.dataset.radius);
-                    
+
                     if (lat && lng && radius) {
                         const distance = computeDistance(parseFloat(latitude), parseFloat(longitude), lat, lng);
                         const info = document.createElement('div');
                         info.className = 'text-xs mt-1';
-                        
+
                         if (distance <= radius) {
                             info.className += ' text-green-600';
                             info.innerHTML = `<i class="fas fa-check-circle mr-1"></i>Jarak dari lokasi: ${Math.round(distance)} m (dalam radius ${Math.round(radius)} m)`;
@@ -283,7 +323,7 @@ function getLocation(useFallback = false) {
                             info.className += ' text-orange-600';
                             info.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i>Jarak dari lokasi: ${Math.round(distance)} m (radius ${Math.round(radius)} m)`;
                         }
-                        
+
                         statusDiv.appendChild(info);
                     }
                 }
@@ -311,7 +351,7 @@ function getLocation(useFallback = false) {
                     break;
             }
             statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>${errorMsg}`;
-            
+
             // Add retry button
             if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
                 statusDiv.innerHTML += ` <button type="button" onclick="getLocation()" class="text-xs underline text-blue-600 hover:text-blue-700">Coba Lagi</button>`;
@@ -324,11 +364,33 @@ function getLocation(useFallback = false) {
 // Initialize Map
 function initMap() {
     // Default view (Indonesia)
-    map = L.map('map').setView([-2.5489, 118.0149], 5);
+    map = L.map('map', {
+        scrollWheelZoom: false,  // Disable scroll zoom by default
+        tap: false,              // Disable tap on mobile
+        touchZoom: true,         // Keep touch zoom enabled
+        dragging: true           // Keep dragging enabled
+    }).setView([-2.5489, 118.0149], 5);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+    
+    // Add message to enable scroll zoom
+    map.on('click', function() {
+        if (!map.scrollWheelZoom.enabled()) {
+            map.scrollWheelZoom.enable();
+        }
+    });
+    
+    // Disable scroll zoom when mouse leaves map
+    const mapElement = document.getElementById('map');
+    if (mapElement) {
+        mapElement.addEventListener('mouseleave', function() {
+            if (map.scrollWheelZoom.enabled()) {
+                map.scrollWheelZoom.disable();
+            }
+        });
+    }
 }
 
 // Compute distance between two lat/lng points (Haversine formula)
@@ -417,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const lat = parseFloat(selectedOption.dataset.lat);
                 const lng = parseFloat(selectedOption.dataset.lng);
                 const radius = parseFloat(selectedOption.dataset.radius);
-                
+
                 if (lat && lng && radius) {
                     // Show office location on map
                     updateOfficeCircle(lat, lng, radius);
@@ -455,7 +517,7 @@ async function startCamera() {
         const video = document.getElementById('camera-preview');
         const placeholder = document.getElementById('camera-placeholder');
         const canvas = document.getElementById('photo-canvas');
-        
+
         // Request camera access with current facing mode
         const constraints = {
             video: {
@@ -464,22 +526,22 @@ async function startCamera() {
                 height: { ideal: 720 }
             }
         };
-        
+
         cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = cameraStream;
-        
+
         // Show video, hide others
         video.style.display = 'block';
         placeholder.style.display = 'none';
         canvas.style.display = 'none';
-        
+
         // Update buttons
         document.getElementById('btn-start-camera').style.display = 'none';
         document.getElementById('btn-capture').style.display = 'block';
         document.getElementById('btn-retake').style.display = 'none';
         document.getElementById('btn-remove').style.display = 'none';
         document.getElementById('btn-switch-camera').style.display = 'block';
-        
+
     } catch (error) {
         console.error('Error accessing camera:', error);
         alert('Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
@@ -490,13 +552,13 @@ async function startCamera() {
 async function switchCamera() {
     // Toggle facing mode
     currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-    
+
     // Stop current stream
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
     }
-    
+
     // Restart camera with new facing mode
     await startCamera();
 }
@@ -506,28 +568,28 @@ function capturePhoto() {
     const video = document.getElementById('camera-preview');
     const canvas = document.getElementById('photo-canvas');
     const context = canvas.getContext('2d');
-    
+
     // Set canvas size to match video
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    
+
     // Draw video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
+
     // Convert canvas to base64
     capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
     document.getElementById('photo-data').value = capturedPhoto;
-    
+
     // Stop camera stream
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
         cameraStream = null;
     }
-    
+
     // Show canvas, hide video
     video.style.display = 'none';
     canvas.style.display = 'block';
-    
+
     // Update buttons
     document.getElementById('btn-start-camera').style.display = 'none';
     document.getElementById('btn-capture').style.display = 'none';
@@ -540,22 +602,22 @@ function capturePhoto() {
 function retakePhoto() {
     const canvas = document.getElementById('photo-canvas');
     const placeholder = document.getElementById('camera-placeholder');
-    
+
     // Clear captured photo
     capturedPhoto = null;
     document.getElementById('photo-data').value = '';
-    
+
     // Hide canvas, show placeholder
     canvas.style.display = 'none';
     placeholder.style.display = 'flex';
-    
+
     // Update buttons
     document.getElementById('btn-start-camera').style.display = 'block';
     document.getElementById('btn-capture').style.display = 'none';
     document.getElementById('btn-retake').style.display = 'none';
     document.getElementById('btn-remove').style.display = 'none';
     document.getElementById('btn-switch-camera').style.display = 'none';
-    
+
     // Reset to rear camera
     currentFacingMode = 'environment';
 }

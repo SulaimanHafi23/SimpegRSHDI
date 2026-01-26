@@ -17,21 +17,21 @@
             </h1>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <a href="{{ route('employee.attendance.export-pdf', request()->all()) }}" 
+            <a href="{{ route('employee.attendance.export-pdf', request()->all()) }}"
                class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-150"
                target="_blank">
                 <i class="fas fa-file-pdf mr-2 text-xs sm:text-sm"></i>
                 <span class="hidden sm:inline">Export PDF</span>
                 <span class="sm:hidden">PDF</span>
             </a>
-            @if(isset($activeAttendance) && $activeAttendance)
-                <a href="{{ route('employee.attendance.check-out-form') }}" 
+            @if(isset($activeAttendance) && $activeAttendance && $activeAttendance->status === 'present')
+                <a href="{{ route('employee.attendance.check-out-form') }}"
                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg shadow-sm transition duration-150">
                     <i class="fas fa-sign-out-alt mr-2 text-xs sm:text-sm"></i>
                     Check Out
                 </a>
             @else
-                <a href="{{ route('employee.attendance.check-in-form') }}" 
+                <a href="{{ route('employee.attendance.check-in-form') }}"
                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition duration-150">
                     <i class="fas fa-sign-in-alt mr-2 text-xs sm:text-sm"></i>
                     Check In
@@ -111,8 +111,8 @@
                         <i class="fas fa-search mr-1 text-xs"></i>
                         Cari
                     </label>
-                    <input type="text" 
-                           name="search" 
+                    <input type="text"
+                           name="search"
                            value="{{ $filters['search'] ?? '' }}"
                            placeholder="Cari tanggal, status..."
                            class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
@@ -126,8 +126,8 @@
                         <i class="far fa-calendar mr-1 text-xs"></i>
                         Dari
                     </label>
-                    <input type="date" 
-                           name="date_from" 
+                    <input type="date"
+                           name="date_from"
                            value="{{ $filters['date_from'] ?? '' }}"
                            class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
                 </div>
@@ -138,8 +138,8 @@
                         <i class="far fa-calendar-check mr-1 text-xs"></i>
                         Sampai
                     </label>
-                    <input type="date" 
-                           name="date_to" 
+                    <input type="date"
+                           name="date_to"
                            value="{{ $filters['date_to'] ?? '' }}"
                            class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
                 </div>
@@ -152,7 +152,7 @@
                         <i class="fas fa-filter mr-1 text-xs"></i>
                         Status
                     </label>
-                    <select name="status" 
+                    <select name="status"
                             class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
                         <option value="">Semua Status</option>
                         <option value="Hadir" {{ ($filters['status'] ?? '') == 'Hadir' ? 'selected' : '' }}>Hadir</option>
@@ -167,7 +167,7 @@
                         <i class="fas fa-list-ol mr-1 text-xs"></i>
                         Tampilkan
                     </label>
-                    <select name="per_page" 
+                    <select name="per_page"
                             class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
                         <option value="10" {{ ($filters['per_page'] ?? 15) == 10 ? 'selected' : '' }}>10 per halaman</option>
                         <option value="15" {{ ($filters['per_page'] ?? 15) == 15 ? 'selected' : '' }}>15 per halaman</option>
@@ -178,13 +178,13 @@
 
                 <!-- Action Buttons -->
                 <div class="flex items-end gap-2">
-                    <button type="submit" 
+                    <button type="submit"
                             class="flex-1 px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-lg transition duration-150 flex items-center justify-center">
                         <i class="fas fa-search mr-1 sm:mr-2 text-xs"></i>
                         <span class="hidden sm:inline">Terapkan</span>
                         <span class="sm:hidden">Cari</span>
                     </button>
-                    <a href="{{ route('employee.attendance.index') }}" 
+                    <a href="{{ route('employee.attendance.index') }}"
                        class="px-3 sm:px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white text-sm font-semibold rounded-lg transition duration-150 flex items-center justify-center">
                         <i class="fas fa-redo text-xs"></i>
                     </a>
@@ -199,7 +199,7 @@
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-blue-50 text-blue-800 border border-blue-100">
                         <i class="fas fa-search mr-1"></i>
                         "{{ $filters['search'] }}"
-                        <a href="{{ route('employee.attendance.index', array_merge(request()->except('search'))) }}" 
+                        <a href="{{ route('employee.attendance.index', array_merge(request()->except('search'))) }}"
                            class="ml-2 text-blue-600 hover:text-blue-800">
                             <i class="fas fa-times"></i>
                         </a>
@@ -209,7 +209,7 @@
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-green-50 text-green-800 border border-green-100">
                         <i class="fas fa-filter mr-1"></i>
                         Status: {{ $filters['status'] }}
-                        <a href="{{ route('employee.attendance.index', array_merge(request()->except('status'))) }}" 
+                        <a href="{{ route('employee.attendance.index', array_merge(request()->except('status'))) }}"
                            class="ml-2 text-green-600 hover:text-green-800">
                             <i class="fas fa-times"></i>
                         </a>
@@ -238,6 +238,12 @@
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Terlambat</span>
                                 @elseif($attendance->status === 'absent')
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Tidak Hadir</span>
+                                @elseif($attendance->status === 'sick')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Sakit</span>
+                                @elseif($attendance->status === 'permission')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Izin</span>
+                                @elseif($attendance->status === 'leave')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Cuti</span>
                                 @else
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ ucfirst($attendance->status) }}</span>
                                 @endif
@@ -248,7 +254,7 @@
                             <div class="flex items-center gap-1"><i class="fas fa-sign-out-alt text-red-500"></i> <span>Out: {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '-' }}</span></div>
                             <div class="flex items-center gap-1 col-span-2">
                                 <i class="far fa-clock text-indigo-600"></i>
-                                <span>Durasi: 
+                                <span>Durasi:
                                     @if($attendance->check_in && $attendance->check_out)
                                         @php
                                             $checkIn = \Carbon\Carbon::parse($attendance->check_in);
@@ -336,13 +342,19 @@
                                         <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Terlambat</span>
                                     @elseif($attendance->status === 'absent')
                                         <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Tidak Hadir</span>
+                                    @elseif($attendance->status === 'sick')
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Sakit</span>
+                                    @elseif($attendance->status === 'permission')
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Izin</span>
+                                    @elseif($attendance->status === 'leave')
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Cuti</span>
                                     @else
                                         <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ ucfirst($attendance->status) }}</span>
                                     @endif
                                 </td>
                                 <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
                                     <div class="flex space-x-3">
-                                        <a href="{{ route('employee.attendance.show', $attendance->id) }}" 
+                                        <a href="{{ route('employee.attendance.show', $attendance->id) }}"
                                            class="text-blue-600 hover:text-blue-900" title="Detail">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -350,8 +362,8 @@
                                             </svg>
                                         </a>
                                         @if($attendance->check_in && !$attendance->check_out)
-                                            <a href="{{ route('employee.attendance.check-out-form') }}" 
-                                               class="text-red-600 hover:text-red-900" 
+                                            <a href="{{ route('employee.attendance.check-out-form') }}"
+                                               class="text-red-600 hover:text-red-900"
                                                title="Check Out">
                                                 <i class="fas fa-sign-out-alt"></i>
                                             </a>
@@ -373,7 +385,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             @if($attendances->hasPages())
                 <div class="px-4 lg:px-6 py-4 border-t border-gray-100 bg-gray-50/70">
                     {{ $attendances->links() }}

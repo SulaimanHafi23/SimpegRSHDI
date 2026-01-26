@@ -88,21 +88,33 @@ class AttendanceService
             }
 
             $shift = $this->shiftRepository->findById($workerShift->shift_id);
-            
+
             // Validate location
             $location = $this->locationRepository->findById($data['location_id']);
 
             $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
             $isOutsideRadius = $distance > $location->radius;
 
-            // Calculate if late (construct shift start datetime for today)
-            $checkInTime = now();
-            $shiftStartTimeStr = \Carbon\Carbon::parse($shift->start_time)->format('H:i:s');
-            $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
-            $graceTime = $shiftStartDateTime->copy()->addMinutes($shift->grace_period_minutes);
+            // Enforce radius only for 'present' status
+            $statusForRadius = $data['status'] ?? 'present';
+            if ($statusForRadius === 'present' && $isOutsideRadius) {
+                throw new \Exception('Anda berada di luar radius lokasi absensi. Silakan mendekat ke lokasi yang ditentukan.');
+            }
 
-            $isLate = $checkInTime->greaterThan($graceTime);
-            $lateMinutes = $isLate ? $checkInTime->diffInMinutes($shiftStartDateTime) : 0;
+            // Calculate if late (only for present status)
+            $checkInTime = now();
+            $statusForLate = $data['status'] ?? 'present';
+            if ($statusForLate === 'present') {
+                $shiftStartTimeStr = \Carbon\Carbon::parse($shift->start_time)->format('H:i:s');
+                $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
+                $graceTime = $shiftStartDateTime->copy()->addMinutes($shift->grace_period_minutes);
+
+                $isLate = $checkInTime->greaterThan($graceTime);
+                $lateMinutes = $isLate ? $checkInTime->diffInMinutes($shiftStartDateTime) : 0;
+            } else {
+                $isLate = false;
+                $lateMinutes = 0;
+            }
 
             // Create attendance
             $attendanceDTO = AttendanceDTO::fromRequest([
@@ -114,7 +126,7 @@ class AttendanceService
                 'check_in_latitude' => $data['latitude'],
                 'check_in_longitude' => $data['longitude'],
                 'distance_check_in' => $distance,
-                'status' => 'present',
+                'status' => $data['status'] ?? 'present',
                 'is_late' => $isLate,
                 'late_minutes' => $lateMinutes,
                 'is_outside_radius' => $isOutsideRadius,
@@ -125,7 +137,7 @@ class AttendanceService
             // Save photo if provided
             if (isset($data['photo'])) {
                 $photoPath = $this->savePhoto($data['photo'], 'check_in', $workerId);
-                
+
                 $photoDTO = AttendancePhotoDTO::fromRequest([
                     'attendance_id' => $attendance->id,
                     'photo_path' => $photoPath,
@@ -152,7 +164,7 @@ class AttendanceService
         DB::beginTransaction();
         try {
             $attendance = $this->attendanceRepository->getById($attendanceId);
-            
+
             if (!$attendance) {
                 throw new \Exception('Data absensi tidak ditemukan.');
             }
@@ -217,7 +229,7 @@ class AttendanceService
             // Save photo if provided
             if (isset($data['photo'])) {
                 $photoPath = $this->savePhoto($data['photo'], 'check_out', $attendance->worker_id);
-                
+
                 $photoDTO = AttendancePhotoDTO::fromRequest([
                     'attendance_id' => $attendanceId,
                     'photo_path' => $photoPath,
@@ -248,7 +260,7 @@ class AttendanceService
     public function delete(string $id): bool
     {
         $attendance = $this->attendanceRepository->getById($id);
-        
+
         // Delete photos
         foreach ($attendance->photos as $photo) {
             if (Storage::exists($photo->photo_path)) {

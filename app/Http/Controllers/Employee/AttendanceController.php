@@ -76,7 +76,7 @@ class AttendanceController extends Controller
         ])->first();
 
         // Jika hari ini kosong atau sudah checkout, cek shift malam dari kemarin
-        if (!$activeAttendance || $activeAttendance->check_out) {
+        if (!$activeAttendance || $activeAttendance->check_out || ($activeAttendance && $activeAttendance->status !== 'present')) {
             $yesterday = now()->subDay()->format('Y-m-d');
             $prevAttendance = $this->attendanceService->getAll([
                 'worker_id' => $worker->id,
@@ -84,7 +84,7 @@ class AttendanceController extends Controller
                 'date_to' => $yesterday,
             ])->first();
 
-            if ($prevAttendance && $prevAttendance->check_in && !$prevAttendance->check_out) {
+            if ($prevAttendance && $prevAttendance->check_in && !$prevAttendance->check_out && $prevAttendance->status === 'present') {
                 $activeAttendance = $prevAttendance;
             } else {
                 $activeAttendance = null; // Tidak ada sesi aktif
@@ -140,7 +140,7 @@ class AttendanceController extends Controller
 
         // Cari absensi aktif (sudah check-in tapi belum check-out)
         $today = now()->format('Y-m-d');
-        
+
         // 1. Cek hari ini
         $attendance = $this->attendanceService->getAll([
             'worker_id' => $worker->id,
@@ -167,6 +167,12 @@ class AttendanceController extends Controller
                 ->with('error', 'Tidak ada sesi check-in aktif yang perlu di-checkout.');
         }
 
+        // Only allow check-out for 'present' attendance
+        if ($attendance->status !== 'present') {
+            return redirect()->route('employee.attendance.index')
+                ->with('error', 'Absensi dengan status selain hadir tidak memerlukan check-out.');
+        }
+
         $locations = $this->locationService->getAllActive();
 
         return view('employee.attendance.check-out', compact('locations', 'attendance'));
@@ -191,11 +197,11 @@ class AttendanceController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'photo' => 'nullable|string', // Changed to accept base64 string
+            'photo' => 'nullable|string',
+            'status' => 'required|in:present,sick,permission,leave',
         ]);
 
         try {
-            // Service checkIn expects array, not DTO
             // Server-side check for accuracy
             $maxAcc = config('attendance.max_accuracy', 300);
             $accuracy = $validated['accuracy'] ?? ($request->input('accuracy') ?? null);
@@ -207,27 +213,18 @@ class AttendanceController extends Controller
             $photoFile = null;
             if ($request->has('photo') && !empty($request->input('photo'))) {
                 $photoData = $request->input('photo');
-                
-                // Check if it's base64 data
                 if (preg_match('/^data:image\/(\w+);base64,/', $photoData, $type)) {
                     $photoData = substr($photoData, strpos($photoData, ',') + 1);
-                    $type = strtolower($type[1]); // jpg, png, gif
-                    
+                    $type = strtolower($type[1]);
                     if (!in_array($type, ['jpg', 'jpeg', 'png'])) {
                         return back()->withInput()->with('error', 'Format foto tidak valid. Gunakan JPG atau PNG.');
                     }
-                    
                     $photoData = base64_decode($photoData);
-                    
                     if ($photoData === false) {
                         return back()->withInput()->with('error', 'Foto tidak valid.');
                     }
-                    
-                    // Create temporary file
                     $tmpFile = tempnam(sys_get_temp_dir(), 'photo_');
                     file_put_contents($tmpFile, $photoData);
-                    
-                    // Create UploadedFile instance
                     $photoFile = new \Illuminate\Http\UploadedFile(
                         $tmpFile,
                         'photo.' . $type,
@@ -246,6 +243,7 @@ class AttendanceController extends Controller
                 'accuracy' => $accuracy,
                 'notes' => $validated['notes'] ?? null,
                 'photo' => $photoFile,
+                'status' => $validated['status'],
             ];
 
             $attendance = $this->attendanceService->checkIn($data);
@@ -278,13 +276,20 @@ class AttendanceController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
+        // Prevent check-out for non-present statuses
+        $attendance = $this->attendanceService->getById($id);
+        if ($attendance && $attendance->status !== 'present') {
+            return redirect()->route('employee.attendance.index')
+                ->with('error', 'Absensi dengan status selain hadir tidak memerlukan check-out.');
+        }
+
         $validated = $request->validate([
             'location_id' => 'required|uuid|exists:locations,id',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'photo' => 'nullable|string', // Changed to accept base64 string
+            'photo' => 'nullable|string',
         ]);
 
         try {
@@ -306,27 +311,18 @@ class AttendanceController extends Controller
             $photoFile = null;
             if ($request->has('photo') && !empty($request->input('photo'))) {
                 $photoData = $request->input('photo');
-                
-                // Check if it's base64 data
                 if (preg_match('/^data:image\/(\w+);base64,/', $photoData, $type)) {
                     $photoData = substr($photoData, strpos($photoData, ',') + 1);
-                    $type = strtolower($type[1]); // jpg, png, gif
-                    
+                    $type = strtolower($type[1]);
                     if (!in_array($type, ['jpg', 'jpeg', 'png'])) {
                         return back()->withInput()->with('error', 'Format foto tidak valid. Gunakan JPG atau PNG.');
                     }
-                    
                     $photoData = base64_decode($photoData);
-                    
                     if ($photoData === false) {
                         return back()->withInput()->with('error', 'Foto tidak valid.');
                     }
-                    
-                    // Create temporary file
                     $tmpFile = tempnam(sys_get_temp_dir(), 'photo_');
                     file_put_contents($tmpFile, $photoData);
-                    
-                    // Create UploadedFile instance
                     $photoFile = new \Illuminate\Http\UploadedFile(
                         $tmpFile,
                         'photo.' . $type,
@@ -338,6 +334,7 @@ class AttendanceController extends Controller
             }
 
             $data = [
+                'worker_id' => $worker->id,
                 'location_id' => $validated['location_id'],
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
