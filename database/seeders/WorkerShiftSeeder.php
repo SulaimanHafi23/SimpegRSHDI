@@ -32,14 +32,14 @@ class WorkerShiftSeeder extends Seeder
         foreach ($workers as $worker) {
             // Assign a default shift pattern for the worker
             $primaryShift = $shifts->random();
-            
+
             $currentDate = $startDate->copy();
-            
+
             while ($currentDate->lte($endDate)) {
                 // Rotate shifts every 7 days for some variety
                 $weekNumber = $currentDate->diffInWeeks($startDate);
                 $assignedShift = $weekNumber % 2 == 0 ? $primaryShift : $shifts->random();
-                
+
                 // Skip Sundays (day off)
                 if ($currentDate->dayOfWeek !== Carbon::SUNDAY) {
                     WorkerShiftSchedule::create([
@@ -65,17 +65,17 @@ class WorkerShiftSeeder extends Seeder
     {
         // Add 5-10 random shift overrides
         $overrideCount = rand(5, 10);
-        
+
         for ($i = 0; $i < $overrideCount; $i++) {
             $worker = $workers->random();
             $shift = $shifts->random();
             $date = Carbon::parse($startDate)->addDays(rand(0, 30))->format('Y-m-d');
-            
+
             // Check if schedule exists for this date
             $existingSchedule = WorkerShiftSchedule::where('worker_id', $worker->id)
                 ->where('date', $date)
                 ->first();
-            
+
             if ($existingSchedule) {
                 $existingSchedule->update([
                     'shift_id' => $shift->id,

@@ -89,7 +89,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Tujuan <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="destination" value="{{ old('destination') }}" 
+                    <input type="text" name="destination" value="{{ old('destination') }}"
                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('destination') border-red-500 @enderror"
                            placeholder="Kota/Lokasi tujuan" required>
                     @error('destination')
@@ -102,7 +102,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Tanggal Mulai <span class="text-red-500">*</span>
                     </label>
-                    <input type="date" name="start_date" value="{{ old('start_date') }}" 
+                    <input type="date" name="start_date" value="{{ old('start_date') }}"
                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('start_date') border-red-500 @enderror"
                            required>
                     @error('start_date')
@@ -115,7 +115,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Tanggal Selesai <span class="text-red-500">*</span>
                     </label>
-                    <input type="date" name="end_date" value="{{ old('end_date') }}" 
+                    <input type="date" name="end_date" value="{{ old('end_date') }}"
                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('end_date') border-red-500 @enderror"
                            required>
                     @error('end_date')
@@ -128,7 +128,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Jenis Transportasi <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" name="transportation" value="{{ old('transportation') }}" 
+                    <input type="text" name="transportation" value="{{ old('transportation') }}"
                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('transportation') border-red-500 @enderror"
                            placeholder="Mis: Pesawat, Mobil, Bus" required>
                     @error('transportation')
@@ -141,7 +141,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Akomodasi
                     </label>
-                    <input type="text" name="accommodation" value="{{ old('accommodation') }}" 
+                    <input type="text" name="accommodation" value="{{ old('accommodation') }}"
                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('accommodation') border-red-500 @enderror"
                            placeholder="Mis: Hotel, Penginapan">
                     @error('accommodation')
@@ -154,7 +154,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Estimasi Biaya (Rp) <span class="text-red-500">*</span>
                     </label>
-                    <input type="number" step="0.01" name="estimated_cost" value="{{ old('estimated_cost') }}" 
+                    <input type="number" step="0.01" name="estimated_cost" value="{{ old('estimated_cost') }}"
                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('estimated_cost') border-red-500 @enderror"
                            placeholder="0.00" required>
                     @error('estimated_cost')
@@ -167,7 +167,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Tujuan Perjalanan <span class="text-red-500">*</span>
                     </label>
-                    <textarea name="purpose" rows="4" 
+                    <textarea name="purpose" rows="4"
                               class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('purpose') border-red-500 @enderror"
                               placeholder="Jelaskan tujuan dan keperluan perjalanan dinas..." required>{{ old('purpose') }}</textarea>
                     @error('purpose')
@@ -180,7 +180,7 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">
                         Catatan
                     </label>
-                    <textarea name="notes" rows="3" 
+                    <textarea name="notes" rows="3"
                               class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 @error('notes') border-red-500 @enderror"
                               placeholder="Informasi tambahan (opsional)">{{ old('notes') }}</textarea>
                     @error('notes')
@@ -191,11 +191,11 @@
 
             <!-- Actions -->
             <div class="mt-6 flex justify-end gap-3">
-                <a href="{{ route('employee.business-trips.index') }}" 
+                <a href="{{ route('employee.business-trips.index') }}"
                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                     <i class="fas fa-times mr-2"></i>Batal
                 </a>
-                <button type="submit" 
+                <button type="submit"
                         class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                     <i class="fas fa-paper-plane mr-2"></i>Ajukan
                 </button>

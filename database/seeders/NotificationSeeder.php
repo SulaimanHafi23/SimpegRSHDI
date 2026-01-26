@@ -65,14 +65,14 @@ class NotificationSeeder extends Seeder
         foreach ($users as $user) {
             // Generate 5-10 notifications per user
             $count = rand(5, 10);
-            
+
             for ($i = 0; $i < $count; $i++) {
                 $notif = $notificationTypes[array_rand($notificationTypes)];
                 $createdAt = Carbon::now()->subDays(rand(1, 30));
-                
+
                 // 60% chance notification is read
                 $isRead = rand(1, 100) <= 60;
-                
+
                 DB::table('notifications')->insert([
                     'id' => (string) Str::uuid(),
                     'type' => $notif['type'],

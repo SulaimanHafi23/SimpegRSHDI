@@ -49,13 +49,13 @@ class BusinessTripSeeder extends Seeder
         foreach ($workers as $worker) {
             // Generate 1-3 business trips per worker
             $count = rand(1, 3);
-            
+
             for ($i = 0; $i < $count; $i++) {
                 $startDate = Carbon::now()->addDays(rand(-60, 60));
                 $duration = rand(1, 5);
                 $endDate = $startDate->copy()->addDays($duration);
                 $status = $statuses[array_rand($statuses)];
-                
+
                 $businessTrip = BusinessTrip::create([
                     'worker_id' => $worker->id,
                     'destination' => $destinations[array_rand($destinations)],

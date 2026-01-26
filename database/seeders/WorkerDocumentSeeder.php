@@ -29,7 +29,7 @@ class WorkerDocumentSeeder extends Seeder
                 // 80% chance the worker has uploaded this document
                 if (rand(1, 100) <= 80) {
                     $uploadedAt = Carbon::now()->subDays(rand(1, 365));
-                    
+
                     Berkas::create([
                         'worker_id' => $worker->id,
                         'department_document_type_id' => $deptDocType->id,
@@ -55,7 +55,7 @@ class WorkerDocumentSeeder extends Seeder
                 // 40% chance the worker has uploaded optional documents
                 if (rand(1, 100) <= 40) {
                     $uploadedAt = Carbon::now()->subDays(rand(1, 365));
-                    
+
                     Berkas::create([
                         'worker_id' => $worker->id,
                         'department_document_type_id' => $deptDocType->id,
@@ -80,17 +80,17 @@ class WorkerDocumentSeeder extends Seeder
     {
         $statuses = ['pending', 'verified', 'rejected'];
         $weights = [30, 60, 10]; // 30% pending, 60% verified, 10% rejected
-        
+
         $random = rand(1, 100);
         $cumulative = 0;
-        
+
         foreach ($weights as $index => $weight) {
             $cumulative += $weight;
             if ($random <= $cumulative) {
                 return $statuses[$index];
             }
         }
-        
+
         return 'pending';
     }
 }

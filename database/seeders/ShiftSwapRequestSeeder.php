@@ -38,30 +38,30 @@ class ShiftSwapRequestSeeder extends Seeder
 
         // Generate 10-15 shift swap requests
         $count = rand(10, 15);
-        
+
         for ($i = 0; $i < $count; $i++) {
             // Get two different workers
             $requester = $workers->random();
             $target = $workers->where('id', '!=', $requester->id)->random();
-            
+
             // Get schedules for both workers
             $requesterSchedule = WorkerShiftSchedule::where('worker_id', $requester->id)
                 ->where('date', '>=', Carbon::now()->format('Y-m-d'))
                 ->inRandomOrder()
                 ->first();
-            
+
             if (!$requesterSchedule) continue;
-            
+
             $targetSchedule = WorkerShiftSchedule::where('worker_id', $target->id)
                 ->where('date', '>=', Carbon::now()->format('Y-m-d'))
                 ->where('date', '!=', $requesterSchedule->date)
                 ->inRandomOrder()
                 ->first();
-            
+
             if (!$targetSchedule) continue;
-            
+
             $status = $statuses[array_rand($statuses)];
-            
+
             $swapRequest = ShiftSwapRequest::create([
                 'requester_worker_id' => $requester->id,
                 'target_worker_id' => $target->id,

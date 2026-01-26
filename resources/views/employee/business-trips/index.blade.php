@@ -10,7 +10,7 @@
             <h1 class="text-2xl font-bold text-gray-900">Perjalanan Dinas</h1>
             <p class="text-gray-600 mt-1">Kelola perjalanan dinas Anda</p>
         </div>
-        <a href="{{ route('employee.business-trips.create') }}" 
+        <a href="{{ route('employee.business-trips.create') }}"
            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
             <i class="fas fa-plus mr-2"></i>Ajukan Baru
         </a>
@@ -73,13 +73,13 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Dari Tanggal</label>
-                <input type="date" name="date_from" value="{{ request('date_from') }}" 
+                <input type="date" name="date_from" value="{{ request('date_from') }}"
                        class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200">
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Sampai Tanggal</label>
-                <input type="date" name="date_to" value="{{ request('date_to') }}" 
+                <input type="date" name="date_to" value="{{ request('date_to') }}"
                        class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200">
             </div>
 
@@ -87,7 +87,7 @@
                 <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                     <i class="fas fa-search mr-2"></i>Filter
                 </button>
-                <a href="{{ route('employee.business-trips.index') }}" 
+                <a href="{{ route('employee.business-trips.index') }}"
                    class="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                     <i class="fas fa-redo mr-2"></i>Reset
                 </a>
@@ -132,7 +132,7 @@
                 </div>
 
                 <div>
-                    <a href="{{ route('employee.business-trips.show', $trip->id) }}" 
+                    <a href="{{ route('employee.business-trips.show', $trip->id) }}"
                        class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition">
                         <i class="fas fa-eye mr-2"></i>Detail
                     </a>
@@ -200,7 +200,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('employee.business-trips.show', $trip->id) }}" 
+                            <a href="{{ route('employee.business-trips.show', $trip->id) }}"
                                class="inline-flex items-center px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition">
                                 <i class="fas fa-eye mr-2"></i>Detail
                             </a>

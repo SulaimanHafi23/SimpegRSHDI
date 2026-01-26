@@ -36,13 +36,13 @@ class OvertimeRequestSeeder extends Seeder
         foreach ($workers as $worker) {
             // Generate 3-5 overtime requests per worker
             $count = rand(3, 5);
-            
+
             for ($i = 0; $i < $count; $i++) {
                 $date = Carbon::now()->subDays(rand(1, 60))->format('Y-m-d');
                 $status = $statuses[array_rand($statuses)];
                 $startTime = Carbon::createFromTime(17, 0, 0); // After work hours
                 $endTime = $startTime->copy()->addHours(rand(2, 4));
-                
+
                 $overtime = Overtime::create([
                     'worker_id' => $worker->id,
                     'date' => $date,

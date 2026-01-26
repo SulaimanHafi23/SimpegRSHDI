@@ -37,14 +37,14 @@ class LeaveRequestSeeder extends Seeder
         foreach ($workers as $worker) {
             // Generate 2-4 leave requests per worker
             $count = rand(2, 4);
-            
+
             for ($i = 0; $i < $count; $i++) {
                 $leaveType = $leaveTypes->random();
                 $startDate = Carbon::now()->addDays(rand(-30, 30));
                 $totalDays = rand(1, min(5, $leaveType->max_days_per_year));
                 $endDate = $startDate->copy()->addDays($totalDays - 1);
                 $status = $statuses[array_rand($statuses)];
-                
+
                 $leaveRequest = LeaveRequest::create([
                     'worker_id' => $worker->id,
                     'leave_type_id' => $leaveType->id,
