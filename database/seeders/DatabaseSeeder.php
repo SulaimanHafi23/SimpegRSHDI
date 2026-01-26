@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             ShiftSeeder::class,
             DocumentTypeSeeder::class,
             LeaveTypeSeeder::class,
+            SalaryComponentSeeder::class,
+            HolidaySeeder::class,
         ]);
 
         $this->command->info('🔐 Seeding Roles & Permissions...');
@@ -32,6 +34,31 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             WorkerSeeder::class,
             UserSeeder::class,
+        ]);
+
+        $this->command->info('📋 Seeding Operational Data...');
+        $this->call([
+            WorkerShiftSeeder::class,
+            AttendanceSeeder::class,
+            WorkerDocumentSeeder::class,
+        ]);
+
+        $this->command->info('📝 Seeding Leave & Business Data...');
+        $this->call([
+            LeaveRequestSeeder::class,
+            OvertimeRequestSeeder::class,
+            BusinessTripSeeder::class,
+            ShiftSwapRequestSeeder::class,
+        ]);
+
+        $this->command->info('💰 Seeding Payroll Data...');
+        $this->call([
+            PayrollSeeder::class,
+        ]);
+
+        $this->command->info('🔔 Seeding Notifications...');
+        $this->call([
+            NotificationSeeder::class,
         ]);
 
         $this->command->info('✅ Database seeded successfully!');

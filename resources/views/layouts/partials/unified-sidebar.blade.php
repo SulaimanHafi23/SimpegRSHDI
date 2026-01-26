@@ -1,7 +1,8 @@
 {{-- filepath: resources/views/layouts/partials/unified-sidebar.blade.php --}}
-<aside class="fixed top-16 lg:top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 flex flex-col" 
+@if(auth()->check())
+<aside class="fixed top-16 lg:top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 flex flex-col"
     id="unified-sidebar">
-    
+
     <!-- Modern Header with Glassmorphism -->
     <div class="relative p-5 bg-white/10 backdrop-blur-md border-b border-white/20 flex-shrink-0">
         <div class="flex items-center justify-between">
@@ -18,7 +19,7 @@
                 </div>
             </div>
             <!-- Close Button for Mobile -->
-            <button onclick="toggleUnifiedSidebar()" 
+            <button onclick="toggleUnifiedSidebar()"
                     class="lg:hidden flex-shrink-0 p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200">
                 <i class="fas fa-times text-lg"></i>
             </button>
@@ -27,10 +28,10 @@
 
     <!-- Navigation with Smooth Scrolling -->
     <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto custom-scrollbar min-h-0">
-        
+
         <!-- Dashboard Admin - if user has admin roles or dashboard.admin permission -->
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('dashboard.admin'))
-            <a href="{{ route('admin.dashboard') }}" 
+            <a href="{{ route('admin.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('admin.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('admin.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <i class="fas fa-th-large text-sm {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-green-300' }}"></i>
@@ -41,7 +42,7 @@
 
         <!-- Dashboard Employee - if user has employee role or dashboard.employee permission -->
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('dashboard.employee'))
-            <a href="{{ route('employee.dashboard') }}" 
+            <a href="{{ route('employee.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('employee.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('employee.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <i class="fas fa-th-large text-sm {{ request()->routeIs('employee.dashboard') ? 'text-white' : 'text-green-300' }}"></i>
@@ -52,7 +53,7 @@
 
         <!-- Master Data Section - Admin/HR/Manager with permissions -->
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('religion.manage') || auth()->user()->can('gender.manage') || auth()->user()->can('department.manage') || auth()->user()->can('location.manage') || auth()->user()->can('shift.manage') || auth()->user()->can('leave-type.manage') || auth()->user()->can('document-type.manage') || auth()->user()->can('department-document-type.manage') || auth()->user()->can('holiday.manage'))
-        
+
         <!-- DATA MASTER Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -62,7 +63,7 @@
         </div>
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('religion.manage'))
-        <a href="{{ route('admin.master.religions.index') }}" 
+        <a href="{{ route('admin.master.religions.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.religions.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.religions.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-mosque text-xs {{ request()->routeIs('admin.master.religions.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -70,9 +71,9 @@
             <span class="text-sm {{ request()->routeIs('admin.master.religions.*') ? 'text-white font-medium' : 'text-green-100' }}">Agama</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('gender.manage'))
-        <a href="{{ route('admin.master.genders.index') }}" 
+        <a href="{{ route('admin.master.genders.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.genders.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.genders.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-venus-mars text-xs {{ request()->routeIs('admin.master.genders.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -80,9 +81,9 @@
             <span class="text-sm {{ request()->routeIs('admin.master.genders.*') ? 'text-white font-medium' : 'text-green-100' }}">Jenis Kelamin</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('department.manage'))
-        <a href="{{ route('admin.master.departments.index') }}" 
+        <a href="{{ route('admin.master.departments.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.departments.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.departments.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-building text-xs {{ request()->routeIs('admin.master.departments.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -90,9 +91,9 @@
             <span class="text-sm {{ request()->routeIs('admin.master.departments.*') ? 'text-white font-medium' : 'text-green-100' }}">Departemen</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('location.manage'))
-        <a href="{{ route('admin.master.locations.index') }}" 
+        <a href="{{ route('admin.master.locations.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.locations.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.locations.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-map-marker-alt text-xs {{ request()->routeIs('admin.master.locations.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -100,9 +101,9 @@
             <span class="text-sm {{ request()->routeIs('admin.master.locations.*') ? 'text-white font-medium' : 'text-green-100' }}">Lokasi</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('shift.manage'))
-        <a href="{{ route('admin.master.shifts.index') }}" 
+        <a href="{{ route('admin.master.shifts.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.shifts.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.shifts.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('admin.master.shifts.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -110,9 +111,9 @@
             <span class="text-sm {{ request()->routeIs('admin.master.shifts.*') ? 'text-white font-medium' : 'text-green-100' }}">Shift</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave-type.manage'))
-        <a href="{{ route('admin.master.leave-types.index') }}" 
+        <a href="{{ route('admin.master.leave-types.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.leave-types.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.leave-types.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('admin.master.leave-types.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -120,9 +121,9 @@
             <span class="text-sm {{ request()->routeIs('admin.master.leave-types.*') ? 'text-white font-medium' : 'text-green-100' }}">Tipe Cuti</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('document-type.manage'))
-        <a href="{{ route('admin.master.document-types.index') }}" 
+        <a href="{{ route('admin.master.document-types.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.document-types.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.document-types.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-file-alt text-xs {{ request()->routeIs('admin.master.document-types.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -130,9 +131,9 @@
             <span class="text-sm {{ request()->routeIs('admin.master.document-types.*') ? 'text-white font-medium' : 'text-green-100' }}">Tipe Dokumen</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('department-document-type.manage'))
-        <a href="{{ route('admin.master.department-document-types.index') }}" 
+        <a href="{{ route('admin.master.department-document-types.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-project-diagram text-xs {{ request()->routeIs('admin.master.department-document-types.*') ? 'text-white' : 'text-blue-300' }}"></i>
@@ -144,7 +145,7 @@
 
         <!-- Management Section - Admin/HR/Manager -->
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('worker.manage') || auth()->user()->can('attendance.manage') || auth()->user()->can('schedule.manage') || auth()->user()->can('worker-document.manage') || auth()->user()->can('payroll.manage'))
-        
+
         <!-- MANAJEMEN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -154,7 +155,7 @@
         </div>
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
-        <a href="{{ route('admin.workers.index') }}" 
+        <a href="{{ route('admin.workers.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.workers.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.workers.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-users text-xs {{ request()->routeIs('admin.workers.*') ? 'text-white' : 'text-purple-300' }}"></i>
@@ -162,9 +163,9 @@
             <span class="text-sm {{ request()->routeIs('admin.workers.*') ? 'text-white font-medium' : 'text-green-100' }}">Pegawai</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('attendance.manage'))
-        <a href="{{ route('admin.attendance.index') }}" 
+        <a href="{{ route('admin.attendance.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.attendance.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.attendance.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clipboard-check text-xs {{ request()->routeIs('admin.attendance.*') ? 'text-white' : 'text-purple-300' }}"></i>
@@ -172,9 +173,9 @@
             <span class="text-sm {{ request()->routeIs('admin.attendance.*') ? 'text-white font-medium' : 'text-green-100' }}">Absensi</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('schedule.manage'))
-        <a href="{{ route('admin.worker-shifts.index') }}" 
+        <a href="{{ route('admin.worker-shifts.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-user-clock text-xs {{ request()->routeIs('admin.worker-shifts.*') ? 'text-white' : 'text-purple-300' }}"></i>
@@ -182,9 +183,9 @@
             <span class="text-sm {{ request()->routeIs('admin.worker-shifts.*') ? 'text-white font-medium' : 'text-green-100' }}">Jadwal Pegawai</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker-document.manage'))
-        <a href="{{ route('admin.worker-documents.index') }}" 
+        <a href="{{ route('admin.worker-documents.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.worker-documents.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-documents.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-file-alt text-xs {{ request()->routeIs('admin.worker-documents.*') ? 'text-white' : 'text-purple-300' }}"></i>
@@ -192,9 +193,9 @@
             <span class="text-sm {{ request()->routeIs('admin.worker-documents.*') ? 'text-white font-medium' : 'text-green-100' }}">Dokumen Pegawai</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
-        <a href="{{ route('admin.payroll.index') }}" 
+        <a href="{{ route('admin.payroll.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.payroll.index') || request()->routeIs('admin.payroll.show') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.payroll.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-money-bill-wave text-xs {{ request()->routeIs('admin.payroll.*') ? 'text-white' : 'text-purple-300' }}"></i>
@@ -206,7 +207,7 @@
 
         <!-- Attendance Section - Employee or with permissions -->
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('attendance.view') || auth()->user()->can('attendance.checkin') || auth()->user()->can('schedule.view') || auth()->user()->can('shift-swap.request'))
-        
+
         <!-- KEHADIRAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -215,7 +216,7 @@
             </div>
         </div>
 
-        <a href="{{ route('employee.attendance.index') }}" 
+        <a href="{{ route('employee.attendance.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.attendance.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.attendance.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clipboard-check text-xs {{ request()->routeIs('employee.attendance.*') ? 'text-white' : 'text-green-300' }}"></i>
@@ -223,7 +224,7 @@
             <span class="text-sm {{ request()->routeIs('employee.attendance.*') ? 'text-white font-medium' : 'text-green-100' }}">Absensi Saya</span>
         </a>
 
-        <a href="{{ route('employee.shifts.index') }}" 
+        <a href="{{ route('employee.shifts.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.shifts.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.shifts.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('employee.shifts.*') ? 'text-white' : 'text-green-300' }}"></i>
@@ -231,7 +232,7 @@
             <span class="text-sm {{ request()->routeIs('employee.shifts.*') ? 'text-white font-medium' : 'text-green-100' }}">Jadwal Kerja</span>
         </a>
 
-        <a href="{{ route('employee.shift-swaps.index') }}" 
+        <a href="{{ route('employee.shift-swaps.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-exchange-alt text-xs {{ request()->routeIs('employee.shift-swaps.*') ? 'text-white' : 'text-green-300' }}"></i>
@@ -242,7 +243,7 @@
 
         <!-- Request Section - Employee or with permissions -->
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('leave.request') || auth()->user()->can('leave.view') || auth()->user()->can('overtime.request') || auth()->user()->can('overtime.view') || auth()->user()->can('business-trip.request') || auth()->user()->can('business-trip.view'))
-        
+
         <!-- PENGAJUAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -251,7 +252,7 @@
             </div>
         </div>
 
-        <a href="{{ route('employee.leaves.index') }}" 
+        <a href="{{ route('employee.leaves.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.leaves.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.leaves.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-times text-xs {{ request()->routeIs('employee.leaves.*') ? 'text-white' : 'text-cyan-300' }}"></i>
@@ -259,7 +260,7 @@
             <span class="text-sm {{ request()->routeIs('employee.leaves.*') ? 'text-white font-medium' : 'text-green-100' }}">Cuti Saya</span>
         </a>
 
-        <a href="{{ route('employee.overtimes.index') }}" 
+        <a href="{{ route('employee.overtimes.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.overtimes.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.overtimes.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('employee.overtimes.*') ? 'text-white' : 'text-cyan-300' }}"></i>
@@ -267,7 +268,7 @@
             <span class="text-sm {{ request()->routeIs('employee.overtimes.*') ? 'text-white font-medium' : 'text-green-100' }}">Lembur Saya</span>
         </a>
 
-        <a href="{{ route('employee.business-trips.index') }}" 
+        <a href="{{ route('employee.business-trips.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.business-trips.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.business-trips.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-plane-departure text-xs {{ request()->routeIs('employee.business-trips.*') ? 'text-white' : 'text-cyan-300' }}"></i>
@@ -278,7 +279,7 @@
 
         <!-- Approval Section - Admin/HR/Manager -->
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve') || auth()->user()->can('overtime.manage') || auth()->user()->can('overtime.approve') || auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve') || auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
-        
+
         <!-- PERSETUJUAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -288,7 +289,7 @@
         </div>
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
-        <a href="{{ route('admin.leave.index') }}" 
+        <a href="{{ route('admin.leave.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.leave.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-times text-xs {{ request()->routeIs('admin.leave.*') ? 'text-white' : 'text-orange-300' }}"></i>
@@ -299,9 +300,9 @@
             @endif
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('overtime.manage') || auth()->user()->can('overtime.approve'))
-        <a href="{{ route('admin.overtime.index') }}" 
+        <a href="{{ route('admin.overtime.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.overtime.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('admin.overtime.*') ? 'text-white' : 'text-orange-300' }}"></i>
@@ -309,9 +310,9 @@
             <span class="text-sm {{ request()->routeIs('admin.overtime.*') ? 'text-white font-medium' : 'text-green-100' }}">Lembur</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve'))
-        <a href="{{ route('manager.shift-swap-approvals.index') }}" 
+        <a href="{{ route('manager.shift-swap-approvals.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-exchange-alt text-xs {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'text-white' : 'text-orange-300' }}"></i>
@@ -319,9 +320,9 @@
             <span class="text-sm {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'text-white font-medium' : 'text-green-100' }}">Tukar Shift</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
-        <a href="{{ route('approvals.business-trips.index') }}" 
+        <a href="{{ route('approvals.business-trips.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('approvals.business-trips.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('approvals.business-trips.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-plane-departure text-xs {{ request()->routeIs('approvals.business-trips.*') ? 'text-white' : 'text-orange-300' }}"></i>
@@ -333,7 +334,7 @@
 
         <!-- Reports Section - Admin/HR/Manager or anyone with report.view permission -->
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('report.view'))
-        
+
         <!-- LAPORAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -342,31 +343,31 @@
             </div>
         </div>
 
-        <a href="{{ route('reports.attendance') }}" 
+        <a href="{{ route('reports.attendance') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.attendance') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.attendance') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clipboard-list text-xs {{ request()->routeIs('reports.attendance') ? 'text-white' : 'text-pink-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('reports.attendance') ? 'text-white font-medium' : 'text-green-100' }}">Attendance</span>
         </a>
-        
-        <a href="{{ route('reports.leaves') }}" 
+
+        <a href="{{ route('reports.leaves') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.leaves') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.leaves') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('reports.leaves') ? 'text-white' : 'text-pink-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('reports.leaves') ? 'text-white font-medium' : 'text-green-100' }}">Cuti</span>
         </a>
-        
-        <a href="{{ route('reports.overtimes') }}" 
+
+        <a href="{{ route('reports.overtimes') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.overtimes') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.overtimes') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('reports.overtimes') ? 'text-white' : 'text-pink-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('reports.overtimes') ? 'text-white font-medium' : 'text-green-100' }}">Lembur</span>
         </a>
-        
-        <a href="{{ route('reports.worker-documents') }}" 
+
+        <a href="{{ route('reports.worker-documents') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.worker-documents') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.worker-documents') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-file-alt text-xs {{ request()->routeIs('reports.worker-documents') ? 'text-white' : 'text-pink-300' }}"></i>
@@ -377,7 +378,7 @@
 
         <!-- HR & Finance Section - Employee with permissions -->
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('worker-document.view') || auth()->user()->can('payroll.view') || auth()->user()->can('calendar.view'))
-        
+
         <!-- HR & KEUANGAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -387,7 +388,7 @@
         </div>
 
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('worker-document.view'))
-        <a href="{{ route('employee.documents.index') }}" 
+        <a href="{{ route('employee.documents.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.documents.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.documents.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-file-alt text-xs {{ request()->routeIs('employee.documents.*') ? 'text-white' : 'text-teal-300' }}"></i>
@@ -397,7 +398,7 @@
         @endif
 
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('payroll.view'))
-        <a href="{{ route('employee.payroll.index') }}" 
+        <a href="{{ route('employee.payroll.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.payroll.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.payroll.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-money-bill-wave text-xs {{ request()->routeIs('employee.payroll.*') ? 'text-white' : 'text-teal-300' }}"></i>
@@ -407,7 +408,7 @@
         @endif
 
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('calendar.view'))
-        <a href="{{ route('employee.calendar.index') }}" 
+        <a href="{{ route('employee.calendar.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.calendar.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-day text-xs {{ request()->routeIs('employee.calendar.*') ? 'text-white' : 'text-teal-300' }}"></i>
@@ -419,7 +420,7 @@
 
         <!-- Settings Section - Admin Only -->
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('holiday.manage') || auth()->user()->can('role.manage') || auth()->user()->can('user.manage') || auth()->user()->can('system-settings.manage'))
-        
+
         <!-- PENGATURAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
@@ -429,7 +430,7 @@
         </div>
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('holiday.manage'))
-        <a href="{{ route('admin.holidays.index') }}" 
+        <a href="{{ route('admin.holidays.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.holidays.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.holidays.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-day text-xs {{ request()->routeIs('admin.holidays.*') ? 'text-white' : 'text-gray-300' }}"></i>
@@ -437,9 +438,9 @@
             <span class="text-sm {{ request()->routeIs('admin.holidays.*') ? 'text-white font-medium' : 'text-green-100' }}">Libur Nasional</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('role.manage'))
-        <a href="{{ route('admin.roles.index') }}" 
+        <a href="{{ route('admin.roles.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.roles.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.roles.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-user-tag text-xs {{ request()->routeIs('admin.roles.*') ? 'text-white' : 'text-gray-300' }}"></i>
@@ -447,9 +448,9 @@
             <span class="text-sm {{ request()->routeIs('admin.roles.*') ? 'text-white font-medium' : 'text-green-100' }}">Role</span>
         </a>
         @endif
-        
+
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
-        <a href="{{ route('admin.users.index') }}" 
+        <a href="{{ route('admin.users.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.users.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.users.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-user-shield text-xs {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-gray-300' }}"></i>
@@ -461,7 +462,7 @@
 
         <!-- Profile - Employee with permission -->
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('profile.view'))
-            <a href="{{ route('employee.profile.show') }}" 
+            <a href="{{ route('employee.profile.show') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('employee.profile.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('employee.profile.*') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <i class="fas fa-user text-sm {{ request()->routeIs('employee.profile.*') ? 'text-white' : 'text-green-300' }}"></i>
@@ -476,7 +477,7 @@
     <div class="p-4 bg-white/5 backdrop-blur-md border-t border-white/10">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" 
+            <button type="submit"
                     class="group w-full flex items-center justify-center space-x-3 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all duration-300 transform hover:scale-105">
                 <i class="fas fa-sign-out-alt group-hover:rotate-12 transition-transform"></i>
                 <span class="font-semibold">Logout</span>
@@ -511,10 +512,10 @@
 function toggleUnifiedSidebar() {
     const sidebar = document.getElementById('unified-sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
-    
+
     // Toggle sidebar
     sidebar.classList.toggle('-translate-x-full');
-    
+
     // Toggle backdrop
     if (sidebar.classList.contains('-translate-x-full')) {
         // Sidebar is closing
@@ -527,3 +528,5 @@ function toggleUnifiedSidebar() {
     }
 }
 </script>
+
+@endif

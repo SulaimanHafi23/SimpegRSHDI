@@ -23,7 +23,6 @@ class BusinessTripRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'worker_id' => ['required', Rule::exists('workers', 'id')],
             'destination' => 'required|string|max:255',
             'purpose' => 'required|string|max:1000',
             'start_date' => 'required|date|after_or_equal:today',
