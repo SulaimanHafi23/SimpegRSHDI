@@ -374,14 +374,14 @@ function initMap() {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
-    
+
     // Add message to enable scroll zoom
     map.on('click', function() {
         if (!map.scrollWheelZoom.enabled()) {
             map.scrollWheelZoom.enable();
         }
     });
-    
+
     // Disable scroll zoom when mouse leaves map
     const mapElement = document.getElementById('map');
     if (mapElement) {

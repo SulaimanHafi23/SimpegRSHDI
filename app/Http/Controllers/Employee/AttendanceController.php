@@ -64,7 +64,8 @@ class AttendanceController extends Controller
             'total_days' => $monthlySummary->count(),
             'present' => $monthlySummary->where('status', 'present')->count(),
             'late' => $monthlySummary->where('status', 'late')->count(),
-            'absent' => $monthlySummary->where('status', 'absent')->count(),
+            // Semua status tidak hadir: absent, sick, permission, leave
+            'absent' => $monthlySummary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count(),
         ];
 
         // Cek apakah ada sesi absensi yang aktif (Check In tapi belum Check Out)
