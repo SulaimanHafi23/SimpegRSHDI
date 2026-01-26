@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Models\WorkerShiftSchedule;
+use App\Models\WorkerShift;
+use App\Models\ShiftOverride;
 use App\Models\Worker;
 use App\Models\Shift;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 
@@ -19,70 +21,57 @@ class WorkerShiftSeeder extends Seeder
 
         $workers = Worker::all();
         $shifts = Shift::where('is_active', true)->get();
+        $users = User::all();
 
         if ($shifts->isEmpty()) {
             $this->command->warn('No active shifts found. Skipping worker shift seeding.');
             return;
         }
 
-        // Generate shift schedules for the next 30 days
-        $startDate = Carbon::now();
-        $endDate = Carbon::now()->addDays(30);
-
+        // Create fixed shift patterns for each worker
         foreach ($workers as $worker) {
-            // Assign a default shift pattern for the worker
-            $primaryShift = $shifts->random();
-
-            $currentDate = $startDate->copy();
-
-            while ($currentDate->lte($endDate)) {
-                // Rotate shifts every 7 days for some variety
-                $weekNumber = $currentDate->diffInWeeks($startDate);
-                $assignedShift = $weekNumber % 2 == 0 ? $primaryShift : $shifts->random();
-
-                // Skip Sundays (day off)
-                if ($currentDate->dayOfWeek !== Carbon::SUNDAY) {
-                    WorkerShiftSchedule::create([
-                        'worker_id' => $worker->id,
-                        'shift_id' => $assignedShift->id,
-                        'date' => $currentDate->format('Y-m-d'),
-                        'is_override' => false,
-                        'notes' => null,
-                    ]);
-                }
-
-                $currentDate->addDay();
-            }
+            $shift = $shifts->random();
+            
+            WorkerShift::create([
+                'worker_id' => $worker->id,
+                'shift_id' => $shift->id,
+                'pattern_type' => 'fixed',
+                'rotating_days' => null,
+                'effective_from' => Carbon::now()->subMonths(1)->format('Y-m-d'),
+                'effective_until' => Carbon::now()->addMonths(3)->format('Y-m-d'),
+                'is_active' => true,
+                'notes' => "Shift tetap: {$shift->name}",
+            ]);
         }
 
-        // Add some shift overrides (special cases)
-        $this->addShiftOverrides($workers, $shifts, $startDate, $endDate);
+        // Add some shift overrides for variety
+        $this->addShiftOverrides($workers, $shifts, $users);
 
         $this->command->info('✅ Worker Shifts seeded successfully!');
     }
 
-    private function addShiftOverrides($workers, $shifts, $startDate, $endDate): void
+    private function addShiftOverrides($workers, $shifts, $users): void
     {
-        // Add 5-10 random shift overrides
-        $overrideCount = rand(5, 10);
-
+        // Add 20-30 random shift overrides
+        $overrideCount = rand(20, 30);
+        
         for ($i = 0; $i < $overrideCount; $i++) {
             $worker = $workers->random();
             $shift = $shifts->random();
-            $date = Carbon::parse($startDate)->addDays(rand(0, 30))->format('Y-m-d');
-
-            // Check if schedule exists for this date
-            $existingSchedule = WorkerShiftSchedule::where('worker_id', $worker->id)
-                ->where('date', $date)
-                ->first();
-
-            if ($existingSchedule) {
-                $existingSchedule->update([
+            $user = $users->random();
+            $date = Carbon::now()->addDays(rand(-10, 60))->format('Y-m-d');
+            
+            ShiftOverride::updateOrCreate(
+                [
+                    'worker_id' => $worker->id,
+                    'override_date' => $date,
+                ],
+                [
                     'shift_id' => $shift->id,
-                    'is_override' => true,
-                    'notes' => 'Penggantian shift karena keperluan operasional',
-                ]);
-            }
+                    'reason' => 'Pergantian shift atas permintaan operasional',
+                    'created_by' => $user->id,
+                ]
+            );
         }
     }
 }

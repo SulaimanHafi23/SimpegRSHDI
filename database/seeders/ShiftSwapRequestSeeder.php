@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\ShiftSwapRequest;
-use App\Models\WorkerShiftSchedule;
 use App\Models\Worker;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -44,29 +43,13 @@ class ShiftSwapRequestSeeder extends Seeder
             $requester = $workers->random();
             $target = $workers->where('id', '!=', $requester->id)->random();
 
-            // Get schedules for both workers
-            $requesterSchedule = WorkerShiftSchedule::where('worker_id', $requester->id)
-                ->where('date', '>=', Carbon::now()->format('Y-m-d'))
-                ->inRandomOrder()
-                ->first();
-
-            if (!$requesterSchedule) continue;
-
-            $targetSchedule = WorkerShiftSchedule::where('worker_id', $target->id)
-                ->where('date', '>=', Carbon::now()->format('Y-m-d'))
-                ->where('date', '!=', $requesterSchedule->date)
-                ->inRandomOrder()
-                ->first();
-
-            if (!$targetSchedule) continue;
-
             $status = $statuses[array_rand($statuses)];
+            $requestDate = Carbon::now()->addDays(rand(1, 30))->format('Y-m-d');
 
             $swapRequest = ShiftSwapRequest::create([
                 'requester_worker_id' => $requester->id,
                 'target_worker_id' => $target->id,
-                'requester_shift_schedule_id' => $requesterSchedule->id,
-                'target_shift_schedule_id' => $targetSchedule->id,
+                'requested_date' => $requestDate,
                 'reason' => $reasons[array_rand($reasons)],
                 'status' => $status,
                 'target_response' => in_array($status, ['approved', 'rejected']) ? ($status === 'approved' ? 'accepted' : 'declined') : 'pending',

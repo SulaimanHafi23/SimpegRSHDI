@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Overtime;
+use App\Models\OvertimeRequest;
 use App\Models\Worker;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -43,10 +43,7 @@ class OvertimeRequestSeeder extends Seeder
                 $startTime = Carbon::createFromTime(17, 0, 0); // After work hours
                 $endTime = $startTime->copy()->addHours(rand(2, 4));
 
-                $overtime = Overtime::create([
-                    'worker_id' => $worker->id,
-                    'date' => $date,
-                    'start_time' => $startTime->format('H:i:s'),
+                $overtime = OvertimeRequest::create([
                     'end_time' => $endTime->format('H:i:s'),
                     'total_hours' => $endTime->diffInHours($startTime),
                     'reason' => $reasons[array_rand($reasons)],

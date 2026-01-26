@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use App\Models\LeaveRequest;
 use App\Models\Worker;
 use App\Models\User;
-use App\Models\Master\LeaveType;
+use App\Models\LeaveType;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 

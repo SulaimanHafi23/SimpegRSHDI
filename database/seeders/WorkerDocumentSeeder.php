@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Berkas;
+use App\Models\WorkerDocument;
 use App\Models\Worker;
 use App\Models\Master\DepartmentDocumentType;
 use Illuminate\Database\Seeder;
@@ -56,7 +56,7 @@ class WorkerDocumentSeeder extends Seeder
                 if (rand(1, 100) <= 40) {
                     $uploadedAt = Carbon::now()->subDays(rand(1, 365));
 
-                    Berkas::create([
+                    WorkerDocument::create([
                         'worker_id' => $worker->id,
                         'department_document_type_id' => $deptDocType->id,
                         'file_path' => "documents/worker_{$worker->id}/optional_{$deptDocType->id}.pdf",

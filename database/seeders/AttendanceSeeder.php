@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Absent;
+use App\Models\Attendance;
 use App\Models\Worker;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
@@ -39,7 +39,7 @@ class AttendanceSeeder extends Seeder
                     $checkInTime = $currentDate->copy()->setTime(8, rand(0, 30), 0); // 08:00 - 08:30
                     $checkOutTime = $currentDate->copy()->setTime(17, rand(0, 60), 0); // 17:00 - 18:00
 
-                    Absent::create([
+                    Attendance::create([
                         'worker_id' => $worker->id,
                         'date' => $currentDate->format('Y-m-d'),
                         'check_in' => $checkInTime->format('H:i:s'),
@@ -56,11 +56,7 @@ class AttendanceSeeder extends Seeder
                         null, // No reason
                     ];
 
-                    Absent::create([
-                        'worker_id' => $worker->id,
-                        'date' => $currentDate->format('Y-m-d'),
-                        'check_in' => null,
-                        'check_out' => null,
+                    Attendance::create([
                         'status' => 'absent',
                         'notes' => $reasons[array_rand($reasons)],
                     ]);
