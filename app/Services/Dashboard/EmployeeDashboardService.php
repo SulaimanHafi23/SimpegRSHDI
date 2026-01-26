@@ -36,7 +36,7 @@ class EmployeeDashboardService
         $total = $attendances->count();
         $present = $attendances->where('status', 'present')->count();
         $late = $attendances->where('status', 'late')->count();
-        $absent = $attendances->where('status', 'absent')->count();
+        $absent = $attendances->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count();
 
         return [
             'total' => $total,
@@ -219,10 +219,10 @@ class EmployeeDashboardService
     public function getLeaveBalance(string $workerId)
     {
         $currentYear = now()->year;
-        
+
         // Get all leave types
         $leaveTypes = \App\Models\LeaveType::where('is_active', true)->get();
-        
+
         $balances = [];
         foreach ($leaveTypes as $leaveType) {
             // Count used days this year
@@ -234,10 +234,10 @@ class EmployeeDashboardService
                 ->sum(function ($leave) {
                     return $leave->start_date->diffInDays($leave->end_date) + 1;
                 });
-            
+
             // Default quota (you can customize this based on your business rules)
             $quota = $leaveType->max_days ?? 12; // Default 12 days if not set
-            
+
             $balances[] = [
                 'leave_type' => $leaveType->name,
                 'quota' => $quota,
@@ -246,7 +246,7 @@ class EmployeeDashboardService
                 'color' => $this->getLeaveTypeColor($leaveType->name),
             ];
         }
-        
+
         return $balances;
     }
 
@@ -262,7 +262,7 @@ class EmployeeDashboardService
             'Cuti Menikah' => 'purple',
             'Cuti Keluarga' => 'orange',
         ];
-        
+
         return $colors[$typeName] ?? 'gray';
     }
 }

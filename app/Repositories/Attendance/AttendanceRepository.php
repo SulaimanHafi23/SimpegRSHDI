@@ -45,8 +45,8 @@ class AttendanceRepository implements AttendanceRepositoryInterface
             $query->where(function($q) use ($search) {
                 $q->where('attendance_date', 'like', "%{$search}%")
                   ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhere('check_in_time', 'like', "%{$search}%")
-                  ->orWhere('check_out_time', 'like', "%{$search}%")
+                  ->orWhere('check_in', 'like', "%{$search}%")
+                  ->orWhere('check_out', 'like', "%{$search}%")
                   ->orWhereHas('location', function($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%");
                   });

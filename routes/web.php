@@ -279,6 +279,14 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
 
     // ========== ATTENDANCE MANAGEMENT ==========
     Route::prefix('attendance')->name('admin.attendance.')->group(function () {
+        // Daftar pegawai untuk absensi
+        Route::get('/workers', [AttendanceController::class, 'workerList'])->name('worker-list');
+        // Riwayat absensi per pegawai
+        Route::get('/history/{worker}', [AttendanceController::class, 'history'])->name('history');
+        // Export absensi pegawai (PDF/Excel)
+        Route::get('/history/{worker}/export', [AttendanceController::class, 'exportWorkerAttendance'])->name('history.export');
+            Route::get('/history/{worker_id}', [AttendanceController::class, 'history'])->name('history');
+        // Index default tetap bisa untuk legacy
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
         Route::get('/create', [AttendanceController::class, 'create'])->name('create');
         Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');

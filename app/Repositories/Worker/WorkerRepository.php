@@ -31,10 +31,11 @@ class WorkerRepository implements WorkerRepositoryInterface
         }
 
         if (!empty($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('nip', 'like', "%{$filters['search']}%")
-                    ->orWhere('name', 'like', "%{$filters['search']}%")
-                    ->orWhere('email', 'like', "%{$filters['search']}%");
+            $searchTerm = strtolower($filters['search']);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                  ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $searchTerm . '%'])
+                  ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $searchTerm . '%']);
             });
         }
 

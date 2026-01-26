@@ -45,7 +45,7 @@ class AttendanceController extends Controller
     {
         $workers = $this->workerService->getAllActive();
         $locations = $this->locationService->getAllActive();
-        
+
         // Format locations for JavaScript validation
         $locationsData = $locations->mapWithKeys(function($loc) {
             return [$loc->id => [
@@ -82,7 +82,7 @@ class AttendanceController extends Controller
                 'worker_id' => $request->worker_id,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());
@@ -109,7 +109,7 @@ class AttendanceController extends Controller
                 'attendance_id' => $id,
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());
@@ -127,7 +127,7 @@ class AttendanceController extends Controller
         }
 
         $locations = $this->locationService->getAllActive();
-        
+
         // Format locations for JavaScript validation
         $locationsData = $locations->mapWithKeys(function($loc) {
             return [$loc->id => [
@@ -213,10 +213,56 @@ class AttendanceController extends Controller
             ];
 
             $filename = 'laporan-absensi-' . now()->format('Y-m-d-His') . '.xlsx';
-            
+
             return Excel::download(new AttendanceExport($filters), $filename);
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    // Daftar pegawai untuk absensi
+    public function workerList(Request $request)
+    {
+        $filters = [
+            'search' => $request->search,
+            'per_page' => $request->per_page ?? 15,
+        ];
+        $workers = $this->workerService->getAll($filters);
+        return view('admin.attendance.worker-list', compact('workers'));
+    }
+
+    // Riwayat absensi per pegawai
+    public function history(Request $request, $workerId)
+    {
+        $worker = $this->workerService->getById($workerId);
+        if (!$worker) {
+            return back()->with('error', 'Pegawai tidak ditemukan');
+        }
+        $filters = [
+            'worker_id' => $workerId,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'status' => $request->status,
+            'per_page' => $request->per_page ?? 15,
+        ];
+        $attendances = $this->attendanceService->getAll($filters);
+        return view('admin.attendance.history', compact('worker', 'attendances', 'filters'));
+    }
+
+    // Export absensi pegawai (Excel)
+    public function exportWorkerAttendance(Request $request, $workerId)
+    {
+        $worker = $this->workerService->getById($workerId);
+        if (!$worker) {
+            return back()->with('error', 'Pegawai tidak ditemukan');
+        }
+        $filters = [
+            'worker_id' => $workerId,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'status' => $request->status,
+        ];
+        $filename = 'absensi-' . str_replace(' ', '-', strtolower($worker->name)) . '-' . now()->format('Y-m-d-His') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\AttendanceExport($filters), $filename);
     }
 }
