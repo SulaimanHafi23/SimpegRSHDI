@@ -301,6 +301,12 @@ class AttendanceController extends Controller
                 abort(403, 'Unauthorized');
             }
 
+            // Check if attendance is already completed
+            if ($attendance->check_out) {
+                return redirect()->route('employee.attendance.index')
+                    ->with('warning', 'Anda sudah melakukan check-out untuk hari ini.');
+            }
+
             // Server-side check for accuracy
             $maxAcc = config('attendance.max_accuracy', 300);
             $accuracy = $validated['accuracy'] ?? ($request->input('accuracy') ?? null);
@@ -344,15 +350,35 @@ class AttendanceController extends Controller
                 'photo' => $photoFile,
             ];
 
-            $this->attendanceService->checkOut($id, $data);
+            $updatedAttendance = $this->attendanceService->checkOut($id, $data);
 
             // Clean up temp file if created
             if ($photoFile && file_exists($photoFile->getRealPath())) {
                 @unlink($photoFile->getRealPath());
             }
 
+            // Check for early checkout and provide appropriate feedback
+            $message = 'Check-out berhasil!';
+            $alertType = 'success';
+            
+            if ($updatedAttendance->is_early_leave && $updatedAttendance->early_leave_minutes > 0) {
+                $hours = floor($updatedAttendance->early_leave_minutes / 60);
+                $minutes = $updatedAttendance->early_leave_minutes % 60;
+                $earlyText = '';
+                
+                if ($hours > 0) {
+                    $earlyText .= $hours . ' jam ';
+                }
+                if ($minutes > 0) {
+                    $earlyText .= $minutes . ' menit';
+                }
+                
+                $message = "Check-out berhasil! Catatan: Anda pulang lebih awal {$earlyText} dari jadwal. Pastikan sudah mendapat izin dari atasan.";
+                $alertType = 'warning';
+            }
+
             return redirect()->route('employee.attendance.index')
-                ->with('success', 'Check-out berhasil!');
+                ->with($alertType, $message);
 
         } catch (\Exception $e) {
             return back()
@@ -379,6 +405,13 @@ class AttendanceController extends Controller
         if ($attendance->worker_id !== $worker->id) {
             abort(403, 'Unauthorized');
         }
+
+        // Load relationships
+        $attendance->load([
+            'location',
+            'photos',
+            'worker.workerShifts.shift'
+        ]);
 
         return view('employee.attendance.show', compact('attendance'));
     }

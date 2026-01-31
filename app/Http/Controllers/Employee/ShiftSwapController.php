@@ -21,7 +21,15 @@ class ShiftSwapController extends Controller
 
         $items = $this->shiftSwapService->listForWorker($worker->id);
 
-        return view('employee.shift-swaps.index', compact('items'));
+        // Calculate summary statistics
+        $summary = [
+            'total' => $items->count(),
+            'pending' => $items->where('status', 'pending')->count(),
+            'approved' => $items->whereIn('status', ['approved', 'accepted', 'awaiting_approval', 'executed'])->count(),
+            'history' => $items->whereIn('status', ['rejected', 'cancelled'])->count(),
+        ];
+
+        return view('employee.shift-swaps.index', compact('items', 'summary'));
     }
 
     public function create()
@@ -35,7 +43,12 @@ class ShiftSwapController extends Controller
         // Get all workers for target selection
         $workers = $this->shiftSwapService->getAvailableWorkersForSwap($worker->id);
 
-        return view('employee.shift-swaps.create', compact('requesterShifts', 'workers'));
+        // Set uniform requirement: 48 hours (2 days) for all departments
+        $minHours = 48;
+        $minDays = 2;
+        $departmentName = $worker->department->name ?? 'Anda';
+
+        return view('employee.shift-swaps.create', compact('requesterShifts', 'workers', 'minHours', 'minDays', 'departmentName'));
     }
 
     public function store(ShiftSwapRequestRequest $request)

@@ -77,11 +77,6 @@ class RolePermissionSeeder extends Seeder
             'shift-swap.approve',  // Can approve/reject shift swap requests
             'shift-swap.request',  // Can submit own shift swap request
             'shift-swap.view',     // View own shift swap requests only
-
-            // Payroll Management
-            'payroll.manage',      // Full CRUD on payroll (generate, approve, edit)
-            'payroll.view',        // View own payroll only
-
             // Notification Management
             'notification.manage', // Manage all notifications
             'notification.view',   // View own notifications only
@@ -163,9 +158,6 @@ class RolePermissionSeeder extends Seeder
             // Shift Swap - Manage & Approve
             'shift-swap.manage',
             'shift-swap.approve',
-
-            // Payroll - Full Management
-            'payroll.manage',
 
             // Notifications - Manage
             'notification.manage',
@@ -259,8 +251,7 @@ class RolePermissionSeeder extends Seeder
             'shift-swap.request',       // Submit shift swap requests
             'shift-swap.view',          // View own shift swap requests
 
-            // Payroll & Notifications
-            'payroll.view',             // View own payroll
+            // Notifications & Calendar
             'notification.view',        // View own notifications
 
             // Calendar & Profile

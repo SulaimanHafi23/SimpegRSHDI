@@ -74,7 +74,7 @@
                             <span class="text-yellow-300">Pegawai yang Modern</span>
                         </h2>
                         <p class="text-lg text-green-100">
-                            Kelola data pegawai, absensi, cuti, dan payroll dengan mudah dan efisien
+                            Kelola data pegawai, absensi, dan cuti dengan mudah dan efisien
                         </p>
                     </div>
 

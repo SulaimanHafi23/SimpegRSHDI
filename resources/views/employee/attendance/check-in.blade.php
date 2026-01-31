@@ -3,58 +3,40 @@
 @section('title', 'Check In')
 
 @section('content')
-<div class="container mx-auto px-3 sm:px-4 py-4 sm:py-6 max-w-4xl">
+<div class="max-w-6xl mx-auto px-4 py-8">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
     <!-- Header -->
-    <div class="mb-4 sm:mb-6">
-        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Check In Absensi</h1>
-        <p class="text-sm sm:text-base text-gray-600 mt-1">Catat kehadiran Anda hari ini</p>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-sign-in-alt text-green-600"></i>
+                    Check In Absensi
+                </h1>
+                <p class="text-sm text-gray-600 mt-1">Catat kehadiran Anda hari ini dengan mudah dan akurat</p>
+            </div>
+            <a href="{{ route('employee.attendance.index') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                <i class="fas fa-arrow-left"></i>
+                <span class="hidden sm:inline">Kembali</span>
+            </a>
+        </div>
     </div>
 
-    @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-3 rounded-lg relative mb-4" role="alert">
-            <span class="block sm:inline text-sm">{{ session('error') }}</span>
+    <!-- Current Time Display -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+        <div class="text-center">
+            <div class="text-sm text-gray-600 mb-2">Waktu Saat Ini</div>
+            <div class="text-3xl sm:text-4xl font-bold text-blue-600 mb-2" id="current-time">{{ now()->format('H:i:s') }}</div>
+            <div class="text-sm text-gray-600">{{ now()->format('l, d F Y') }}</div>
         </div>
-    @endif
-
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-3 sm:px-4 py-3 rounded-lg relative mb-4" role="alert">
-            <span class="block sm:inline text-sm">{{ session('success') }}</span>
-        </div>
-    @endif
+    </div>
 
     <!-- Check In Form -->
-    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
-        <!-- Instructions -->
-        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-blue-500 text-lg sm:text-xl mt-0.5"></i>
-                </div>
-                <div class="ml-2 sm:ml-3">
-                    <h3 class="text-xs sm:text-sm font-semibold text-gray-800 mb-2">Cara Check In:</h3>
-                    <ol class="text-xs sm:text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                        <li>Pilih lokasi absensi dari dropdown</li>
-                        <li>Pilih status kehadiran Anda</li>
-                        <li>Klik "Dapatkan Lokasi" untuk GPS</li>
-                        <li>Upload foto (opsional)</li>
-                        <li>Klik "Check In Sekarang"</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-
-        <form id="checkin-form" action="{{ route('employee.attendance.check-in') }}" method="POST" enctype="multipart/form-data">
-            @csrf
-
-            <!-- Current Time Display -->
-            <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center">
-                <div class="text-xs sm:text-sm text-gray-600 mb-1">Waktu Saat Ini</div>
-                <div class="text-2xl sm:text-3xl font-bold text-blue-600" id="current-time">{{ now()->format('H:i:s') }}</div>
-                <div class="text-xs sm:text-sm text-gray-600 mt-1">{{ now()->format('l, d F Y') }}</div>
-            </div>
+    <form action="{{ route('employee.attendance.check-in') }}" method="POST" enctype="multipart/form-data" id="checkin-form" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+        @csrf
 
             <!-- Location -->
             <div class="mb-4">
@@ -210,6 +192,66 @@
                     <i class="fas fa-info-circle mr-1"></i>Klik "Dapatkan Lokasi" setelah memilih lokasi
                 </div>
                 <div id="accuracyInfo" class="text-xs text-gray-500">Akurasi: —</div>
+                
+                <!-- Manual GPS Input (Hidden by default) -->
+                <div id="manualGpsInput" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg" style="display: none;">
+                    <div class="text-sm font-medium text-blue-800 mb-2">Input Manual Koordinat GPS</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label for="manual_latitude" class="block text-xs text-gray-700 mb-1">Latitude</label>
+                            <input type="number" id="manual_latitude" step="any" 
+                                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                   placeholder="contoh: -6.200000">
+                        </div>
+                        <div>
+                            <label for="manual_longitude" class="block text-xs text-gray-700 mb-1">Longitude</label>
+                            <input type="number" id="manual_longitude" step="any" 
+                                   class="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                   placeholder="contoh: 106.816666">
+                        </div>
+                    </div>
+                    <button type="button" onclick="setManualCoordinates()" 
+                            class="mt-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                        Gunakan Koordinat Ini
+                    </button>
+                </div>
+                
+                <!-- GPS Error Messages -->
+                @error('latitude')
+                    <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>
+                            <div class="text-sm text-red-700">
+                                <strong>Error GPS:</strong> Koordinat latitude diperlukan. 
+                                <br><span class="text-xs">Silakan klik "Dapatkan Lokasi" atau "Pilih di Peta" untuk mendapatkan koordinat GPS Anda.</span>
+                            </div>
+                        </div>
+                    </div>
+                @enderror
+                
+                @error('longitude')
+                    <div class="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>
+                            <div class="text-sm text-red-700">
+                                <strong>Error GPS:</strong> Koordinat longitude diperlukan. 
+                                <br><span class="text-xs">Silakan klik "Dapatkan Lokasi" atau "Pilih di Peta" untuk mendapatkan koordinat GPS Anda.</span>
+                            </div>
+                        </div>
+                    </div>
+                @enderror
+                
+                @error('location_id')
+                    <div class="mt-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-map-marker-alt text-orange-500 mt-0.5"></i>
+                            <div class="text-sm text-orange-700">
+                                <strong>Lokasi belum dipilih:</strong> {{ $message }}
+                                <br><span class="text-xs">Pilih lokasi absensi dari dropdown di atas.</span>
+                            </div>
+                        </div>
+                    </div>
+                @enderror
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
                 <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude') }}">
                 <input type="hidden" name="accuracy" id="accuracy" value="{{ old('accuracy') }}">
@@ -258,12 +300,21 @@ let map, userMarker, officeCircle;
 // Get geolocation
 function getLocation(useFallback = false) {
     const statusDiv = document.getElementById('locationStatus');
+    const locationBtn = document.querySelector('button[onclick="getLocation()"]');
+    
+    console.log('getLocation called, useFallback:', useFallback);
 
     if (!navigator.geolocation) {
+        console.log('Geolocation not supported');
         statusDiv.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i>Browser Anda tidak mendukung geolocation';
         return;
     }
 
+    // Disable button and show loading
+    if (locationBtn) {
+        locationBtn.disabled = true;
+        locationBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Loading...';
+    }
     statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mendapatkan lokasi' + (useFallback ? ' (mode cepat)...' : '...');
 
     const options = useFallback ? {
@@ -278,9 +329,12 @@ function getLocation(useFallback = false) {
 
     navigator.geolocation.getCurrentPosition(
         function(position) {
+            console.log('GPS success:', position);
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
             const accuracy = position.coords.accuracy;
+            
+            console.log('Setting values:', {latitude, longitude, accuracy});
 
             document.getElementById('latitude').value = latitude;
             document.getElementById('longitude').value = longitude;
@@ -288,6 +342,12 @@ function getLocation(useFallback = false) {
             document.getElementById('accuracyInfo').textContent = `Akurasi: ±${Math.round(accuracy)} m`;
 
             statusDiv.innerHTML = `<i class="fas fa-check-circle text-green-500 mr-1"></i>Lokasi berhasil didapat: ${latitude.toFixed(6)}, ${longitude.toFixed(6)} (±${Math.round(accuracy)}m)`;
+
+            // Restore button
+            if (locationBtn) {
+                locationBtn.disabled = false;
+                locationBtn.innerHTML = '<i class="fas fa-crosshairs mr-1"></i>Dapatkan Lokasi';
+            }
 
             updateUserMarker(latitude, longitude, accuracy);
 
@@ -352,13 +412,67 @@ function getLocation(useFallback = false) {
             }
             statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>${errorMsg}`;
 
-            // Add retry button
+            // Restore button
+            if (locationBtn) {
+                locationBtn.disabled = false;
+                locationBtn.innerHTML = '<i class="fas fa-crosshairs mr-1"></i>Dapatkan Lokasi';
+            }
+
+            // Add retry button and manual input option
             if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
                 statusDiv.innerHTML += ` <button type="button" onclick="getLocation()" class="text-xs underline text-blue-600 hover:text-blue-700">Coba Lagi</button>`;
+            }
+            
+            // Show manual input option for permission denied or persistent errors
+            if (error.code === error.PERMISSION_DENIED || useFallback) {
+                statusDiv.innerHTML += ` <button type="button" onclick="showManualInput()" class="text-xs underline text-green-600 hover:text-green-700 ml-2">Input Manual</button>`;
             }
         },
         options
     );
+}
+
+// Show manual GPS input
+function showManualInput() {
+    document.getElementById('manualGpsInput').style.display = 'block';
+    document.getElementById('manual_latitude').focus();
+}
+
+// Set manual coordinates
+function setManualCoordinates() {
+    const lat = parseFloat(document.getElementById('manual_latitude').value);
+    const lng = parseFloat(document.getElementById('manual_longitude').value);
+    
+    if (isNaN(lat) || isNaN(lng)) {
+        alert('Mohon masukkan koordinat yang valid');
+        return;
+    }
+    
+    if (lat < -90 || lat > 90) {
+        alert('Latitude harus antara -90 sampai 90');
+        return;
+    }
+    
+    if (lng < -180 || lng > 180) {
+        alert('Longitude harus antara -180 sampai 180');
+        return;
+    }
+    
+    console.log('Setting manual coordinates:', {lat, lng});
+    
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+    document.getElementById('accuracy').value = 1000; // Set default accuracy for manual input
+    document.getElementById('accuracyInfo').textContent = 'Akurasi: ±1000 m (input manual)';
+    
+    const statusDiv = document.getElementById('locationStatus');
+    statusDiv.innerHTML = `<i class="fas fa-check-circle text-green-500 mr-1"></i>Koordinat manual: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    
+    // Hide manual input
+    document.getElementById('manualGpsInput').style.display = 'none';
+    
+    // Update map if available
+    updateUserMarker(lat, lng, 1000);
 }
 
 // Initialize Map
@@ -494,13 +608,89 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkinForm = document.getElementById('checkin-form');
     if (checkinForm) {
         checkinForm.addEventListener('submit', function(e) {
+            // Check required fields
+            const latitude = document.getElementById('latitude').value;
+            const longitude = document.getElementById('longitude').value;
+            const locationId = document.getElementById('location_id').value;
+            const status = document.getElementById('status').value;
+            
+            // Validate GPS coordinates
+            if (!latitude || !longitude) {
+                e.preventDefault();
+                showError('GPS tidak tersedia', 'Silakan klik "Dapatkan Lokasi" untuk mendapatkan koordinat GPS Anda terlebih dahulu.');
+                
+                // Scroll to GPS section
+                document.getElementById('locationStatus').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                return false;
+            }
+            
+            // Validate location selection
+            if (!locationId) {
+                e.preventDefault();
+                showError('Lokasi belum dipilih', 'Pilih lokasi absensi dari dropdown yang tersedia.');
+                
+                // Scroll to location dropdown
+                document.getElementById('location_id').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                document.getElementById('location_id').focus();
+                return false;
+            }
+            
+            // Validate status selection
+            if (!status) {
+                e.preventDefault();
+                showError('Status belum dipilih', 'Pilih status kehadiran Anda (Hadir, Sakit, Izin, atau Cuti).');
+                
+                // Scroll to status dropdown
+                document.getElementById('status').scrollIntoView({ 
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+                document.getElementById('status').focus();
+                return false;
+            }
+            
+            // Check GPS accuracy
             const acc = parseFloat(document.getElementById('accuracy').value) || null;
             if (acc && acc > ACC_THRESHOLD) {
                 e.preventDefault();
-                alert('Lokasi tidak cukup akurat (±' + Math.round(acc) + ' m). Silakan gunakan ponsel atau pilih lokasi manual.');
+                showError('GPS tidak akurat', `Lokasi tidak cukup akurat (±${Math.round(acc)} m). Silakan gunakan ponsel atau pilih lokasi manual di peta.`);
                 return false;
             }
         });
+    }
+    
+    // Error notification function
+    function showError(title, message) {
+        // Create error notification
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fixed top-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50 max-w-md';
+        errorDiv.innerHTML = `
+            <div class="flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-red-500 mt-0.5"></i>
+                <div class="flex-1">
+                    <div class="font-medium text-red-800">${title}</div>
+                    <div class="text-sm text-red-700 mt-1">${message}</div>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="text-red-400 hover:text-red-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(errorDiv);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (errorDiv.parentElement) {
+                errorDiv.remove();
+            }
+        }, 5000);
     }
 });
 

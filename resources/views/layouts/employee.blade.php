@@ -14,6 +14,9 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Sweet Alert 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -40,25 +43,46 @@
             <main class="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
             <div class="max-w-7xl mx-auto">
                 <!-- Alert Messages -->
-                @if(session('success'))
-                    <div class="alert-dismissible mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center shadow-md">
-                        <i class="fas fa-check-circle mr-3"></i>
-                        <span>{{ session('success') }}</span>
-                    </div>
-                @endif
+                @php
+                    $currentRoute = Route::currentRouteName();
+                    $isCreateOrEditPage = str_contains($currentRoute, '.create') || 
+                                         str_contains($currentRoute, '.edit') || 
+                                         str_contains($currentRoute, 'create') || 
+                                         str_contains($currentRoute, 'edit');
+                @endphp
 
-                @if(session('error'))
-                    <div class="alert-dismissible mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center shadow-md">
-                        <i class="fas fa-exclamation-circle mr-3"></i>
-                        <span>{{ session('error') }}</span>
-                    </div>
-                @endif
+                @if($isCreateOrEditPage)
+                    {{-- Keep traditional alerts for create/edit pages --}}
+                    @if(session('success'))
+                        <div class="alert-dismissible mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center shadow-md">
+                            <i class="fas fa-check-circle mr-3"></i>
+                            <span>{{ session('success') }}</span>
+                        </div>
+                    @endif
 
-                @if(session('warning'))
-                    <div class="alert-dismissible mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg flex items-center shadow-md">
-                        <i class="fas fa-exclamation-triangle mr-3"></i>
-                        <span>{{ session('warning') }}</span>
-                    </div>
+                    @if(session('error'))
+                        <div class="alert-dismissible mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center shadow-md">
+                            <i class="fas fa-exclamation-circle mr-3"></i>
+                            <span>{{ session('error') }}</span>
+                        </div>
+                    @endif
+
+                    @if(session('warning'))
+                        <div class="alert-dismissible mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg flex items-center shadow-md">
+                            <i class="fas fa-exclamation-triangle mr-3"></i>
+                            <span>{{ session('warning') }}</span>
+                        </div>
+                    @endif
+
+                    @if(session('info'))
+                        <div class="alert-dismissible mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg flex items-center shadow-md">
+                            <i class="fas fa-info-circle mr-3"></i>
+                            <span>{{ session('info') }}</span>
+                        </div>
+                    @endif
+                @else
+                    {{-- Use Sweet Alert for other pages --}}
+                    <x-sweet-alert />
                 @endif
 
                 <!-- Page Content -->

@@ -45,8 +45,9 @@ class DocumentController extends Controller
         if ($worker->department_id) {
             $documentTypes = \App\Models\Department::find($worker->department_id)
                 ?->documentTypes()
-                ->where('is_active', true)
-                ->orderBy('name')
+                ->select('document_types.*')
+                ->where('document_types.is_active', true)
+                ->orderBy('document_types.name')
                 ->get();
             
             if (!$documentTypes || $documentTypes->isEmpty()) {
@@ -82,24 +83,48 @@ class DocumentController extends Controller
         }
 
         // Get document types based on worker's department
+        $documentTypes = collect();
+        
         if ($worker->department_id) {
-            // Get document types assigned to this department
-            $documentTypes = \App\Models\Department::find($worker->department_id)
+            // Get document types assigned to this department via our seeder
+            $departmentDocTypes = \App\Models\Department::find($worker->department_id)
                 ?->documentTypes()
-                ->where('is_active', true)
-                ->orderBy('name')
+                ->select('document_types.*')
+                ->where('document_types.is_active', true)
+                ->orderBy('document_types.name')
                 ->get();
             
-            // If department has no specific document types, use all active
-            if (!$documentTypes || $documentTypes->isEmpty()) {
-                $documentTypes = $this->documentTypeService->getActive();
+            if ($departmentDocTypes && $departmentDocTypes->isNotEmpty()) {
+                $documentTypes = $departmentDocTypes;
             }
-        } else {
-            // Worker has no department, show all active document types
+        }
+        
+        // If no department-specific documents or department not set, show all active
+        if ($documentTypes->isEmpty()) {
             $documentTypes = $this->documentTypeService->getActive();
         }
+        
+        // Get already uploaded document types for this worker (to mark with checkmark)
+        $uploadedDocTypes = $this->documentService->getAll([
+            'worker_id' => $worker->id,
+            'status' => ['pending', 'approved']
+        ])->pluck('document_type_id')->toArray();
+        
+        // Get document statistics for each type
+        $documentStats = $this->documentService->getAll([
+            'worker_id' => $worker->id
+        ])->groupBy('document_type_id')->map(function($docs) {
+            return [
+                'total' => $docs->count(),
+                'approved' => $docs->where('status', 'approved')->count(),
+                'pending' => $docs->where('status', 'pending')->count(),
+                'rejected' => $docs->where('status', 'rejected')->count(),
+                'latest_status' => $docs->sortByDesc('created_at')->first()?->status,
+                'latest_date' => $docs->sortByDesc('created_at')->first()?->created_at,
+            ];
+        });
 
-        return view('employee.documents.create', compact('documentTypes'));
+        return view('employee.documents.create', compact('documentTypes', 'uploadedDocTypes', 'documentStats'));
     }
 
     /**
@@ -115,14 +140,56 @@ class DocumentController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
+        // Validate document type is allowed for worker's department
+        $allowedDocumentTypes = [];
+        
+        if ($worker->department_id) {
+            $departmentDocTypes = \App\Models\Department::find($worker->department_id)
+                ?->documentTypes()
+                ->select('document_types.id')
+                ->where('document_types.is_active', true)
+                ->pluck('document_types.id')
+                ->toArray();
+            
+            $allowedDocumentTypes = $departmentDocTypes ?? [];
+        }
+
+        // If no department-specific documents found, allow all active document types
+        if (empty($allowedDocumentTypes)) {
+            $allowedDocumentTypes = $this->documentTypeService->getActive()->pluck('id')->toArray();
+        }
+
         $validated = $request->validate([
-            'document_type_id' => 'required|uuid|exists:document_types,id',
+            'document_type_id' => [
+                'required',
+                'uuid',
+                'exists:document_types,id',
+                function ($attribute, $value, $fail) use ($allowedDocumentTypes) {
+                    if (!in_array($value, $allowedDocumentTypes)) {
+                        $fail('Jenis dokumen tidak diizinkan untuk departemen Anda.');
+                    }
+                }
+            ],
             'expired_date' => 'nullable|date|after:today',
             'notes' => 'nullable|string|max:500',
             'file' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         try {
+            // Check for duplicate document type
+            $existingDocument = $this->documentService->getAll([
+                'worker_id' => $worker->id,
+                'document_type_id' => $validated['document_type_id'],
+                'status' => ['pending', 'approved'],
+            ]);
+
+            if ($existingDocument->isNotEmpty()) {
+                $documentType = \App\Models\DocumentType::find($validated['document_type_id']);
+                return back()
+                    ->withInput()
+                    ->with('error', "Anda sudah memiliki dokumen {$documentType->name} yang aktif. Hapus atau perbarui dokumen yang ada terlebih dahulu.");
+            }
+
             // Pass file and data to service (service will handle file upload)
             $document = $this->documentService->create([
                 'worker_id' => $worker->id,
@@ -133,7 +200,7 @@ class DocumentController extends Controller
             ]);
 
             return redirect()->route('employee.documents.index')
-                ->with('success', 'Dokumen berhasil diupload!');
+                ->with('success', 'Dokumen berhasil diupload dan sedang menunggu verifikasi!');
 
         } catch (\Exception $e) {
             return back()

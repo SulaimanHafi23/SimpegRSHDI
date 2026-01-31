@@ -26,11 +26,73 @@ class WorkerDocumentController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $documents = $this->workerDocumentService->getAll($filters);
+        // Get all active workers with their document statistics
         $workers = $this->workerService->getAllActive();
+        
+        $workersWithDocStats = $workers->map(function($worker) use ($filters) {
+            // Get required document types for this worker's department
+            // Required = document types that are linked to the department in department_document_type pivot table
+            $totalRequired = \App\Models\DocumentType::whereHas('departments', function($q) use ($worker) {
+                    $q->where('departments.id', $worker->department_id);
+                })
+                ->where('is_active', true)
+                ->count();
+            
+            // Get uploaded documents count
+            $uploadedCount = $worker->workerDocuments()
+                ->when(isset($filters['status']), function($q) use ($filters) {
+                    return $q->where('status', $filters['status']);
+                })
+                ->when(isset($filters['document_type_id']), function($q) use ($filters) {
+                    return $q->where('document_type_id', $filters['document_type_id']);
+                })
+                ->count();
+            
+            // Get verified documents count
+            $verifiedCount = $worker->workerDocuments()
+                ->where('status', 'verified')
+                ->count();
+            
+            // Get expired documents count
+            $expiredCount = $worker->workerDocuments()
+                ->where('status', 'verified')
+                ->whereNotNull('expired_date')
+                ->whereDate('expired_date', '<', now())
+                ->count();
+            
+            // Calculate completion percentage
+            $completionPercentage = $totalRequired > 0 
+                ? round(($verifiedCount / $totalRequired) * 100, 1) 
+                : 0;
+            
+            $worker->totalRequired = $totalRequired;
+            $worker->uploadedCount = $uploadedCount;
+            $worker->verifiedCount = $verifiedCount;
+            $worker->expiredCount = $expiredCount;
+            $worker->completionPercentage = $completionPercentage;
+            
+            return $worker;
+        });
+
+        // Apply worker filter if specified
+        if (isset($filters['worker_id']) && $filters['worker_id']) {
+            $workersWithDocStats = $workersWithDocStats->where('id', $filters['worker_id']);
+        }
+
+        // Paginate manually
+        $perPage = $filters['per_page'];
+        $currentPage = $request->get('page', 1);
+        $workersWithDocStats = new \Illuminate\Pagination\LengthAwarePaginator(
+            $workersWithDocStats->forPage($currentPage, $perPage),
+            $workersWithDocStats->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         $documentTypes = $this->documentTypeService->getAllActive();
 
-        return view('admin.workers.documents.index', compact('documents', 'workers', 'documentTypes'));
+        return view('admin.workers.documents.index', compact('workersWithDocStats', 'workers', 'documentTypes', 'filters'));
     }
 
     public function create()
@@ -197,9 +259,69 @@ class WorkerDocumentController extends Controller
     public function workerDocuments(string $workerId)
     {
         $worker = $this->workerService->getById($workerId);
+        
+        if (!$worker) {
+            return redirect()->route('admin.worker-documents.index')
+                ->with('error', 'Pegawai tidak ditemukan');
+        }
+        
+        // Get all documents for this worker
         $documents = $this->workerDocumentService->getByWorkerId($workerId);
+        
+        // Get required document types for this worker's department
+        // Required = document types that are linked to the department in department_document_type pivot table
+        $allRequiredDocTypes = \App\Models\DocumentType::whereHas('departments', function($q) use ($worker) {
+                $q->where('departments.id', $worker->department_id);
+            })
+            ->where('is_active', true)
+            ->get();
+        
+        // Calculate statistics
+        $totalRequired = $allRequiredDocTypes->count();
+        $uploadedCount = $documents->count();
+        $verifiedCount = $documents->where('status', 'verified')->count();
+        $pendingCount = $documents->where('status', 'pending')->count();
+        $rejectedCount = $documents->where('status', 'rejected')->count();
+        $expiredCount = $documents->filter(function($doc) {
+            return $doc->status === 'verified' 
+                && $doc->expired_date 
+                && \Carbon\Carbon::parse($doc->expired_date)->isPast();
+        })->count();
+        
+        // Group documents by document type
+        $documentsByType = $documents->groupBy('document_type_id');
+        
+        // Create document checklist
+        $documentChecklist = $allRequiredDocTypes->map(function($docType) use ($documentsByType) {
+            $docs = $documentsByType->get($docType->id, collect());
+            $latestDoc = $docs->sortByDesc('created_at')->first();
+            
+            return [
+                'document_type' => $docType,
+                'is_uploaded' => $docs->isNotEmpty(),
+                'latest_document' => $latestDoc,
+                'total_uploads' => $docs->count(),
+                'status' => $latestDoc ? $latestDoc->status : 'missing',
+                'is_expired' => $latestDoc && $latestDoc->expired_date && \Carbon\Carbon::parse($latestDoc->expired_date)->isPast(),
+            ];
+        });
+        
+        $completionPercentage = $totalRequired > 0 
+            ? round(($verifiedCount / $totalRequired) * 100, 1) 
+            : 0;
 
-        return view('admin.workers.documents.worker', compact('worker', 'documents'));
+        return view('admin.workers.documents.worker', compact(
+            'worker', 
+            'documents', 
+            'documentChecklist',
+            'totalRequired',
+            'uploadedCount',
+            'verifiedCount',
+            'pendingCount',
+            'rejectedCount',
+            'expiredCount',
+            'completionPercentage'
+        ));
     }
 
     public function expired()

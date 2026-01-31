@@ -21,34 +21,6 @@
         </div>
     </div>
 
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg shadow-sm">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
-                <p class="text-green-800 font-medium">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg shadow-sm">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
-                <p class="text-red-800 font-medium">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
-
-    @php
-        $allItems = $items instanceof \Illuminate\Pagination\AbstractPaginator ? $items->getCollection() : collect($items);
-        $summary = [
-            'total' => $allItems->count(),
-            'pending' => $allItems->whereIn('status', ['pending', 'awaiting_approval'])->count(),
-            'approved' => $allItems->whereIn('status', ['accepted', 'approved'])->count(),
-            'history' => $allItems->whereIn('status', ['rejected', 'cancelled', 'executed'])->count(),
-        ];
-    @endphp
-
     <!-- Summary Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 p-5">

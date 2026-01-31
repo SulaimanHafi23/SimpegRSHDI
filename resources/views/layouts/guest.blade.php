@@ -13,6 +13,9 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Sweet Alert 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -64,6 +67,9 @@
                 <!-- Card Content -->
                 <div class="card animate-fade-in">
                     <div class="p-8 sm:p-10">
+                        <!-- Sweet Alert for notifications -->
+                        <x-sweet-alert />
+                        
                         @yield('content')
                     </div>
                 </div>

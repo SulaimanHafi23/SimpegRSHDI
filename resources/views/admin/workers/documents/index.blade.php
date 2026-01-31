@@ -3,227 +3,328 @@
 @section('title', 'Manajemen Dokumen Pegawai')
 
 @section('content')
-<div class="space-y-6">
+<div class="container mx-auto px-4 py-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Manajemen Dokumen Pegawai" 
-        description="Kelola dokumen yang diupload pegawai"
-        icon="fas fa-file-alt">
-        <x-slot:actions>
-            <x-button 
-                variant="success" 
-                icon="fas fa-plus"
-                onclick="window.location.href='{{ route('admin.worker-documents.create') }}'">
-                Unggah Dokumen
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Manajemen Dokumen Pegawai</h1>
+            <p class="text-gray-600 mt-1">Kelola dan pantau kelengkapan dokumen pegawai</p>
+        </div>
+        <a href="{{ route('admin.worker-documents.create') }}" 
+           class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Upload Dokumen
+        </a>
+    </div>
+
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('error') }}</span>
+        </div>
+    @endif
 
     {{-- Statistics Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <x-stats-card 
-            title="Total Dokumen" 
-            :value="$documents->total() ?? 0" 
-            icon="fas fa-file-alt" 
-            color="blue" />
-        
-        <x-stats-card 
-            title="Menunggu Verifikasi" 
-            :value="$documents->where('status', 'pending')->count() ?? 0" 
-            icon="fas fa-clock" 
-            color="yellow" />
-        
-        <x-stats-card 
-            title="Terverifikasi" 
-            :value="$documents->where('status', 'verified')->count() ?? 0" 
-            icon="fas fa-check-circle" 
-            color="green" />
-        
-        <x-stats-card 
-            title="Ditolak" 
-            :value="$documents->where('status', 'rejected')->count() ?? 0" 
-            icon="fas fa-times-circle" 
-            color="red" />
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        @php
+            $completedWorkers = $workersWithDocStats->filter(function($w) {
+                return $w->completionPercentage >= 100;
+            })->count();
+            $incompleteWorkers = $workersWithDocStats->filter(function($w) {
+                return $w->completionPercentage < 100 && $w->completionPercentage > 0;
+            })->count();
+            $noDocsWorkers = $workersWithDocStats->filter(function($w) {
+                return $w->uploadedCount == 0;
+            })->count();
+        @endphp
+
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-5 border border-blue-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-blue-700">Total Pegawai</p>
+                    <p class="text-3xl font-bold text-blue-900 mt-1">{{ $workersWithDocStats->total() }}</p>
+                </div>
+                <div class="p-3 bg-blue-600 rounded-full">
+                    <i class="fas fa-users text-white text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-5 border border-green-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-green-700">Dokumen Lengkap</p>
+                    <p class="text-3xl font-bold text-green-900 mt-1">{{ $completedWorkers }}</p>
+                </div>
+                <div class="p-3 bg-green-600 rounded-full">
+                    <i class="fas fa-check-circle text-white text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg p-5 border border-yellow-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-yellow-700">Belum Lengkap</p>
+                    <p class="text-3xl font-bold text-yellow-900 mt-1">{{ $incompleteWorkers }}</p>
+                </div>
+                <div class="p-3 bg-yellow-600 rounded-full">
+                    <i class="fas fa-exclamation-triangle text-white text-2xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-5 border border-red-200 shadow-sm">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-red-700">Belum Upload</p>
+                    <p class="text-3xl font-bold text-red-900 mt-1">{{ $noDocsWorkers }}</p>
+                </div>
+                <div class="p-3 bg-red-600 rounded-full">
+                    <i class="fas fa-times-circle text-white text-2xl"></i>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- Filter Section --}}
-    <x-filter-section action="{{ route('admin.worker-documents.index') }}">
-        <x-form.select 
-            name="worker_id" 
-            label="Pegawai"
-            :selected="request('worker_id') ?? ''"
-            placeholder="Semua Pegawai">
-            @foreach($workers as $w)
-                <option value="{{ $w->id }}">{{ $w->name }}</option>
-            @endforeach
-        </x-form.select>
+    <div x-data="{ showFilters: false }" class="mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <button @click="showFilters = !showFilters" 
+                    class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-filter text-indigo-600"></i>
+                    <span class="font-semibold text-gray-900">Filter & Pencarian</span>
+                </div>
+                <i class="fas fa-chevron-down transform transition-transform" 
+                   :class="{ 'rotate-180': showFilters }"></i>
+            </button>
 
-        <x-form.select 
-            name="document_type_id" 
-            label="Tipe Dokumen"
-            :selected="request('document_type_id') ?? ''"
-            placeholder="Semua Tipe">
-            @foreach($documentTypes as $dt)
-                <option value="{{ $dt->id }}">{{ $dt->name }}</option>
-            @endforeach
-        </x-form.select>
+            <div x-show="showFilters" 
+                 x-collapse 
+                 class="border-t border-gray-200">
+                <form method="GET" action="{{ route('admin.worker-documents.index') }}" class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Pegawai</label>
+                            <select name="worker_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Semua Pegawai</option>
+                                @foreach($workers as $worker)
+                                    <option value="{{ $worker->id }}" {{ ($filters['worker_id'] ?? '') == $worker->id ? 'selected' : '' }}>
+                                        {{ $worker->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-        <x-form.select 
-            name="status" 
-            label="Status"
-            :options="[
-                'pending' => 'Menunggu',
-                'verified' => 'Terverifikasi',
-                'rejected' => 'Ditolak'
-            ]"
-            :selected="request('status') ?? ''"
-            placeholder="Semua Status" />
-    </x-filter-section>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Dokumen</label>
+                            <select name="document_type_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Semua Tipe</option>
+                                @foreach($documentTypes as $type)
+                                    <option value="{{ $type->id }}" {{ ($filters['document_type_id'] ?? '') == $type->id ? 'selected' : '' }}>
+                                        {{ $type->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-    {{-- Documents Table --}}
-    <x-card>
-        @if($documents->isEmpty())
-            <x-empty-state 
-                icon="fas fa-file-alt"
-                title="Tidak ada dokumen"
-                description="Dokumen yang diupload pegawai akan ditampilkan di sini"
-                actionText="Unggah Dokumen"
-                :actionUrl="route('admin.worker-documents.create')" />
-        @else
-            <x-table>
-                <x-slot:thead>
-                    <x-table.row>
-                        <x-table.cell header>No</x-table.cell>
-                        <x-table.cell header>Pegawai</x-table.cell>
-                        <x-table.cell header>Tipe Dokumen</x-table.cell>
-                        <x-table.cell header>File</x-table.cell>
-                        <x-table.cell header>Status</x-table.cell>
-                        <x-table.cell header>Tanggal Upload</x-table.cell>
-                        <x-table.cell header>Aksi</x-table.cell>
-                    </x-table.row>
-                </x-slot:thead>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Semua Status</option>
+                                <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Menunggu</option>
+                                <option value="verified" {{ ($filters['status'] ?? '') === 'verified' ? 'selected' : '' }}>Terverifikasi</option>
+                                <option value="rejected" {{ ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            </select>
+                        </div>
 
-                @foreach($documents as $index => $doc)
-                    <x-table.row>
-                        <x-table.cell>{{ $documents->firstItem() + $index }}</x-table.cell>
-                        
-                        <x-table.cell>
-                            <div class="font-medium text-gray-900">{{ $doc->worker->name ?? '-' }}</div>
-                            <div class="text-sm text-gray-500">{{ $doc->worker->nip ?? '-' }}</div>
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            <div class="font-medium">{{ $doc->documentType->name ?? '-' }}</div>
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            <a href="{{ route('admin.worker-documents.download', $doc->id) }}" 
-                               class="text-blue-600 hover:text-blue-900 flex items-center">
-                                <i class="fas fa-download mr-2"></i>
-                                {{ Str::limit($doc->file_name, 30) }}
+                        <div class="flex items-end gap-2">
+                            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-md transition duration-150 flex items-center">
+                                <i class="fas fa-search mr-2"></i>
+                                Filter
+                            </button>
+                            <a href="{{ route('admin.worker-documents.index') }}" 
+                               class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg shadow-md transition duration-150 flex items-center">
+                                <i class="fas fa-redo mr-2"></i>
+                                Reset
                             </a>
-                        </x-table.cell>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
-                        <x-table.cell>
-                            @php
-                                $statusBadges = [
-                                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
-                                    'verified' => ['variant' => 'success', 'label' => 'Terverifikasi'],
-                                    'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
-                                ];
-                                $badge = $statusBadges[$doc->status] ?? ['variant' => 'secondary', 'label' => $doc->status];
-                            @endphp
-                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            <div class="text-sm">{{ $doc->created_at->format('d M Y') }}</div>
-                            <div class="text-xs text-gray-500">{{ $doc->created_at->format('H:i') }}</div>
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            <div class="flex justify-end space-x-2">
-                                {{-- View button --}}
-                                <a href="{{ route('admin.worker-documents.show', $doc->id) }}" 
-                                   class="text-blue-600 hover:text-blue-900" 
-                                   title="Detail">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                    </svg>
-                                </a>
-
-                                @if($doc->status === 'pending')
-                                    {{-- Verify button --}}
-                                    <button onclick="verifyDocument('{{ $doc->id }}')" 
-                                            class="text-green-600 hover:text-green-900" 
-                                            title="Verifikasi">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </button>
-                                    
-                                    {{-- Reject button --}}
-                                    <button onclick="rejectDocument('{{ $doc->id }}')" 
-                                            class="text-red-600 hover:text-red-900" 
-                                            title="Tolak">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
+    {{-- Workers Table --}}
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Pegawai
+                        </th>
+                        <th scope="col" class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Departemen
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Dokumen Wajib
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Dokumen Terupload
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Terverifikasi
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Kelengkapan
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @forelse($workersWithDocStats as $worker)
+                    @php
+                        $statusColor = 'gray';
+                        if ($worker->completionPercentage >= 100) {
+                            $statusColor = 'green';
+                        } elseif ($worker->completionPercentage >= 50) {
+                            $statusColor = 'yellow';
+                        } elseif ($worker->uploadedCount > 0) {
+                            $statusColor = 'orange';
+                        } else {
+                            $statusColor = 'red';
+                        }
+                    @endphp
+                    <tr class="hover:bg-gray-50 {{ $worker->uploadedCount == 0 ? 'bg-red-50' : '' }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    @if(($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url))
+                                        <img class="h-10 w-10 rounded-full object-cover" 
+                                             src="{{ Storage::url($worker->photo_url) }}" 
+                                             alt="{{ $worker->name }}">
+                                    @elseif(($worker->photo ?? false) && Storage::disk('public')->exists($worker->photo))
+                                        <img class="h-10 w-10 rounded-full object-cover" 
+                                             src="{{ Storage::url($worker->photo) }}" 
+                                             alt="{{ $worker->name }}">
+                                    @else
+                                        <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
+                                            {{ strtoupper(substr($worker->name ?? ($worker->nip ?? '-'), 0, 1)) }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ $worker->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $worker->nip ?? '-' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ $worker->department->name ?? '-' }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="text-lg font-bold text-gray-900">{{ $worker->totalRequired }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="text-lg font-bold {{ $worker->uploadedCount > 0 ? 'text-blue-600' : 'text-gray-400' }}">
+                                {{ $worker->uploadedCount }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-lg font-bold {{ $worker->verifiedCount > 0 ? 'text-green-600' : 'text-gray-400' }}">
+                                    {{ $worker->verifiedCount }}
+                                </span>
+                                @if($worker->expiredCount > 0)
+                                    <span class="text-xs text-red-600 flex items-center mt-1">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        {{ $worker->expiredCount }} kadaluarsa
+                                    </span>
                                 @endif
-
-                                {{-- Download button --}}
-                                <a href="{{ route('admin.worker-documents.download', $doc->id) }}" 
-                                   class="text-indigo-600 hover:text-indigo-900" 
-                                   title="Download">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                    </svg>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-full bg-gray-200 rounded-full h-2.5 max-w-[100px] mb-1">
+                                    <div class="bg-{{ $statusColor }}-600 h-2.5 rounded-full transition-all duration-300" 
+                                         style="width: {{ min($worker->completionPercentage, 100) }}%"></div>
+                                </div>
+                                <span class="text-xs font-semibold text-{{ $statusColor }}-700">
+                                    {{ $worker->completionPercentage }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div class="flex justify-end space-x-2">
+                                <a href="{{ route('admin.worker-documents.worker-documents', $worker->id) }}" 
+                                   class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150"
+                                   title="Lihat Detail Dokumen">
+                                    <i class="fas fa-eye mr-1"></i>
+                                    Detail
+                                </a>
+                                <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id]) }}" 
+                                   class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150"
+                                   title="Upload Dokumen">
+                                    <i class="fas fa-upload mr-1"></i>
+                                    Upload
                                 </a>
                             </div>
-                        </x-table.cell>
-                    </x-table.row>
-                @endforeach
-            </x-table>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                            <div class="flex flex-col items-center justify-center py-8">
+                                <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <p class="text-lg font-medium text-gray-700 mb-1">Tidak ada data pegawai</p>
+                                <p class="text-sm text-gray-500">Silakan tambahkan pegawai terlebih dahulu</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        {{-- Pagination --}}
+        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+            {{ $workersWithDocStats->links() }}
+        </div>
+    </div>
 
-            {{-- Pagination --}}
-            @if($documents->hasPages())
-                <div class="mt-4">
-                    <x-pagination :paginator="$documents" />
+    {{-- Legend Info --}}
+    <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">Informasi</h3>
+                <div class="mt-2 text-sm text-blue-700">
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Baris dengan <span class="px-2 py-0.5 bg-red-100 text-red-800 rounded font-semibold">latar merah</span> menunjukkan pegawai yang <strong>belum upload dokumen sama sekali</strong></li>
+                        <li><strong>Dokumen Wajib:</strong> Jumlah dokumen yang harus dilengkapi oleh pegawai</li>
+                        <li><strong>Dokumen Terupload:</strong> Total dokumen yang sudah diupload (termasuk pending dan rejected)</li>
+                        <li><strong>Terverifikasi:</strong> Dokumen yang sudah diverifikasi dan disetujui</li>
+                        <li><strong>Kelengkapan:</strong> Persentase kelengkapan dokumen berdasarkan dokumen terverifikasi</li>
+                        <li>Klik tombol <span class="px-2 py-0.5 bg-blue-600 text-white rounded font-semibold">Detail</span> untuk melihat dokumen lengkap pegawai</li>
+                    </ul>
                 </div>
-            @endif
-        @endif
-    </x-card>
+            </div>
+        </div>
+    </div>
 </div>
-
-{{-- Hidden forms for verify/reject actions --}}
-<form id="verifyForm" method="POST" style="display: none;">
-    @csrf
-</form>
-
-<form id="rejectForm" method="POST" style="display: none;">
-    @csrf
-    <input type="hidden" name="reason" id="rejectReason">
-</form>
-
-<script>
-function verifyDocument(documentId) {
-    if (confirm('Apakah Anda yakin ingin memverifikasi dokumen ini?')) {
-        const form = document.getElementById('verifyForm');
-        form.action = `/admin/worker-documents/${documentId}/verify`;
-        form.submit();
-    }
-}
-
-function rejectDocument(documentId) {
-    const reason = prompt('Masukkan alasan penolakan:');
-    if (reason !== null && reason.trim() !== '') {
-        const form = document.getElementById('rejectForm');
-        document.getElementById('rejectReason').value = reason;
-        form.action = `/admin/worker-documents/${documentId}/reject`;
-        form.submit();
-    }
-}
-</script>
 @endsection

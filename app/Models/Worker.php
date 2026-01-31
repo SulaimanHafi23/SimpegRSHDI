@@ -25,6 +25,7 @@ class Worker extends Model
         'gender_id',
         'religion_id',
         'department_id',
+        'shift_id',
         'hire_date',
         'resign_date',
         'employment_status',
@@ -52,6 +53,11 @@ class Worker extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function shift(): BelongsTo
+    {
+        return $this->belongsTo(Shift::class);
     }
 
     public function user(): HasOne

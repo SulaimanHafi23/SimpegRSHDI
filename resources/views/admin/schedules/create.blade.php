@@ -53,14 +53,24 @@
                     <select id="worker_select" class="flex-1 px-4 py-2 border @if($errors->has('worker_id') || $errors->has('worker_ids')) border-red-500 @else border-gray-300 @endif rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                         <option value="">-- Pilih Pegawai --</option>
                         @foreach($workers as $worker)
-                            <option value="{{ $worker->id }}" data-label="{{ $worker->nip }} - {{ $worker->name }}">{{ $worker->nip }} - {{ $worker->name }}</option>
+                            <option value="{{ $worker->id }}" 
+                                    data-label="{{ $worker->nip }} - {{ $worker->name }}"
+                                    {{ (request('worker_id') == $worker->id) ? 'selected' : '' }}>
+                                {{ $worker->nip }} - {{ $worker->name }}
+                            </option>
                         @endforeach
                     </select>
-                    <button type="button" id="add_worker_btn" class="px-4 py-2 bg-green-600 text-white rounded-lg">Tambah</button>
+                    <button type="button" id="add_worker_btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Tambah</button>
                 </div>
                 <div id="selected-workers" class="mt-3 flex flex-wrap gap-2">
                     {{-- chips for selected workers will be injected here --}}
-                    @php $oldWorkers = old('worker_ids', []); @endphp
+                    @php 
+                        $oldWorkers = old('worker_ids', []); 
+                        // Auto-add worker from query parameter if not in errors
+                        if(request('worker_id') && !$errors->any() && empty($oldWorkers)) {
+                            $oldWorkers = [request('worker_id')];
+                        }
+                    @endphp
                     @if(is_array($oldWorkers) && count($oldWorkers))
                         @foreach($oldWorkers as $wId)
                             @php $w = collect($workers)->firstWhere('id', $wId); @endphp
@@ -80,6 +90,12 @@
                 @error('worker_ids')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
+                @if(request('worker_id') && !$errors->any())
+                    <p class="text-blue-600 text-sm mt-2 flex items-center">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Pegawai telah dipilih secara otomatis. Silakan lanjutkan mengisi form.
+                    </p>
+                @endif
             </div>
 
             <!-- Shift -->
@@ -308,6 +324,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     addBtn?.addEventListener('click', addSelectedWorker);
+
+    // Auto-add worker if coming from worker-shifts index page
+    @if(request('worker_id') && !$errors->any())
+        // Auto-trigger add if worker is selected but not yet added
+        const workerId = "{{ request('worker_id') }}";
+        if (workerId && !selectedContainer.querySelector(`[data-id="${workerId}"]`)) {
+            addSelectedWorker();
+        }
+    @endif
 
     // delegate remove
     selectedContainer?.addEventListener('click', function(e){

@@ -56,6 +56,9 @@ use App\Http\Controllers\Approval\BusinessTripApprovalController;
 // Profile Controller
 use App\Http\Controllers\ProfileController;
 
+// API Controllers
+use App\Http\Controllers\Api\WorkerShiftApiController;
+
 // Approval Controllers
 use App\Http\Controllers\Approval\LeaveApprovalController;
 use App\Http\Controllers\Approval\OvertimeApprovalController;
@@ -177,12 +180,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\Employee\NotificationController::class, 'destroy'])->name('destroy');
         });
 
-        // Payroll for employees
-        Route::prefix('payroll')->name('payroll.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Employee\PayrollController::class, 'index'])->name('index');
-            Route::get('/{payroll}', [\App\Http\Controllers\Employee\PayrollController::class, 'show'])->name('show');
-        });
-
         // Calendar for employees
         Route::prefix('calendar')->name('calendar.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('index');
@@ -283,6 +280,11 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/workers', [AttendanceController::class, 'workerList'])->name('worker-list');
         // Riwayat absensi per pegawai
         Route::get('/history/{worker}', [AttendanceController::class, 'history'])->name('history');
+        // Statistik detail pegawai
+        Route::get('/stats/{worker}', [AttendanceController::class, 'workerStats'])->name('worker-stats');
+        // Export statistik pegawai
+        Route::get('/stats/{worker}/export-pdf', [AttendanceController::class, 'exportStatsPdf'])->name('stats.export-pdf');
+        Route::get('/stats/{worker}/export-excel', [AttendanceController::class, 'exportStatsExcel'])->name('stats.export-excel');
         // Export absensi pegawai (PDF/Excel)
         Route::get('/history/{worker}/export', [AttendanceController::class, 'exportWorkerAttendance'])->name('history.export');
             Route::get('/history/{worker_id}', [AttendanceController::class, 'history'])->name('history');
@@ -399,19 +401,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::resource('leave-types', LeaveTypeController::class);
     });
 
-    // ========== PAYROLL MANAGEMENT ==========
-    Route::prefix('payroll')->name('admin.payroll.')->middleware(['auth', 'role:Super Admin|HR'])->group(function () {
-        Route::get('/', [\App\Http\Controllers\Admin\PayrollController::class, 'index'])->name('index');
-        Route::get('/generate', [\App\Http\Controllers\Admin\PayrollController::class, 'generate'])->name('generate');
-        Route::post('/generate', [\App\Http\Controllers\Admin\PayrollController::class, 'processGenerate'])->name('generate.process');
-        Route::get('/{payroll}', [\App\Http\Controllers\Admin\PayrollController::class, 'show'])->name('show');
-        Route::get('/{payroll}/edit', [\App\Http\Controllers\Admin\PayrollController::class, 'edit'])->name('edit');
-        Route::put('/{payroll}', [\App\Http\Controllers\Admin\PayrollController::class, 'update'])->name('update');
-        Route::post('/{payroll}/approve', [\App\Http\Controllers\Admin\PayrollController::class, 'approve'])->name('approve');
-        Route::post('/{payroll}/mark-as-paid', [\App\Http\Controllers\Admin\PayrollController::class, 'markAsPaid'])->name('mark-as-paid');
-        Route::delete('/{payroll}', [\App\Http\Controllers\Admin\PayrollController::class, 'destroy'])->name('destroy');
-    });
-
     // ========== HOLIDAYS MANAGEMENT ==========
     Route::prefix('holidays')->name('admin.holidays.')->middleware(['auth', 'role:Super Admin|HR'])->group(function () {
         Route::get('/', [HolidayController::class, 'index'])->name('index');
@@ -425,6 +414,11 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/auto-generate', [HolidayController::class, 'autoGenerate'])->name('auto-generate');
         Route::post('/auto-generate', [HolidayController::class, 'storeAutoGenerate'])->name('auto-generate.store');
     });
+});
+
+// ========== API ROUTES ==========
+Route::prefix('api')->middleware(['auth'])->group(function () {
+    Route::get('/workers/{workerId}/future-shifts', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getFutureShifts']);
 });
 
 // ========== FALLBACK ROUTE ==========

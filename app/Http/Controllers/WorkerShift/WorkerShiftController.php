@@ -26,11 +26,46 @@ class WorkerShiftController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $workerShifts = $this->workerShiftService->getAll($filters);
+        // Get all active workers with their latest shift
         $workers = $this->workerService->getAllActive();
+        
+        // Get all workers with their latest active shift
+        $workersWithShifts = $workers->map(function($worker) use ($filters) {
+            // Get latest active shift for this worker
+            $latestShift = $worker->workerShifts()
+                ->with(['shift'])
+                ->when(isset($filters['shift_id']), function($q) use ($filters) {
+                    return $q->where('shift_id', $filters['shift_id']);
+                })
+                ->when(isset($filters['is_active']), function($q) use ($filters) {
+                    return $q->where('is_active', $filters['is_active']);
+                })
+                ->orderBy('effective_from', 'desc')
+                ->first();
+            
+            $worker->latestShift = $latestShift;
+            return $worker;
+        });
+
+        // Apply worker filter if specified
+        if (isset($filters['worker_id']) && $filters['worker_id']) {
+            $workersWithShifts = $workersWithShifts->where('id', $filters['worker_id']);
+        }
+
+        // Paginate manually
+        $perPage = $filters['per_page'];
+        $currentPage = $request->get('page', 1);
+        $workersWithShifts = new \Illuminate\Pagination\LengthAwarePaginator(
+            $workersWithShifts->forPage($currentPage, $perPage),
+            $workersWithShifts->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
         $shifts = $this->shiftService->getActive();
 
-        return view('admin.schedules.index', compact('workerShifts', 'workers', 'shifts', 'filters'));
+        return view('admin.schedules.index', compact('workersWithShifts', 'workers', 'shifts', 'filters'));
     }
 
     public function create()

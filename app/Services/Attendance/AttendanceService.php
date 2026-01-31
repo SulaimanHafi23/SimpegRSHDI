@@ -173,31 +173,75 @@ class AttendanceService
                 throw new \Exception('Anda sudah melakukan check-out.');
             }
 
+            $checkOutTime = now();
+            $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
+            
+            // Validasi: Tidak boleh checkout setelah hari berikutnya
+            $nextDayStart = $attendanceDate->copy()->addDay()->startOfDay();
+            if ($checkOutTime->greaterThanOrEqualTo($nextDayStart)) {
+                throw new \Exception('Tidak dapat melakukan check-out setelah tengah malam hari berikutnya. Silakan hubungi admin untuk koreksi absensi.');
+            }
+
+            // Validasi: Harus sudah check-in terlebih dahulu
+            if (!$attendance->check_in) {
+                throw new \Exception('Anda belum melakukan check-in. Tidak dapat melakukan check-out.');
+            }
+
             // Validate location
             $location = $this->locationRepository->findById($data['location_id']);
-
             $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
 
-            // Calculate early leave
-            $checkOutTime = now();
+            // Get shift information for calculating early leave
             $shift = $this->shiftRepository->findById($attendance->shift_id);
+            if (!$shift) {
+                throw new \Exception('Jadwal shift tidak ditemukan.');
+            }
 
-            // Construct shift end datetime based on attendance date and shift end_time (use only time part)
+            // Calculate shift end time based on attendance date
             $shiftEndTime = \Carbon\Carbon::parse($shift->end_time)->format('H:i:s');
             $shiftEndDateTime = \Carbon\Carbon::parse($attendance->attendance_date->format('Y-m-d') . ' ' . $shiftEndTime);
 
-            // Jika shift melewati tengah malam, tambahkan satu hari ke tanggal akhir shift
+            // Jika shift melewati tengah malam (overnight), tambahkan satu hari ke tanggal akhir shift
             if ($shift->is_overnight) {
                 $shiftEndDateTime->addDay();
             }
 
+            // Hitung early leave dan overtime
             $isEarlyLeave = $checkOutTime->lessThan($shiftEndDateTime);
-            $earlyLeaveMinutes = $isEarlyLeave ? $checkOutTime->diffInMinutes($shiftEndDateTime) : 0;
+            $earlyLeaveMinutes = 0;
+            $overtimeMinutes = 0;
 
-            // Calculate overtime
-            $overtimeMinutes = $checkOutTime->greaterThan($shiftEndDateTime)
-                ? $checkOutTime->diffInMinutes($shiftEndDateTime)
-                : 0;
+            if ($isEarlyLeave) {
+                $earlyLeaveMinutes = $checkOutTime->diffInMinutes($shiftEndDateTime);
+                
+                // Peringatan untuk pulang lebih awal
+                $earlyLeaveHours = floor($earlyLeaveMinutes / 60);
+                $earlyLeaveRemainingMinutes = $earlyLeaveMinutes % 60;
+                $earlyLeaveText = '';
+                
+                if ($earlyLeaveHours > 0) {
+                    $earlyLeaveText .= $earlyLeaveHours . ' jam ';
+                }
+                if ($earlyLeaveRemainingMinutes > 0) {
+                    $earlyLeaveText .= $earlyLeaveRemainingMinutes . ' menit';
+                }
+                
+                \Log::warning('Early check-out detected', [
+                    'worker_id' => $attendance->worker_id,
+                    'attendance_id' => $attendanceId,
+                    'scheduled_end' => $shiftEndDateTime->format('H:i'),
+                    'actual_checkout' => $checkOutTime->format('H:i'),
+                    'early_minutes' => $earlyLeaveMinutes
+                ]);
+                
+                // Optional: Bisa ditambahkan notifikasi atau approval untuk early leave
+                $earlyLeaveWarning = "Perhatian: Anda pulang lebih awal {$earlyLeaveText} dari jadwal ({$shiftEndDateTime->format('H:i')}). Pastikan Anda sudah mendapat izin dari atasan.";
+            } else {
+                // Calculate overtime if checkout is after shift end time
+                $overtimeMinutes = $checkOutTime->greaterThan($shiftEndDateTime)
+                    ? $checkOutTime->diffInMinutes($shiftEndDateTime)
+                    : 0;
+            }
 
             // Update attendance
             $attendanceDTO = AttendanceDTO::fromRequest([
@@ -219,9 +263,9 @@ class AttendanceService
                 'late_minutes' => $attendance->late_minutes,
                 'is_early_leave' => $isEarlyLeave,
                 'early_leave_minutes' => $earlyLeaveMinutes,
-                'is_outside_radius' => $attendance->is_outside_radius,
+                'is_outside_radius' => $distance > $location->radius,
                 'overtime_minutes' => $overtimeMinutes,
-                'notes' => $attendance->notes,
+                'notes' => $attendance->notes . ($isEarlyLeave ? "\n[SYSTEM] Pulang lebih awal: {$earlyLeaveMinutes} menit" : ''),
             ]);
 
             $updated = $this->attendanceRepository->update($attendanceId, $attendanceDTO);

@@ -5,11 +5,16 @@ namespace App\DTOs;
 class ShiftSwapRequestDTO
 {
     public function __construct(
-        public readonly ?string $id = null,
         public readonly string $requester_id,
-        public readonly ?string $target_worker_id = null,
         public readonly string $requester_shift_id,
+        public readonly string $swap_type = 'single_date',
+        public readonly ?string $id = null,
+        public readonly ?string $target_worker_id = null,
         public readonly ?string $target_shift_id = null,
+        public readonly ?string $swap_date = null,
+        public readonly ?string $swap_start_date = null,
+        public readonly ?string $swap_end_date = null,
+        public readonly ?array $swap_dates = null,
         public readonly ?string $reason = null,
         public readonly ?array $metadata = null,
         public readonly ?string $expires_at = null,
@@ -18,11 +23,16 @@ class ShiftSwapRequestDTO
     public static function fromRequest(array $data): self
     {
         return new self(
-            $data['id'] ?? null,
             $data['requester_id'],
-            $data['target_worker_id'] ?? null,
             $data['requester_shift_id'],
+            $data['swap_type'] ?? 'single_date',
+            $data['id'] ?? null,
+            $data['target_worker_id'] ?? null,
             $data['target_shift_id'] ?? null,
+            $data['swap_date'] ?? null,
+            $data['swap_start_date'] ?? null,
+            $data['swap_end_date'] ?? null,
+            $data['swap_dates'] ?? null,
             $data['reason'] ?? null,
             $data['metadata'] ?? null,
             $data['expires_at'] ?? null,
@@ -34,9 +44,14 @@ class ShiftSwapRequestDTO
         return [
             'id' => $this->id,
             'requester_id' => $this->requester_id,
-            'target_worker_id' => $this->target_worker_id,
             'requester_shift_id' => $this->requester_shift_id,
+            'swap_type' => $this->swap_type,
+            'target_worker_id' => $this->target_worker_id,
             'target_shift_id' => $this->target_shift_id,
+            'swap_date' => $this->swap_date,
+            'swap_start_date' => $this->swap_start_date,
+            'swap_end_date' => $this->swap_end_date,
+            'swap_dates' => $this->swap_dates,
             'reason' => $this->reason,
             'metadata' => $this->metadata,
             'expires_at' => $this->expires_at,

@@ -103,8 +103,8 @@ class ReportController extends Controller
     public function workerDocuments(Request $request)
     {
         $filters = [
-            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
+            'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
             'worker_id' => $request->input('worker_id'),
             'document_type_id' => $request->input('document_type_id'),
             'status' => $request->input('status'),

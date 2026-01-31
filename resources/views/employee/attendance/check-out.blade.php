@@ -3,144 +3,259 @@
 @section('title', 'Check Out')
 
 @section('content')
-<div class="max-w-4xl mx-auto px-4 py-8">
+<div class="max-w-6xl mx-auto px-4 py-8">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
-    <div class="mb-6">
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-gray-800">Konfirmasi Check Out</h1>
-                <p class="text-sm text-gray-600 mt-1">Selesaikan sesi absensi Anda dengan mengonfirmasi check-out.</p>
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fas fa-sign-out-alt text-red-600"></i>
+                    Konfirmasi Check Out
+                </h1>
+                <p class="text-sm text-gray-600 mt-1">Selesaikan sesi absensi Anda dengan mengonfirmasi check-out</p>
             </div>
-            <div class="text-right">
-                <a href="{{ route('employee.attendance.index') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded shadow-sm hover:shadow">
-                    <i class="fas fa-arrow-left text-gray-600"></i>
-                    <span class="text-sm text-gray-700">Kembali</span>
-                </a>
-            </div>
+            <a href="{{ route('employee.attendance.index') }}" 
+               class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+                <i class="fas fa-arrow-left"></i>
+                <span class="hidden sm:inline">Kembali</span>
+            </a>
         </div>
     </div>
 
-    <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        <div class="p-5 border-b">
-            <div class="flex items-center justify-between">
+    <!-- Session Info -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 border-b border-gray-200">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <div class="text-sm text-gray-500">Sesi tanggal</div>
-                    <div class="text-lg font-semibold text-gray-800">{{ \Carbon\Carbon::parse($attendance->attendance_date)->format('d M Y') }}</div>
-                    <div class="text-sm text-gray-600">Check-in: <span class="font-medium text-green-700">{{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}</span></div>
+                    <div class="text-sm text-gray-600 mb-1">Sesi Absensi</div>
+                    <div class="text-lg font-semibold text-gray-800">
+                        {{ \Carbon\Carbon::parse($attendance->attendance_date)->format('l, d M Y') }}
+                    </div>
+                    <div class="text-sm text-green-700 mt-1 flex items-center gap-1">
+                        <i class="fas fa-sign-in-alt text-xs"></i>
+                        Check-in: {{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}
+                    </div>
                 </div>
-                <div class="text-sm text-gray-500 text-right">
-                    <div>Selamat bekerja,</div>
-                    <div class="font-semibold">{{ auth()->user()->name }}</div>
+                <div class="text-right">
+                    <div class="text-sm text-gray-600">Selamat bekerja,</div>
+                    <div class="font-semibold text-gray-800">{{ auth()->user()->name }}</div>
+                    <div class="text-xs text-gray-500 mt-1">{{ auth()->user()->worker->employee_id ?? '' }}</div>
                 </div>
             </div>
         </div>
 
         <!-- Instructions -->
-        <div class="p-5 border-b bg-gradient-to-r from-red-50 to-pink-50">
-            <div class="flex items-start">
-                <div class="flex-shrink-0">
-                    <i class="fas fa-info-circle text-red-500 text-xl mt-0.5"></i>
+        <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-6 border-b border-gray-200">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1">
+                    <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                        <i class="fas fa-info-circle text-amber-600"></i>
+                    </div>
                 </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-semibold text-gray-800 mb-2">Cara Check Out:</h3>
-                    <ol class="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                        <li>Pilih lokasi checkout dari dropdown (lokasi checkout Anda)</li>
-                        <li>Sistem akan otomatis mendapatkan koordinat GPS Anda</li>
-                        <li>Pastikan Anda berada dalam radius lokasi yang dipilih</li>
-                        <li>Upload foto (opsional) dan tambahkan catatan jika diperlukan</li>
-                        <li>Klik "Konfirmasi Check Out" untuk menyelesaikan</li>
+                <div class="flex-1">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-3">Panduan Check Out:</h3>
+                    <ol class="text-sm text-gray-700 space-y-2">
+                        <li class="flex items-start gap-2">
+                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">1</span>
+                            <span>Pilih lokasi checkout dari dropdown yang tersedia</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">2</span>
+                            <span>Sistem akan otomatis mendapatkan koordinat GPS Anda</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">3</span>
+                            <span>Pastikan Anda berada dalam radius lokasi yang dipilih</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">4</span>
+                            <span>Upload foto (opsional) dan tambahkan catatan jika diperlukan</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">5</span>
+                            <span>Klik "Konfirmasi Check Out" untuk menyelesaikan</span>
+                        </li>
                     </ol>
                 </div>
             </div>
         </div>
+    </div>
 
-        <form action="{{ route('employee.attendance.check-out', $attendance->id) }}" method="POST" enctype="multipart/form-data" id="checkout-form">
-            @csrf
-            <input type="hidden" name="latitude" id="latitude">
-            <input type="hidden" name="longitude" id="longitude">
-            <input type="hidden" name="accuracy" id="accuracy">
+    <!-- Check Out Form -->
+    <form action="{{ route('employee.attendance.check-out', $attendance->id) }}" method="POST" enctype="multipart/form-data" id="checkout-form">
+        @csrf
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
+        <input type="hidden" name="accuracy" id="accuracy">
 
-            <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Lokasi</label>
-                    <select name="location_id" id="location_id" class="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-purple-200 @error('location_id') border-red-500 @enderror" required>
-                        <option value="">-- Pilih Lokasi --</option>
-                        @foreach($locations as $location)
-                            <option value="{{ $location->id }}" data-lat="{{ $location->latitude }}" data-lng="{{ $location->longitude }}" data-radius="{{ $location->radius }}">{{ $location->name }}</option>
-                        @endforeach
-                    </select>
-                    @error('location_id')
-                        <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Location & Map Section -->
+            <div class="lg:col-span-2">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-map-marker-alt text-blue-600"></i>
+                        Lokasi & Peta
+                    </h3>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Lokasi Check-Out</label>
+                        <select name="location_id" id="location_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('location_id') border-red-500 @enderror" required>
+                            <option value="">-- Pilih Lokasi --</option>
+                            @foreach($locations as $location)
+                                <option value="{{ $location->id }}" 
+                                        data-lat="{{ $location->latitude }}" 
+                                        data-lng="{{ $location->longitude }}" 
+                                        data-radius="{{ $location->radius }}">
+                                    {{ $location->name }} (Radius: {{ $location->radius }}m)
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('location_id')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                    <div id="map" class="mt-4 w-full h-72 rounded border border-gray-200"></div>
+                    <!-- Map -->
+                    <div id="map" class="w-full h-80 rounded-lg border border-gray-300 mb-4"></div>
 
-                    <div class="mt-3 flex items-center gap-4 text-sm">
-                        <div>
-                            <div id="distanceInfo" class="text-gray-600">Menunggu lokasi Anda...</div>
-                            <div id="accuracyInfo" class="text-gray-500 text-xs mt-1">Akurasi: —</div>
+                    <!-- GPS Status -->
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <h4 class="text-sm font-medium text-gray-800 mb-3 flex items-center gap-2">
+                            <i class="fas fa-satellite-dish text-blue-600"></i>
+                            Status GPS
+                        </h4>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <div id="distanceInfo" class="text-sm text-gray-600 mb-1">
+                                    <i class="fas fa-search-location mr-1"></i>
+                                    Mencari lokasi Anda...
+                                </div>
+                                <div id="accuracyInfo" class="text-xs text-gray-500">
+                                    <i class="fas fa-crosshairs mr-1"></i>
+                                    Akurasi: —
+                                </div>
+                            </div>
+                            <div>
+                                <div id="insideBadge" class="hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"></div>
+                                <button type="button" id="refreshLocation" class="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-blue-100 text-blue-700 text-sm rounded-lg hover:bg-blue-200 transition-colors">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Refresh Lokasi
+                                </button>
+                            </div>
                         </div>
-                        <div id="insideBadge" class="hidden px-2 py-0.5 rounded-full text-xs font-semibold"></div>
                     </div>
                 </div>
+            </div>
 
-                <div>
-                    <div class="bg-gray-50 border border-gray-100 rounded-lg p-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Foto Bukti (Opsional)</label>
+            <!-- Photo & Notes Section -->
+            <div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-camera text-green-600"></i>
+                        Foto & Catatan
+                    </h3>
+                    <!-- Photo Section -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            Foto Bukti 
+                            <span class="text-sm font-normal text-blue-600">(Sangat Direkomendasikan)</span>
+                        </label>
+                        <div class="text-xs text-gray-600 mb-3">
+                            📸 Ambil foto selfie atau lingkungan sekitar sebagai bukti check-out Anda
+                        </div>
                         
                         <!-- Camera Preview -->
-                        <div class="relative mb-3">
-                            <video id="camera-preview" class="w-full rounded-lg border border-gray-300 bg-gray-900" style="display: none; max-height: 200px;" autoplay playsinline></video>
-                            <canvas id="photo-canvas" class="w-full rounded-lg border border-gray-300" style="display: none; max-height: 200px;"></canvas>
-                            <div id="camera-placeholder" class="w-full h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center">
-                                <i class="fas fa-camera text-gray-400 text-3xl mb-1"></i>
-                                <p class="text-xs text-gray-500">Klik tombol untuk ambil foto</p>
+                        <div class="relative mb-4">
+                            <video id="camera-preview" class="w-full rounded-lg border border-gray-300 bg-gray-900" style="display: none; max-height: 250px;" autoplay playsinline></video>
+                            <canvas id="photo-canvas" class="w-full rounded-lg border border-gray-300" style="display: none; max-height: 250px;"></canvas>
+                            <div id="camera-placeholder" class="w-full h-40 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center">
+                                <div class="text-center">
+                                    <i class="fas fa-camera text-gray-400 text-4xl mb-2"></i>
+                                    <p class="text-sm text-gray-500 font-medium">Klik tombol untuk ambil foto</p>
+                                    <p class="text-xs text-gray-400 mt-1">Foto akan digunakan sebagai bukti check-out</p>
+                                </div>
                             </div>
-                            <!-- Switch Camera Button (shown when camera is active) -->
+                            <!-- Switch Camera Button -->
                             <button type="button" id="btn-switch-camera" onclick="switchCamera()" style="display: none;"
-                                    class="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white text-gray-700 rounded-full shadow-lg transition text-sm">
+                                    class="absolute top-3 right-3 p-2 bg-white/90 hover:bg-white text-gray-700 rounded-full shadow-lg transition-all duration-200 text-sm">
                                 <i class="fas fa-sync-alt"></i>
                             </button>
                         </div>
 
                         <!-- Camera Controls -->
-                        <div class="flex gap-1 mb-3">
+                        <div class="grid grid-cols-2 gap-2 mb-4">
                             <button type="button" id="btn-start-camera" onclick="startCamera()" 
-                                    class="flex-1 px-2 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded transition">
-                                <i class="fas fa-camera mr-1"></i>Buka Kamera
+                                    class="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200">
+                                <i class="fas fa-camera"></i>
+                                Buka Kamera
                             </button>
                             <button type="button" id="btn-capture" onclick="capturePhoto()" style="display: none;"
-                                    class="flex-1 px-2 py-1.5 bg-green-500 hover:bg-green-600 text-white text-xs rounded transition">
-                                <i class="fas fa-camera-retro mr-1"></i>Ambil
+                                    class="flex items-center justify-center gap-2 px-3 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-all duration-200">
+                                <i class="fas fa-camera-retro"></i>
+                                Ambil Foto
                             </button>
                             <button type="button" id="btn-retake" onclick="retakePhoto()" style="display: none;"
-                                    class="flex-1 px-2 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded transition">
-                                <i class="fas fa-redo mr-1"></i>Ulang
+                                    class="flex items-center justify-center gap-2 px-3 py-2.5 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-all duration-200">
+                                <i class="fas fa-redo"></i>
+                                Foto Ulang
                             </button>
                             <button type="button" id="btn-remove" onclick="removePhoto()" style="display: none;"
-                                    class="px-2 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded transition">
+                                    class="flex items-center justify-center gap-2 px-3 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-all duration-200">
                                 <i class="fas fa-trash"></i>
+                                Hapus
                             </button>
                         </div>
 
                         <input type="hidden" name="photo" id="photo-data">
+                    </div>
 
-                        <label class="block text-sm font-medium text-gray-700 mb-2 mt-4">Catatan (Opsional)</label>
-                        <textarea name="notes" id="notes" rows="4" class="w-full px-3 py-2 border border-gray-200 rounded text-sm" placeholder="Contoh: Pulang cepat karena sakit..."></textarea>
+                    <!-- Notes Section -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
+                        <textarea name="notes" id="notes" rows="4" 
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" 
+                                  placeholder="Contoh: Pulang lebih awal karena ada keperluan keluarga..."></textarea>
+                        <div class="text-xs text-gray-500 mt-1">
+                            Maksimal 500 karakter
+                        </div>
+                    </div>
 
-                        <div class="mt-4">
-                            <button type="submit" id="btn-submit" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded shadow">
-                                <i class="fas fa-sign-out-alt"></i> Konfirmasi Check Out
-                            </button>
-                            <a href="{{ route('employee.attendance.index') }}" class="mt-2 block text-center text-sm text-gray-600 hover:underline">Batal</a>
+                    <!-- Action Buttons -->
+                    <div class="space-y-3">
+                        <button type="submit" id="btn-submit" 
+                                class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                            <i class="fas fa-sign-out-alt"></i> 
+                            Konfirmasi Check Out
+                        </button>
+                        
+                        <a href="{{ route('employee.attendance.index') }}" 
+                           class="block text-center text-sm text-gray-600 hover:text-gray-800 hover:underline transition-colors">
+                            <i class="fas fa-times mr-1"></i>
+                            Batal Check Out
+                        </a>
+                    </div>
+
+                    <!-- Quick Info -->
+                    <div class="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="text-xs text-blue-800">
+                            <div class="flex items-center gap-2 mb-1">
+                                <i class="fas fa-info-circle"></i>
+                                <span class="font-medium">Info:</span>
+                            </div>
+                            <ul class="space-y-1 ml-4">
+                                <li>• Waktu check-out akan tercatat secara otomatis</li>
+                                <li>• Foto akan disimpan sebagai bukti kehadiran</li>
+                                <li>• Pastikan lokasi GPS akurat untuk validasi</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 <!-- Leaflet JS -->
@@ -198,61 +313,153 @@
 
         // Geolocation
         if ("geolocation" in navigator) {
+        if ("geolocation" in navigator) {
             navigator.geolocation.getCurrentPosition(function(position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
+                updateLocation(position);
+            }, function(error) {
+                handleLocationError(error);
+            }, { 
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 300000 
+            });
+        } else {
+            document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Browser tidak mendukung Geolocation';
+        }
 
-                document.getElementById('latitude').value = lat;
-                document.getElementById('longitude').value = lng;
-                document.getElementById('accuracy').value = accuracy;
+        // Refresh location button
+        document.getElementById('refreshLocation').addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mencari...';
+            
+            navigator.geolocation.getCurrentPosition(function(position) {
+                updateLocation(position);
+                document.getElementById('refreshLocation').disabled = false;
+                document.getElementById('refreshLocation').innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh Lokasi';
+            }, function(error) {
+                handleLocationError(error);
+                document.getElementById('refreshLocation').disabled = false;
+                document.getElementById('refreshLocation').innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh Lokasi';
+            }, { 
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0 
+            });
+        });
 
-                updateUserMarker(lat, lng);
-                document.getElementById('accuracyInfo').textContent = `Akurasi: ±${Math.round(accuracy)} m`;
+        function updateLocation(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const accuracy = position.coords.accuracy;
 
-                // Enforce accuracy threshold
-                const submit = document.getElementById('btn-submit');
-                if (accuracy && accuracy > ACC_THRESHOLD) {
-                    submit.disabled = true;
-                    submit.classList.add('opacity-50', 'cursor-not-allowed');
-                    document.getElementById('distanceInfo').textContent = `Akurasi buruk: ±${Math.round(accuracy)} m. Silakan gunakan ponsel atau pilih lokasi manual.`;
-                } else {
-                    submit.disabled = false;
-                    submit.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            document.getElementById('accuracy').value = accuracy;
 
-                // Check distance from selected location (if any)
-                const select = document.getElementById('location_id');
-                const selectedOption = select.options[select.selectedIndex];
-                if (selectedOption && selectedOption.value) {
-                    const latLoc = parseFloat(selectedOption.getAttribute('data-lat'));
-                    const lngLoc = parseFloat(selectedOption.getAttribute('data-lng'));
-                    const radius = parseFloat(selectedOption.getAttribute('data-radius'));
+            updateUserMarker(lat, lng);
+            document.getElementById('accuracyInfo').innerHTML = `<i class="fas fa-crosshairs mr-1"></i>Akurasi: ±${Math.round(accuracy)} m`;
+
+            // Accuracy validation
+            const submit = document.getElementById('btn-submit');
+            if (accuracy && accuracy > ACC_THRESHOLD) {
+                submit.disabled = true;
+                submit.classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('distanceInfo').innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Akurasi kurang baik: ±${Math.round(accuracy)} m`;
+                showNotification('GPS tidak cukup akurat. Coba refresh atau pindah ke area terbuka.', 'warning');
+            } else {
+                submit.disabled = false;
+                submit.classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('distanceInfo').innerHTML = `<i class="fas fa-check-circle text-green-500 mr-1"></i>Lokasi ditemukan dengan akurat`;
+            }
+
+            // Check distance if location selected
+            checkLocationDistance(lat, lng);
+        }
+
+        function handleLocationError(error) {
+            let message = '';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    message = 'Akses lokasi ditolak. Mohon izinkan akses lokasi pada browser.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    message = 'Informasi lokasi tidak tersedia.';
+                    break;
+                case error.TIMEOUT:
+                    message = 'Request lokasi timeout. Coba refresh halaman.';
+                    break;
+                default:
+                    message = 'Error tidak diketahui saat mendapatkan lokasi.';
+                    break;
+            }
+            document.getElementById('distanceInfo').innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>${message}`;
+            showNotification(message, 'error');
+        }
+
+        function checkLocationDistance(userLat, userLng) {
+            const select = document.getElementById('location_id');
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (selectedOption && selectedOption.value) {
+                const latLoc = parseFloat(selectedOption.getAttribute('data-lat'));
+                const lngLoc = parseFloat(selectedOption.getAttribute('data-lng'));
+                const radius = parseFloat(selectedOption.getAttribute('data-radius'));
+                
+                if (latLoc && lngLoc && radius) {
+                    const distance = computeDistance(userLat, userLng, latLoc, lngLoc);
+                    const badge = document.getElementById('insideBadge');
                     
-                    if (latLoc && lngLoc && radius) {
-                        const distance = computeDistance(lat, lng, latLoc, lngLoc);
-                        const distInfo = document.getElementById('distanceInfo');
-                        const badge = document.getElementById('insideBadge');
-                        
-                        distInfo.textContent = Math.round(distance) + ' m dari lokasi terpilih';
-                        
-                        if (distance <= radius) {
-                            badge.textContent = 'Di dalam area';
-                            badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800';
-                            badge.classList.remove('hidden');
-                        } else {
-                            badge.textContent = 'Di luar area';
-                            badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700';
-                            badge.classList.remove('hidden');
-                        }
+                    document.getElementById('distanceInfo').innerHTML = 
+                        `<i class="fas fa-map-marker-alt mr-1"></i>${Math.round(distance)} m dari lokasi terpilih`;
+                    
+                    if (distance <= radius) {
+                        badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Di dalam area kerja';
+                        badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-800 border border-green-200';
+                        badge.classList.remove('hidden');
+                        showNotification('Anda berada dalam area kerja yang valid', 'success');
+                    } else {
+                        badge.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Di luar area kerja';
+                        badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-red-100 text-red-800 border border-red-200';
+                        badge.classList.remove('hidden');
+                        showNotification(`Anda berada ${Math.round(distance - radius)} meter di luar area kerja`, 'warning');
                     }
                 }
+            }
+        }
 
-            }, function(error) {
-                document.getElementById('distanceInfo').textContent = 'Gagal mendapatkan lokasi.';
-            }, { enableHighAccuracy: true });
+        function showNotification(message, type) {
+            // Simple notification system
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform translate-x-full`;
+            
+            const bgColor = type === 'success' ? 'bg-green-500' : 
+                           type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
+            
+            notification.classList.add(bgColor, 'text-white');
+            notification.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'}"></i>
+                    <span class="text-sm">${message}</span>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Hide notification
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 4000);
+        }
         } else {
-            document.getElementById('distanceInfo').textContent = 'Browser Anda tidak mendukung Geolocation.';
+            document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Browser tidak mendukung Geolocation';
         }
 
         // Handle Location Select Change
@@ -264,37 +471,17 @@
 
             if (lat && lng) {
                 updateOfficeCircle(parseFloat(lat), parseFloat(lng), parseFloat(radius));
-            }
-
-            // update distance immediately if user location exists
-            const ulat = document.getElementById('latitude').value;
-            const ulng = document.getElementById('longitude').value;
-            if (ulat && ulng && lat && lng) {
-                const dist = computeDistance(parseFloat(ulat), parseFloat(ulng), parseFloat(lat), parseFloat(lng));
-                document.getElementById('distanceInfo').textContent = Math.round(dist) + ' m dari lokasi terpilih';
-                const badge = document.getElementById('insideBadge');
-                if (radius && dist <= parseFloat(radius)) {
-                    badge.textContent = 'Di dalam area';
-                    badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800';
-                    badge.classList.remove('hidden');
-                } else {
-                    badge.textContent = 'Di luar area';
-                    badge.className = 'px-2 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700';
-                    badge.classList.remove('hidden');
+                
+                // Update distance if user location exists
+                const ulat = document.getElementById('latitude').value;
+                const ulng = document.getElementById('longitude').value;
+                if (ulat && ulng) {
+                    checkLocationDistance(parseFloat(ulat), parseFloat(ulng));
                 }
-
-                // Re-evaluate accuracy and enable/disable submit accordingly
-                const accVal = parseFloat(document.getElementById('accuracy').value) || null;
-                const submit = document.getElementById('btn-submit');
-                if (accVal && accVal > ACC_THRESHOLD) {
-                    submit.disabled = true;
-                    submit.classList.add('opacity-50','cursor-not-allowed');
-                    document.getElementById('accuracyInfo').textContent = `Akurasi: ±${Math.round(accVal)} m (tidak cukup akurat)`;
-                } else {
-                    submit.disabled = false;
-                    submit.classList.remove('opacity-50','cursor-not-allowed');
-                    if (accVal) document.getElementById('accuracyInfo').textContent = `Akurasi: ±${Math.round(accVal)} m`;
-                }
+            } else {
+                // Clear badge if no location selected
+                document.getElementById('insideBadge').classList.add('hidden');
+                document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-map-marker-alt mr-1"></i>Pilih lokasi terlebih dahulu';
             }
         });
 
@@ -303,18 +490,30 @@
             const lat = document.getElementById('latitude').value;
             const lng = document.getElementById('longitude').value;
             const acc = parseFloat(document.getElementById('accuracy').value) || null;
+            const locationId = document.getElementById('location_id').value;
+
+            if (!locationId) {
+                e.preventDefault();
+                showNotification('Pilih lokasi check-out terlebih dahulu', 'error');
+                return;
+            }
 
             if (!lat || !lng) {
                 e.preventDefault();
-                alert('Lokasi belum terdeteksi. Mohon tunggu sebentar atau refresh halaman, dan pastikan GPS aktif.');
+                showNotification('Lokasi GPS belum terdeteksi. Mohon tunggu atau refresh lokasi.', 'error');
                 return;
             }
 
             if (acc && acc > ACC_THRESHOLD) {
                 e.preventDefault();
-                alert('Lokasi tidak cukup akurat (±' + Math.round(acc) + ' m). Silakan gunakan ponsel atau pilih lokasi manual.');
+                showNotification('Akurasi GPS tidak cukup baik. Coba pindah ke area terbuka.', 'error');
                 return;
             }
+
+            // Show loading state
+            const submitBtn = document.getElementById('btn-submit');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
         });
     });
 

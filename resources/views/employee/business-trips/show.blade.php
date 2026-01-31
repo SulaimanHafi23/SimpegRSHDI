@@ -46,7 +46,9 @@
                 @if($trip->approvedBy)
                 <p class="text-green-700 text-sm mt-1">
                     Disetujui oleh <strong>{{ $trip->approvedBy->name }}</strong> 
-                    pada {{ $trip->approved_at->format('d M Y H:i') }}
+                    @if($trip->approved_at)
+                        pada {{ \Carbon\Carbon::parse($trip->approved_at)->format('d M Y H:i') }}
+                    @endif
                 </p>
                 @endif
             </div>
@@ -61,7 +63,9 @@
                 @if($trip->approvedBy)
                 <p class="text-red-700 text-sm mt-1">
                     Ditolak oleh <strong>{{ $trip->approvedBy->name }}</strong> 
-                    pada {{ $trip->approved_at->format('d M Y H:i') }}
+                    @if($trip->approved_at)
+                        pada {{ \Carbon\Carbon::parse($trip->approved_at)->format('d M Y H:i') }}
+                    @endif
                 </p>
                 @endif
                 @if($trip->rejection_reason)
@@ -107,7 +111,7 @@
                     <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Mulai</label>
                     <p class="text-base font-semibold text-gray-900">
                         <i class="fas fa-calendar text-blue-500 mr-2"></i>
-                        {{ $trip->start_date->format('d F Y') }}
+                        {{ $trip->start_date ? $trip->start_date->format('d F Y') : 'Tidak tersedia' }}
                     </p>
                 </div>
 
@@ -115,7 +119,7 @@
                     <label class="block text-sm font-medium text-gray-500 mb-1">Tanggal Selesai</label>
                     <p class="text-base font-semibold text-gray-900">
                         <i class="fas fa-calendar text-blue-500 mr-2"></i>
-                        {{ $trip->end_date->format('d F Y') }}
+                        {{ $trip->end_date ? $trip->end_date->format('d F Y') : 'Tidak tersedia' }}
                     </p>
                 </div>
 
@@ -157,9 +161,9 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-500 mb-1">Diajukan Pada</label>
                     <p class="text-base text-gray-900">
-                        {{ $trip->created_at->format('d M Y H:i') }}
+                        {{ $trip->created_at ? $trip->created_at->format('d M Y H:i') : 'Tidak tersedia' }}
                     </p>
-                    <p class="text-sm text-gray-500">{{ $trip->created_at->diffForHumans() }}</p>
+                    <p class="text-sm text-gray-500">{{ $trip->created_at ? $trip->created_at->diffForHumans() : '' }}</p>
                 </div>
             </div>
         </div>

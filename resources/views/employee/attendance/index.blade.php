@@ -233,7 +233,11 @@
                             </div>
                             <div>
                                 @if($attendance->status === 'present')
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Hadir</span>
+                                    @if($attendance->is_late)
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Terlambat</span>
+                                    @else
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Hadir</span>
+                                    @endif
                                 @elseif($attendance->status === 'late')
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Terlambat</span>
                                 @elseif($attendance->status === 'absent')
@@ -250,8 +254,50 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs text-gray-700">
-                            <div class="flex items-center gap-1"><i class="fas fa-sign-in-alt text-green-600"></i> <span>In: {{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i') : '-' }}</span></div>
-                            <div class="flex items-center gap-1"><i class="fas fa-sign-out-alt text-red-500"></i> <span>Out: {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '-' }}</span></div>
+                            <div class="flex items-center gap-1">
+                                <i class="fas fa-sign-in-alt text-green-600"></i> 
+                                <span>In: {{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i') : '-' }}</span>
+                                @if($attendance->check_in && $attendance->is_late && $attendance->late_minutes > 0)
+                                    <span class="text-red-500 ml-1">({{ $attendance->late_minutes }}m)</span>
+                                @elseif($attendance->check_in && $attendance->is_late)
+                                    <span class="text-yellow-500 ml-1">(Terlambat)</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <i class="fas fa-sign-out-alt text-red-500"></i> 
+                                <span>Out: {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '-' }}</span>
+                            </div>
+                            @php
+                                $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
+                                $shiftOverride = $attendance->worker->shiftOverrides
+                                    ->where('override_date', $attendanceDate->format('Y-m-d'))
+                                    ->first();
+                                
+                                $mobileShift = null;
+                                if ($shiftOverride && $shiftOverride->shift) {
+                                    $mobileShift = $shiftOverride->shift;
+                                } else {
+                                    $activeWorkerShift = $attendance->worker->workerShifts
+                                        ->where('is_active', true)
+                                        ->where('effective_from', '<=', $attendanceDate->format('Y-m-d'))
+                                        ->filter(function($ws) use ($attendanceDate) {
+                                            return is_null($ws->effective_until) || $ws->effective_until >= $attendanceDate->format('Y-m-d');
+                                        })
+                                        ->first();
+                                    
+                                    if ($activeWorkerShift && $activeWorkerShift->shift) {
+                                        $mobileShift = $activeWorkerShift->shift;
+                                    } elseif ($attendance->worker->shift) {
+                                        $mobileShift = $attendance->worker->shift;
+                                    }
+                                }
+                            @endphp
+                            @if($mobileShift)
+                            <div class="flex items-center gap-1 col-span-2 text-gray-600">
+                                <i class="fas fa-clock text-blue-600"></i>
+                                <span>Shift: {{ \Carbon\Carbon::parse($mobileShift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($mobileShift->end_time)->format('H:i') }}</span>
+                            </div>
+                            @endif
                             <div class="flex items-center gap-1 col-span-2">
                                 <i class="far fa-clock text-indigo-600"></i>
                                 <span>Durasi:
@@ -295,6 +341,9 @@
                                 <i class="far fa-calendar mr-2 text-xs"></i>Tanggal
                             </th>
                             <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                                <i class="fas fa-clock mr-2 text-xs"></i>Shift
+                            </th>
+                            <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                                 <i class="fas fa-sign-in-alt mr-2 text-xs"></i>Check In
                             </th>
                             <th class="px-4 lg:px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -317,11 +366,109 @@
                                 <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     {{ \Carbon\Carbon::parse($attendance->attendance_date)->format('d M Y') }}
                                 </td>
-                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i') : '-' }}
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
+                                    @php
+                                        $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
+                                        
+                                        // Cek shift override untuk tanggal ini
+                                        $shiftOverride = $attendance->worker->shiftOverrides
+                                            ->where('override_date', $attendanceDate->format('Y-m-d'))
+                                            ->first();
+                                        
+                                        $shift = null;
+                                        $shiftSource = '';
+                                        
+                                        if ($shiftOverride && $shiftOverride->shift) {
+                                            $shift = $shiftOverride->shift;
+                                            $shiftSource = 'override';
+                                        } else {
+                                            // Cari worker shift yang aktif untuk tanggal ini
+                                            $activeWorkerShift = $attendance->worker->workerShifts
+                                                ->where('is_active', true)
+                                                ->where('effective_from', '<=', $attendanceDate->format('Y-m-d'))
+                                                ->filter(function($ws) use ($attendanceDate) {
+                                                    return is_null($ws->effective_until) || $ws->effective_until >= $attendanceDate->format('Y-m-d');
+                                                })
+                                                ->first();
+                                            
+                                            if ($activeWorkerShift && $activeWorkerShift->shift) {
+                                                $shift = $activeWorkerShift->shift;
+                                                $shiftSource = 'active';
+                                            } elseif ($attendance->worker->shift) {
+                                                // Fallback ke shift default
+                                                $shift = $attendance->worker->shift;
+                                                $shiftSource = 'default';
+                                            }
+                                        }
+                                    @endphp
+                                    @if($shift)
+                                        <div class="text-gray-900 font-medium">{{ $shift->name }}</div>
+                                        <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}</div>
+                                        @if($shiftSource === 'override')
+                                            <div class="text-xs text-blue-600">
+                                                <i class="fas fa-exchange-alt mr-1"></i>Override
+                                            </div>
+                                        @elseif($shiftSource === 'active')
+                                            <div class="text-xs text-green-600">
+                                                <i class="fas fa-check mr-1"></i>Aktif
+                                            </div>
+                                        @else
+                                            <div class="text-xs text-gray-600">
+                                                <i class="fas fa-clock mr-1"></i>Default
+                                            </div>
+                                        @endif
+                                    @else
+                                        <div class="text-gray-400 text-xs">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Belum ada shift
+                                        </div>
+                                        <div class="text-xs text-red-500">Perlu setting shift</div>
+                                    @endif
                                 </td>
-                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                    {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '-' }}
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($attendance->check_in)
+                                        <div class="text-gray-900 font-medium">{{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i:s') }}</div>
+                                        @if($attendance->is_late && $attendance->late_minutes > 0)
+                                            <div class="text-xs text-red-500">
+                                                <i class="fas fa-clock mr-1"></i>Terlambat {{ $attendance->late_minutes }} menit
+                                            </div>
+                                        @elseif($attendance->is_late && $attendance->late_minutes <= 0)
+                                            <div class="text-xs text-yellow-500">
+                                                <i class="fas fa-clock mr-1"></i>Status terlambat
+                                            </div>
+                                        @else
+                                            <div class="text-xs text-green-500">
+                                                <i class="fas fa-check mr-1"></i>Tepat waktu
+                                            </div>
+                                        @endif
+                                        @if($shift)
+                                            <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}</div>
+                                        @endif
+                                    @else
+                                        <div class="text-gray-400">-</div>
+                                        @if($shift)
+                                            <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}</div>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($attendance->check_out)
+                                        <div class="text-gray-900 font-medium">{{ \Carbon\Carbon::parse($attendance->check_out)->format('H:i:s') }}</div>
+                                        @if($shift)
+                                            <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}</div>
+                                        @endif
+                                    @elseif($attendance->check_in)
+                                        <div class="text-yellow-600">
+                                            <i class="fas fa-clock mr-1"></i>Belum check-out
+                                        </div>
+                                        @if($shift)
+                                            <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}</div>
+                                        @endif
+                                    @else
+                                        <div class="text-gray-400">-</div>
+                                        @if($shift)
+                                            <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}</div>
+                                        @endif
+                                    @endif
                                 </td>
                                 <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                     @if($attendance->check_in && $attendance->check_out)
@@ -337,17 +484,35 @@
                                 </td>
                                 <td class="px-4 lg:px-6 py-4 whitespace-nowrap">
                                     @if($attendance->status === 'present')
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Hadir</span>
+                                        @if($attendance->is_late)
+                                            <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                <i class="fas fa-clock mr-1"></i>Terlambat
+                                            </span>
+                                        @else
+                                            <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                                <i class="fas fa-check mr-1"></i>Hadir
+                                            </span>
+                                        @endif
                                     @elseif($attendance->status === 'late')
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Terlambat</span>
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                            <i class="fas fa-clock mr-1"></i>Terlambat
+                                        </span>
                                     @elseif($attendance->status === 'absent')
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Tidak Hadir</span>
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                                            <i class="fas fa-times mr-1"></i>Tidak Hadir
+                                        </span>
                                     @elseif($attendance->status === 'sick')
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">Sakit</span>
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">
+                                            <i class="fas fa-medkit mr-1"></i>Sakit
+                                        </span>
                                     @elseif($attendance->status === 'permission')
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Izin</span>
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            <i class="fas fa-info-circle mr-1"></i>Izin
+                                        </span>
                                     @elseif($attendance->status === 'leave')
-                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Cuti</span>
+                                        <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                            <i class="fas fa-umbrella-beach mr-1"></i>Cuti
+                                        </span>
                                     @else
                                         <span class="px-2.5 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ ucfirst($attendance->status) }}</span>
                                     @endif
@@ -373,7 +538,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-12 text-center">
+                                <td colspan="7" class="px-6 py-12 text-center">
                                     <div class="flex flex-col items-center justify-center">
                                         <i class="fas fa-inbox text-gray-300 text-5xl mb-3"></i>
                                         <p class="text-base font-medium text-gray-500 mb-1">Belum ada data absensi</p>

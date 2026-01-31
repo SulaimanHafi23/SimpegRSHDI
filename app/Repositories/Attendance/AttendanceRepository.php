@@ -17,7 +17,13 @@ class AttendanceRepository implements AttendanceRepositoryInterface
 
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = $this->model->with(['worker', 'shift', 'location']);
+        $query = $this->model->with([
+            'worker.shift', 
+            'worker.workerShifts.shift', 
+            'worker.shiftOverrides.shift',
+            'shift', 
+            'location'
+        ]);
 
         if (!empty($filters['worker_id'])) {
             $query->where('worker_id', $filters['worker_id']);

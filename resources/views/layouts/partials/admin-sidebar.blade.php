@@ -23,7 +23,7 @@
     <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto" x-data="{
         openMenu: '{{
             request()->routeIs('admin.master.*') ? 'master' :
-            (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*', 'admin.payroll.*') ? 'management' :
+            (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*') ? 'management' :
             (request()->routeIs('admin.leave.*', 'admin.overtime.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' :
             (request()->routeIs('reports.*') ? 'reports' :
             (request()->routeIs('admin.roles.*', 'admin.users.*', 'admin.holidays.*') ? 'settings' : ''))))
@@ -138,12 +138,6 @@
                 <a href="{{ route('admin.worker-documents.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.worker-documents.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
                     <i class="fas fa-file-alt w-4"></i>
                     <span>Dokumen Pegawai</span>
-                </a>
-                @endif
-                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
-                <a href="{{ route('admin.payroll.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.payroll.index') || request()->routeIs('admin.payroll.show') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-money-bill-wave w-4"></i>
-                    <span>Payroll</span>
                 </a>
                 @endif
             </div>

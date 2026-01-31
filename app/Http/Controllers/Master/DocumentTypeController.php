@@ -44,9 +44,16 @@ class DocumentTypeController extends Controller
             'name' => 'required|string|max:255|unique:document_types,name',
             'description' => 'nullable|string',
             'file_format' => 'nullable|string',
+            'file_formats' => 'nullable|array',
+            'file_formats.*' => 'nullable|string|in:pdf,jpg,jpeg,png,doc,docx',
             'max_file_size' => 'nullable|integer|min:1',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // Convert file_formats array to comma-separated string if provided
+        if (isset($validated['file_formats']) && is_array($validated['file_formats'])) {
+            $validated['file_format'] = implode(',', $validated['file_formats']);
+        }
 
         try {
             $dto = DocumentTypeDTO::fromRequest($validated);
@@ -98,9 +105,16 @@ class DocumentTypeController extends Controller
             'name' => 'required|string|max:255|unique:document_types,name,' . $id,
             'description' => 'nullable|string',
             'file_format' => 'nullable|string',
+            'file_formats' => 'nullable|array',
+            'file_formats.*' => 'nullable|string|in:pdf,jpg,jpeg,png,doc,docx',
             'max_file_size' => 'nullable|integer|min:1',
             'is_active' => 'nullable|boolean',
         ]);
+
+        // Convert file_formats array to comma-separated string if provided
+        if (isset($validated['file_formats']) && is_array($validated['file_formats'])) {
+            $validated['file_format'] = implode(',', $validated['file_formats']);
+        }
 
         try {
             $dto = DocumentTypeDTO::fromRequest($validated);

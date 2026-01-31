@@ -31,6 +31,15 @@ class WorkerDocumentRepository implements WorkerDocumentRepositoryInterface
             $query->where('document_type_id', $filters['document_type_id']);
         }
 
+        // Date range filter
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
         // Advanced search
         if (!empty($filters['search'])) {
             $search = $filters['search'];

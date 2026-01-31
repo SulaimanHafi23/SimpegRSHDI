@@ -113,8 +113,8 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 class="font-semibold text-gray-900">Payroll System</h3>
-                                    <p class="text-sm text-gray-600">Automated process</p>
+                                    <h3 class="font-semibold text-gray-900">Document Management</h3>
+                                    <p class="text-sm text-gray-600">Secure file storage</p>
                                 </div>
                             </div>
 
@@ -210,11 +210,11 @@
 
                                     <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl p-4">
                                         <div class="flex items-center justify-between mb-2">
-                                            <span class="text-2xl">💰</span>
+                                            <span class="text-2xl">�</span>
                                             <span class="text-xs font-semibold text-yellow-600 bg-yellow-200 px-2 py-1 rounded-full">✓</span>
                                         </div>
-                                        <div class="text-2xl font-bold text-yellow-900">45M</div>
-                                        <div class="text-xs text-yellow-700">Payroll</div>
+                                        <div class="text-2xl font-bold text-yellow-900">1.2K</div>
+                                        <div class="text-xs text-yellow-700">Documents</div>
                                     </div>
                                 </div>
 
@@ -293,10 +293,10 @@
 
                     <div class="card p-6 sm:p-8 card-hover cursor-default border-t-4 border-green-500">
                         <div class="h-12 w-12 sm:h-14 sm:w-14 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 transition-transform duration-300">
-                            <i class="fas fa-money-bill-wave text-xl sm:text-2xl text-white"></i>
+                            <i class="fas fa-file-alt text-xl sm:text-2xl text-white"></i>
                         </div>
-                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Payroll Processing</h3>
-                        <p class="text-sm sm:text-base text-gray-600">Automated salary calculation with tax computation and slip generation.</p>
+                        <h3 class="text-lg sm:text-xl font-bold text-gray-900 mb-2 sm:mb-3">Document Management</h3>
+                        <p class="text-sm sm:text-base text-gray-600">Secure document storage and management with organized file system.</p>
                     </div>
                 </div>
             </div>

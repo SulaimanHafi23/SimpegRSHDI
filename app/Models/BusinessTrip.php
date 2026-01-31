@@ -22,6 +22,7 @@ class BusinessTrip extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'estimated_cost' => 'decimal:2',
+        'approved_at' => 'datetime',
     ];
 
     public function worker()

@@ -36,7 +36,7 @@
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('admin.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <i class="fas fa-th-large text-sm {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-green-300' }}"></i>
                 </div>
-                <span class="font-medium text-sm {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-green-100' }}">Dashboard Admin</span>
+                <span class="font-medium text-sm {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard Admin</span>
             </a>
         @endif
 
@@ -47,7 +47,7 @@
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('employee.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <i class="fas fa-th-large text-sm {{ request()->routeIs('employee.dashboard') ? 'text-white' : 'text-green-300' }}"></i>
                 </div>
-                <span class="font-medium text-sm {{ request()->routeIs('employee.dashboard') ? 'text-white' : 'text-green-100' }}">Dashboard Employee</span>
+                <span class="font-medium text-sm {{ request()->routeIs('employee.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard Employee</span>
             </a>
         @endif
 
@@ -68,7 +68,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.religions.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-mosque text-xs {{ request()->routeIs('admin.master.religions.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.religions.*') ? 'text-white font-medium' : 'text-green-100' }}">Agama</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.religions.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Agama</span>
         </a>
         @endif
 
@@ -78,7 +78,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.genders.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-venus-mars text-xs {{ request()->routeIs('admin.master.genders.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.genders.*') ? 'text-white font-medium' : 'text-green-100' }}">Jenis Kelamin</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.genders.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jenis Kelamin</span>
         </a>
         @endif
 
@@ -88,7 +88,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.departments.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-building text-xs {{ request()->routeIs('admin.master.departments.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.departments.*') ? 'text-white font-medium' : 'text-green-100' }}">Departemen</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.departments.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Departemen</span>
         </a>
         @endif
 
@@ -98,7 +98,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.locations.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-map-marker-alt text-xs {{ request()->routeIs('admin.master.locations.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.locations.*') ? 'text-white font-medium' : 'text-green-100' }}">Lokasi</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.locations.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lokasi</span>
         </a>
         @endif
 
@@ -108,7 +108,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.shifts.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('admin.master.shifts.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.shifts.*') ? 'text-white font-medium' : 'text-green-100' }}">Shift</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.shifts.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Shift</span>
         </a>
         @endif
 
@@ -118,7 +118,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.leave-types.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('admin.master.leave-types.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.leave-types.*') ? 'text-white font-medium' : 'text-green-100' }}">Tipe Cuti</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.leave-types.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Tipe Cuti</span>
         </a>
         @endif
 
@@ -128,7 +128,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.document-types.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-file-alt text-xs {{ request()->routeIs('admin.master.document-types.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.document-types.*') ? 'text-white font-medium' : 'text-green-100' }}">Tipe Dokumen</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.document-types.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Tipe Dokumen</span>
         </a>
         @endif
 
@@ -138,71 +138,62 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-project-diagram text-xs {{ request()->routeIs('admin.master.department-document-types.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.department-document-types.*') ? 'text-white font-medium' : 'text-green-100' }}">Dokumen Posisi</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.department-document-types.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Dokumen Posisi</span>
         </a>
         @endif
         @endif
 
         <!-- Management Section - Admin/HR/Manager -->
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('worker.manage') || auth()->user()->can('attendance.manage') || auth()->user()->can('schedule.manage') || auth()->user()->can('worker-document.manage') || auth()->user()->can('payroll.manage'))
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('worker.manage') || auth()->user()->can('attendance.manage') || auth()->user()->can('schedule.manage') || auth()->user()->can('worker-document.manage'))
 
         <!-- MANAJEMEN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
-                <i class="fas fa-tasks text-xs text-purple-400"></i>
-                <span class="text-xs font-bold text-purple-400 tracking-wider uppercase">Manajemen</span>
+                <i class="fas fa-tasks text-xs text-blue-400"></i>
+                <span class="text-xs font-bold text-blue-400 tracking-wider uppercase">Manajemen</span>
             </div>
         </div>
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
         <a href="{{ route('admin.workers.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.workers.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.workers.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-users text-xs {{ request()->routeIs('admin.workers.*') ? 'text-white' : 'text-purple-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.workers.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-users text-xs {{ request()->routeIs('admin.workers.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.workers.*') ? 'text-white font-medium' : 'text-green-100' }}">Pegawai</span>
+            <span class="text-sm {{ request()->routeIs('admin.workers.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Pegawai</span>
         </a>
         @endif
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('attendance.manage'))
         <a href="{{ route('admin.attendance.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.attendance.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.attendance.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-clipboard-check text-xs {{ request()->routeIs('admin.attendance.*') ? 'text-white' : 'text-purple-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.attendance.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-clipboard-check text-xs {{ request()->routeIs('admin.attendance.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.attendance.*') ? 'text-white font-medium' : 'text-green-100' }}">Absensi</span>
+            <span class="text-sm {{ request()->routeIs('admin.attendance.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Absensi</span>
         </a>
         @endif
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('schedule.manage'))
         <a href="{{ route('admin.worker-shifts.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-user-clock text-xs {{ request()->routeIs('admin.worker-shifts.*') ? 'text-white' : 'text-purple-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-user-clock text-xs {{ request()->routeIs('admin.worker-shifts.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.worker-shifts.*') ? 'text-white font-medium' : 'text-green-100' }}">Jadwal Pegawai</span>
+            <span class="text-sm {{ request()->routeIs('admin.worker-shifts.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jadwal Pegawai</span>
         </a>
         @endif
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker-document.manage'))
         <a href="{{ route('admin.worker-documents.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.worker-documents.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-documents.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-file-alt text-xs {{ request()->routeIs('admin.worker-documents.*') ? 'text-white' : 'text-purple-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-documents.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-file-alt text-xs {{ request()->routeIs('admin.worker-documents.*') ? 'text-white' : 'text-blue-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.worker-documents.*') ? 'text-white font-medium' : 'text-green-100' }}">Dokumen Pegawai</span>
+            <span class="text-sm {{ request()->routeIs('admin.worker-documents.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Dokumen Pegawai</span>
         </a>
         @endif
 
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
-        <a href="{{ route('admin.payroll.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.payroll.index') || request()->routeIs('admin.payroll.show') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.payroll.*') ? 'bg-white/20' : 'bg-purple-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-money-bill-wave text-xs {{ request()->routeIs('admin.payroll.*') ? 'text-white' : 'text-purple-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('admin.payroll.*') ? 'text-white font-medium' : 'text-green-100' }}">Payroll</span>
-        </a>
-        @endif
         @endif
 
         <!-- Attendance Section - Employee or with permissions -->
@@ -221,7 +212,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.attendance.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clipboard-check text-xs {{ request()->routeIs('employee.attendance.*') ? 'text-white' : 'text-green-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.attendance.*') ? 'text-white font-medium' : 'text-green-100' }}">Absensi Saya</span>
+            <span class="text-sm {{ request()->routeIs('employee.attendance.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Absensi Saya</span>
         </a>
 
         <a href="{{ route('employee.shifts.index') }}"
@@ -229,7 +220,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.shifts.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('employee.shifts.*') ? 'text-white' : 'text-green-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.shifts.*') ? 'text-white font-medium' : 'text-green-100' }}">Jadwal Kerja</span>
+            <span class="text-sm {{ request()->routeIs('employee.shifts.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jadwal Kerja</span>
         </a>
 
         <a href="{{ route('employee.shift-swaps.index') }}"
@@ -237,7 +228,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.shift-swaps.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-exchange-alt text-xs {{ request()->routeIs('employee.shift-swaps.*') ? 'text-white' : 'text-green-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.shift-swaps.*') ? 'text-white font-medium' : 'text-green-100' }}">Tukar Shift</span>
+            <span class="text-sm {{ request()->routeIs('employee.shift-swaps.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Tukar Shift</span>
         </a>
         @endif
 
@@ -257,7 +248,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.leaves.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-times text-xs {{ request()->routeIs('employee.leaves.*') ? 'text-white' : 'text-cyan-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.leaves.*') ? 'text-white font-medium' : 'text-green-100' }}">Cuti Saya</span>
+            <span class="text-sm {{ request()->routeIs('employee.leaves.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Cuti Saya</span>
         </a>
 
         <a href="{{ route('employee.overtimes.index') }}"
@@ -265,7 +256,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.overtimes.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('employee.overtimes.*') ? 'text-white' : 'text-cyan-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.overtimes.*') ? 'text-white font-medium' : 'text-green-100' }}">Lembur Saya</span>
+            <span class="text-sm {{ request()->routeIs('employee.overtimes.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur Saya</span>
         </a>
 
         <a href="{{ route('employee.business-trips.index') }}"
@@ -273,7 +264,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.business-trips.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-plane-departure text-xs {{ request()->routeIs('employee.business-trips.*') ? 'text-white' : 'text-cyan-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.business-trips.*') ? 'text-white font-medium' : 'text-green-100' }}">Perjalanan Dinas</span>
+            <span class="text-sm {{ request()->routeIs('employee.business-trips.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Perjalanan Dinas</span>
         </a>
         @endif
 
@@ -294,7 +285,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.leave.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-times text-xs {{ request()->routeIs('admin.leave.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.leave.*') ? 'text-white font-medium' : 'text-green-100' }}">Cuti</span>
+            <span class="text-sm {{ request()->routeIs('admin.leave.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Cuti</span>
             @if(isset($pendingLeaves) && $pendingLeaves > 0)
                 <span class="ml-auto bg-yellow-400 text-green-900 text-xs font-bold px-2 py-0.5 rounded-full">{{ $pendingLeaves }}</span>
             @endif
@@ -307,7 +298,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.overtime.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('admin.overtime.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.overtime.*') ? 'text-white font-medium' : 'text-green-100' }}">Lembur</span>
+            <span class="text-sm {{ request()->routeIs('admin.overtime.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur</span>
         </a>
         @endif
 
@@ -317,7 +308,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-exchange-alt text-xs {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'text-white font-medium' : 'text-green-100' }}">Tukar Shift</span>
+            <span class="text-sm {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Tukar Shift</span>
         </a>
         @endif
 
@@ -327,7 +318,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('approvals.business-trips.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-plane-departure text-xs {{ request()->routeIs('approvals.business-trips.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('approvals.business-trips.*') ? 'text-white font-medium' : 'text-green-100' }}">Perjalanan Dinas</span>
+            <span class="text-sm {{ request()->routeIs('approvals.business-trips.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Perjalanan Dinas</span>
         </a>
         @endif
         @endif
@@ -338,52 +329,52 @@
         <!-- LAPORAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
-                <i class="fas fa-chart-bar text-xs text-pink-400"></i>
-                <span class="text-xs font-bold text-pink-400 tracking-wider uppercase">Laporan</span>
+                <i class="fas fa-chart-bar text-xs text-sky-400"></i>
+                <span class="text-xs font-bold text-sky-400 tracking-wider uppercase">Laporan</span>
             </div>
         </div>
 
         <a href="{{ route('reports.attendance') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.attendance') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.attendance') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-clipboard-list text-xs {{ request()->routeIs('reports.attendance') ? 'text-white' : 'text-pink-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.attendance') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-clipboard-list text-xs {{ request()->routeIs('reports.attendance') ? 'text-white' : 'text-sky-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('reports.attendance') ? 'text-white font-medium' : 'text-green-100' }}">Attendance</span>
+            <span class="text-sm {{ request()->routeIs('reports.attendance') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Attendance</span>
         </a>
 
         <a href="{{ route('reports.leaves') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.leaves') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.leaves') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('reports.leaves') ? 'text-white' : 'text-pink-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.leaves') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('reports.leaves') ? 'text-white' : 'text-sky-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('reports.leaves') ? 'text-white font-medium' : 'text-green-100' }}">Cuti</span>
+            <span class="text-sm {{ request()->routeIs('reports.leaves') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Cuti</span>
         </a>
 
         <a href="{{ route('reports.overtimes') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.overtimes') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.overtimes') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-clock text-xs {{ request()->routeIs('reports.overtimes') ? 'text-white' : 'text-pink-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.overtimes') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-clock text-xs {{ request()->routeIs('reports.overtimes') ? 'text-white' : 'text-sky-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('reports.overtimes') ? 'text-white font-medium' : 'text-green-100' }}">Lembur</span>
+            <span class="text-sm {{ request()->routeIs('reports.overtimes') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur</span>
         </a>
 
         <a href="{{ route('reports.worker-documents') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.worker-documents') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.worker-documents') ? 'bg-white/20' : 'bg-pink-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-file-alt text-xs {{ request()->routeIs('reports.worker-documents') ? 'text-white' : 'text-pink-300' }}"></i>
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.worker-documents') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-file-alt text-xs {{ request()->routeIs('reports.worker-documents') ? 'text-white' : 'text-sky-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('reports.worker-documents') ? 'text-white font-medium' : 'text-green-100' }}">Dokumen Pegawai</span>
+            <span class="text-sm {{ request()->routeIs('reports.worker-documents') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Dokumen Pegawai</span>
         </a>
         @endif
 
         <!-- HR & Finance Section - Employee with permissions -->
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('worker-document.view') || auth()->user()->can('payroll.view') || auth()->user()->can('calendar.view'))
+        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('worker-document.view') || auth()->user()->can('calendar.view'))
 
         <!-- HR & KEUANGAN Label -->
         <div class="pt-3 pb-1.5 px-3">
             <div class="flex items-center space-x-2">
                 <i class="fas fa-briefcase text-xs text-teal-400"></i>
-                <span class="text-xs font-bold text-teal-400 tracking-wider uppercase">HR & Keuangan</span>
+                <span class="text-xs font-bold text-teal-400 tracking-wider uppercase">Pemberkasan</span>
             </div>
         </div>
 
@@ -393,17 +384,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.documents.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-file-alt text-xs {{ request()->routeIs('employee.documents.*') ? 'text-white' : 'text-teal-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.documents.*') ? 'text-white font-medium' : 'text-green-100' }}">Dokumen Saya</span>
-        </a>
-        @endif
-
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('payroll.view'))
-        <a href="{{ route('employee.payroll.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.payroll.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.payroll.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-money-bill-wave text-xs {{ request()->routeIs('employee.payroll.*') ? 'text-white' : 'text-teal-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('employee.payroll.*') ? 'text-white font-medium' : 'text-green-100' }}">Payroll Saya</span>
+            <span class="text-sm {{ request()->routeIs('employee.documents.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Dokumen Saya</span>
         </a>
         @endif
 
@@ -413,7 +394,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.calendar.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-day text-xs {{ request()->routeIs('employee.calendar.*') ? 'text-white' : 'text-teal-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('employee.calendar.*') ? 'text-white font-medium' : 'text-green-100' }}">Kalender</span>
+            <span class="text-sm {{ request()->routeIs('employee.calendar.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Kalender</span>
         </a>
         @endif
         @endif
@@ -435,7 +416,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.holidays.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-day text-xs {{ request()->routeIs('admin.holidays.*') ? 'text-white' : 'text-gray-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.holidays.*') ? 'text-white font-medium' : 'text-green-100' }}">Libur Nasional</span>
+            <span class="text-sm {{ request()->routeIs('admin.holidays.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Libur Nasional</span>
         </a>
         @endif
 
@@ -445,7 +426,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.roles.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-user-tag text-xs {{ request()->routeIs('admin.roles.*') ? 'text-white' : 'text-gray-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.roles.*') ? 'text-white font-medium' : 'text-green-100' }}">Role</span>
+            <span class="text-sm {{ request()->routeIs('admin.roles.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Role</span>
         </a>
         @endif
 
@@ -455,7 +436,7 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.users.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-user-shield text-xs {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-gray-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.users.*') ? 'text-white font-medium' : 'text-green-100' }}">Users</span>
+            <span class="text-sm {{ request()->routeIs('admin.users.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Users</span>
         </a>
         @endif
         @endif
@@ -467,7 +448,7 @@
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('employee.profile.*') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
                     <i class="fas fa-user text-sm {{ request()->routeIs('employee.profile.*') ? 'text-white' : 'text-green-300' }}"></i>
                 </div>
-                <span class="font-medium text-sm {{ request()->routeIs('employee.profile.*') ? 'text-white' : 'text-green-100' }}">Profile Saya</span>
+                <span class="font-medium text-sm {{ request()->routeIs('employee.profile.*') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Profile Saya</span>
             </a>
         @endif
 
@@ -506,7 +487,7 @@
     background: rgba(255, 255, 255, 0.3);
 }
 </style>
-
+ 
 <!-- Toggle Sidebar Script -->
 <script>
 function toggleUnifiedSidebar() {
@@ -527,6 +508,84 @@ function toggleUnifiedSidebar() {
         backdrop.classList.add('opacity-100', 'pointer-events-auto');
     }
 }
+
+// Save sidebar scroll position before navigation
+function saveSidebarScrollPosition() {
+    const sidebar = document.getElementById('unified-sidebar');
+    if (sidebar) {
+        const scrollPosition = sidebar.scrollTop;
+        localStorage.setItem('sidebarScrollPosition', scrollPosition);
+        // console.log('Saved scroll position:', scrollPosition); // Uncomment for debugging
+    }
+}
+
+// Restore sidebar scroll position after page load
+function restoreSidebarScrollPosition() {
+    const sidebar = document.getElementById('unified-sidebar');
+    const savedPosition = localStorage.getItem('sidebarScrollPosition');
+    if (sidebar && savedPosition) {
+        // Use setTimeout to ensure the sidebar is fully rendered
+        setTimeout(() => {
+            sidebar.scrollTop = parseInt(savedPosition);
+            // console.log('Restored scroll position:', savedPosition); // Uncomment for debugging
+        }, 50);
+    }
+}
+
+// Add event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Restore scroll position when page loads
+    restoreSidebarScrollPosition();
+    
+    // Additional restoration after a short delay for safety
+    setTimeout(() => {
+        restoreSidebarScrollPosition();
+    }, 200);
+    
+    // Save scroll position before navigating to any link
+    const sidebarLinks = document.querySelectorAll('#unified-sidebar a[href]');
+    sidebarLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            saveSidebarScrollPosition();
+        });
+    });
+    
+    // Save scroll position on window unload (fallback)
+    window.addEventListener('beforeunload', function() {
+        saveSidebarScrollPosition();
+    });
+    
+    // Save scroll position periodically while scrolling
+    const sidebar = document.getElementById('unified-sidebar');
+    if (sidebar) {
+        let scrollTimeout;
+        sidebar.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                saveSidebarScrollPosition();
+            }, 100);
+        });
+    }
+});
+
+// Also try to restore position when window is fully loaded
+window.addEventListener('load', function() {
+    setTimeout(() => {
+        restoreSidebarScrollPosition();
+    }, 100);
+});
+
+// Save position when page becomes hidden (for page refresh scenarios)
+document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState === 'hidden') {
+        saveSidebarScrollPosition();
+    }
+});
+
+// Save position when user is about to leave the page
+window.addEventListener('pagehide', function() {
+    saveSidebarScrollPosition();
+});
 </script>
 
 @endif

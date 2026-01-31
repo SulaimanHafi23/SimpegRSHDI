@@ -14,6 +14,9 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+    <!-- Sweet Alert 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -44,12 +47,34 @@
                 @endif
 
                 <!-- Alert Messages -->
-                @if(session('success'))
-                    <x-ui.alert type="success" :message="session('success')" />
-                @endif
+                @php
+                    $currentRoute = Route::currentRouteName();
+                    $isCreateOrEditPage = str_contains($currentRoute, '.create') || 
+                                         str_contains($currentRoute, '.edit') || 
+                                         str_contains($currentRoute, 'create') || 
+                                         str_contains($currentRoute, 'edit');
+                @endphp
 
-                @if(session('error'))
-                    <x-ui.alert type="error" :message="session('error')" />
+                @if($isCreateOrEditPage)
+                    {{-- Keep traditional alerts for create/edit pages --}}
+                    @if(session('success'))
+                        <x-ui.alert type="success" :message="session('success')" />
+                    @endif
+
+                    @if(session('error'))
+                        <x-ui.alert type="error" :message="session('error')" />
+                    @endif
+
+                    @if(session('warning'))
+                        <x-ui.alert type="warning" :message="session('warning')" />
+                    @endif
+
+                    @if(session('info'))
+                        <x-ui.alert type="info" :message="session('info')" />
+                    @endif
+                @else
+                    {{-- Use Sweet Alert for other pages --}}
+                    <x-sweet-alert />
                 @endif
 
                 <!-- Page Content -->

@@ -26,7 +26,6 @@ $protectedRoutes = [
     'Roles List' => '/roles',
     'Users List' => '/users',
     'Holidays List' => '/holidays',
-    'Payroll List' => '/payroll',
     'Leave Approvals' => '/approvals/leaves',
     'Overtime Approvals' => '/approvals/overtimes',
 ];

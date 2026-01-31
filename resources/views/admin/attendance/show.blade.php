@@ -3,46 +3,48 @@
 @section('title', 'Detail Absensi')
 
 @section('content')
-<div class="space-y-4 sm:space-y-6">
+<div class="space-y-6">
     {{-- Page Header with Actions --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center space-x-3">
-            <x-button 
-                variant="secondary" 
-                size="sm"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.attendance.index') }}'">
-            </x-button>
+            <a href="{{ route('admin.attendance.index') }}" class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <i class="fas fa-arrow-left w-5 h-5"></i>
+            </a>
             <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Absensi</h1>
-                <p class="text-xs sm:text-sm text-gray-600 mt-1">Informasi lengkap data absensi</p>
+                <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <i class="fas fa-user-check mr-3 text-blue-600"></i>
+                    Detail Absensi
+                </h1>
+                <p class="text-sm text-gray-600 mt-1">Informasi lengkap data absensi pegawai</p>
             </div>
         </div>
         <div class="flex space-x-2 w-full sm:w-auto">
             @if(!$attendance->check_out)
-                <x-button 
-                    variant="warning" 
-                    icon="fas fa-sign-out-alt"
-                    onclick="document.getElementById('checkout-modal').classList.remove('hidden')">
+                <button onclick="document.getElementById('checkout-modal').classList.remove('hidden')" 
+                        class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition duration-200 shadow-md">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
                     Check Out
-                </x-button>
+                </button>
             @endif
+            <a href="{{ route('admin.attendance.edit', $attendance->id) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition duration-200 shadow-md">
+                <i class="fas fa-edit mr-2"></i>
+                Edit
+            </a>
             @can('delete-attendance')
-                <x-button 
-                    variant="danger" 
-                    icon="fas fa-trash"
-                    onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()">
+                <button onclick="if(confirm('Yakin ingin menghapus data absensi ini?')) document.getElementById('delete-form').submit()" 
+                        class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200 shadow-md">
+                    <i class="fas fa-trash mr-2"></i>
                     Hapus
-                </x-button>
+                </button>
             @endcan
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Left Column - Worker Info --}}
-        <div class="lg:col-span-1 space-y-4 sm:space-y-6">
+        <div class="lg:col-span-1 space-y-6">
             {{-- Worker Profile --}}
-            <x-card>
+            <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex flex-col items-center">
                     @if($attendance->worker->photo_url && Storage::disk('public')->exists($attendance->worker->photo_url))
                         <img src="{{ asset('storage/' . $attendance->worker->photo_url) }}" 
@@ -57,18 +59,19 @@
                     <p class="text-sm text-gray-600">{{ $attendance->worker->nip }}</p>
                     
                     @php
-                        $statusBadges = [
-                            'present' => ['variant' => 'success', 'label' => 'Hadir'],
-                            'late' => ['variant' => 'warning', 'label' => 'Terlambat'],
-                            'absent' => ['variant' => 'danger', 'label' => 'Tidak Hadir'],
-                            'leave' => ['variant' => 'primary', 'label' => 'Cuti'],
-                            'sick' => ['variant' => 'secondary', 'label' => 'Sakit'],
+                        $statusConfig = [
+                            'present' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Hadir'],
+                            'late' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Terlambat'],
+                            'absent' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Tidak Hadir'],
+                            'sick' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'label' => 'Sakit'],
+                            'permission' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Izin'],
+                            'leave' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'label' => 'Cuti'],
                         ];
-                        $statusBadge = $statusBadges[$attendance->status ?? 'present'] ?? ['variant' => 'secondary', 'label' => '-'];
+                        $status = $statusConfig[$attendance->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => ucfirst($attendance->status)];
                     @endphp
-                    <x-badge :variant="$statusBadge['variant']" class="mt-2">
-                        {{ $statusBadge['label'] }}
-                    </x-badge>
+                    <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full {{ $status['bg'] }} {{ $status['text'] }} mt-2">
+                        {{ $status['label'] }}
+                    </span>
                 </div>
                 <div class="mt-6 space-y-3 text-center border-t pt-4">
                     <div class="py-2">
@@ -87,10 +90,11 @@
                         <p class="font-semibold text-gray-900">{{ $attendance->location->name ?? '-' }}</p>
                     </div>
                 </div>
-            </x-card>
+            </div>
 
             {{-- Status Info --}}
-            <x-card title="Status Absensi">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Status Absensi</h3>
                 <div class="space-y-3">
                     @if($attendance->is_late)
                         <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
@@ -138,14 +142,14 @@
                         </div>
                     @endif
                 </div>
-            </x-card>
+            </div>
         </div>
 
         {{-- Right Column - Attendance Details --}}
         <div class="lg:col-span-2 space-y-6">
             {{-- Check In Info --}}
-            <x-card>
-                <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                     <i class="fas fa-sign-in-alt text-green-600 mr-2"></i>
                     Check In
                 </h3>
@@ -188,12 +192,12 @@
                         </div>
                     </div>
                 @endif
-            </x-card>
+            </div>
 
             {{-- Check Out Info --}}
             @if($attendance->check_out)
-                <x-card>
-                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <i class="fas fa-sign-out-alt text-red-600 mr-2"></i>
                         Check Out
                     </h3>
@@ -236,27 +240,29 @@
                             </div>
                         </div>
                     @endif
-                </x-card>
+                </div>
             @else
-                <x-card>
+                <div class="bg-white rounded-lg shadow-md p-6">
                     <div class="text-center py-8">
                         <i class="fas fa-clock text-4xl text-gray-400 mb-3"></i>
                         <p class="text-gray-600">Belum Check Out</p>
                         <p class="text-sm text-gray-500 mt-1">Pegawai belum melakukan check out</p>
                     </div>
-                </x-card>
+                </div>
             @endif
 
             {{-- Notes --}}
             @if($attendance->notes)
-                <x-card title="Catatan">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Catatan</h3>
                     <p class="text-gray-700">{{ $attendance->notes }}</p>
-                </x-card>
+                </div>
             @endif
 
             {{-- Working Hours Summary --}}
             @if($attendance->check_in && $attendance->check_out)
-                <x-card title="Ringkasan Jam Kerja">
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Ringkasan Jam Kerja</h3>
                     @php
                         $workingHours = $attendance->check_in->diffInMinutes($attendance->check_out);
                         $hours = floor($workingHours / 60);
@@ -280,7 +286,7 @@
                             <p class="text-2xl font-bold text-purple-600">{{ $attendance->overtime_minutes ?? 0 }}m</p>
                         </div>
                     </div>
-                </x-card>
+                </div>
             @endif
         </div>
     </div>

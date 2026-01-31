@@ -51,11 +51,6 @@ class NotificationSeeder extends Seeder
                 'message' => 'Dokumen yang Anda upload telah diverifikasi.',
             ],
             [
-                'type' => 'App\\Notifications\\PayrollGenerated',
-                'title' => 'Slip Gaji Tersedia',
-                'message' => 'Slip gaji bulan ini telah tersedia. Silakan cek di menu Penggajian.',
-            ],
-            [
                 'type' => 'App\\Notifications\\ShiftReminder',
                 'title' => 'Pengingat Shift',
                 'message' => 'Anda memiliki shift besok. Jangan lupa untuk hadir tepat waktu.',
