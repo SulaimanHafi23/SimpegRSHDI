@@ -93,6 +93,21 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
             ->get();
     }
 
+    /**
+     * Get count of leave requests by status for a specific worker and year
+     */
+    public function countByStatus(string $workerId, int $year, ?string $status = null): int
+    {
+        $query = $this->model->where('worker_id', $workerId)
+            ->whereYear('start_date', $year);
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        return $query->count();
+    }
+
     public function create(LeaveRequestDTO $dto): object
     {
         return $this->model->create($dto->toArray());
@@ -108,12 +123,12 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
     public function delete(string $id): bool
     {
         $leaveRequest = $this->model->findOrFail($id);
-        
+
         // Delete attachment if exists
         if ($leaveRequest->attachment_path && \Storage::exists($leaveRequest->attachment_path)) {
             \Storage::delete($leaveRequest->attachment_path);
         }
-        
+
         return $leaveRequest->delete();
     }
 
@@ -151,7 +166,7 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
     public function getWorkerLeaveBalance(string $workerId, string $leaveTypeId, int $year): int
     {
         $leaveType = \App\Models\LeaveType::findOrFail($leaveTypeId);
-        
+
         if (!$leaveType->max_days_per_year) {
             return 0; // Unlimited
         }

@@ -44,7 +44,7 @@ class UserSeeder extends Seeder
 
             // Generate username from name
             $username = strtolower(str_replace([' ', '.', ','], '', explode(',', $worker->name)[0]));
-            
+
             // Ensure unique username
             $baseUsername = $username;
             $counter = 1;
@@ -64,11 +64,12 @@ class UserSeeder extends Seeder
 
             // Assign role based on position
             $positionName = $worker->position->name ?? '';
-            
+            $workerNip = $worker->nip ?? '';
+
             if (str_contains(strtolower($positionName), 'admin')) {
                 $user->assignRole($roleHR);
                 $role = 'HR';
-            } elseif (str_contains(strtolower($positionName), 'manager')) {
+            } elseif (str_contains(strtolower($positionName), 'manager') || $workerNip === 'MGR001') {
                 $user->assignRole($roleManager);
                 $role = 'Manager';
             } else {

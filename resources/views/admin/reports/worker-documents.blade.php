@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Persetujuan Dokumen Pegawai')
+@section('title', 'Laporan Dokumen Pegawai')
 
 @section('content')
 <div class="space-y-6">
@@ -8,31 +8,51 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
-                <i class="fas fa-file-certificate text-orange-600 mr-2"></i>
-                 Dokumen Pegawai
+                <i class="fas fa-chart-pie text-orange-600 mr-2"></i>
+                 Laporan Dokumen Pegawai
             </h1>
-            <p class="text-sm sm:text-base text-gray-600 mt-1">Verifikasi dan kelola dokumen karyawan</p>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Lihat ringkasan dan ekspor data dokumen karyawan</p>
+            <div class="mt-2 flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Mode: Laporan (Baca Saja)
+                </span>
+                <a href="{{ route('approvals.documents.index') }}" class="text-xs text-green-600 hover:text-green-700 underline">
+                    <i class="fas fa-check-double mr-1"></i>
+                    Pergi ke Persetujuan Dokumen
+                </a>
+            </div>
         </div>
-        
-        <!-- Statistics Cards -->
-        <div class="flex gap-3">
-            @php
-                $pendingCount = $documents->where('status', 'pending')->count();
-                $verifiedCount = $documents->where('status', 'verified')->count();
-                $rejectedCount = $documents->where('status', 'rejected')->count();
-            @endphp
-            
-            <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
-                <div class="text-yellow-800 text-xs font-medium">Pending</div>
-                <div class="text-yellow-900 text-xl font-bold">{{ $pendingCount }}</div>
-            </div>
-            <div class="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-                <div class="text-green-800 text-xs font-medium">Terverifikasi</div>
-                <div class="text-green-900 text-xl font-bold">{{ $verifiedCount }}</div>
-            </div>
-            <div class="bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-                <div class="text-red-800 text-xs font-medium">Ditolak</div>
-                <div class="text-red-900 text-xl font-bold">{{ $rejectedCount }}</div>
+
+        <!-- Export Button and Statistics Cards -->
+        <div class="flex flex-col gap-3">
+            <!-- Export Button -->
+            <a href="{{ route('reports.worker-documents', array_merge($filters ?? [], ['export' => 'csv'])) }}"
+               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium shadow-sm">
+                <i class="fas fa-file-csv mr-2"></i>
+                Export CSV
+            </a>
+
+            <!-- Statistics Cards -->
+            <div class="flex gap-3">
+                @php
+                    $pendingCount = $documents->where('status', 'pending')->count();
+                    $verifiedCount = $documents->where('status', 'verified')->count();
+                    $rejectedCount = $documents->where('status', 'rejected')->count();
+                @endphp
+
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
+                    <div class="text-yellow-800 text-xs font-medium">Pending</div>
+                    <div class="text-yellow-900 text-xl font-bold">{{ $pendingCount }}</div>
+                </div>
+                <div class="bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+                    <div class="text-green-800 text-xs font-medium">Terverifikasi</div>
+                    <div class="text-green-900 text-xl font-bold">{{ $verifiedCount }}</div>
+                </div>
+                <div class="bg-red-50 border border-red-200 rounded-lg px-4 py-2">
+                    <div class="text-red-800 text-xs font-medium">Ditolak</div>
+                    <div class="text-red-900 text-xl font-bold">{{ $rejectedCount }}</div>
+                </div>
             </div>
         </div>
     </div>
@@ -43,16 +63,16 @@
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Mulai</label>
-                    <input type="date" 
-                           name="date_from" 
-                           value="{{ $filters['date_from'] ?? now()->startOfMonth()->format('Y-m-d') }}" 
+                    <input type="date"
+                           name="date_from"
+                           value="{{ $filters['date_from'] ?? now()->startOfMonth()->format('Y-m-d') }}"
                            class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Selesai</label>
-                    <input type="date" 
-                           name="date_to" 
-                           value="{{ $filters['date_to'] ?? now()->endOfMonth()->format('Y-m-d') }}" 
+                    <input type="date"
+                           name="date_to"
+                           value="{{ $filters['date_to'] ?? now()->endOfMonth()->format('Y-m-d') }}"
                            class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
                 </div>
                 <div>
@@ -94,8 +114,8 @@
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10 mr-3">
                                     @if($doc->worker && $doc->worker->photo_url && Storage::disk('public')->exists($doc->worker->photo_url))
-                                        <img src="{{ Storage::url($doc->worker->photo_url) }}" 
-                                             alt="{{ $doc->worker->name }}" 
+                                        <img src="{{ Storage::url($doc->worker->photo_url) }}"
+                                             alt="{{ $doc->worker->name }}"
                                              class="h-10 w-10 rounded-full object-cover border-2 border-orange-200">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-yellow-500 flex items-center justify-center text-white font-bold text-sm">
@@ -149,7 +169,7 @@
                                     Ditolak
                                 </span>
                             @endif
-                            
+
                             @if($doc->expired_date && \Carbon\Carbon::parse($doc->expired_date)->isPast())
                                 <div class="mt-1">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
@@ -178,25 +198,25 @@
                             <div class="flex flex-col sm:flex-row items-center justify-center gap-2">
                                 <!-- View/Download Button -->
                                 @if($doc->file_path)
-                                    <a href="{{ route('admin.worker-documents.show', $doc->id) }}" 
+                                    <a href="{{ route('admin.worker-documents.show', $doc->id) }}"
                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs font-medium shadow-sm"
                                        title="Lihat Detail">
                                         <i class="fas fa-eye mr-1"></i>
                                         <span class="hidden xl:inline">Detail</span>
                                     </a>
                                 @endif
-                                
+
                                 <!-- Approve Button -->
                                 @if($doc->status === 'pending')
-                                    <button onclick="approveDocument('{{ $doc->id }}')" 
+                                    <button onclick="approveDocument('{{ $doc->id }}')"
                                             class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-xs font-medium shadow-sm"
                                             title="Setujui Dokumen">
                                         <i class="fas fa-check mr-1"></i>
                                         <span class="hidden xl:inline">Approve</span>
                                     </button>
-                                    
+
                                     <!-- Reject Button -->
-                                    <button onclick="rejectDocument('{{ $doc->id }}')" 
+                                    <button onclick="rejectDocument('{{ $doc->id }}')"
                                             class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-xs font-medium shadow-sm"
                                             title="Tolak Dokumen">
                                         <i class="fas fa-times mr-1"></i>

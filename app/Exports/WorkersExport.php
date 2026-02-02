@@ -21,7 +21,7 @@ class WorkersExport implements FromCollection, WithHeadings, WithMapping, WithSt
 
     public function collection()
     {
-        $query = Worker::with(['department', 'position', 'gender', 'religion']);
+        $query = Worker::with(['department', 'gender', 'religion']);
 
         // Apply filters
         if (!empty($this->filters['status'])) {
@@ -51,7 +51,6 @@ class WorkersExport implements FromCollection, WithHeadings, WithMapping, WithSt
             'Tanggal Lahir',
             'Alamat',
             'Departemen',
-            'Jabatan',
             'Status Kepegawaian',
             'Status',
             'Tanggal Bergabung',
@@ -68,13 +67,12 @@ class WorkersExport implements FromCollection, WithHeadings, WithMapping, WithSt
             $worker->phone_number,
             $worker->gender->name ?? '-',
             $worker->religion->name ?? '-',
-            $worker->date_of_birth ? $worker->date_of_birth->format('d/m/Y') : '-',
+            $worker->birth_date ? $worker->birth_date->format('d/m/Y') : '-',
             $worker->address ?? '-',
             $worker->department->name ?? '-',
-            $worker->position->name ?? '-',
             $this->getEmploymentStatusLabel($worker->employment_status),
             $this->getStatusLabel($worker->status),
-            $worker->join_date ? $worker->join_date->format('d/m/Y') : '-',
+            $worker->hire_date ? $worker->hire_date->format('d/m/Y') : '-',
             $worker->resign_date ? $worker->resign_date->format('d/m/Y') : '-',
         ];
     }

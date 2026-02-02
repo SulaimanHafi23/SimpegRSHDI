@@ -17,21 +17,21 @@ class WorkerSeeder extends Seeder
     public function run(): void
     {
         $this->command->info('🏥 Starting WorkerSeeder...');
-        
+
         // ========== DEBUG: CEK DATA MASTER ==========
         $this->command->info('🔍 Checking master data...');
         $this->command->info('   Genders: ' . Gender::count());
         $this->command->info('   Religions: ' . Religion::count());
         $this->command->info('   Positions: ' . Department::count());
-        
+
         // ✅ AMBIL DATA (pakai firstOrCreate untuk safety)
         $genderLaki = Gender::firstOrCreate(['name' => 'Laki-laki']);
         $genderPerempuan = Gender::firstOrCreate(['name' => 'Perempuan']);
-        
+
         $religionIslam = Religion::firstOrCreate(['name' => 'Islam']);
         $religionKristen = Religion::firstOrCreate(['name' => 'Kristen']);
         $religionKatolik = Religion::firstOrCreate(['name' => 'Katolik']);
-        
+
         $departmentDokter = Department::firstOrCreate(['name' => 'Dokter'], ['description' => 'Dokter umum dan spesialis']);
         $departmentPerawat = Department::firstOrCreate(['name' => 'Perawat'], ['description' => 'Perawat']);
         $departmentBidan = Department::firstOrCreate(['name' => 'Bidan'], ['description' => 'Bidan']);
@@ -48,7 +48,7 @@ class WorkerSeeder extends Seeder
         $this->command->info('👥 Creating workers...');
 
         // ========== DATA WORKERS ==========
-        
+
         $workers = [
             // DOKTER
             [
@@ -197,10 +197,42 @@ class WorkerSeeder extends Seeder
                 'hire_date' => '2020-06-01',
                 'status' => 'Active',
             ],
+
+            // MANAGER
+            [
+                'name' => 'Bapak Manager RS',
+                'nip' => 'MGR001',
+                'email' => 'manager@rshdi.com',
+                'phone_number' => '081234567900',
+                'gender_id' => $genderLaki->id,
+                'religion_id' => $religionIslam->id,
+                'department_id' => $departmentAdmin->id,
+                'birth_place' => 'Banjarmasin',
+                'birth_date' => '1980-05-15',
+                'address' => 'Jl. Ahmad Yani No. 100, Banjarmasin',
+                'hire_date' => '2010-01-01',
+                'status' => 'Active',
+            ],
+
+            // USER HARI
+            [
+                'name' => 'Hari Prasetyo',
+                'nip' => 'EMP001',
+                'email' => 'hari.prasetyo@rshdi.com',
+                'phone_number' => '081234567901',
+                'gender_id' => $genderLaki->id,
+                'religion_id' => $religionIslam->id,
+                'department_id' => $departmentAdmin->id,
+                'birth_place' => 'Banjarmasin',
+                'birth_date' => '1995-12-20',
+                'address' => 'Jl. Lambung Mangkurat No. 50, Banjarmasin',
+                'hire_date' => '2022-01-10',
+                'status' => 'Active',
+            ],
         ];
 
         // ========== CREATE WORKERS ==========
-        
+
         foreach ($workers as $workerData) {
             Worker::create($workerData);
             $this->command->info("   ✅ {$workerData['name']}");

@@ -1,13 +1,26 @@
 @extends('layouts.admin')
 
-@section('title', 'Approval Dokumen')
+@section('title', 'Manajemen & Verifikasi Dokumen')
 
 @section('content')
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Approval Dokumen</h1>
-            <p class="text-gray-600 mt-1">Kelola verifikasi dokumen pegawai</p>
+            <h1 class="text-2xl font-bold text-gray-900">
+                <i class="fas fa-tasks text-green-600 mr-2"></i>
+                Manajemen & Verifikasi Dokumen
+            </h1>
+            <p class="text-gray-600 mt-1">Verifikasi, setujui atau tolak dokumen yang diupload pegawai</p>
+            <div class="mt-2 flex items-center gap-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    <i class="fas fa-edit mr-1"></i>
+                    Mode: Manajemen (Bisa Approve/Reject)
+                </span>
+                <a href="{{ route('reports.worker-documents') }}" class="text-xs text-blue-600 hover:text-blue-700 underline">
+                    <i class="fas fa-chart-pie mr-1"></i>
+                    Pergi ke Laporan Dokumen
+                </a>
+            </div>
         </div>
     </div>
 

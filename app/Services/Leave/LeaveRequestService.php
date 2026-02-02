@@ -36,6 +36,14 @@ class LeaveRequestService
         return $this->leaveRequestRepository->getPendingRequests();
     }
 
+    /**
+     * Get count of leave requests by status
+     */
+    public function countByStatus(string $workerId, int $year, ?string $status = null): int
+    {
+        return $this->leaveRequestRepository->countByStatus($workerId, $year, $status);
+    }
+
     public function create(array $data)
     {
         $leaveType = $this->leaveTypeRepository->getById($data['leave_type_id']);

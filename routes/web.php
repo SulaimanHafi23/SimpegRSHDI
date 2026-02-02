@@ -115,6 +115,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::post('/{id}/accept', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'accept'])->name('accept');
             Route::post('/{id}/reject', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'reject'])->name('reject');
             Route::post('/{id}/cancel', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'cancel'])->name('cancel');
+            Route::get('/{id}/accept-open', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'showAcceptOpen'])->name('accept-open');
+            Route::post('/{id}/accept-open', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'acceptOpen'])->name('accept-open.store');
         });
 
         // Shifts for employees

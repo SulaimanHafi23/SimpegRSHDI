@@ -27,7 +27,7 @@
     </div>
 
     <!-- Navigation with Smooth Scrolling -->
-    <nav class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto custom-scrollbar min-h-0">
+    <nav id="sidebar-nav" class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto custom-scrollbar min-h-0">
 
         <!-- Dashboard Admin - if user has admin roles or dashboard.admin permission -->
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('dashboard.admin'))
@@ -487,7 +487,7 @@
     background: rgba(255, 255, 255, 0.3);
 }
 </style>
- 
+
 <!-- Toggle Sidebar Script -->
 <script>
 function toggleUnifiedSidebar() {
@@ -511,23 +511,21 @@ function toggleUnifiedSidebar() {
 
 // Save sidebar scroll position before navigation
 function saveSidebarScrollPosition() {
-    const sidebar = document.getElementById('unified-sidebar');
-    if (sidebar) {
-        const scrollPosition = sidebar.scrollTop;
+    const sidebarNav = document.getElementById('sidebar-nav');
+    if (sidebarNav) {
+        const scrollPosition = sidebarNav.scrollTop;
         localStorage.setItem('sidebarScrollPosition', scrollPosition);
-        // console.log('Saved scroll position:', scrollPosition); // Uncomment for debugging
     }
 }
 
 // Restore sidebar scroll position after page load
 function restoreSidebarScrollPosition() {
-    const sidebar = document.getElementById('unified-sidebar');
+    const sidebarNav = document.getElementById('sidebar-nav');
     const savedPosition = localStorage.getItem('sidebarScrollPosition');
-    if (sidebar && savedPosition) {
+    if (sidebarNav && savedPosition) {
         // Use setTimeout to ensure the sidebar is fully rendered
         setTimeout(() => {
-            sidebar.scrollTop = parseInt(savedPosition);
-            // console.log('Restored scroll position:', savedPosition); // Uncomment for debugging
+            sidebarNav.scrollTop = parseInt(savedPosition);
         }, 50);
     }
 }
@@ -536,30 +534,30 @@ function restoreSidebarScrollPosition() {
 document.addEventListener('DOMContentLoaded', function() {
     // Restore scroll position when page loads
     restoreSidebarScrollPosition();
-    
+
     // Additional restoration after a short delay for safety
     setTimeout(() => {
         restoreSidebarScrollPosition();
     }, 200);
-    
+
     // Save scroll position before navigating to any link
-    const sidebarLinks = document.querySelectorAll('#unified-sidebar a[href]');
+    const sidebarLinks = document.querySelectorAll('#sidebar-nav a[href]');
     sidebarLinks.forEach(link => {
         link.addEventListener('click', function() {
             saveSidebarScrollPosition();
         });
     });
-    
+
     // Save scroll position on window unload (fallback)
     window.addEventListener('beforeunload', function() {
         saveSidebarScrollPosition();
     });
-    
+
     // Save scroll position periodically while scrolling
-    const sidebar = document.getElementById('unified-sidebar');
-    if (sidebar) {
+    const sidebarNav = document.getElementById('sidebar-nav');
+    if (sidebarNav) {
         let scrollTimeout;
-        sidebar.addEventListener('scroll', function() {
+        sidebarNav.addEventListener('scroll', function() {
             clearTimeout(scrollTimeout);
             scrollTimeout = setTimeout(() => {
                 saveSidebarScrollPosition();

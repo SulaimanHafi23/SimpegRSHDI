@@ -13,6 +13,7 @@ interface LeaveRequestRepositoryInterface
     public function getById(string $id): ?object;
     public function getByWorkerId(string $workerId, array $filters = []): Collection;
     public function getPendingRequests(): Collection;
+    public function countByStatus(string $workerId, int $year, ?string $status = null): int;
     public function create(LeaveRequestDTO $dto): object;
     public function update(string $id, LeaveRequestDTO $dto): object;
     public function delete(string $id): bool;

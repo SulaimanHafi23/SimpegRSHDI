@@ -122,8 +122,26 @@
 </head>
 <body>
     <div class="header">
+        <table style="width: 100%; border: none; margin-bottom: 5px;">
+            <tr>
+                <td style="width: 80px; text-align: center; border: none; vertical-align: middle;">
+                    @if(file_exists(public_path('images/logo-rs.png')))
+                        <img src="{{ public_path('images/logo-rs.png') }}" alt="Logo" style="max-width: 65px; max-height: 65px;">
+                    @endif
+                </td>
+                <td style="text-align: center; border: none; vertical-align: middle; padding-left: 10px;">
+                    <p style="margin: 0; font-size: 11px; font-weight: normal;">PEMERINTAH KABUPATEN TANAH LAUT</p>
+                    <p style="margin: 0; font-size: 11px; font-weight: normal;">DINAS KESEHATAN</p>
+                    <h2 style="margin: 2px 0; font-size: 16px; font-weight: bold;">UPTD RSUD HAJI DARLAN ISMAIL</h2>
+                    <p style="margin: 0; font-size: 9px;">Jl. Swadaya RT.003 Desa Bumi Harapan Kecamatan Bumi Makmur</p>
+                    <p style="margin: 0; font-size: 9px;">Kabupaten Tanah Laut Kode Pos 70853</p>
+                    <p style="margin: 0; font-size: 9px;">Email: Rsudhajidarlanismail@gmail.com</p>
+                </td>
+                <td style="width: 80px; border: none;"></td>
+            </tr>
+        </table>
+        <div style="border-bottom: 3px double #000; margin-bottom: 15px;"></div>
         <h1>{{ $title }}</h1>
-        <p>RSUD Haji Darlan Ismail</p>
         <p style="font-size: 10px;">Dicetak pada: {{ $generated_at }}</p>
     </div>
 
@@ -218,8 +236,16 @@
     </table>
 
     <div class="footer">
-        <p>Dokumen ini digenerate otomatis oleh sistem SIMPEG RSUD Haji Darlan Ismail</p>
-        <p>© {{ date('Y') }} RSUD Haji Darlan Ismail. All rights reserved.</p>
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="width: 50%; text-align: left; border: none;">
+                    <p>Dokumen ini digenerate otomatis oleh sistem SIMPEG</p>
+                </td>
+                <td style="width: 50%; text-align: right; border: none;">
+                    <p>© {{ date('Y') }} RS Haji Darlan Ismail</p>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>

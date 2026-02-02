@@ -21,15 +21,19 @@ class ShiftSwapController extends Controller
 
         $items = $this->shiftSwapService->listForWorker($worker->id);
 
+        // Get open requests from other workers
+        $openRequests = $this->shiftSwapService->getOpenRequests($worker->id);
+
         // Calculate summary statistics
         $summary = [
             'total' => $items->count(),
             'pending' => $items->where('status', 'pending')->count(),
             'approved' => $items->whereIn('status', ['approved', 'accepted', 'awaiting_approval', 'executed'])->count(),
             'history' => $items->whereIn('status', ['rejected', 'cancelled'])->count(),
+            'open_requests' => $openRequests->count(),
         ];
 
-        return view('employee.shift-swaps.index', compact('items', 'summary'));
+        return view('employee.shift-swaps.index', compact('items', 'summary', 'openRequests'));
     }
 
     public function create()
@@ -39,7 +43,7 @@ class ShiftSwapController extends Controller
 
         // Get worker's future shifts for requester
         $requesterShifts = $this->shiftSwapService->getFutureShifts($worker->id);
-        
+
         // Get all workers for target selection
         $workers = $this->shiftSwapService->getAvailableWorkersForSwap($worker->id);
 
@@ -77,11 +81,11 @@ class ShiftSwapController extends Controller
 
         try {
             $swap = $this->shiftSwapService->acceptRequest($id, $worker->id);
-            
-            $message = $swap->requires_manager_approval 
+
+            $message = $swap->requires_manager_approval
                 ? 'Permintaan diterima dan menunggu persetujuan manager.'
                 : 'Permintaan tukar shift diterima.';
-            
+
             return redirect()->route('employee.shift-swaps.index')->with('success', $message);
         } catch (\Exception $e) {
             return back()->with('error','Gagal menerima permintaan: ' . $e->getMessage());
@@ -119,6 +123,55 @@ class ShiftSwapController extends Controller
             return redirect()->route('employee.shift-swaps.index')->with('success','Permintaan tukar shift dibatalkan.');
         } catch (\Exception $e) {
             return back()->with('error','Gagal membatalkan permintaan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Show form to accept an open request
+     */
+    public function showAcceptOpen(string $id)
+    {
+        $worker = auth()->user()->worker;
+        if (!$worker) return redirect()->route('employee.dashboard')->with('error','Data pekerja tidak ditemukan.');
+
+        $swapRequest = \App\Models\ShiftSwapRequest::with(['requester.department', 'requesterShift.shift'])->findOrFail($id);
+
+        // Verify it's an open request and not from current worker
+        if ($swapRequest->target_worker_id !== null) {
+            return redirect()->route('employee.shift-swaps.index')->with('error', 'Ini bukan open request.');
+        }
+
+        if ($swapRequest->requester_id === $worker->id) {
+            return redirect()->route('employee.shift-swaps.index')->with('error', 'Anda tidak bisa menerima request sendiri.');
+        }
+
+        if ($swapRequest->status !== 'pending') {
+            return redirect()->route('employee.shift-swaps.index')->with('error', 'Request ini sudah tidak tersedia.');
+        }
+
+        // Get worker's shifts for selection
+        $workerShifts = $this->shiftSwapService->getFutureShifts($worker->id);
+
+        return view('employee.shift-swaps.accept-open', compact('swapRequest', 'workerShifts'));
+    }
+
+    /**
+     * Accept an open request
+     */
+    public function acceptOpen(Request $request, string $id)
+    {
+        $worker = auth()->user()->worker;
+        if (!$worker) return redirect()->route('employee.dashboard')->with('error','Data pekerja tidak ditemukan.');
+
+        $request->validate([
+            'target_shift_id' => 'required|exists:worker_shifts,id',
+        ]);
+
+        try {
+            $this->shiftSwapService->acceptOpenRequest($id, $worker->id, $request->input('target_shift_id'));
+            return redirect()->route('employee.shift-swaps.index')->with('success', 'Anda berhasil menerima open request. Menunggu persetujuan manager.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menerima request: ' . $e->getMessage());
         }
     }
 }
