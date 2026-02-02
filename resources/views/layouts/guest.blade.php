@@ -69,7 +69,7 @@
                     <div class="p-8 sm:p-10">
                         <!-- Sweet Alert for notifications -->
                         <x-sweet-alert />
-                        
+
                         @yield('content')
                     </div>
                 </div>

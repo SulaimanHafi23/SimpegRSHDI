@@ -34,9 +34,9 @@
                 <div class="max-w-7xl mx-auto">
                     @php
                         $currentRoute = Route::currentRouteName();
-                        $isCreateOrEditPage = str_contains($currentRoute, '.create') || 
-                                             str_contains($currentRoute, '.edit') || 
-                                             str_contains($currentRoute, 'create') || 
+                        $isCreateOrEditPage = str_contains($currentRoute, '.create') ||
+                                             str_contains($currentRoute, '.edit') ||
+                                             str_contains($currentRoute, 'create') ||
                                              str_contains($currentRoute, 'edit');
                     @endphp
 

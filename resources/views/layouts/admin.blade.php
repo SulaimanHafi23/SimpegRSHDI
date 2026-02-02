@@ -22,7 +22,7 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Mobile Responsive Fix -->
     <style>
         @media (max-width: 768px) {
@@ -39,16 +39,16 @@
             }
         }
     </style>
-    
+
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-gray-50 overflow-x-hidden">
     <div class="min-h-screen flex overflow-x-hidden max-w-full">
         <!-- Backdrop Overlay for Mobile -->
-        <div id="sidebar-backdrop" 
+        <div id="sidebar-backdrop"
              class="fixed inset-0 backdrop-blur-sm bg-white/30 z-30 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
              onclick="toggleUnifiedSidebar()"></div>
-        
+
         <!-- Unified Sidebar -->
         @include('layouts.partials.unified-sidebar')
 
@@ -67,9 +67,9 @@
                 <!-- Alert Messages -->
                 @php
                     $currentRoute = Route::currentRouteName();
-                    $isCreateOrEditPage = str_contains($currentRoute, '.create') || 
-                                         str_contains($currentRoute, '.edit') || 
-                                         str_contains($currentRoute, 'create') || 
+                    $isCreateOrEditPage = str_contains($currentRoute, '.create') ||
+                                         str_contains($currentRoute, '.edit') ||
+                                         str_contains($currentRoute, 'create') ||
                                          str_contains($currentRoute, 'edit');
                 @endphp
 
@@ -113,7 +113,7 @@
     <div id="sidebar-overlay" class="fixed inset-0 backdrop-blur-sm bg-white/30 hidden lg:hidden transition-opacity duration-300" style="z-index: 35;"></div>
 
     @stack('scripts')
-    
+
     <script>
         // Admin Notifications Alpine Component
         function adminNotifications() {
@@ -182,8 +182,8 @@
                 },
 
                 updateTotal() {
-                    this.totalPending = this.pendingLeaves.length + 
-                                       this.pendingOvertimes.length + 
+                    this.totalPending = this.pendingLeaves.length +
+                                       this.pendingOvertimes.length +
                                        this.pendingDocuments.length;
                 }
             };
@@ -192,10 +192,10 @@
         function toggleSidebar() {
             const sidebar = document.getElementById('admin-sidebar');
             const overlay = document.getElementById('sidebar-overlay');
-            
+
             if (sidebar && overlay) {
                 const isHidden = sidebar.classList.contains('-translate-x-full');
-                
+
                 if (isHidden) {
                     // Open sidebar
                     sidebar.classList.remove('-translate-x-full');

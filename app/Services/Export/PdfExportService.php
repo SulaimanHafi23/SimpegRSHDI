@@ -14,7 +14,7 @@ class PdfExportService
     {
         try {
             $collection = collect($attendances);
-            
+
             $data = [
                 'title' => 'Laporan Riwayat Absensi',
                 'worker' => $worker,
@@ -31,7 +31,7 @@ class PdfExportService
 
             $pdf = Pdf::loadView('employee.exports.attendance-pdf', $data);
             $pdf->setPaper('a4', 'portrait');
-            
+
             $filename = 'Absensi_' . $worker->name . '_' . now()->format('YmdHis') . '.pdf';
             return $pdf->download($filename);
         } catch (\Exception $e) {
@@ -50,7 +50,7 @@ class PdfExportService
     {
         try {
             $collection = collect($leaves);
-            
+
             $data = [
                 'title' => 'Laporan Riwayat Cuti',
                 'worker' => $worker,
@@ -67,7 +67,7 @@ class PdfExportService
 
             $pdf = Pdf::loadView('employee.exports.leave-pdf', $data);
             $pdf->setPaper('a4', 'portrait');
-            
+
             $filename = 'Cuti_' . $worker->name . '_' . now()->format('YmdHis') . '.pdf';
             return $pdf->download($filename);
         } catch (\Exception $e) {
@@ -85,7 +85,7 @@ class PdfExportService
     {
         try {
             $collection = collect($overtimes);
-            
+
             $data = [
                 'title' => 'Laporan Riwayat Lembur',
                 'worker' => $worker,
@@ -103,7 +103,7 @@ class PdfExportService
 
             $pdf = Pdf::loadView('employee.exports.overtime-pdf', $data);
             $pdf->setPaper('a4', 'landscape');
-            
+
             $filename = 'Lembur_' . $worker->name . '_' . now()->format('YmdHis') . '.pdf';
             return $pdf->download($filename);
         } catch (\Exception $e) {

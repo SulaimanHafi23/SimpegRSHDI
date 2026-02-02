@@ -44,17 +44,17 @@
     {{-- Main Content --}}
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             {{-- Sweet Alert for notifications --}}
             <x-sweet-alert />
-            
+
             {{-- Dashboard Card --}}
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 bg-white border-b border-gray-200">
                     <h2 class="text-2xl font-semibold text-gray-800 mb-4">
                         Dashboard
                     </h2>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {{-- User Info Card --}}
                         <div class="bg-indigo-50 rounded-lg p-6 border border-indigo-200">
@@ -89,7 +89,7 @@
                                 @endif
                             </ul>
                         </div>
-                        
+
                         {{-- Quick Links Card --}}
                         <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
                             <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -104,19 +104,19 @@
                                         <span class="text-gray-800 font-medium">Admin Dashboard</span>
                                     </a>
                                 @endrole
-                                
+
                                 @role('HR')
                                     <a href="{{ route('hr.dashboard') }}" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                         <span class="text-gray-800 font-medium">HR Dashboard</span>
                                     </a>
                                 @endrole
-                                
+
                                 @role('Manager')
                                     <a href="{{ route('manager.dashboard') }}" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                         <span class="text-gray-800 font-medium">Manager Dashboard</span>
                                     </a>
                                 @endrole
-                                
+
                                 <a href="#" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                     <span class="text-gray-800 font-medium">Profile Saya</span>
                                 </a>

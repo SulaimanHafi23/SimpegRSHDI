@@ -23,7 +23,7 @@
                     <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
                         Sedang Dalam Perbaikan
                     </h1>
-                    
+
                     {{-- Message --}}
                     <p class="text-lg text-gray-600 mb-8">
                         Kami sedang melakukan pemeliharaan sistem untuk meningkatkan layanan.
@@ -110,7 +110,7 @@
             50% { width: 75%; }
             100% { width: 100%; }
         }
-        
+
         .animate-progress {
             animation: progress 3s ease-in-out infinite;
         }
