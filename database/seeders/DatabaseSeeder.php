@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             WorkerSeeder::class,
             UserSeeder::class,
+            HRUserSeeder::class, // HR dedicated user
         ]);
 
         $this->command->info('📋 Seeding Operational Data...');

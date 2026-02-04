@@ -11,7 +11,7 @@ class DocumentApprovalController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:HR');
+        $this->middleware('role:Manager|HR|Super Admin');
     }
 
     public function index(Request $request)

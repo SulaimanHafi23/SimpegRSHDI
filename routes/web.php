@@ -94,7 +94,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('role:Manager')->name('manager.dashboard');
 
     // ========== EMPLOYEE ROUTES ==========
-    Route::prefix('employee')->name('employee.')->middleware('role_or_permission:Employee|dashboard.employee')->group(function () {
+    Route::prefix('employee')->name('employee.')->middleware('role_or_permission:Employee|Manager|dashboard.employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         // Attendance for employees
         Route::prefix('attendance')->name('attendance.')->group(function () {
@@ -210,7 +210,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== APPROVAL ROUTES ==========
-    Route::prefix('approvals')->name('approvals.')->middleware('role:Manager|HR')->group(function () {
+    Route::prefix('approvals')->name('approvals.')->middleware('role:Manager|HR|Super Admin')->group(function () {
         // Leave Approvals
         Route::prefix('leaves')->name('leaves.')->group(function () {
             Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
@@ -234,8 +234,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         });
     });
 
-    // Business Trip Approvals (separate - has its own middleware in controller)
-    Route::prefix('approvals/business-trips')->name('approvals.business-trips.')->middleware('auth')->group(function () {
+    // Business Trip Approvals (separate - needs Manager|HR|Super Admin role)
+    Route::prefix('approvals/business-trips')->name('approvals.business-trips.')->middleware('role:Manager|HR|Super Admin')->group(function () {
         Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
         Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
         Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');

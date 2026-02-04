@@ -13,7 +13,7 @@ class OvertimeApprovalController extends Controller
         private readonly OvertimeRequestService $overtimeService
     ) {
         $this->middleware('auth');
-        $this->middleware('role:Manager|HR');
+        $this->middleware('role:Manager|HR|Super Admin');
     }
 
     public function index(Request $request)
@@ -29,9 +29,28 @@ class OvertimeApprovalController extends Controller
             $filters['department_id'] = $user->worker->department_id;
         }
 
-        $overtimeRequests = $this->overtimeService->getAll($filters);
+        $overtimes = $this->overtimeService->getAll($filters);
+        
+        // Get statistics
+        $baseQuery = OvertimeRequest::query();
+        if ($user->hasRole('Manager') && $user->worker) {
+            $baseQuery->whereHas('worker', function($q) use ($user) {
+                $q->where('department_id', $user->worker->department_id);
+            });
+        }
+        
+        $totalOvertimes = $baseQuery->count();
+        $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
+        $approvedCount = (clone $baseQuery)->where('status', 'approved')->count();
+        $rejectedCount = (clone $baseQuery)->where('status', 'rejected')->count();
 
-        return view('approvals.overtimes.index', compact('overtimeRequests'));
+        return view('approvals.overtimes.index', compact(
+            'overtimes',
+            'totalOvertimes',
+            'pendingCount',
+            'approvedCount',
+            'rejectedCount'
+        ));
     }
 
     public function show(string $id)

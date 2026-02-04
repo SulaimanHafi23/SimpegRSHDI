@@ -11,7 +11,7 @@ class BusinessTripApprovalController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:business-trip.manage');
+        $this->middleware('role:Manager|HR|Super Admin');
     }
 
     public function index(Request $request)
@@ -26,6 +26,13 @@ class BusinessTripApprovalController extends Controller
         ];
 
         $query = BusinessTrip::with(['worker.user', 'worker.department']);
+
+        // If user is Manager, only show requests from their department
+        if ($user->hasRole('Manager') && $user->worker) {
+            $query->whereHas('worker', function($q) use ($user) {
+                $q->where('department_id', $user->worker->department_id);
+            });
+        }
 
         // Apply status filter
         if ($filters['status']) {
@@ -47,22 +54,10 @@ class BusinessTripApprovalController extends Controller
             });
         }
 
-        // Manager can only see trips from their department
-        if ($user->hasRole('Manager') && $user->worker) {
-            $query->whereHas('worker', function ($q) use ($user) {
-                $q->where('department_id', $user->worker->department_id);
-            });
-        }
-
         $trips = $query->orderBy('start_date', 'desc')->paginate($filters['per_page']);
 
         // Calculate statistics
         $statsQuery = BusinessTrip::query();
-        if ($user->hasRole('Manager') && $user->worker) {
-            $statsQuery->whereHas('worker', function ($q) use ($user) {
-                $q->where('department_id', $user->worker->department_id);
-            });
-        }
 
         $statistics = [
             'total' => $statsQuery->count(),

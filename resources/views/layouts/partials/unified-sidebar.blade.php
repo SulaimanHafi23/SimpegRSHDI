@@ -279,10 +279,10 @@
             </div>
         </div>
 
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
-        <a href="{{ route('admin.leave.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.leave.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
+        <a href="{{ route('approvals.leaves.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('approvals.leaves.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('approvals.leaves.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-times text-xs {{ request()->routeIs('admin.leave.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('admin.leave.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Cuti</span>
@@ -292,10 +292,10 @@
         </a>
         @endif
 
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('overtime.manage') || auth()->user()->can('overtime.approve'))
-        <a href="{{ route('admin.overtime.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.overtime.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('overtime.manage') || auth()->user()->can('overtime.approve'))
+        <a href="{{ route('approvals.overtimes.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('approvals.overtimes.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('approvals.overtimes.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('admin.overtime.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('admin.overtime.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur</span>
@@ -388,7 +388,7 @@
         </a>
         @endif
 
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('calendar.view'))
+        @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->can('calendar.view'))
         <a href="{{ route('employee.calendar.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.calendar.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">

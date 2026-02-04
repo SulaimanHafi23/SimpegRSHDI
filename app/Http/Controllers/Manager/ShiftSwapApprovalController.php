@@ -11,7 +11,7 @@ class ShiftSwapApprovalController extends Controller
     public function __construct(protected ShiftSwapService $shiftSwapService)
     {
         $this->middleware('auth');
-        $this->middleware('permission:shift-swap.manage');
+        $this->middleware('role:Manager|HR|Super Admin');
     }
 
     /**
