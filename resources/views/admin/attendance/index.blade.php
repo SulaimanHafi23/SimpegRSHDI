@@ -712,7 +712,7 @@
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center space-x-1">
                                 <!-- Tombol Statistik Pegawai -->
-                                <a href="{{ route('admin.workers.attendance-history', $worker->id) }}"
+                                <a href="{{ route('admin.attendance.history', $worker->id) }}"
                                    class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" title="Lihat Statistik">
                                     <i class="fas fa-chart-bar w-4 h-4"></i>
                                 </a>
