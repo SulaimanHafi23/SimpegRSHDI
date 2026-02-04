@@ -20,7 +20,7 @@ class ShiftSwapApprovalController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        
+
         try {
             $items = $this->shiftSwapService->listPendingApprovalsForManager($user->id);
             return view('manager.shift-swap-approvals.index', compact('items'));
@@ -35,7 +35,7 @@ class ShiftSwapApprovalController extends Controller
     public function show(string $id)
     {
         $swap = \App\Models\ShiftSwapRequest::with([
-            'requester.user', 
+            'requester.user',
             'requester.department',
             'targetWorker.user',
             'targetWorker.department',

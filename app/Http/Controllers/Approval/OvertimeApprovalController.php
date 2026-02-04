@@ -30,7 +30,7 @@ class OvertimeApprovalController extends Controller
         }
 
         $overtimes = $this->overtimeService->getAll($filters);
-        
+
         // Get statistics
         $baseQuery = OvertimeRequest::query();
         if ($user->hasRole('Manager') && $user->worker) {
@@ -38,7 +38,7 @@ class OvertimeApprovalController extends Controller
                 $q->where('department_id', $user->worker->department_id);
             });
         }
-        
+
         $totalOvertimes = $baseQuery->count();
         $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
         $approvedCount = (clone $baseQuery)->where('status', 'approved')->count();

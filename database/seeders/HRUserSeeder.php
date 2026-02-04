@@ -34,7 +34,7 @@ class HRUserSeeder extends Seeder
         }
 
         // Get or create necessary data
-        $department = Department::where('name', 'Human Resource')->first() 
+        $department = Department::where('name', 'Human Resource')->first()
                       ?? Department::where('name', 'LIKE', '%hr%')->first()
                       ?? Department::first();
 

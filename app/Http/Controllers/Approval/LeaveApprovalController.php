@@ -31,7 +31,7 @@ class LeaveApprovalController extends Controller
 
         $leaves = $this->leaveService->getAll($filters);
         $leaveTypes = \App\Models\LeaveType::orderBy('name')->get();
-        
+
         // Get statistics
         $baseQuery = LeaveRequest::query();
         if ($user->hasRole('Manager') && $user->worker) {
@@ -39,14 +39,14 @@ class LeaveApprovalController extends Controller
                 $q->where('department_id', $user->worker->department_id);
             });
         }
-        
+
         $totalLeaves = $baseQuery->count();
         $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
         $approvedCount = (clone $baseQuery)->where('status', 'approved')->count();
         $rejectedCount = (clone $baseQuery)->where('status', 'rejected')->count();
 
         return view('approvals.leaves.index', compact(
-            'leaves', 
+            'leaves',
             'leaveTypes',
             'totalLeaves',
             'pendingCount',
