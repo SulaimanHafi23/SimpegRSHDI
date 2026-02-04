@@ -39,7 +39,7 @@ class OvertimeRequestController extends Controller
             'pending' => $this->overtimeRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total(),
             'approved' => $this->overtimeRequestService->getAll(['status' => 'approved', 'per_page' => 9999])->total(),
             'rejected' => $this->overtimeRequestService->getAll(['status' => 'rejected', 'per_page' => 9999])->total(),
-            'total_hours' => 0, // TODO: Calculate from database
+            'total_hours' => \App\Models\OvertimeRequest::where('status', 'approved')->sum('total_hours'),
         ];
 
         return view('admin.overtime.index', compact('overtimes', 'workers', 'statistics', 'filters'));

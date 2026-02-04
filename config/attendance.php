@@ -8,6 +8,24 @@ return [
 
     // Automatically select nearest location if within this radius (meters)
     'auto_select_radius' => env('ATTENDANCE_AUTO_SELECT_RADIUS', 500),
+
+    // ========== TIME WINDOW VALIDATION ==========
+    
+    // Maximum hours BEFORE shift start time that check-in is allowed
+    // Example: If shift starts at 08:00 and this is set to 2, earliest check-in is 06:00
+    'check_in_window_before_hours' => env('ATTENDANCE_CHECKIN_WINDOW_BEFORE', 2),
+    
+    // Maximum hours AFTER shift end time that check-out is allowed
+    // Example: If shift ends at 14:30 and this is set to 4, latest check-out is 18:30
+    'check_out_window_after_hours' => env('ATTENDANCE_CHECKOUT_WINDOW_AFTER', 4),
+    
+    // Grace period for early check-in (minutes)
+    // If employee checks in earlier than the window, they'll get a warning but still allowed
+    'early_checkin_grace_minutes' => env('ATTENDANCE_EARLY_CHECKIN_GRACE', 30),
+    
+    // Enable/disable strict time window enforcement
+    // If false, time window violations will only show warnings, not block check-in/out
+    'strict_time_window' => env('ATTENDANCE_STRICT_TIME_WINDOW', false),
     // Shift swap settings
     'shift_swap' => [
         // Minimum rest period between shifts (hours)

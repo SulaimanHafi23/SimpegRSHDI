@@ -1,6 +1,6 @@
 @extends('layouts.employee')
 
-@section('title', 'Kalender Cuti & Lembur')
+@section('title', 'Kalender Saya')
 
 @section('content')
 <div x-data="calendarApp()" x-init="initCalendar()">
@@ -9,9 +9,9 @@
         <div>
             <h1 class="text-2xl font-bold text-gray-900 flex items-center">
                 <i class="fas fa-calendar-alt mr-3 text-green-600"></i>
-                Kalender Cuti & Lembur
+                Kalender Saya
             </h1>
-            <p class="mt-1 text-sm text-gray-600">Lihat jadwal cuti dan lembur Anda dalam tampilan kalender</p>
+            <p class="mt-1 text-sm text-gray-600">Lihat jadwal cuti, lembur, dan perjalanan dinas Anda</p>
         </div>
     </div>
 
@@ -30,6 +30,10 @@
             <div class="flex items-center space-x-2">
                 <div class="w-4 h-4 rounded" style="background-color: #3b82f6;"></div>
                 <span class="text-sm text-gray-600">Lembur Disetujui</span>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div class="w-4 h-4 rounded" style="background-color: #8b5cf6;"></div>
+                <span class="text-sm text-gray-600">✈️ Perjalanan Dinas</span>
             </div>
             <div class="flex items-center space-x-2">
                 <div class="w-4 h-4 rounded" style="background-color: #f59e0b;"></div>
@@ -139,6 +143,12 @@
                             <p class="text-xs text-gray-500">
                                 <i class="fas fa-clock mr-1"></i>
                                 <span x-text="event.hours"></span> jam
+                            </p>
+                        </template>
+                        <template x-if="event.type === 'business-trip'">
+                            <p class="text-xs text-gray-500">
+                                <i class="fas fa-plane-departure mr-1"></i>
+                                <span x-text="'Tujuan: ' + event.destination"></span>
                             </p>
                         </template>
                     </div>

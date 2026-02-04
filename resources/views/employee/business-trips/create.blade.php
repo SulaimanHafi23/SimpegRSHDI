@@ -44,7 +44,7 @@
             <div class="ml-3">
                 <h3 class="text-sm font-semibold text-gray-800 mb-2">Informasi Penting:</h3>
                 <ul class="text-sm text-gray-700 space-y-1 list-disc list-inside">
-                    <li>Perjalanan dinas harus diajukan minimal 3 hari sebelum keberangkatan</li>
+                    <li>Perjalanan dinas harus diajukan minimal 1 hari sebelum keberangkatan</li>
                     <li>Estimasi biaya harus realistis dan sesuai dengan standar</li>
                     <li>Semua perjalanan dinas memerlukan persetujuan</li>
                     <!-- <li>Dokumen pendukung dapat diupload setelah pengajuan disetujui</li> -->
@@ -95,13 +95,17 @@
                                name="start_date" 
                                id="start_date"
                                value="{{ old('start_date') }}"
-                               min="{{ date('Y-m-d', strtotime('+3 days')) }}"
+                               min="{{ date('Y-m-d', strtotime('+1 day')) }}"
                                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent @error('start_date') border-red-500 @enderror"
                                required>
+                        <p class="mt-1 text-xs text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Minimal besok diajukan untuk besok
+                        </p>
                         @error('start_date')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
-                        <p class="text-xs text-gray-500 mt-1">Minimal 3 hari dari hari ini</p>
+                        <!-- <p class="text-xs text-gray-500 mt-1">Minimal 3 hari dari hari ini</p> -->
                     </div>
 
                     <!-- End Date -->

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Models\Holiday;
+use App\Models\BusinessTrip;
 use App\Services\Leave\LeaveRequestService;
 use App\Services\Overtime\OvertimeRequestService;
 use Carbon\Carbon;
@@ -56,6 +57,18 @@ class CalendarController extends Controller
         // Get holidays
         $holidays = Holiday::dateRange($start, $end)->get();
 
+        // Get business trips
+        $businessTrips = BusinessTrip::where('worker_id', $workerId)
+            ->where(function ($query) use ($start, $end) {
+                $query->whereBetween('start_date', [$start, $end])
+                    ->orWhereBetween('end_date', [$start, $end])
+                    ->orWhere(function ($q) use ($start, $end) {
+                        $q->where('start_date', '<=', $start)
+                          ->where('end_date', '>=', $end);
+                    });
+            })
+            ->get();
+
         $events = [];
 
         // Process leaves
@@ -103,6 +116,21 @@ class CalendarController extends Controller
             ];
         }
 
+        // Process business trips
+        foreach ($businessTrips as $trip) {
+            $events[] = [
+                'id' => 'business-trip-' . $trip->id,
+                'type' => 'business-trip',
+                'title' => '✈️ Perjalanan Dinas: ' . $trip->destination,
+                'start' => $trip->start_date,
+                'end' => Carbon::parse($trip->end_date)->addDay()->format('Y-m-d'), // FullCalendar exclusive end
+                'status' => $trip->status,
+                'color' => $this->getBusinessTripColor($trip->status),
+                'description' => $trip->purpose,
+                'destination' => $trip->destination,
+            ];
+        }
+
         return response()->json($events);
     }
 
@@ -128,6 +156,20 @@ class CalendarController extends Controller
             'approved' => '#3b82f6', // blue
             'pending' => '#f59e0b', // amber
             'rejected' => '#ef4444', // red
+            default => '#6b7280', // gray
+        };
+    }
+
+    /**
+     * Get color based on business trip status
+     */
+    private function getBusinessTripColor(string $status): string
+    {
+        return match($status) {
+            'approved' => '#8b5cf6', // purple - perjalanan dinas disetujui
+            'pending' => '#f59e0b', // amber - menunggu persetujuan
+            'rejected' => '#ef4444', // red - ditolak
+            'completed' => '#10b981', // green - selesai
             default => '#6b7280', // gray
         };
     }

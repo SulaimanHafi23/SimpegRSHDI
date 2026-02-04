@@ -11,7 +11,7 @@
                 variant="secondary" 
                 size="sm"
                 icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.workers.show', $worker->id) }}'">
+                onclick="window.history.back()">
             </x-button>
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">Riwayat Presensi</h1>
@@ -302,27 +302,31 @@
                     ];
                 @endphp
                 
-                <div class="border border-gray-300 rounded-lg p-2 {{ $bgColor }} min-h-[120px] hover:shadow-md transition-shadow relative">
+                <div class="border border-gray-300 rounded-lg p-3 {{ $bgColor }} min-h-[180px] hover:shadow-lg transition-all relative overflow-hidden">
                     {{-- Date Number --}}
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-lg font-bold {{ $isWeekend ? 'text-red-600' : 'text-gray-800' }}">
+                        <span class="text-xl font-bold {{ $isWeekend ? 'text-red-600' : 'text-gray-800' }}">
                             {{ $dayData['day'] }}
                         </span>
                         @if($isToday)
-                            <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">Hari Ini</span>
+                            <span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-semibold">Hari Ini</span>
                         @endif
                     </div>
 
                     {{-- Shift Schedule Info --}}
                     @if($shift)
                         <div class="mb-2 pb-2 border-b border-gray-200">
-                            <div class="text-xs font-medium text-gray-700 mb-1 flex items-center">
-                                <i class="fas fa-clock text-indigo-600 mr-1"></i>
+                            <div class="text-xs font-semibold text-indigo-700 mb-1 flex items-center">
+                                <i class="fas fa-clock mr-1"></i>
                                 {{ $shift->name }}
                             </div>
-                            <div class="text-xs text-gray-600">
-                                <i class="fas fa-sign-in-alt text-green-600 mr-1"></i>{{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}
-                                <i class="fas fa-sign-out-alt text-red-600 ml-2 mr-1"></i>{{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}
+                            <div class="text-xs text-gray-600 flex items-center justify-between">
+                                <span class="flex items-center">
+                                    <i class="fas fa-sign-in-alt text-green-600 mr-1"></i>{{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}
+                                </span>
+                                <span class="flex items-center">
+                                    <i class="fas fa-sign-out-alt text-red-600 mr-1"></i>{{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}
+                                </span>
                             </div>
                         </div>
                     @endif
@@ -333,63 +337,95 @@
                             $config = $statusConfig[$attendance->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'icon' => 'fas fa-question-circle', 'label' => 'Unknown'];
                         @endphp
                         
-                        <div class="space-y-1">
+                        <div class="space-y-1.5">
                             {{-- Status Badge --}}
-                            <div class="inline-flex items-center px-2 py-1 rounded text-xs font-medium {{ $config['bg'] }} {{ $config['text'] }}">
+                            <div class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold {{ $config['bg'] }} {{ $config['text'] }} w-full justify-center">
                                 <i class="{{ $config['icon'] }} mr-1"></i>
                                 {{ $config['label'] }}
                             </div>
                             
-                            {{-- Late Badge --}}
-                            @if($attendance->is_late)
-                                <div class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700 ml-1">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i>
-                                    Terlambat
+                            {{-- Late & Early Leave Info --}}
+                            <div class="flex gap-1">
+                                @if($attendance->is_late && $attendance->late_minutes)
+                                    <div class="flex-1 inline-flex items-center justify-center px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                                        +{{ $attendance->late_minutes }}m
+                                    </div>
+                                @endif
+                                
+                                @if($attendance->is_early_leave && $attendance->early_leave_minutes)
+                                    <div class="flex-1 inline-flex items-center justify-center px-2 py-1 rounded text-xs font-medium bg-amber-100 text-amber-700">
+                                        <i class="fas fa-running mr-1"></i>
+                                        -{{ $attendance->early_leave_minutes }}m
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Check-in & Check-out Time --}}
+                            <div class="bg-gray-50 rounded-md p-2 space-y-1">
+                                @if($attendance->check_in)
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-gray-600">
+                                            <i class="fas fa-sign-in-alt text-green-600 mr-1"></i>Masuk
+                                        </span>
+                                        <span class="font-bold text-gray-800">{{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}</span>
+                                    </div>
+                                @endif
+
+                                @if($attendance->check_out)
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-gray-600">
+                                            <i class="fas fa-sign-out-alt text-red-600 mr-1"></i>Keluar
+                                        </span>
+                                        <span class="font-bold text-gray-800">{{ \Carbon\Carbon::parse($attendance->check_out)->format('H:i') }}</span>
+                                    </div>
+                                @endif
+
+                                {{-- Work Duration --}}
+                                @if($attendance->check_in && $attendance->check_out)
+                                    @php
+                                        $checkIn = \Carbon\Carbon::parse($attendance->check_in);
+                                        $checkOut = \Carbon\Carbon::parse($attendance->check_out);
+                                        $duration = $checkIn->diff($checkOut);
+                                        $hours = $duration->h;
+                                        $minutes = $duration->i;
+                                    @endphp
+                                    <div class="flex items-center justify-between text-xs pt-1 border-t border-gray-200">
+                                        <span class="text-gray-600">
+                                            <i class="fas fa-hourglass-half text-blue-600 mr-1"></i>Durasi
+                                        </span>
+                                        <span class="font-bold text-blue-600">{{ $hours }}j {{ $minutes }}m</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- Location Info --}}
+                            @if($attendance->location)
+                                <div class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded flex items-center">
+                                    <i class="fas fa-map-marker-alt mr-1"></i>
+                                    <span class="truncate flex-1">{{ Str::limit($attendance->location->name, 18) }}</span>
                                 </div>
                             @endif
 
-                            {{-- Check-in Time --}}
-                            @if($attendance->check_in_time)
-                                <div class="text-xs text-gray-700 mt-1">
-                                    <i class="fas fa-sign-in-alt text-green-600 mr-1"></i>
-                                    <span class="font-semibold">{{ \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') }}</span>
-                                </div>
-                            @endif
-
-                            {{-- Check-out Time --}}
-                            @if($attendance->check_out_time)
-                                <div class="text-xs text-gray-700">
-                                    <i class="fas fa-sign-out-alt text-red-600 mr-1"></i>
-                                    <span class="font-semibold">{{ \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') }}</span>
-                                </div>
-                            @endif
-
-                            {{-- Work Duration --}}
-                            @if($attendance->check_in_time && $attendance->check_out_time)
-                                @php
-                                    $checkIn = \Carbon\Carbon::parse($attendance->check_in_time);
-                                    $checkOut = \Carbon\Carbon::parse($attendance->check_out_time);
-                                    $duration = $checkIn->diff($checkOut);
-                                    $hours = $duration->h;
-                                    $minutes = $duration->i;
-                                @endphp
-                                <div class="text-xs text-blue-600 font-medium mt-1">
-                                    <i class="fas fa-hourglass-half mr-1"></i>
-                                    {{ $hours }}j {{ $minutes }}m
+                            {{-- Notes/Remarks --}}
+                            @if($attendance->notes)
+                                <div class="text-xs bg-yellow-50 text-yellow-700 px-2 py-1 rounded flex items-start">
+                                    <i class="fas fa-sticky-note mr-1 mt-0.5"></i>
+                                    <span class="flex-1 line-clamp-2">{{ $attendance->notes }}</span>
                                 </div>
                             @endif
                         </div>
                     @else
                         {{-- No attendance record --}}
                         @if($shift && !$isWeekend)
-                            <div class="text-xs text-gray-400 italic mt-2">
+                            <div class="text-xs text-gray-400 italic mt-2 text-center bg-gray-50 rounded py-2">
                                 <i class="fas fa-info-circle mr-1"></i>
                                 Belum ada presensi
                             </div>
                         @elseif($isWeekend)
-                            <div class="text-xs text-gray-400 italic mt-2">
+                            <div class="text-xs text-gray-400 italic mt-2 text-center bg-gray-50 rounded py-2">
                                 <i class="fas fa-calendar-day mr-1"></i>
-                                Hari Libur (Minggu)
+                                Hari Libur
                             </div>
                         @endif
                     @endif
@@ -400,7 +436,7 @@
         {{-- Legend --}}
         <div class="mt-6 pt-4 border-t border-gray-200">
             <h4 class="text-sm font-semibold text-gray-700 mb-3">Keterangan:</h4>
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-sm">
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-sm">
                 <div class="flex items-center">
                     <div class="w-4 h-4 rounded bg-green-100 border border-green-300 mr-2"></div>
                     <span class="text-gray-700">Hadir</span>
@@ -426,11 +462,105 @@
                     <span class="text-gray-700">Terlambat</span>
                 </div>
                 <div class="flex items-center">
+                    <div class="w-4 h-4 rounded bg-amber-100 border border-amber-300 mr-2"></div>
+                    <span class="text-gray-700">Pulang Cepat</span>
+                </div>
+                <div class="flex items-center">
                     <div class="w-4 h-4 rounded bg-blue-50 border border-blue-400 mr-2"></div>
                     <span class="text-gray-700">Hari Ini</span>
                 </div>
             </div>
         </div>
     </x-card>
+
+    {{-- Modal for Attendance Detail --}}
+    <div id="attendanceDetailModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+        <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b">
+                <h3 class="text-lg font-bold text-gray-900">Detail Presensi</h3>
+                <button onclick="closeAttendanceDetail()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div id="attendanceDetailContent" class="space-y-4">
+                {{-- Content will be loaded here --}}
+            </div>
+        </div>
+    </div>
 </div>
+
+@push('scripts')
+<script>
+    function showAttendanceDetail(attendanceId, date) {
+        const modal = document.getElementById('attendanceDetailModal');
+        const content = document.getElementById('attendanceDetailContent');
+        
+        // Show modal
+        modal.classList.remove('hidden');
+        
+        // Show loading
+        content.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i><p class="mt-2 text-gray-600">Memuat data...</p></div>';
+        
+        // Fetch attendance detail
+        fetch(`/api/attendance/${attendanceId}/detail`)
+            .then(response => response.json())
+            .then(data => {
+                let html = '<div class="space-y-4">';
+                
+                // Date
+                html += `<div class="bg-blue-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Tanggal</div><div class="font-semibold text-gray-900">${date}</div></div>`;
+                
+                // Status
+                html += `<div class="bg-gray-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Status</div><div class="font-semibold text-gray-900 capitalize">${data.status}</div></div>`;
+                
+                // Check-in
+                if (data.check_in_time) {
+                    html += `<div class="bg-green-50 p-3 rounded-lg">
+                        <div class="text-sm text-gray-600">Check In</div>
+                        <div class="font-semibold text-gray-900">${data.check_in_time}</div>
+                        ${data.is_late ? `<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>Terlambat ${data.late_minutes} menit</div>` : ''}
+                    </div>`;
+                }
+                
+                // Check-out
+                if (data.check_out_time) {
+                    html += `<div class="bg-red-50 p-3 rounded-lg">
+                        <div class="text-sm text-gray-600">Check Out</div>
+                        <div class="font-semibold text-gray-900">${data.check_out_time}</div>
+                        ${data.is_early_leave ? `<div class="text-xs text-amber-600 mt-1"><i class="fas fa-running mr-1"></i>Pulang ${data.early_leave_minutes} menit lebih cepat</div>` : ''}
+                    </div>`;
+                }
+                
+                // Location
+                if (data.location) {
+                    html += `<div class="bg-indigo-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Lokasi</div><div class="font-semibold text-gray-900">${data.location}</div></div>`;
+                }
+                
+                // Notes
+                if (data.notes) {
+                    html += `<div class="bg-yellow-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Catatan</div><div class="text-gray-900">${data.notes}</div></div>`;
+                }
+                
+                html += '</div>';
+                content.innerHTML = html;
+            })
+            .catch(error => {
+                content.innerHTML = '<div class="text-center py-8 text-red-600"><i class="fas fa-exclamation-triangle text-4xl mb-2"></i><p>Gagal memuat data</p></div>';
+                console.error('Error:', error);
+            });
+    }
+    
+    function closeAttendanceDetail() {
+        document.getElementById('attendanceDetailModal').classList.add('hidden');
+    }
+    
+    // Close modal when clicking outside
+    document.getElementById('attendanceDetailModal')?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeAttendanceDetail();
+        }
+    });
+</script>
+@endpush
+
 @endsection

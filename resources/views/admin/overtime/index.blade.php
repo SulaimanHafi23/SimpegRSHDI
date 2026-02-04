@@ -153,11 +153,11 @@
                         <x-table.cell>
                             @php
                                 $statusBadges = [
-                                    'Pending' => ['variant' => 'warning', 'label' => 'Pending'],
-                                    'Approved' => ['variant' => 'success', 'label' => 'Approved'],
-                                    'Rejected' => ['variant' => 'danger', 'label' => 'Rejected'],
+                                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                                    'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                                    'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
                                 ];
-                                $badge = $statusBadges[$overtime->status] ?? ['variant' => 'secondary', 'label' => $overtime->status];
+                                $badge = $statusBadges[$overtime->status] ?? ['variant' => 'secondary', 'label' => ucfirst($overtime->status)];
                             @endphp
                             <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
                         </x-table.cell>
@@ -169,6 +169,19 @@
                                    title="Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
+
+                                @if($overtime->status === 'pending')
+                                    <button onclick="approveOvertime('{{ $overtime->id }}')" 
+                                            class="text-green-600 hover:text-green-900 inline-flex items-center" 
+                                            title="Setujui">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button onclick="rejectOvertime('{{ $overtime->id }}')" 
+                                            class="text-red-600 hover:text-red-900 inline-flex items-center" 
+                                            title="Tolak">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                @endif
                             </div>
                         </x-table.cell>
                     </x-table.row>

@@ -25,6 +25,10 @@ class Attendance extends Model
         'check_out_longitude',
         'distance_check_in',
         'distance_check_out',
+        'check_in_by_admin',
+        'check_in_admin_id',
+        'check_out_by_admin',
+        'check_out_admin_id',
         'status',
         'is_late',
         'late_minutes',
@@ -45,6 +49,8 @@ class Attendance extends Model
         'check_out_longitude' => 'decimal:8',
         'distance_check_in' => 'integer',
         'distance_check_out' => 'integer',
+        'check_in_by_admin' => 'boolean',
+        'check_out_by_admin' => 'boolean',
         'is_late' => 'boolean',
         'late_minutes' => 'integer',
         'is_early_leave' => 'boolean',
@@ -66,6 +72,16 @@ class Attendance extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function checkInAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'check_in_admin_id');
+    }
+
+    public function checkOutAdmin(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'check_out_admin_id');
     }
 
     public function photos(): HasMany

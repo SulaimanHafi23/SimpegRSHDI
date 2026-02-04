@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Approval;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessTrip;
+use App\Models\Worker;
 use Illuminate\Http\Request;
 
 class BusinessTripApprovalController extends Controller
@@ -17,12 +18,14 @@ class BusinessTripApprovalController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+        $isSuperAdmin = $user->hasRole('Super Admin');
+
         $filters = [
-            'status' => $request->input('status'),
-            'date_from' => $request->input('date_from'),
-            'date_to' => $request->input('date_to'),
-            'worker_search' => $request->input('worker_search'),
-            'per_page' => 20,
+            'status' => $request->input('status', ''),
+            'worker_id' => $request->input('worker_id'),
+            'month' => $request->input('month'),
+            'year' => $request->input('year'),
+            'per_page' => 15,
         ];
 
         $query = BusinessTrip::with(['worker.user', 'worker.department']);
@@ -35,22 +38,29 @@ class BusinessTripApprovalController extends Controller
         }
 
         // Apply status filter
-        if ($filters['status']) {
+        if (isset($filters['status']) && $filters['status'] !== '') {
             $query->where('status', $filters['status']);
         }
 
-        // Apply date filters
-        if ($filters['date_from']) {
-            $query->where('start_date', '>=', $filters['date_from']);
-        }
-        if ($filters['date_to']) {
-            $query->where('end_date', '<=', $filters['date_to']);
+        // Apply worker filter
+        if ($filters['worker_id']) {
+            $query->where('worker_id', $filters['worker_id']);
         }
 
-        // Apply worker search
-        if ($filters['worker_search']) {
-            $query->whereHas('worker.user', function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['worker_search'] . '%');
+        // Apply month filter
+        if ($filters['month']) {
+            $query->whereMonth('start_date', $filters['month']);
+        }
+
+        // Apply year filter
+        if ($filters['year']) {
+            $query->whereYear('start_date', $filters['year']);
+        }
+
+        // Manager can only see trips from their department, Super Admin sees all
+        if (!$isSuperAdmin && $user->hasRole('Manager') && $user->worker) {
+            $query->whereHas('worker', function ($q) use ($user) {
+                $q->where('department_id', $user->worker->department_id);
             });
         }
 
@@ -58,15 +68,28 @@ class BusinessTripApprovalController extends Controller
 
         // Calculate statistics
         $statsQuery = BusinessTrip::query();
+        if (!$isSuperAdmin && $user->hasRole('Manager') && $user->worker) {
+            $statsQuery->whereHas('worker', function ($q) use ($user) {
+                $q->where('department_id', $user->worker->department_id);
+            });
+        }
 
         $statistics = [
             'total' => $statsQuery->count(),
-            'pending' => $statsQuery->where('status', 'pending')->count(),
-            'approved' => $statsQuery->where('status', 'approved')->count(),
-            'rejected' => $statsQuery->where('status', 'rejected')->count(),
+            'pending' => (clone $statsQuery)->where('status', 'pending')->count(),
+            'approved' => (clone $statsQuery)->where('status', 'approved')->count(),
+            'rejected' => (clone $statsQuery)->where('status', 'rejected')->count(),
+            'cancelled' => (clone $statsQuery)->where('status', 'cancelled')->count(),
         ];
 
-        return view('approvals.business-trips.index', compact('trips', 'statistics'));
+        // Get workers for filter
+        $workersQuery = Worker::orderBy('name');
+        if (!$isSuperAdmin && $user->hasRole('Manager') && $user->worker) {
+            $workersQuery->where('department_id', $user->worker->department_id);
+        }
+        $workers = $workersQuery->get();
+
+        return view('approvals.business-trips.index', compact('trips', 'statistics', 'workers'));
     }
 
     public function show(string $id)

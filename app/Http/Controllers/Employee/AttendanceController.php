@@ -60,10 +60,25 @@ class AttendanceController extends Controller
             now()->year
         );
 
+        // Hitung jumlah yang terlambat (is_late = true)
+        $lateCount = $monthlySummary->where('is_late', true)->count();
+        
+        // Hitung jumlah pulang cepat (is_early_leave = true)
+        $earlyLeaveCount = $monthlySummary->where('is_early_leave', true)->count();
+        
+        // Hitung hadir sempurna (present, tidak terlambat, tidak pulang cepat)
+        $perfectCount = $monthlySummary
+            ->whereIn('status', ['present'])
+            ->where('is_late', false)
+            ->where('is_early_leave', false)
+            ->count();
+
         $summary = [
             'total_days' => $monthlySummary->count(),
-            'present' => $monthlySummary->where('status', 'present')->count(),
-            'late' => $monthlySummary->where('status', 'late')->count(),
+            'present' => $monthlySummary->whereIn('status', ['present', 'late'])->count(),
+            'late' => $lateCount,
+            'early_leave' => $earlyLeaveCount,
+            'perfect' => $perfectCount,
             // Semua status tidak hadir: absent, sick, permission, leave
             'absent' => $monthlySummary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count(),
         ];
@@ -121,9 +136,16 @@ class AttendanceController extends Controller
                 ->with('error', 'Anda sudah melakukan check-in hari ini.');
         }
 
+        // Check if on business trip today
+        $activeBusinessTrip = \App\Models\BusinessTrip::where('worker_id', $worker->id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->first();
+
         $locations = $this->locationService->getAllActive();
 
-        return view('employee.attendance.check-in', compact('locations'));
+        return view('employee.attendance.check-in', compact('locations', 'activeBusinessTrip'));
     }
 
     /**

@@ -40,49 +40,82 @@
         </div>
     </div>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs sm:text-sm font-medium text-gray-500 mb-1">Total Hari</p>
-                    <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ $summary['total_days'] }}</p>
-                </div>
-                <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
-                    <i class="fas fa-calendar text-gray-600 text-base sm:text-xl"></i>
-                </div>
+    <!-- Summary Cards - Statistik Bulan Ini -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-700">
+                <i class="fas fa-chart-pie text-sm"></i>
+            </span>
+            <div>
+                <p class="text-xs text-gray-500">Riwayat Presensi Bulan Ini</p>
+                <p class="text-sm sm:text-base font-semibold text-gray-800">Statistik Kehadiran {{ now()->translatedFormat('F Y') }}</p>
             </div>
         </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs sm:text-sm font-medium text-gray-500 mb-1">Hadir</p>
-                    <p class="text-xl sm:text-2xl font-bold text-green-600">{{ $summary['present'] }}</p>
-                </div>
-                <div class="bg-green-50 p-2 sm:p-3 rounded-lg">
-                    <i class="fas fa-check-circle text-green-600 text-base sm:text-xl"></i>
-                </div>
-            </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs sm:text-sm font-medium text-gray-500 mb-1">Terlambat</p>
-                    <p class="text-xl sm:text-2xl font-bold text-yellow-600">{{ $summary['late'] }}</p>
-                </div>
-                <div class="bg-yellow-50 p-2 sm:p-3 rounded-lg">
-                    <i class="fas fa-clock text-yellow-600 text-base sm:text-xl"></i>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+            <div class="bg-gray-50 rounded-xl p-4 sm:p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-gray-500 mb-1">Total Hari</p>
+                        <p class="text-xl sm:text-2xl font-bold text-gray-900">{{ $summary['total_days'] }}</p>
+                    </div>
+                    <div class="bg-gray-100 p-2 sm:p-3 rounded-lg">
+                        <i class="fas fa-calendar text-gray-600 text-base sm:text-xl"></i>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-xs sm:text-sm font-medium text-gray-500 mb-1">Tidak Hadir</p>
-                    <p class="text-xl sm:text-2xl font-bold text-red-600">{{ $summary['absent'] }}</p>
+            <div class="bg-green-50 rounded-xl p-4 sm:p-5 border border-green-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-green-700 mb-1">Hadir</p>
+                        <p class="text-xl sm:text-2xl font-bold text-green-600">{{ $summary['present'] }}</p>
+                    </div>
+                    <div class="bg-green-100 p-2 sm:p-3 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600 text-base sm:text-xl"></i>
+                    </div>
                 </div>
-                <div class="bg-red-50 p-2 sm:p-3 rounded-lg">
-                    <i class="fas fa-times-circle text-red-600 text-base sm:text-xl"></i>
+            </div>
+            <div class="bg-emerald-50 rounded-xl p-4 sm:p-5 border border-emerald-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-emerald-700 mb-1">Sempurna</p>
+                        <p class="text-xl sm:text-2xl font-bold text-emerald-600">{{ $summary['perfect'] ?? 0 }}</p>
+                    </div>
+                    <div class="bg-emerald-100 p-2 sm:p-3 rounded-lg">
+                        <i class="fas fa-star text-emerald-600 text-base sm:text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-yellow-50 rounded-xl p-4 sm:p-5 border border-yellow-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-yellow-700 mb-1">Terlambat</p>
+                        <p class="text-xl sm:text-2xl font-bold text-yellow-600">{{ $summary['late'] }}</p>
+                    </div>
+                    <div class="bg-yellow-100 p-2 sm:p-3 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600 text-base sm:text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-orange-50 rounded-xl p-4 sm:p-5 border border-orange-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-orange-700 mb-1">Pulang Cepat</p>
+                        <p class="text-xl sm:text-2xl font-bold text-orange-600">{{ $summary['early_leave'] ?? 0 }}</p>
+                    </div>
+                    <div class="bg-orange-100 p-2 sm:p-3 rounded-lg">
+                        <i class="fas fa-running text-orange-600 text-base sm:text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-red-50 rounded-xl p-4 sm:p-5 border border-red-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs sm:text-sm font-medium text-red-700 mb-1">Tidak Hadir</p>
+                        <p class="text-xl sm:text-2xl font-bold text-red-600">{{ $summary['absent'] }}</p>
+                    </div>
+                    <div class="bg-red-100 p-2 sm:p-3 rounded-lg">
+                        <i class="fas fa-times-circle text-red-600 text-base sm:text-xl"></i>
+                    </div>
                 </div>
             </div>
         </div>

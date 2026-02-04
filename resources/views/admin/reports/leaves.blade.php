@@ -4,82 +4,149 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold">Laporan Cuti</h1>
-            <p class="text-sm sm:text-base text-gray-600">Ringkasan permohonan cuti berdasarkan rentang tanggal dan status.</p>
-        </div>
-    </div>
+    {{-- Page Header --}}
+    <x-page-header 
+        title="Laporan Cuti" 
+        description="Ringkasan permohonan cuti berdasarkan rentang tanggal dan status"
+        icon="fas fa-calendar-times">
+        <x-slot:actions>
+            <a href="{{ route('reports.leaves.export', request()->only(['start_date','end_date','status','worker_id'])) }}"
+               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium">
+                <i class="fas fa-file-excel mr-2"></i>
+                Export Excel
+            </a>
+        </x-slot:actions>
+    </x-page-header>
 
-    <!-- Filter -->
-    <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-        <form method="GET" action="{{ route('reports.leaves') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div>
-                <label class="block text-sm text-gray-500 mb-1">Dari Tanggal</label>
-                <input type="date" name="start_date" value="{{ $filters['date_from'] ?? now()->startOfMonth()->format('Y-m-d') }}" class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-                <label class="block text-sm text-gray-500 mb-1">Sampai Tanggal</label>
-                <input type="date" name="end_date" value="{{ $filters['date_to'] ?? now()->endOfMonth()->format('Y-m-d') }}" class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500">
-            </div>
-            <div>
-                <label class="block text-sm text-gray-500 mb-1">Status</label>
-                <select name="status" class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500">
-                    <option value="">Semua</option>
-                    <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Approved</option>
-                    <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <button class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm"><i class="fas fa-filter mr-1"></i><span class="hidden sm:inline">Filter</span></button>
-                <a href="{{ route('reports.leaves.export', request()->only(['start_date','end_date','status','worker_id'])) }}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm"><i class="fas fa-file-excel mr-1"></i><span class="hidden sm:inline">Excel</span></a>
-            </div>
-        </form>
-    </div>
+    {{-- Filter Section --}}
+    <x-filter-section action="{{ route('reports.leaves') }}">
+        <x-form.select 
+            name="worker_id" 
+            label="Pegawai"
+            :selected="request('worker_id') ?? ''"
+            placeholder="Semua Pegawai">
+            @if(isset($workers))
+                @foreach($workers as $w)
+                    <option value="{{ $w->id }}">{{ $w->name }}</option>
+                @endforeach
+            @endif
+        </x-form.select>
 
-    <!-- Table -->
-    <div class="bg-white rounded-lg shadow overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Tanggal</th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Tipe</th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Total Hari</th>
-                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                @forelse($leaves as $leave)
-                <tr class="hover:bg-gray-50">
-                    <td class="px-3 sm:px-6 py-4">
-                        <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $leave->worker->name ?? 'N/A' }}</div>
-                        <div class="text-xs text-gray-500 md:hidden">{{ $leave->start_date->format('d M') }} - {{ $leave->end_date->format('d M') }}</div>
-                    </td>
-                    <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden md:table-cell">{{ $leave->start_date->format('d M Y') }} - {{ $leave->end_date->format('d M Y') }}</td>
-                    <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden lg:table-cell">{{ $leave->leaveType->name ?? '-' }}</td>
-                    <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm text-gray-900 hidden lg:table-cell">{{ $leave->total_days }}</td>
-                    <td class="px-3 sm:px-6 py-4">
-                        <span class="px-2 py-1 rounded-full text-xs font-medium
-                            @if($leave->status === 'approved') bg-green-100 text-green-800
-                            @elseif($leave->status === 'pending') bg-yellow-100 text-yellow-800
-                            @else bg-red-100 text-red-800 @endif">
-                            {{ ucfirst($leave->status) }}
-                        </span>
-                    </td>
-                    <td class="px-3 sm:px-6 py-4 text-right text-xs sm:text-sm font-medium"><a href="#" class="text-blue-600"><i class="fas fa-eye"></i></a></td>
-                </tr>
-                @empty
-                <tr><td colspan="6" class="px-6 py-12 text-center">Tidak ada data cuti.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
+        <x-form.select 
+            name="leave_type_id" 
+            label="Jenis Cuti"
+            :selected="request('leave_type_id') ?? ''"
+            placeholder="Semua Jenis">
+            @if(isset($leaveTypes))
+                @foreach($leaveTypes as $type)
+                    <option value="{{ $type->id }}">{{ $type->name }}</option>
+                @endforeach
+            @endif
+        </x-form.select>
 
-    @if($leaves->hasPages())
-    <div class="mt-4">{{ $leaves->links() }}</div>
-    @endif
+        <x-form.select 
+            name="status" 
+            label="Status"
+            :options="[
+                'pending' => 'Menunggu',
+                'approved' => 'Disetujui',
+                'rejected' => 'Ditolak'
+            ]"
+            :selected="request('status') ?? ''"
+            placeholder="Semua Status" />
+
+        <x-form.select 
+            name="month" 
+            label="Bulan"
+            :selected="request('month') ?? ''"
+            placeholder="Semua Bulan">
+            @for($i = 1; $i <= 12; $i++)
+                <option value="{{ $i }}">{{ DateTime::createFromFormat('!m', $i)->format('F') }}</option>
+            @endfor
+        </x-form.select>
+
+        <x-form.select 
+            name="year" 
+            label="Tahun"
+            :selected="request('year') ?? ''"
+            placeholder="Semua Tahun">
+            @for($y = date('Y'); $y >= date('Y') - 5; $y--)
+                <option value="{{ $y }}">{{ $y }}</option>
+            @endfor
+        </x-form.select>
+    </x-filter-section>
+
+    {{-- Table --}}
+    <x-card>
+        @if($leaves->isEmpty())
+            <x-empty-state 
+                icon="fas fa-calendar-times"
+                title="Tidak ada data cuti"
+                description="Data cuti akan ditampilkan di sini" />
+        @else
+            <x-table>
+                <x-slot:thead>
+                    <x-table.row>
+                        <x-table.cell header>No</x-table.cell>
+                        <x-table.cell header>Pegawai</x-table.cell>
+                        <x-table.cell header>Jenis Cuti</x-table.cell>
+                        <x-table.cell header>Tanggal</x-table.cell>
+                        <x-table.cell header>Total Hari</x-table.cell>
+                        <x-table.cell header>Status</x-table.cell>
+                        <x-table.cell header>Aksi</x-table.cell>
+                    </x-table.row>
+                </x-slot:thead>
+
+                @foreach($leaves as $index => $leave)
+                    <x-table.row>
+                        <x-table.cell>{{ $leaves->firstItem() + $index }}</x-table.cell>
+                        
+                        <x-table.cell>
+                            <div class="font-medium text-gray-900">{{ $leave->worker->name ?? '-' }}</div>
+                            <div class="text-sm text-gray-500">{{ $leave->worker->nip ?? '-' }}</div>
+                        </x-table.cell>
+
+                        <x-table.cell>{{ $leave->leaveType->name ?? '-' }}</x-table.cell>
+
+                        <x-table.cell>
+                            <div class="text-sm">{{ $leave->start_date->format('d M Y') }}</div>
+                            <div class="text-xs text-gray-500">s/d {{ $leave->end_date->format('d M Y') }}</div>
+                        </x-table.cell>
+
+                        <x-table.cell>{{ $leave->total_days }} hari</x-table.cell>
+
+                        <x-table.cell>
+                            @php
+                                $statusBadges = [
+                                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                                    'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                                    'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                                ];
+                                $badge = $statusBadges[$leave->status] ?? ['variant' => 'secondary', 'label' => ucfirst($leave->status)];
+                            @endphp
+                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            <a href="{{ route('approvals.leaves.show', $leave->id) }}" 
+                               class="text-blue-600 hover:text-blue-900" 
+                               title="Detail">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                </svg>
+                            </a>
+                        </x-table.cell>
+                    </x-table.row>
+                @endforeach
+            </x-table>
+
+            @if($leaves->hasPages())
+                <div class="mt-4">
+                    <x-pagination :paginator="$leaves" />
+                </div>
+            @endif
+        @endif
+    </x-card>
 </div>
 @endsection

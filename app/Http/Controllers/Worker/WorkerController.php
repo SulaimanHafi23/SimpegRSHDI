@@ -114,27 +114,34 @@ class WorkerController extends Controller
             $month = $request->input('month', now()->month);
             $year = $request->input('year', now()->year);
             
-            // Get attendance data for the month
+            // Get attendance data for the month using getAll with filters
             $attendanceService = app(\App\Services\Attendance\AttendanceService::class);
-            $attendances = $attendanceService->getByWorkerId($worker->id, [
-                'month' => $month,
-                'year' => $year,
-                'per_page' => 999, // Get all for the month
+            
+            // Create date range for the month
+            $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+            $endDate = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+            
+            // Get attendances using getAll method with proper filters
+            $attendancePaginated = $attendanceService->getAll([
+                'worker_id' => $worker->id,
+                'date_from' => $startDate->format('Y-m-d'),
+                'date_to' => $endDate->format('Y-m-d'),
+                'per_page' => 999,
             ]);
             
+            // Extract items from paginator - these are already loaded with relations
+            $attendances = collect($attendancePaginated->items());
+            
             // Calculate statistics
-            $totalPresent = $attendances->where('status', 'present')->count();
+            $totalPresent = $attendances->whereIn('status', ['present', 'late'])->count();
             $totalAbsent = $attendances->where('status', 'absent')->count();
             $totalLate = $attendances->where('is_late', true)->count();
             $totalLeave = $attendances->where('status', 'leave')->count();
             
-            // Create calendar data structure
-            $startDate = \Carbon\Carbon::create($year, $month, 1);
-            $endDate = $startDate->copy()->endOfMonth();
             $daysInMonth = $startDate->daysInMonth;
             
             // Get worker's active shift with relation
-            $worker->load(['activeWorkerShift.shift']);
+            $worker->load(['activeWorkerShift.shift', 'workerShifts.shift', 'department']);
             
             // Get all shifts for reference
             $allShifts = \App\Models\Shift::where('is_active', true)
@@ -148,17 +155,26 @@ class WorkerController extends Controller
                 $dateKey = $date->format('Y-m-d');
                 
                 // Find attendance for this date
-                $attendance = $attendances->firstWhere('attendance_date', $dateKey);
+                $dayAttendance = $attendances->first(function($att) use ($dateKey) {
+                    return $att->attendance_date && 
+                           \Carbon\Carbon::parse($att->attendance_date)->format('Y-m-d') === $dateKey;
+                });
                 
                 // Get shift schedule for this date
-                $shiftId = $worker->getShiftForDate($date);
-                $shift = $shiftId ? \App\Models\Shift::find($shiftId) : null;
+                $shift = null;
+                if (method_exists($worker, 'getShiftForDate')) {
+                    $shiftId = $worker->getShiftForDate($date);
+                    $shift = $shiftId ? \App\Models\Shift::find($shiftId) : null;
+                } elseif ($worker->activeWorkerShift && $worker->activeWorkerShift->shift) {
+                    // Fallback: use active shift if getShiftForDate doesn't exist
+                    $shift = $worker->activeWorkerShift->shift;
+                }
                 
                 $calendarData[] = [
                     'date' => $date,
                     'day' => $day,
                     'dayName' => $date->translatedFormat('l'),
-                    'attendance' => $attendance,
+                    'attendance' => $dayAttendance,
                     'shift' => $shift,
                     'isWeekend' => $date->isSunday(), // Only Sunday is weekend
                 ];

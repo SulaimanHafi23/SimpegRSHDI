@@ -26,6 +26,87 @@
         </div>
     </div>
 
+    <!-- Summary Statistics - Absensi Hari Ini -->
+    <div class="bg-white rounded-lg shadow-md mb-6 p-6">
+        <div class="flex items-center gap-2 mb-4">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-700">
+                <i class="fas fa-chart-pie text-sm"></i>
+            </span>
+            <div>
+                <p class="text-xs text-gray-500">Statistik Hari Ini</p>
+                <p class="text-base font-semibold text-gray-800">{{ now()->translatedFormat('l, d F Y') }}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500 mb-1">Total Pegawai</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ $summary['total_workers'] }}</p>
+                    </div>
+                    <div class="bg-gray-100 p-3 rounded-lg">
+                        <i class="fas fa-users text-gray-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-green-50 rounded-lg p-4 border border-green-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-green-700 mb-1">Sudah Masuk</p>
+                        <p class="text-2xl font-bold text-green-600">{{ $summary['present'] }}</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-emerald-700 mb-1">Sempurna</p>
+                        <p class="text-2xl font-bold text-emerald-600">{{ $summary['perfect'] }}</p>
+                    </div>
+                    <div class="bg-emerald-100 p-3 rounded-lg">
+                        <i class="fas fa-star text-emerald-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-yellow-700 mb-1">Terlambat</p>
+                        <p class="text-2xl font-bold text-yellow-600">{{ $summary['late'] }}</p>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-lg">
+                        <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-orange-50 rounded-lg p-4 border border-orange-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-orange-700 mb-1">Pulang Cepat</p>
+                        <p class="text-2xl font-bold text-orange-600">{{ $summary['early_leave'] }}</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-lg">
+                        <i class="fas fa-running text-orange-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-red-50 rounded-lg p-4 border border-red-100">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-red-700 mb-1">Belum Masuk</p>
+                        <p class="text-2xl font-bold text-red-600">{{ $summary['absent'] }}</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-lg">
+                        <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Filter Section -->
     <div class="bg-white rounded-lg shadow-md mb-6">
         <button @click="showFilters = !showFilters" class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
@@ -198,17 +279,18 @@
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Tampilan Data</h3>
             <div class="flex space-x-2">
-                <button id="btn-today-view" class="px-4 py-2 bg-blue-600 text-white rounded-lg transition duration-200 hover:bg-blue-700">
-                    Absensi Hari Ini
-                </button>
-                <button id="btn-history-view" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg transition duration-200 hover:bg-gray-300">
+                <button id="btn-history-view" class="px-4 py-2 bg-blue-600 text-white rounded-lg transition duration-200 hover:bg-blue-700">
                     Riwayat Absensi
+                </button>
+                <button id="btn-today-view" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg transition duration-200 hover:bg-gray-300">
+                    Absensi Hari Ini
                 </button>
             </div>
         </div>
     </div>
-    <!-- Table for Today's Attendance -->
-    <div id="today-view" class="bg-white rounded-lg shadow-md overflow-hidden">
+
+    <!-- Table for Today's Attendance (Detail) - Hidden by default -->
+    <div id="today-view" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900">Absensi Hari Ini - {{ now()->isoFormat('dddd, D MMMM Y') }}</h3>
         </div>
@@ -414,11 +496,6 @@
                                         <i class="fas fa-sign-in-alt w-4 h-4"></i>
                                     </button>
                                 @endif
-                                <!-- Tombol Detail Statistik -->
-                                <a href="{{ route('admin.attendance.worker-stats', $worker->id) }}"
-                                   class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" title="Detail Statistik">
-                                    <i class="fas fa-chart-bar w-4 h-4"></i>
-                                </a>
                             </div>
                         </td>
                     </tr>
@@ -438,102 +515,207 @@
         </div>
     </div>
 
-    <!-- Table for Attendance History -->
-    <div id="history-view" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+    <!-- Table for Attendance History (Statistik) - Default visible -->
+    <div id="history-view" class="bg-white rounded-lg shadow-md overflow-hidden">
         <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Riwayat Absensi</h3>
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Riwayat Absensi</h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        Statistik kehadiran 
+                        @if($statsFilters['period'] === 'year')
+                            Tahun {{ $statsFilters['year'] }}
+                        @elseif($statsFilters['period'] === 'custom')
+                            {{ \Carbon\Carbon::parse($statsFilters['start_date'])->translatedFormat('d M Y') }} - {{ \Carbon\Carbon::parse($statsFilters['end_date'])->translatedFormat('d M Y') }}
+                        @else
+                            {{ \Carbon\Carbon::create($statsFilters['year'], $statsFilters['month'], 1)->translatedFormat('F Y') }}
+                        @endif
+                    </p>
+                </div>
+            </div>
+
+            <!-- Filter Periode Statistik -->
+            <div x-data="{ showStatsPeriodForm: false }" class="mb-4">
+                <button @click="showStatsPeriodForm = !showStatsPeriodForm" 
+                        class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-200">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Ubah Periode
+                    <i class="fas fa-chevron-down ml-2 transform transition-transform" :class="{ 'rotate-180': showStatsPeriodForm }"></i>
+                </button>
+
+                <div x-show="showStatsPeriodForm" x-collapse class="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <form method="GET" action="{{ route('admin.attendance.index') }}" id="stats-period-form">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Periode</label>
+                                <select name="stats_period" id="stats_period" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    <option value="month" {{ ($statsFilters['period'] ?? 'month') == 'month' ? 'selected' : '' }}>Per Bulan</option>
+                                    <option value="year" {{ ($statsFilters['period'] ?? '') == 'year' ? 'selected' : '' }}>Per Tahun</option>
+                                    <option value="custom" {{ ($statsFilters['period'] ?? '') == 'custom' ? 'selected' : '' }}>Custom (Pilih Tanggal)</option>
+                                </select>
+                            </div>
+
+                            <div id="month-field" style="display: {{ ($statsFilters['period'] ?? 'month') == 'month' ? 'block' : 'none' }}">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Bulan</label>
+                                <select name="stats_month" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    @for($m = 1; $m <= 12; $m++)
+                                        <option value="{{ str_pad($m, 2, '0', STR_PAD_LEFT) }}" {{ ($statsFilters['month'] ?? now()->format('m')) == str_pad($m, 2, '0', STR_PAD_LEFT) ? 'selected' : '' }}>
+                                            {{ \Carbon\Carbon::create(null, $m, 1)->translatedFormat('F') }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <div id="year-field" style="display: {{ in_array($statsFilters['period'] ?? 'month', ['month', 'year']) ? 'block' : 'none' }}">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tahun</label>
+                                <select name="stats_year" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                    @for($y = now()->year; $y >= now()->year - 5; $y--)
+                                        <option value="{{ $y }}" {{ ($statsFilters['year'] ?? now()->year) == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+
+                            <div id="date-from-field" style="display: {{ ($statsFilters['period'] ?? '') == 'custom' ? 'block' : 'none' }}">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Dari</label>
+                                <input type="date" name="stats_date_from" value="{{ $statsFilters['date_from'] ?? '' }}" 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            </div>
+
+                            <div id="date-to-field" style="display: {{ ($statsFilters['period'] ?? '') == 'custom' ? 'block' : 'none' }}">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Sampai</label>
+                                <input type="date" name="stats_date_to" value="{{ $statsFilters['date_to'] ?? '' }}" 
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mt-4">
+                            <button type="submit" class="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition duration-200">
+                                <i class="fas fa-filter mr-2"></i>
+                                Terapkan Filter
+                            </button>
+                            <a href="{{ route('admin.attendance.index') }}" class="px-6 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg transition duration-200">
+                                <i class="fas fa-redo mr-2"></i>
+                                Reset
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Pegawai</th>
-                        <th class="hidden md:table-cell px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Tanggal</th>
-                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Jam Masuk</th>
-                        <th class="hidden lg:table-cell px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Jam Keluar</th>
-                        <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                        <th class="hidden xl:table-cell px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Lokasi</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">Total Hadir</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">Sempurna</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">Terlambat</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">Pulang Cepat</th>
+                        <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">Tidak Hadir</th>
                         <th class="px-6 py-3 text-center text-xs font-semibold uppercase tracking-wider">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($attendances as $attendance)
+                    @forelse($workersWithAttendance as $worker)
+                    @php
+                        $stats = $workerStats[$worker->id] ?? [
+                            'total_present' => 0, 
+                            'total_late' => 0, 
+                            'total_late_minutes' => 0,
+                            'avg_late_minutes' => 0,
+                            'total_early_leave' => 0, 
+                            'total_early_leave_minutes' => 0,
+                            'avg_early_leave_minutes' => 0,
+                            'total_perfect' => 0, 
+                            'total_absent' => 0,
+                            'total_sick' => 0,
+                            'total_permission' => 0,
+                            'total_leave' => 0
+                        ];
+                    @endphp
                     <tr class="hover:bg-gray-50 transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
-                                    @if($attendance->worker->photo_url && Storage::disk('public')->exists($attendance->worker->photo_url))
+                                    @if($worker->photo_url && Storage::disk('public')->exists($worker->photo_url))
                                         <img class="h-10 w-10 rounded-full object-cover"
-                                             src="{{ asset('storage/' . $attendance->worker->photo_url) }}"
-                                             alt="{{ $attendance->worker->name }}">
+                                             src="{{ asset('storage/' . $worker->photo_url) }}"
+                                             alt="{{ $worker->name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm">
-                                            {{ substr($attendance->worker->name, 0, 1) }}
+                                            {{ substr($worker->name, 0, 1) }}
                                         </div>
                                     @endif
                                 </div>
                                 <div class="ml-4">
-                                    <div class="text-sm font-medium text-gray-900">{{ $attendance->worker->name }}</div>
-                                    <div class="text-xs text-gray-500">{{ $attendance->worker->nip ?? '-' }}</div>
-                                    <div class="text-xs text-gray-500 md:hidden">{{ $attendance->attendance_date?->format('d M Y') ?? '-' }}</div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $worker->name }}</div>
+                                    <div class="text-xs text-gray-500">{{ $worker->nip ?? '-' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $worker->department->name ?? '-' }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 hidden md:table-cell">
-                            <div class="text-sm text-gray-900">{{ $attendance->attendance_date?->format('d M Y') ?? '-' }}</div>
-                            <div class="text-xs text-gray-500">{{ $attendance->attendance_date?->isoFormat('dddd') ?? '-' }}</div>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-lg font-bold text-green-800">{{ $stats['total_present'] }}</span>
+                                <span class="text-xs text-gray-500 mt-1">hari</span>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 hidden lg:table-cell">
-                            <div class="text-sm text-gray-900">{{ $attendance->check_in?->format('H:i') ?? '-' }}</div>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-lg font-bold text-emerald-800">{{ $stats['total_perfect'] }}</span>
+                                <span class="text-xs text-gray-500 mt-1">hari</span>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 hidden lg:table-cell">
-                            <div class="text-sm text-gray-900">{{ $attendance->check_out?->format('H:i') ?? '-' }}</div>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-lg font-bold text-yellow-800">{{ $stats['total_late'] }}</span>
+                                <span class="text-xs text-gray-500 mt-1">kali</span>
+                                @if($stats['total_late'] > 0)
+                                    <div class="mt-2 text-xs bg-yellow-50 px-2 py-1 rounded border border-yellow-200">
+                                        <div class="text-yellow-700">Total: <span class="font-semibold">{{ $stats['total_late_minutes'] }}</span> menit</div>
+                                        <div class="text-yellow-600 mt-0.5">Rata-rata: <span class="font-semibold">{{ $stats['avg_late_minutes'] }}</span> menit</div>
+                                    </div>
+                                @endif
+                            </div>
                         </td>
-                        <td class="px-6 py-4">
-                            @php
-                                $statusConfig = [
-                                    'present' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Hadir', 'icon' => 'fa-check'],
-                                    'late' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Terlambat', 'icon' => 'fa-clock'],
-                                    'absent' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Tidak Hadir', 'icon' => 'fa-times'],
-                                    'sick' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'label' => 'Sakit', 'icon' => 'fa-medkit'],
-                                    'permission' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Izin', 'icon' => 'fa-info-circle'],
-                                    'leave' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'label' => 'Cuti', 'icon' => 'fa-umbrella-beach'],
-                                ];
-                                $config = $statusConfig[$attendance->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => ucfirst($attendance->status), 'icon' => 'fa-question'];
-                            @endphp
-                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $config['bg'] }} {{ $config['text'] }}">
-                                <i class="fas {{ $config['icon'] }} mr-1"></i>
-                                {{ $config['label'] }}
-                            </span>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-lg font-bold text-orange-800">{{ $stats['total_early_leave'] }}</span>
+                                <span class="text-xs text-gray-500 mt-1">kali</span>
+                                @if($stats['total_early_leave'] > 0)
+                                    <div class="mt-2 text-xs bg-orange-50 px-2 py-1 rounded border border-orange-200">
+                                        <div class="text-orange-700">Total: <span class="font-semibold">{{ $stats['total_early_leave_minutes'] }}</span> menit</div>
+                                        <div class="text-orange-600 mt-0.5">Rata-rata: <span class="font-semibold">{{ $stats['avg_early_leave_minutes'] }}</span> menit</div>
+                                    </div>
+                                @endif
+                            </div>
                         </td>
-                        <td class="px-6 py-4 hidden xl:table-cell">
-                            <div class="text-sm text-gray-500">{{ $attendance->location->name ?? '-' }}</div>
+                        <td class="px-6 py-4 text-center">
+                            <div class="flex flex-col items-center">
+                                <span class="text-lg font-bold text-red-800">{{ $stats['total_absent'] }}</span>
+                                <span class="text-xs text-gray-500 mt-1">hari</span>
+                                @if($stats['total_absent'] > 0)
+                                    <div class="mt-2 text-xs bg-red-50 px-2 py-1 rounded border border-red-200 space-y-0.5">
+                                        @if($stats['total_sick'] > 0)
+                                            <div class="text-red-700">Sakit: <span class="font-semibold">{{ $stats['total_sick'] }}</span></div>
+                                        @endif
+                                        @if($stats['total_permission'] > 0)
+                                            <div class="text-red-700">Izin: <span class="font-semibold">{{ $stats['total_permission'] }}</span></div>
+                                        @endif
+                                        @if($stats['total_leave'] > 0)
+                                            <div class="text-red-700">Cuti: <span class="font-semibold">{{ $stats['total_leave'] }}</span></div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center space-x-1">
-                                <a href="{{ route('admin.attendance.show', $attendance->id) }}"
-                                   class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Detail">
-                                    <i class="fas fa-eye w-4 h-4"></i>
-                                </a>
-                                <a href="{{ route('admin.attendance.edit', $attendance->id) }}"
-                                   class="p-2 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded-lg transition-colors" title="Edit">
-                                    <i class="fas fa-edit w-4 h-4"></i>
-                                </a>
-                                <!-- Tombol Detail Statistik -->
-                                <a href="{{ route('admin.attendance.worker-stats', $attendance->worker_id) }}"
-                                   class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" title="Detail Statistik">
+                                <!-- Tombol Statistik Pegawai -->
+                                <a href="{{ route('admin.workers.attendance-history', $worker->id) }}"
+                                   class="p-2 text-purple-600 hover:text-purple-900 hover:bg-purple-50 rounded-lg transition-colors" title="Lihat Statistik">
                                     <i class="fas fa-chart-bar w-4 h-4"></i>
                                 </a>
-                                <form action="{{ route('admin.attendance.destroy', $attendance->id) }}"
-                                      method="POST"
-                                      class="inline-block"
-                                      onsubmit="return confirm('Yakin ingin menghapus data absensi ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
-                                        <i class="fas fa-trash w-4 h-4"></i>
-                                    </button>
-                                </form>
                             </div>
                         </td>
                     </tr>
@@ -541,9 +723,9 @@
                     <tr>
                         <td colspan="7" class="px-6 py-12 text-center">
                             <div class="text-gray-500">
-                                <i class="fas fa-calendar-times text-4xl mb-4"></i>
-                                <p class="text-lg font-medium">Tidak ada data absensi</p>
-                                <p class="text-sm">Silakan tambah data absensi atau sesuaikan filter pencarian</p>
+                                <i class="fas fa-users text-4xl mb-4"></i>
+                                <p class="text-lg font-medium">Tidak ada data pegawai</p>
+                                <p class="text-sm">Belum ada pegawai yang terdaftar</p>
                             </div>
                         </td>
                     </tr>
@@ -551,13 +733,6 @@
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination for History -->
-        @if($attendances->hasPages())
-        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-            {{ $attendances->withQueryString()->links() }}
-        </div>
-        @endif
     </div>
 </div>
 
@@ -570,8 +745,20 @@
         const todayView = document.getElementById('today-view');
         const historyView = document.getElementById('history-view');
 
+        btnHistoryView.addEventListener('click', function() {
+            // Show history view (statistik)
+            historyView.classList.remove('hidden');
+            todayView.classList.add('hidden');
+            
+            // Update button styles
+            btnHistoryView.classList.remove('bg-gray-200', 'text-gray-700');
+            btnHistoryView.classList.add('bg-blue-600', 'text-white');
+            btnTodayView.classList.remove('bg-blue-600', 'text-white');
+            btnTodayView.classList.add('bg-gray-200', 'text-gray-700');
+        });
+
         btnTodayView.addEventListener('click', function() {
-            // Show today view
+            // Show today view (detail)
             todayView.classList.remove('hidden');
             historyView.classList.add('hidden');
             
@@ -582,72 +769,46 @@
             btnHistoryView.classList.add('bg-gray-200', 'text-gray-700');
         });
 
-        btnHistoryView.addEventListener('click', function() {
-            // Show history view
-            todayView.classList.add('hidden');
-            historyView.classList.remove('hidden');
-            
-            // Update button styles
-            btnHistoryView.classList.remove('bg-gray-200', 'text-gray-700');
-            btnHistoryView.classList.add('bg-blue-600', 'text-white');
-            btnTodayView.classList.remove('bg-blue-600', 'text-white');
-            btnTodayView.classList.add('bg-gray-200', 'text-gray-700');
-        });
+        // Toggle fields based on stats period selection
+        const statsPeriodSelect = document.getElementById('stats_period');
+        if (statsPeriodSelect) {
+            statsPeriodSelect.addEventListener('change', function() {
+                const period = this.value;
+                const monthField = document.getElementById('month-field');
+                const yearField = document.getElementById('year-field');
+                const dateFromField = document.getElementById('date-from-field');
+                const dateToField = document.getElementById('date-to-field');
+
+                if (period === 'month') {
+                    monthField.style.display = 'block';
+                    yearField.style.display = 'block';
+                    dateFromField.style.display = 'none';
+                    dateToField.style.display = 'none';
+                } else if (period === 'year') {
+                    monthField.style.display = 'none';
+                    yearField.style.display = 'block';
+                    dateFromField.style.display = 'none';
+                    dateToField.style.display = 'none';
+                } else if (period === 'custom') {
+                    monthField.style.display = 'none';
+                    yearField.style.display = 'none';
+                    dateFromField.style.display = 'block';
+                    dateToField.style.display = 'block';
+                }
+            });
+        }
     });
 
-    // Check in worker function
+    // Check in worker function - redirect to check-in form
     function checkInWorker(workerId, workerName) {
-        if (confirm(`Apakah Anda yakin ingin check-in ${workerName}?`)) {
-            // Redirect to check-in form or handle via AJAX
-            window.location.href = `{{ route('admin.attendance.create') }}?worker_id=${workerId}`;
-        }
+        // Redirect to check-in form page with worker data
+        window.location.href = `/attendance/${workerId}/check-in`;
     }
 
-    // Check out worker function
+    // Check out worker function - redirect to check-out form
     function checkOutWorker(attendanceId, workerName) {
-        if (confirm(`Apakah Anda yakin ingin check-out ${workerName}?`)) {
-            // Create and submit form for check-out
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `{{ url('/admin/attendance') }}/${attendanceId}/check-out`;
-            
-            // Add CSRF token
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
-            
-            // Add method PUT
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'PUT';
-            form.appendChild(methodInput);
-            
-            // Add location (you might want to get this from GPS or default location)
-            const locationInput = document.createElement('input');
-            locationInput.type = 'hidden';
-            locationInput.name = 'location_id';
-            locationInput.value = '{{ $locations->first()->id ?? "" }}'; // Default location
-            form.appendChild(locationInput);
-            
-            // Add coordinates (you might want to get this from GPS)
-            const latInput = document.createElement('input');
-            latInput.type = 'hidden';
-            latInput.name = 'latitude';
-            latInput.value = '0'; // Default or get from GPS
-            form.appendChild(latInput);
-            
-            const lngInput = document.createElement('input');
-            lngInput.type = 'hidden';
-            lngInput.name = 'longitude';
-            lngInput.value = '0'; // Default or get from GPS
-            form.appendChild(lngInput);
-            
-            document.body.appendChild(form);
-            form.submit();
-        }
+        // Redirect to check-out form page using correct URL pattern
+        window.location.href = `/attendance/${attendanceId}/check-out`;
     }
 
     // Auto refresh every 5 minutes for real-time data (only for today view)
