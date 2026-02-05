@@ -3,351 +3,284 @@
 @section('title', 'Persetujuan Tukar Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
-    <!-- Header -->
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">
-            <i class="fas fa-exchange-alt text-green-600 mr-2"></i>
-            Persetujuan Tukar Shift
-        </h1>
-        <p class="text-gray-600 mt-1">Kelola permintaan pertukaran shift dari pekerja</p>
+<div class="space-y-6">
+    {{-- Page Header --}}
+    <x-page-header 
+        title="Persetujuan Tukar Shift" 
+        description="Kelola permintaan pertukaran shift dari pegawai"
+        icon="fas fa-exchange-alt">
+    </x-page-header>
+
+    {{-- Statistics Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <x-stats-card 
+            title="Total Permintaan" 
+            :value="$statistics['total'] ?? 0" 
+            icon="fas fa-file-alt" 
+            color="blue" />
+        
+        <x-stats-card 
+            title="Menunggu Persetujuan" 
+            :value="$statistics['awaiting_approval'] ?? 0" 
+            icon="fas fa-clock" 
+            color="yellow" />
+        
+        <x-stats-card 
+            title="Disetujui" 
+            :value="$statistics['approved'] ?? 0" 
+            icon="fas fa-check-circle" 
+            color="green" />
+        
+        <x-stats-card 
+            title="Ditolak" 
+            :value="$statistics['rejected'] ?? 0" 
+            icon="fas fa-times-circle" 
+            color="red" />
+        
+        <x-stats-card 
+            title="Dieksekusi" 
+            :value="$statistics['executed'] ?? 0" 
+            icon="fas fa-check-double" 
+            color="purple" />
     </div>
 
-    <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                <p class="text-green-800">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
+    {{-- Filter Section --}}
+    <x-filter-section action="{{ route('manager.shift-swap-approvals.index') }}">
+        <x-form.select 
+            name="status" 
+            label="Status"
+            :selected="$filters['status'] ?? ''"
+            placeholder="Semua Status">
+            <option value="pending">Pending</option>
+            <option value="accepted">Diterima</option>
+            <option value="awaiting_approval">Menunggu Persetujuan</option>
+            <option value="approved">Disetujui</option>
+            <option value="rejected">Ditolak</option>
+            <option value="cancelled">Dibatalkan</option>
+            <option value="executed">Dieksekusi</option>
+        </x-form.select>
 
-    @if(session('error'))
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
-                <p class="text-red-800">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
+        <x-form.select 
+            name="requester_id" 
+            label="Pemohon"
+            :selected="$filters['requester_id'] ?? ''"
+            placeholder="Semua Pemohon">
+            @foreach($workers as $worker)
+                <option value="{{ $worker->id }}">{{ $worker->name }}</option>
+            @endforeach
+        </x-form.select>
 
-    <!-- Main Card -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-800">
-                <i class="fas fa-clock text-yellow-600 mr-2"></i>
-                Permintaan Menunggu Persetujuan
-            </h2>
-        </div>
-        
-        <div class="p-6">
-            @if($items->isEmpty())
-                <div class="text-center py-12">
-                    <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
-                    <p class="text-gray-500 text-lg">Tidak ada permintaan yang menunggu persetujuan</p>
-                </div>
-            @else
-                <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pemohon</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift Pemohon</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift Target</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
-                        <tbody class="bg-white divide-y divide-gray-200">
-                            @foreach($items as $item)
-                                <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">
-                                            <i class="fas fa-calendar text-blue-500 mr-1"></i>
-                                            {{ $item->requested_at?->format('d M Y') ?? $item->created_at->format('d M Y') }}
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            {{ $item->requested_at?->format('H:i') ?? $item->created_at->format('H:i') }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="text-sm font-medium text-gray-900">
-                                            <i class="fas fa-user text-green-500 mr-1"></i>
-                                            {{ $item->requester->name }}
-                                        </div>
-                                        <div class="text-xs text-gray-500">
-                                            <i class="fas fa-building text-gray-400 mr-1"></i>
-                                            {{ $item->requester->department?->name ?? 'N/A' }}
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @if($item->targetWorker)
-                                            <div class="text-sm font-medium text-gray-900">
-                                                <i class="fas fa-user text-purple-500 mr-1"></i>
-                                                {{ $item->targetWorker->name }}
-                                            </div>
-                                            <div class="text-xs text-gray-500">
-                                                <i class="fas fa-building text-gray-400 mr-1"></i>
-                                                {{ $item->targetWorker->department?->name ?? 'N/A' }}
-                                            </div>
-                                        @else
-                                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                <i class="fas fa-users mr-1"></i>
-                                                Open Request
-                                            </span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @if($item->requesterShift && $item->requesterShift->shift)
-                                            <div class="text-sm font-medium text-gray-900">
-                                                <i class="fas fa-clock text-orange-500 mr-1"></i>
-                                                {{ $item->requesterShift->shift->name }}
-                                            </div>
-                                            <div class="text-xs text-gray-500">
-                                                {{ $item->requesterShift->effective_from?->format('d M Y') ?? 'N/A' }}
-                                            </div>
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @if($item->targetShift && $item->targetShift->shift)
-                                            <div class="text-sm font-medium text-gray-900">
-                                                <i class="fas fa-clock text-blue-500 mr-1"></i>
-                                                {{ $item->targetShift->shift->name }}
-                                            </div>
-                                            <div class="text-xs text-gray-500">
-                                                {{ $item->targetShift->effective_from?->format('d M Y') ?? 'N/A' }}
-                                            </div>
-                                        @else
-                                            <span class="text-gray-400">N/A</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        @if($item->reason)
-                                            <div class="text-sm text-gray-600 max-w-xs">
-                                                {{ Str::limit($item->reason, 50) }}
-                                            </div>
-                                        @else
-                                            <span class="text-gray-400">-</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium
-                                            @if($item->status == 'awaiting_approval') bg-yellow-100 text-yellow-800
-                                            @elseif($item->status == 'approved') bg-green-100 text-green-800
-                                            @elseif($item->status == 'rejected') bg-red-100 text-red-800
-                                            @else bg-gray-100 text-gray-800
-                                            @endif">
-                                            @if($item->status == 'awaiting_approval')
-                                                <i class="fas fa-clock mr-1"></i>
-                                            @elseif($item->status == 'approved')
-                                                <i class="fas fa-check mr-1"></i>
-                                            @elseif($item->status == 'rejected')
-                                                <i class="fas fa-times mr-1"></i>
-                                            @endif
-                                            {{ ucfirst(str_replace('_', ' ', $item->status)) }}
-                                        </span>
-                                        @if($item->requires_manager_approval)
-                                            <div class="text-xs text-purple-600 mt-1">
-                                                <i class="fas fa-exchange-alt"></i> Cross-dept
-                                            </div>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <div class="flex justify-center space-x-2">
-                                        <div class="flex justify-center space-x-2">
-                                            <a href="{{ route('manager.shift-swap-approvals.show', $item->id) }}" 
-                                               class="text-blue-600 hover:text-blue-900"
-                                               title="Lihat Detail">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            @if($item->status === 'awaiting_approval')
-                                                <button type="button" 
-                                                    class="text-green-600 hover:text-green-900"
-                                                    onclick="approveSwap('{{ $item->id }}')"
-                                                    title="Setujui">
-                                                    <i class="fas fa-check"></i>
-                                                </button>
-                                                <button type="button" 
-                                                    class="text-red-600 hover:text-red-900"
-                                                    onclick="rejectSwap('{{ $item->id }}')"
-                                                    title="Tolak">
-                                                    <i class="fas fa-times"></i>
-                                                </button>
-                                            @endif
-                                            @if(in_array($item->status, ['approved', 'accepted']))
-                                                <button type="button" 
-                                                    class="text-purple-600 hover:text-purple-900"
-                                                    onclick="executeSwap('{{ $item->id }}')"
-                                                    title="Eksekusi">
-                                                    <i class="fas fa-play"></i>
-                                                </button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
+        <x-form.input 
+            type="date"
+            name="date_from"
+            label="Dari Tanggal"
+            :value="$filters['date_from'] ?? ''" />
+
+        <x-form.input 
+            type="date"
+            name="date_to"
+            label="Sampai Tanggal"
+            :value="$filters['date_to'] ?? ''" />
+    </x-filter-section>
+
+    {{-- Main Table --}}
+    <x-card>
+        @if(isset($items) && $items->isEmpty())
+            <x-empty-state 
+                icon="fas fa-exchange-alt"
+                title="Tidak ada data tukar shift"
+                description="Permintaan tukar shift akan ditampilkan di sini" />
+        @elseif(isset($items))
+            <x-table>
+                <x-slot:thead>
+                    <x-table.row>
+                        <x-table.cell header>No</x-table.cell>
+                        <x-table.cell header>Tanggal Permintaan</x-table.cell>
+                        <x-table.cell header>Pemohon</x-table.cell>
+                        <x-table.cell header>Target</x-table.cell>
+                        <x-table.cell header>Shift Pemohon</x-table.cell>
+                        <x-table.cell header>Shift Target</x-table.cell>
+                        <x-table.cell header>Alasan</x-table.cell>
+                        <x-table.cell header>Status</x-table.cell>
+                        <x-table.cell header>Aksi</x-table.cell>
+                    </x-table.row>
+                </x-slot:thead>
+
+                @foreach($items as $index => $item)
+                    <x-table.row>
+                        <x-table.cell>{{ $items->firstItem() + $index }}</x-table.cell>
+
+                        <x-table.cell>
+                            <div class="text-sm">{{ $item->requested_at?->format('d M Y') ?? $item->created_at->format('d M Y') }}</div>
+                            <div class="text-xs text-gray-500">{{ $item->requested_at?->format('H:i') ?? $item->created_at->format('H:i') }}</div>
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            <div class="font-medium text-gray-900">{{ $item->requester->name }}</div>
+                            <div class="text-sm text-gray-500">{{ $item->requester->nip ?? '-' }}</div>
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            @if($item->targetWorker)
+                                <div class="font-medium text-gray-900">{{ $item->targetWorker->name }}</div>
+                                <div class="text-sm text-gray-500">{{ $item->targetWorker->nip ?? '-' }}</div>
+                            @else
+                                <x-badge variant="secondary">Open Request</x-badge>
+                            @endif
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            @if($item->requesterShift && $item->requesterShift->shift)
+                                <div class="text-sm">{{ $item->requesterShift->shift->name }}</div>
+                                <div class="text-xs text-gray-500">
+                                    {{ $item->requesterShift->shift->start_time }} - {{ $item->requesterShift->shift->end_time }}
+                                </div>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            @if($item->targetShift && $item->targetShift->shift)
+                                <div class="text-sm">{{ $item->targetShift->shift->name }}</div>
+                                <div class="text-xs text-gray-500">
+                                    {{ $item->targetShift->shift->start_time }} - {{ $item->targetShift->shift->end_time }}
+                                </div>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            <span class="text-sm text-gray-600">{{ Str::limit($item->reason ?? '-', 40) }}</span>
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            @php
+                                $statusBadges = [
+                                    'pending' => ['variant' => 'secondary', 'label' => 'Pending'],
+                                    'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
+                                    'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Persetujuan'],
+                                    'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                                    'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                                    'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
+                                    'executed' => ['variant' => 'success', 'label' => 'Dieksekusi'],
+                                ];
+                                $badge = $statusBadges[$item->status] ?? ['variant' => 'secondary', 'label' => ucfirst($item->status)];
+                            @endphp
+                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
+                        </x-table.cell>
+
+                        <x-table.cell>
+                            <div class="flex justify-end space-x-2">
+                                <a href="{{ route('manager.shift-swap-approvals.show', $item->id) }}" 
+                                   class="text-blue-600 hover:text-blue-900 inline-flex items-center" 
+                                   title="Detail">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+
+                                @if($item->status === 'awaiting_approval')
+                                    <button onclick="approveSwap('{{ $item->id }}')" 
+                                            class="text-green-600 hover:text-green-900 inline-flex items-center" 
+                                            title="Setujui">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    <button onclick="rejectSwap('{{ $item->id }}')" 
+                                            class="text-red-600 hover:text-red-900 inline-flex items-center" 
+                                            title="Tolak">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                @endif
+
+                                @if($item->status === 'approved' && !$item->executed_at)
+                                    <button onclick="executeSwap('{{ $item->id }}')" 
+                                            class="text-purple-600 hover:text-purple-900 inline-flex items-center" 
+                                            title="Eksekusi">
+                                        <i class="fas fa-check-double"></i>
+                                    </button>
+                                @endif
+                            </div>
+                        </x-table.cell>
+                    </x-table.row>
+                @endforeach
+            </x-table>
+
+            {{-- Pagination --}}
+            @if($items->hasPages())
+                <div class="mt-4">
+                    <x-pagination :paginator="$items" />
                 </div>
             @endif
-        </div>
-    </div>
+        @else
+            <x-empty-state 
+                icon="fas fa-exchange-alt"
+                title="Tidak ada data tukar shift"
+                description="Gunakan filter di atas untuk melihat data" />
+        @endif
+    </x-card>
 </div>
 
-<!-- Approve Modal -->
-<div id="approveModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeModal('approveModal')">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white" onclick="event.stopPropagation()">
-        <form id="approveForm" method="POST">
-            @csrf
-            <div class="flex items-center justify-between pb-3 border-b">
-                <h3 class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                    Setujui Permintaan
-                </h3>
-                <button type="button" onclick="closeModal('approveModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (opsional)</label>
-                <textarea name="notes" 
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" 
-                          rows="3"
-                          placeholder="Tambahkan catatan..."></textarea>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" 
-                        onclick="closeModal('approveModal')"
-                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
-                    <i class="fas fa-check mr-2"></i>Setujui
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeModal('rejectModal')">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white" onclick="event.stopPropagation()">
-        <form id="rejectForm" method="POST">
-            @csrf
-            <div class="flex items-center justify-between pb-3 border-b">
-                <h3 class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-times-circle text-red-600 mr-2"></i>
-                    Tolak Permintaan
-                </h3>
-                <button type="button" onclick="closeModal('rejectModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Alasan Penolakan <span class="text-red-500">*</span>
-                </label>
-                <textarea name="reason" 
-                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent" 
-                          rows="3" 
-                          required
-                          placeholder="Jelaskan alasan penolakan..."></textarea>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" 
-                        onclick="closeModal('rejectModal')"
-                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-                    <i class="fas fa-times mr-2"></i>Tolak
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Execute Modal -->
-<div id="executeModal" class="hidden fixed inset-0 backdrop-blur-sm bg-white/30 overflow-y-auto h-full w-full z-50" onclick="if(event.target === this) closeModal('executeModal')">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-lg bg-white" onclick="event.stopPropagation()">
-        <form id="executeForm" method="POST">
-            @csrf
-            <div class="flex items-center justify-between pb-3 border-b">
-                <h3 class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-play-circle text-purple-600 mr-2"></i>
-                    Eksekusi Pertukaran Shift
-                </h3>
-                <button type="button" onclick="closeModal('executeModal')" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="mt-4">
-                <div class="flex items-start space-x-3 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
-                    <p class="text-sm text-yellow-800">
-                        Yakin ingin mengeksekusi pertukaran shift ini? Shift kedua pekerja akan ditukar secara permanen.
-                    </p>
-                </div>
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" 
-                        onclick="closeModal('executeModal')"
-                        class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
-                    Batal
-                </button>
-                <button type="submit" 
-                        class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition">
-                    <i class="fas fa-play mr-2"></i>Eksekusi
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
+@push('scripts')
 <script>
-function openModal(modalId) {
-    document.getElementById(modalId).classList.remove('hidden');
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.add('hidden');
-}
-
-function approveSwap(id) {
-    const form = document.getElementById('approveForm');
-    form.action = "{{ route('manager.shift-swap-approvals.index') }}/" + id + "/approve";
-    openModal('approveModal');
-}
-
-function rejectSwap(id) {
-    const form = document.getElementById('rejectForm');
-    form.action = "{{ route('manager.shift-swap-approvals.index') }}/" + id + "/reject";
-    openModal('rejectModal');
-}
-
-function executeSwap(id) {
-    const form = document.getElementById('executeForm');
-    form.action = "{{ route('manager.shift-swap-approvals.index') }}/" + id + "/execute";
-    openModal('executeModal');
-}
-
-// Close modal when clicking outside
-window.onclick = function(event) {
-    if (event.target.classList.contains('bg-opacity-50')) {
-        const modals = ['approveModal', 'rejectModal', 'executeModal'];
-        modals.forEach(modalId => {
-            document.getElementById(modalId).classList.add('hidden');
-        });
+    function approveSwap(id) {
+        if (confirm('Apakah Anda yakin ingin menyetujui permintaan tukar shift ini?')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/manager/shift-swap-approvals/${id}/approve`;
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
     }
-}
+
+    function rejectSwap(id) {
+        const reason = prompt('Masukkan alasan penolakan:');
+        if (reason && reason.trim() !== '') {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/manager/shift-swap-approvals/${id}/reject`;
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            const reasonInput = document.createElement('input');
+            reasonInput.type = 'hidden';
+            reasonInput.name = 'reason';
+            reasonInput.value = reason;
+            form.appendChild(reasonInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+        } else if (reason !== null) {
+            alert('Alasan penolakan harus diisi!');
+        }
+    }
+
+    function executeSwap(id) {
+        if (confirm('Apakah Anda yakin ingin mengeksekusi pertukaran shift ini? Shift akan segera ditukar.')) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/manager/shift-swap-approvals/${id}/execute`;
+            
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            form.appendChild(csrfToken);
+            
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
 </script>
+@endpush
 @endsection

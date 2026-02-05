@@ -22,8 +22,29 @@ class ShiftSwapApprovalController extends Controller
         $user = auth()->user();
         
         try {
-            $items = $this->shiftSwapService->listPendingApprovalsForManager($user->id);
-            return view('manager.shift-swap-approvals.index', compact('items'));
+            $filters = [
+                'status' => $request->input('status', ''), // Default empty string untuk tampilkan semua
+                'requester_id' => $request->input('requester_id'),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'per_page' => $request->input('per_page', 15),
+            ];
+
+            $items = $this->shiftSwapService->listPendingApprovalsForManager($user->id, $filters);
+            
+            // Get statistics
+            $statistics = [
+                'total' => \App\Models\ShiftSwapRequest::count(),
+                'awaiting_approval' => \App\Models\ShiftSwapRequest::where('status', 'awaiting_approval')->count(),
+                'approved' => \App\Models\ShiftSwapRequest::where('status', 'approved')->count(),
+                'rejected' => \App\Models\ShiftSwapRequest::where('status', 'rejected')->count(),
+                'executed' => \App\Models\ShiftSwapRequest::whereNotNull('executed_at')->count(),
+            ];
+
+            // Get all workers for filter
+            $workers = \App\Models\Worker::orderBy('name')->get();
+
+            return view('manager.shift-swap-approvals.index', compact('items', 'statistics', 'workers', 'filters'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal mengambil data: ' . $e->getMessage());
         }

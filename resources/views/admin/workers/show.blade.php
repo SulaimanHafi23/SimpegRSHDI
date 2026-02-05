@@ -97,10 +97,6 @@
             {{-- Quick Actions --}}
             <x-card title="Aksi Cepat">
                 <div class="space-y-2">
-                    <a href="#" class="flex items-center p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-blue-700">
-                        <i class="fas fa-file-invoice w-5"></i>
-                        <span class="ml-3">Lihat Slip Gaji</span>
-                    </a>
                     <a href="{{ route('admin.workers.attendance-history', $worker->id) }}" class="flex items-center p-3 bg-green-50 hover:bg-green-100 rounded-lg text-green-700">
                         <i class="fas fa-calendar-check w-5"></i>
                         <span class="ml-3">Riwayat Absensi</span>

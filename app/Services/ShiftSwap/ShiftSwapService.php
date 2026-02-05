@@ -966,31 +966,55 @@ class ShiftSwapService
     /**
      * List pending approvals for manager
      */
-    public function listPendingApprovalsForManager(string $managerId)
+    public function listPendingApprovalsForManager(string $managerId, array $filters = [])
     {
         // Get manager's department
         $manager = \App\Models\User::findOrFail($managerId);
         $worker = $manager->worker;
 
-        if (!$worker) {
-            return collect([]);
-        }
-
-        // Get swaps requiring approval in manager's department
-        // Include both 'pending' and 'awaiting_approval' status for manager visibility
-        return ShiftSwapRequest::with(['requester', 'targetWorker', 'requesterShift.shift', 'targetShift.shift'])
-            ->whereIn('status', ['pending', 'awaiting_approval'])
-            ->where('requires_manager_approval', true)
-            ->where(function($q) use ($worker) {
+        // Build base query
+        $query = ShiftSwapRequest::with(['requester', 'targetWorker', 'requesterShift.shift', 'targetShift.shift']);
+        
+        // For Manager (not Super Admin), filter by department
+        // Super Admin can see all data
+        $isSuperAdmin = $manager->hasRole('Super Admin');
+        
+        if ($worker && !$isSuperAdmin) {
+            $query->where(function($q) use ($worker) {
                 $q->whereHas('requester', function($query) use ($worker) {
                     $query->where('department_id', $worker->department_id);
                 })
                 ->orWhereHas('targetWorker', function($query) use ($worker) {
                     $query->where('department_id', $worker->department_id);
                 });
-            })
-            ->orderBy('requested_at', 'asc')
-            ->get();
+            });
+        }
+
+        // Apply status filter
+        if (isset($filters['status']) && $filters['status'] !== '') {
+            // Explicit status filter selected
+            $query->where('status', $filters['status']);
+        } elseif (!isset($filters['status'])) {
+            // No filter applied, show only items needing approval (default view)
+            $query->whereIn('status', ['pending', 'awaiting_approval'])
+                  ->where('requires_manager_approval', true);
+        }
+        // If status is empty string '', show all statuses
+
+        if (!empty($filters['requester_id'])) {
+            $query->where('requester_id', $filters['requester_id']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('requested_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('requested_at', '<=', $filters['date_to']);
+        }
+
+        $perPage = $filters['per_page'] ?? 15;
+        return $query->orderBy('requested_at', 'desc')->paginate($perPage);
     }
 
     /**

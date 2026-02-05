@@ -81,6 +81,16 @@ class AttendanceService
                 throw new \Exception('Anda sedang cuti (' . $leaveTypeName . '). Tidak perlu melakukan absensi.');
             }
 
+            // Check if worker is on approved business trip today
+            $approvedBusinessTrip = \App\Models\BusinessTrip::where('worker_id', $workerId)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->first();
+            if ($approvedBusinessTrip) {
+                throw new \Exception('Anda sedang dalam perjalanan dinas ke ' . $approvedBusinessTrip->destination . '. Tidak perlu melakukan absensi.');
+            }
+
             // Get worker's shift for today
             $workerShift = $this->workerShiftRepository->getActiveByWorkerId($workerId);
             if (!$workerShift) {
@@ -126,6 +136,8 @@ class AttendanceService
                 'check_in_latitude' => $data['latitude'],
                 'check_in_longitude' => $data['longitude'],
                 'distance_check_in' => $distance,
+                'check_in_by_admin' => $data['by_admin'] ?? false,
+                'check_in_admin_id' => ($data['by_admin'] ?? false) ? ($data['admin_id'] ?? null) : null,
                 'status' => $data['status'] ?? 'present',
                 'is_late' => $isLate,
                 'late_minutes' => $lateMinutes,
@@ -258,6 +270,10 @@ class AttendanceService
                 'check_out_longitude' => $data['longitude'],
                 'distance_check_in' => $attendance->distance_check_in,
                 'distance_check_out' => $distance,
+                'check_in_by_admin' => $attendance->check_in_by_admin,
+                'check_in_admin_id' => $attendance->check_in_admin_id,
+                'check_out_by_admin' => $data['by_admin'] ?? false,
+                'check_out_admin_id' => ($data['by_admin'] ?? false) ? ($data['admin_id'] ?? null) : null,
                 'status' => $attendance->status,
                 'is_late' => $attendance->is_late,
                 'late_minutes' => $attendance->late_minutes,

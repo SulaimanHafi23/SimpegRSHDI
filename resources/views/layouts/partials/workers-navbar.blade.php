@@ -37,12 +37,6 @@
                     <p class="text-xs text-yellow-100">{{ \Carbon\Carbon::now()->isoFormat('D MMMM YYYY') }}</p>
                 </div>
 
-                <!-- Notifications -->
-                <button class="relative p-2 hover:bg-green-500 rounded-lg transition duration-200">
-                    <i class="fas fa-bell text-lg lg:text-xl"></i>
-                    <span class="absolute top-1 right-1 h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></span>
-                </button>
-
                 <!-- User Menu Dropdown (Desktop) -->
                 <div class="hidden lg:block relative" x-data="{ open: false }">
                     <button @click="open = !open" class="flex items-center space-x-2 p-2 hover:bg-green-500 rounded-lg transition duration-200">

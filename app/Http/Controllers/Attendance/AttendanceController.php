@@ -70,8 +70,94 @@ class AttendanceController extends Controller
             return $worker;
         });
 
+        // Hitung statistik untuk hari ini
+        $summary = [
+            'total_workers' => $allWorkers->count(),
+            'present' => $todayAttendances->whereIn('status', ['present', 'late'])->count(),
+            'late' => $todayAttendances->where('is_late', true)->count(),
+            'early_leave' => $todayAttendances->where('is_early_leave', true)->count(),
+            'perfect' => $todayAttendances->whereIn('status', ['present'])
+                ->where('is_late', false)
+                ->where('is_early_leave', false)
+                ->count(),
+            'absent' => $allWorkers->count() - $todayAttendances->whereIn('status', ['present', 'late'])->count(),
+        ];
+
+        // Tentukan periode untuk statistik riwayat
+        $statsPeriod = $request->stats_period ?? 'month'; // month, year, custom
+        $statsMonth = $request->stats_month ?? now()->format('m');
+        $statsYear = $request->stats_year ?? now()->format('Y');
+        $statsDateFrom = $request->stats_date_from;
+        $statsDateTo = $request->stats_date_to;
+
+        // Hitung date range berdasarkan periode
+        if ($statsPeriod === 'year') {
+            $statsStartDate = \Carbon\Carbon::create($statsYear, 1, 1)->format('Y-m-d');
+            $statsEndDate = \Carbon\Carbon::create($statsYear, 12, 31)->format('Y-m-d');
+        } elseif ($statsPeriod === 'custom' && $statsDateFrom && $statsDateTo) {
+            $statsStartDate = $statsDateFrom;
+            $statsEndDate = $statsDateTo;
+        } else {
+            // Default: per bulan
+            $statsStartDate = \Carbon\Carbon::create($statsYear, $statsMonth, 1)->startOfMonth()->format('Y-m-d');
+            $statsEndDate = \Carbon\Carbon::create($statsYear, $statsMonth, 1)->endOfMonth()->format('Y-m-d');
+        }
+
+        // Hitung statistik per pegawai untuk periode yang dipilih
+        $workerStats = [];
+        foreach ($allWorkers as $worker) {
+            $periodAttendances = $this->attendanceService->getAll([
+                'worker_id' => $worker->id,
+                'date_from' => $statsStartDate,
+                'date_to' => $statsEndDate,
+                'per_page' => 1000,
+            ]);
+
+            // Ambil items dari paginator jika ada
+            $attendanceItems = $periodAttendances instanceof \Illuminate\Pagination\LengthAwarePaginator 
+                ? collect($periodAttendances->items()) 
+                : $periodAttendances;
+
+            // Hitung detail statistik
+            $lateItems = $attendanceItems->where('is_late', true);
+            $earlyLeaveItems = $attendanceItems->where('is_early_leave', true);
+            $totalLateMinutes = $lateItems->sum('late_minutes');
+            $totalEarlyLeaveMinutes = $earlyLeaveItems->sum('early_leave_minutes');
+            $avgLateMinutes = $lateItems->count() > 0 ? round($totalLateMinutes / $lateItems->count()) : 0;
+            $avgEarlyLeaveMinutes = $earlyLeaveItems->count() > 0 ? round($totalEarlyLeaveMinutes / $earlyLeaveItems->count()) : 0;
+
+            $workerStats[$worker->id] = [
+                'total_present' => $attendanceItems->whereIn('status', ['present', 'late'])->count(),
+                'total_late' => $lateItems->count(),
+                'total_late_minutes' => $totalLateMinutes,
+                'avg_late_minutes' => $avgLateMinutes,
+                'total_early_leave' => $earlyLeaveItems->count(),
+                'total_early_leave_minutes' => $totalEarlyLeaveMinutes,
+                'avg_early_leave_minutes' => $avgEarlyLeaveMinutes,
+                'total_perfect' => $attendanceItems->whereIn('status', ['present'])
+                    ->where('is_late', false)
+                    ->where('is_early_leave', false)
+                    ->count(),
+                'total_absent' => $attendanceItems->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count(),
+                'total_sick' => $attendanceItems->where('status', 'sick')->count(),
+                'total_permission' => $attendanceItems->where('status', 'permission')->count(),
+                'total_leave' => $attendanceItems->where('status', 'leave')->count(),
+            ];
+        }
+
+        // Data filter untuk statistik
+        $statsFilters = [
+            'period' => $statsPeriod,
+            'month' => $statsMonth,
+            'year' => $statsYear,
+            'date_from' => $statsDateFrom,
+            'date_to' => $statsDateTo,
+            'start_date' => $statsStartDate,
+            'end_date' => $statsEndDate,
+        ];
+
         // Gunakan historyFilters untuk filter form (bukan yang sudah dimodifikasi)
-        return view('admin.attendance.index', compact('attendances', 'workers', 'historyFilters', 'workersWithAttendance', 'locations'));
+        return view('admin.attendance.index', compact('attendances', 'workers', 'historyFilters', 'workersWithAttendance', 'locations', 'summary', 'workerStats', 'statsFilters'));
     }
 
     public function create()
@@ -94,6 +180,64 @@ class AttendanceController extends Controller
         return view('admin.attendance.create', compact('workers', 'locations', 'locationsData'));
     }
 
+    /**
+     * Show check-in form for specific worker
+     */
+    public function checkInForm(string $workerId)
+    {
+        try {
+            $worker = $this->workerService->getById($workerId);
+            
+            if (!$worker) {
+                return redirect()
+                    ->route('admin.attendance.index')
+                    ->with('error', 'Data pegawai tidak ditemukan');
+            }
+
+            // Cek apakah sudah check-in hari ini
+            $today = now()->format('Y-m-d');
+            $existingAttendance = $this->attendanceService->getAll([
+                'worker_id' => $workerId,
+                'date_from' => $today,
+                'date_to' => $today,
+            ])->first();
+
+            if ($existingAttendance && $existingAttendance->check_in) {
+                return redirect()
+                    ->route('admin.attendance.show', $existingAttendance->id)
+                    ->with('error', 'Pegawai ini sudah melakukan check-in hari ini');
+            }
+
+            $locations = $this->locationService->getAllActive();
+
+            // Format locations for JavaScript validation
+            $locationsData = $locations->mapWithKeys(function($loc) {
+                return [$loc->id => [
+                    'id' => $loc->id,
+                    'name' => $loc->name,
+                    'latitude' => (float)$loc->latitude,
+                    'longitude' => (float)$loc->longitude,
+                    'radius' => (int)$loc->radius,
+                    'enforce_geofence' => (bool)$loc->enforce_geofence
+                ]];
+            });
+
+            // Get worker's current shift
+            $currentShift = $worker->getCurrentShift();
+
+            return view('admin.attendance.check-in', compact('worker', 'locations', 'locationsData', 'currentShift'));
+        } catch (\Exception $e) {
+            \Log::error('Check-in form error: ' . $e->getMessage(), [
+                'worker_id' => $workerId,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()
+                ->route('admin.attendance.index')
+                ->with('error', 'Data pegawai tidak ditemukan');
+        }
+    }
+
     public function checkIn(Request $request)
     {
         $validated = $request->validate([
@@ -105,11 +249,15 @@ class AttendanceController extends Controller
         ]);
 
         try {
+            // Add admin flag since this is from admin controller
+            $validated['by_admin'] = true;
+            $validated['admin_id'] = auth()->id();
+
             $attendance = $this->attendanceService->checkIn($validated);
 
             return redirect()
                 ->route('admin.attendance.show', $attendance->id)
-                ->with('success', 'Check-in berhasil dicatat');
+                ->with('success', 'Check-in berhasil dicatat oleh Admin');
         } catch (\Exception $e) {
             \Log::error('Check-in error: ' . $e->getMessage(), [
                 'worker_id' => $request->worker_id,
@@ -119,6 +267,45 @@ class AttendanceController extends Controller
             return back()
                 ->withInput()
                 ->with('error', $e->getMessage());
+        }
+    }
+
+    public function checkOutForm(string $id)
+    {
+        try {
+            $attendance = $this->attendanceService->getById($id);
+            
+            // Validasi apakah sudah check-out
+            if ($attendance->check_out) {
+                return redirect()
+                    ->route('admin.attendance.show', $id)
+                    ->with('error', 'Pegawai ini sudah melakukan check-out');
+            }
+
+            $locations = $this->locationService->getAllActive();
+
+            // Format locations for JavaScript validation
+            $locationsData = $locations->mapWithKeys(function($loc) {
+                return [$loc->id => [
+                    'id' => $loc->id,
+                    'name' => $loc->name,
+                    'latitude' => (float)$loc->latitude,
+                    'longitude' => (float)$loc->longitude,
+                    'radius' => (int)$loc->radius,
+                    'enforce_geofence' => (bool)$loc->enforce_geofence
+                ]];
+            });
+
+            return view('admin.attendance.check-out', compact('attendance', 'locations', 'locationsData'));
+        } catch (\Exception $e) {
+            \Log::error('Check-out form error: ' . $e->getMessage(), [
+                'attendance_id' => $id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return redirect()
+                ->route('admin.attendance.index')
+                ->with('error', 'Data absensi tidak ditemukan');
         }
     }
 
@@ -132,10 +319,14 @@ class AttendanceController extends Controller
         ]);
 
         try {
+            // Add admin flag since this is from admin controller
+            $validated['by_admin'] = true;
+            $validated['admin_id'] = auth()->id();
+
             $attendance = $this->attendanceService->checkOut($id, $validated);
             
             // Check if it was an early leave and show appropriate message
-            $message = 'Check-out berhasil dicatat';
+            $message = 'Check-out berhasil dicatat oleh Admin';
             
             if ($attendance->is_early_leave && $attendance->early_leave_minutes > 0) {
                 $hours = floor($attendance->early_leave_minutes / 60);
@@ -149,7 +340,7 @@ class AttendanceController extends Controller
                     $earlyText .= $minutes . ' menit';
                 }
                 
-                $message = "Check-out berhasil dicatat. Perhatian: Anda pulang lebih awal {$earlyText} dari jadwal. Pastikan sudah mendapat izin dari atasan.";
+                $message = "Check-out berhasil dicatat oleh Admin. Perhatian: Pegawai pulang lebih awal {$earlyText} dari jadwal.";
                 
                 return redirect()
                     ->route('admin.attendance.show', $attendance->id)
@@ -580,5 +771,41 @@ class AttendanceController extends Controller
             new \App\Exports\AttendanceStatsExport($worker, $attendances, $stats, $dateFrom, $dateTo),
             $filename
         );
+    }
+
+    /**
+     * Get attendance detail for API
+     */
+    public function getAttendanceDetail($id)
+    {
+        try {
+            $attendance = $this->attendanceService->getById($id);
+            
+            if (!$attendance) {
+                return response()->json(['error' => 'Data tidak ditemukan'], 404);
+            }
+
+            // Load relationships
+            $attendance->load(['worker', 'location']);
+
+            return response()->json([
+                'id' => $attendance->id,
+                'status' => $attendance->status,
+                'check_in_time' => $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i:s') : null,
+                'check_out_time' => $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i:s') : null,
+                'is_late' => $attendance->is_late,
+                'late_minutes' => $attendance->late_minutes ?? 0,
+                'is_early_leave' => $attendance->is_early_leave ?? false,
+                'early_leave_minutes' => $attendance->early_leave_minutes ?? 0,
+                'location' => $attendance->location ? $attendance->location->name : null,
+                'notes' => $attendance->notes,
+                'worker' => [
+                    'name' => $attendance->worker->name,
+                    'nip' => $attendance->worker->nip,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Terjadi kesalahan: ' . $e->getMessage()], 500);
+        }
     }
 }

@@ -149,10 +149,31 @@
         <div class="lg:col-span-2 space-y-6">
             {{-- Check In Info --}}
             <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <i class="fas fa-sign-in-alt text-green-600 mr-2"></i>
-                    Check In
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                    <span class="flex items-center">
+                        <i class="fas fa-sign-in-alt text-green-600 mr-2"></i>
+                        Check In
+                    </span>
+                    @if($attendance->check_in_by_admin)
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <i class="fas fa-user-shield mr-1"></i>
+                            Oleh Admin
+                        </span>
+                    @endif
                 </h3>
+                
+                {{-- Admin Info if by admin --}}
+                @if($attendance->check_in_by_admin && $attendance->checkInAdmin)
+                    <div class="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-info-circle text-purple-600 mr-2"></i>
+                            <span class="text-sm text-purple-800">
+                                Check-in dilakukan oleh <strong>{{ $attendance->checkInAdmin->name }}</strong>
+                            </span>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <p class="text-sm text-gray-600">Tanggal</p>
@@ -183,10 +204,17 @@
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                             @foreach($attendance->checkInPhoto as $photo)
                                 @if($photo->photo_path && Storage::disk('public')->exists($photo->photo_path))
-                                    <img src="{{ asset('storage/' . $photo->photo_path) }}" 
-                                         alt="Check In Photo" 
-                                         class="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-75"
-                                         onclick="window.open('{{ asset('storage/' . $photo->photo_path) }}', '_blank')">
+                                    <div class="relative">
+                                        <img src="{{ asset('storage/' . $photo->photo_path) }}" 
+                                             alt="Check In Photo" 
+                                             class="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-75"
+                                             onclick="window.open('{{ asset('storage/' . $photo->photo_path) }}', '_blank')">
+                                        @if($attendance->check_in_by_admin)
+                                            <span class="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-600 text-white text-xs rounded">
+                                                Admin
+                                            </span>
+                                        @endif
+                                    </div>
                                 @endif
                             @endforeach
                         </div>
@@ -197,10 +225,31 @@
             {{-- Check Out Info --}}
             @if($attendance->check_out)
                 <div class="bg-white rounded-lg shadow-md p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <i class="fas fa-sign-out-alt text-red-600 mr-2"></i>
-                        Check Out
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center justify-between">
+                        <span class="flex items-center">
+                            <i class="fas fa-sign-out-alt text-red-600 mr-2"></i>
+                            Check Out
+                        </span>
+                        @if($attendance->check_out_by_admin)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                <i class="fas fa-user-shield mr-1"></i>
+                                Oleh Admin
+                            </span>
+                        @endif
                     </h3>
+                    
+                    {{-- Admin Info if by admin --}}
+                    @if($attendance->check_out_by_admin && $attendance->checkOutAdmin)
+                        <div class="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                            <div class="flex items-center">
+                                <i class="fas fa-info-circle text-purple-600 mr-2"></i>
+                                <span class="text-sm text-purple-800">
+                                    Check-out dilakukan oleh <strong>{{ $attendance->checkOutAdmin->name }}</strong>
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <p class="text-sm text-gray-600">Tanggal</p>
@@ -231,10 +280,17 @@
                             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                 @foreach($attendance->checkOutPhoto as $photo)
                                     @if($photo->photo_path && Storage::disk('public')->exists($photo->photo_path))
-                                        <img src="{{ asset('storage/' . $photo->photo_path) }}" 
-                                             alt="Check Out Photo" 
-                                             class="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-75"
-                                             onclick="window.open('{{ asset('storage/' . $photo->photo_path) }}', '_blank')">
+                                        <div class="relative">
+                                            <img src="{{ asset('storage/' . $photo->photo_path) }}" 
+                                                 alt="Check Out Photo" 
+                                                 class="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-75"
+                                                 onclick="window.open('{{ asset('storage/' . $photo->photo_path) }}', '_blank')">
+                                            @if($attendance->check_out_by_admin)
+                                                <span class="absolute top-1 right-1 px-1.5 py-0.5 bg-purple-600 text-white text-xs rounded">
+                                                    Admin
+                                                </span>
+                                            @endif
+                                        </div>
                                     @endif
                                 @endforeach
                             </div>

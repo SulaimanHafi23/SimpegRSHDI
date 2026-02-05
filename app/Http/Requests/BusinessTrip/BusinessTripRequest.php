@@ -22,10 +22,13 @@ class BusinessTripRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Minimal 1 hari sebelum keberangkatan (tomorrow)
+        $minStartDate = now()->addDay()->format('Y-m-d');
+        
         return [
             'destination' => 'required|string|max:255',
             'purpose' => 'required|string|max:1000',
-            'start_date' => 'required|date|after_or_equal:today',
+            'start_date' => 'required|date|after_or_equal:' . $minStartDate,
             'end_date' => 'required|date|after_or_equal:start_date',
             'transportation' => 'required|string|max:255',
             'accommodation' => 'nullable|string|max:255',
@@ -46,6 +49,13 @@ class BusinessTripRequest extends FormRequest
             'accommodation' => 'Akomodasi',
             'estimated_cost' => 'Estimasi Biaya',
             'notes' => 'Catatan',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'start_date.after_or_equal' => 'Perjalanan dinas harus diajukan minimal 1 hari sebelum keberangkatan. Tanggal keberangkatan paling cepat besok (' . now()->addDay()->format('d M Y') . ').',
         ];
     }
 }

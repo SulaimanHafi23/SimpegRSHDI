@@ -136,4 +136,40 @@ class Worker extends Model
 
         return $workerShift?->getShiftForDate($date);
     }
+
+    /**
+     * Get current shift for today
+     */
+    public function getCurrentShift(): ?Shift
+    {
+        $today = now();
+        
+        // Check override first
+        $override = $this->shiftOverrides()
+            ->where('override_date', $today->format('Y-m-d'))
+            ->with('shift')
+            ->first();
+
+        if ($override && $override->shift) {
+            return $override->shift;
+        }
+
+        // Get active worker shift
+        $workerShift = $this->workerShifts()
+            ->where('is_active', true)
+            ->where('effective_from', '<=', $today->format('Y-m-d'))
+            ->where(function ($query) use ($today) {
+                $query->whereNull('effective_until')
+                    ->orWhere('effective_until', '>=', $today->format('Y-m-d'));
+            })
+            ->with('shift')
+            ->first();
+
+        if ($workerShift && $workerShift->shift) {
+            return $workerShift->shift;
+        }
+
+        // Fallback to default shift
+        return $this->shift;
+    }
 }

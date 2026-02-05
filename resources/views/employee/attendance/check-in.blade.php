@@ -34,6 +34,35 @@
         </div>
     </div>
 
+    @if(isset($activeBusinessTrip) && $activeBusinessTrip)
+    <!-- Business Trip Alert -->
+    <div class="bg-purple-50 border-l-4 border-purple-500 rounded-xl shadow-sm p-4 sm:p-6 mb-6">
+        <div class="flex items-start gap-3">
+            <div class="flex-shrink-0">
+                <i class="fas fa-plane-departure text-2xl text-purple-600"></i>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-purple-900 mb-2">✈️ Anda Sedang Dalam Perjalanan Dinas</h3>
+                <p class="text-sm text-purple-800 mb-2">
+                    <strong>Tujuan:</strong> {{ $activeBusinessTrip->destination }}
+                </p>
+                <p class="text-sm text-purple-800 mb-2">
+                    <strong>Periode:</strong> {{ \Carbon\Carbon::parse($activeBusinessTrip->start_date)->format('d M Y') }} - {{ \Carbon\Carbon::parse($activeBusinessTrip->end_date)->format('d M Y') }}
+                </p>
+                <p class="text-sm text-purple-800">
+                    <strong>Keperluan:</strong> {{ $activeBusinessTrip->purpose }}
+                </p>
+                <div class="mt-3 p-3 bg-purple-100 rounded-lg">
+                    <p class="text-sm font-medium text-purple-900">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Anda tidak perlu melakukan absensi selama perjalanan dinas. Sistem akan secara otomatis merekam status Anda.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Check In Form -->
     <form action="{{ route('employee.attendance.check-in') }}" method="POST" enctype="multipart/form-data" id="checkin-form" class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
         @csrf

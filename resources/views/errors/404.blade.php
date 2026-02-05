@@ -76,14 +76,16 @@
                         <i class="fas fa-tachometer-alt mr-1"></i> Dashboard
                     </a>
                     @can('worker.view')
-                        <a href="{{ route('employee.profile') }}" class="text-sm text-blue-600 hover:text-blue-700 px-4 py-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                        <a href="{{ route('employee.profile.show') }}" class="text-sm text-blue-600 hover:text-blue-700 px-4 py-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
                             <i class="fas fa-user mr-1"></i> Profil Saya
                         </a>
                     @endcan
                     @can('attendance.checkin')
-                        <a href="{{ route('employee.attendance.checkin') }}" class="text-sm text-blue-600 hover:text-blue-700 px-4 py-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
-                            <i class="fas fa-clock mr-1"></i> Absensi
-                        </a>
+                        @if(Route::has('employee.attendance.checkin'))
+                            <a href="{{ route('employee.attendance.checkin') }}" class="text-sm text-blue-600 hover:text-blue-700 px-4 py-2 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                                <i class="fas fa-clock mr-1"></i> Absensi
+                            </a>
+                        @endif
                     @endcan
                 </div>
             </div>

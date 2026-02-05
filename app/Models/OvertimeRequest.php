@@ -22,6 +22,7 @@ class OvertimeRequest extends Model
         'approved_by',
         'approved_at',
         'rejection_reason',
+        'approval_notes',
     ];
 
     protected $casts = [
@@ -40,5 +41,21 @@ class OvertimeRequest extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    // Accessor untuk backward compatibility
+    public function getDateAttribute()
+    {
+        return $this->overtime_date?->format('d M Y');
+    }
+
+    public function getDurationAttribute()
+    {
+        return $this->total_hours;
+    }
+
+    public function getDescriptionAttribute()
+    {
+        return $this->reason;
     }
 }

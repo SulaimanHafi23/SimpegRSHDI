@@ -16,6 +16,7 @@
             <!-- Right Side -->
             <div class="flex items-center space-x-2 sm:space-x-4">
                 <!-- Profile Dropdown -->
+            @auth
             <div class="relative" x-data="{ open: false }">
                 <button @click="open = !open" class="flex items-center p-2 space-x-2 transition duration-200 rounded-lg sm:space-x-3 hover:bg-green-500">
                     @php
@@ -35,7 +36,7 @@
                          alt="Avatar"
                          class="w-8 h-8 border-2 border-yellow-400 rounded-full sm:h-10 sm:w-10">
                     <div class="hidden text-left sm:block">
-                        <p class="text-sm font-semibold">{{ auth()->user()->name }}</p>
+                        <p class="text-sm font-semibold">{{ auth()->user()->name ?? auth()->user()->email }}</p>
                         <p class="text-xs text-yellow-100">{{ auth()->user()->email }}</p>
                     </div>
                     <i class="text-xs text-white fas fa-chevron-down sm:text-sm"></i>
@@ -61,6 +62,7 @@
                     </form>
                 </div>
             </div>
+            @endauth
         </div>
     </div>
 </header>
