@@ -99,6 +99,82 @@ class AttendanceService
 
             $shift = $this->shiftRepository->findById($workerShift->shift_id);
 
+            // ========== VALIDATE CHECK-IN TIME WINDOW ==========
+            $checkInTime = now();
+            $shiftStartTimeStr = \Carbon\Carbon::parse($shift->start_time)->format('H:i:s');
+            $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
+            
+            // Special handling for overnight shifts
+            // If shift is overnight (e.g., 22:00-06:00) and current time is in the morning,
+            // the shift actually starts tonight, not this morning
+            if ($shift->is_overnight) {
+                $shiftStartHour = (int) \Carbon\Carbon::parse($shift->start_time)->format('H');
+                $currentHour = $checkInTime->hour;
+                
+                // If current time is before noon and shift starts after noon (evening shift),
+                // the shift hasn't started yet (it will start tonight)
+                if ($currentHour < 12 && $shiftStartHour >= 12) {
+                    // Shift starts tonight, so add 0 days (today evening)
+                    // But we're checking in the morning, which is ~12+ hours too early
+                    $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
+                } elseif ($currentHour >= 12 && $shiftStartHour >= 12) {
+                    // Both in evening - shift starts today
+                    $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
+                } else {
+                    // Current time is afternoon/evening, shift started last night
+                    // This is valid - shift started yesterday evening
+                    $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr)->subDay();
+                }
+            }
+            
+            // Get time window configuration
+            $checkInWindowBeforeHours = config('attendance.check_in_window_before_hours', 2);
+            $earlyCheckInGraceMinutes = config('attendance.early_checkin_grace_minutes', 30);
+            $strictTimeWindow = config('attendance.strict_time_window', false);
+            
+            // Calculate earliest allowed check-in time
+            $earliestCheckInTime = $shiftStartDateTime->copy()->subHours($checkInWindowBeforeHours);
+            $veryEarlyCheckInTime = $earliestCheckInTime->copy()->subMinutes($earlyCheckInGraceMinutes);
+            
+            // Validation: Too early check-in
+            if ($checkInTime->lessThan($veryEarlyCheckInTime)) {
+                $hoursDiff = $checkInTime->diffInHours($shiftStartDateTime);
+                $minutesDiff = $checkInTime->diffInMinutes($shiftStartDateTime) % 60;
+                
+                $message = sprintf(
+                    'Check-in terlalu dini! Anda mencoba check-in %d jam %d menit sebelum shift dimulai (pukul %s). ' .
+                    'Batas check-in paling awal adalah %d jam sebelum shift (pukul %s).',
+                    $hoursDiff,
+                    $minutesDiff,
+                    $shiftStartDateTime->format('H:i'),
+                    $checkInWindowBeforeHours,
+                    $earliestCheckInTime->format('H:i')
+                );
+                
+                if ($strictTimeWindow) {
+                    throw new \Exception($message);
+                } else {
+                    // Log warning but allow (non-strict mode)
+                    \Log::warning('Very early check-in attempt', [
+                        'worker_id' => $workerId,
+                        'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
+                        'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
+                        'earliest_allowed' => $veryEarlyCheckInTime->format('Y-m-d H:i:s'),
+                        'hours_too_early' => $hoursDiff,
+                        'is_overnight_shift' => $shift->is_overnight,
+                    ]);
+                }
+            } elseif ($checkInTime->lessThan($earliestCheckInTime)) {
+                // Warning for slightly early check-in (within grace period)
+                \Log::info('Early check-in (within grace period)', [
+                    'worker_id' => $workerId,
+                    'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
+                    'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
+                    'earliest_allowed' => $earliestCheckInTime->format('Y-m-d H:i:s'),
+                    'is_overnight_shift' => $shift->is_overnight,
+                ]);
+            }
+
             // Validate location
             $location = $this->locationRepository->findById($data['location_id']);
 
@@ -112,11 +188,8 @@ class AttendanceService
             }
 
             // Calculate if late (only for present status)
-            $checkInTime = now();
             $statusForLate = $data['status'] ?? 'present';
             if ($statusForLate === 'present') {
-                $shiftStartTimeStr = \Carbon\Carbon::parse($shift->start_time)->format('H:i:s');
-                $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
                 $graceTime = $shiftStartDateTime->copy()->addMinutes($shift->grace_period_minutes);
 
                 $isLate = $checkInTime->greaterThan($graceTime);
@@ -216,6 +289,60 @@ class AttendanceService
             // Jika shift melewati tengah malam (overnight), tambahkan satu hari ke tanggal akhir shift
             if ($shift->is_overnight) {
                 $shiftEndDateTime->addDay();
+            }
+
+            // ========== VALIDATE CHECK-OUT TIME WINDOW ==========
+            $checkOutWindowAfterHours = config('attendance.check_out_window_after_hours', 4);
+            $strictTimeWindow = config('attendance.strict_time_window', false);
+            
+            // Calculate latest allowed check-out time (including potential overtime)
+            $latestCheckOutTime = $shiftEndDateTime->copy()->addHours($checkOutWindowAfterHours);
+            
+            // Check for approved overtime request
+            $hasApprovedOvertime = \App\Models\OvertimeRequest::where('worker_id', $attendance->worker_id)
+                ->where('status', 'approved')
+                ->whereDate('overtime_date', $attendance->attendance_date)
+                ->exists();
+            
+            // If there's approved overtime, extend the window
+            if ($hasApprovedOvertime) {
+                // Add extra 2 hours for overtime flexibility
+                $latestCheckOutTime->addHours(2);
+                \Log::info('Check-out window extended due to approved overtime', [
+                    'worker_id' => $attendance->worker_id,
+                    'attendance_date' => $attendance->attendance_date,
+                    'extended_latest_checkout' => $latestCheckOutTime->format('Y-m-d H:i:s'),
+                ]);
+            }
+            
+            // Validation: Check-out too late
+            if ($checkOutTime->greaterThan($latestCheckOutTime)) {
+                $hoursDiff = $shiftEndDateTime->diffInHours($checkOutTime);
+                $minutesDiff = $shiftEndDateTime->diffInMinutes($checkOutTime) % 60;
+                
+                $message = sprintf(
+                    'Check-out terlalu terlambat! Anda mencoba check-out %d jam %d menit setelah shift berakhir (pukul %s). ' .
+                    'Batas check-out paling akhir adalah %d jam setelah shift berakhir (pukul %s). ' .
+                    'Silakan hubungi admin untuk koreksi absensi.',
+                    $hoursDiff,
+                    $minutesDiff,
+                    $shiftEndDateTime->format('H:i'),
+                    $checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0),
+                    $latestCheckOutTime->format('H:i')
+                );
+                
+                if ($strictTimeWindow) {
+                    throw new \Exception($message);
+                } else {
+                    // Log warning but allow (non-strict mode)
+                    \Log::warning('Very late check-out attempt', [
+                        'worker_id' => $attendance->worker_id,
+                        'attendance_id' => $attendanceId,
+                        'check_out_time' => $checkOutTime->format('H:i:s'),
+                        'shift_end' => $shiftEndDateTime->format('H:i:s'),
+                        'latest_allowed' => $latestCheckOutTime->format('H:i:s'),
+                    ]);
+                }
             }
 
             // Hitung early leave dan overtime
