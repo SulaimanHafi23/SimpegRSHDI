@@ -453,7 +453,7 @@ class AttendanceController extends Controller
     {
         try {
             $format = $request->input('format', 'excel'); // pdf, excel, csv
-            
+
             $filters = [
                 'worker_id' => $request->input('worker_id'),
                 'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
@@ -463,7 +463,7 @@ class AttendanceController extends Controller
 
             // Get attendances data
             $query = \App\Models\Attendance::with(['worker.department', 'location']);
-            
+
             if ($filters['worker_id']) {
                 $query->where('worker_id', $filters['worker_id']);
             }
@@ -476,9 +476,9 @@ class AttendanceController extends Controller
             if ($filters['status']) {
                 $query->where('status', $filters['status']);
             }
-            
+
             $attendances = $query->orderBy('date', 'desc')->get();
-            
+
             // Get worker if single worker export
             $worker = null;
             if ($filters['worker_id']) {
@@ -502,14 +502,14 @@ class AttendanceController extends Controller
 
                 case 'csv':
                     return \Maatwebsite\Excel\Facades\Excel::download(
-                        new AttendanceExport($filters), 
+                        new AttendanceExport($filters),
                         $filename . '.csv',
                         \Maatwebsite\Excel\Excel::CSV
                     );
 
                 default: // excel
                     return \Maatwebsite\Excel\Facades\Excel::download(
-                        new AttendanceExport($filters), 
+                        new AttendanceExport($filters),
                         $filename . '.xlsx'
                     );
             }
