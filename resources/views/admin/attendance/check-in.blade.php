@@ -6,8 +6,8 @@
 <div class="space-y-4 sm:space-y-6">
     {{-- Page Header --}}
     <div class="flex items-center space-x-3">
-        <x-button 
-            variant="secondary" 
+        <x-button
+            variant="secondary"
             size="sm"
             icon="fas fa-arrow-left"
             onclick="window.location.href='{{ route('admin.attendance.index') }}'">
@@ -49,8 +49,8 @@
                 {{-- Profile Section --}}
                 <div class="flex items-center space-x-4">
                     @if($worker->photo)
-                        <img src="{{ Storage::url($worker->photo) }}" 
-                             alt="{{ $worker->name }}" 
+                        <img src="{{ Storage::url($worker->photo) }}"
+                             alt="{{ $worker->name }}"
                              class="w-20 h-20 rounded-full object-cover border-2 border-gray-200">
                     @else
                         <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
@@ -140,19 +140,17 @@
 
         {{-- Check In Form --}}
         <x-card title="Form Check In">
-            <form action="{{ route('admin.attendance.check-in') }}" 
-                  method="POST" 
-                  enctype="multipart/form-data" 
+            <form action="{{ route('admin.attendance.check-in', $worker->id) }}"
+                  method="POST"
+                  enctype="multipart/form-data"
                   class="space-y-4">
                 @csrf
-                
-                {{-- Hidden Worker ID --}}
                 <input type="hidden" name="worker_id" value="{{ $worker->id }}">
-                
-                <x-form.select 
-                    name="location_id" 
+
+                <x-form.select
+                    name="location_id"
                     label="Lokasi"
-                    required 
+                    required
                     :error="$errors->first('location_id')">
                     <option value="">Pilih Lokasi</option>
                     @foreach($locations as $location)
@@ -162,28 +160,28 @@
                     @endforeach
                 </x-form.select>
 
-                <x-form.input 
-                    name="latitude" 
-                    label="Latitude" 
+                <x-form.input
+                    name="latitude"
+                    label="Latitude"
                     type="number"
                     step="any"
                     :value="old('latitude', '0')"
-                    required 
+                    required
                     :error="$errors->first('latitude')"
                     placeholder="Contoh: -6.200000" />
 
-                <x-form.input 
-                    name="longitude" 
-                    label="Longitude" 
+                <x-form.input
+                    name="longitude"
+                    label="Longitude"
                     type="number"
                     step="any"
                     :value="old('longitude', '0')"
-                    required 
+                    required
                     :error="$errors->first('longitude')"
                     placeholder="Contoh: 106.816666" />
 
-                <x-form.file 
-                    name="photo" 
+                <x-form.file
+                    name="photo"
                     label="Foto (Opsional)"
                     accept="image/*"
                     :error="$errors->first('photo')">
@@ -194,9 +192,9 @@
 
                 {{-- Get Location Button --}}
                 <div>
-                    <x-button 
-                        type="button" 
-                        variant="secondary" 
+                    <x-button
+                        type="button"
+                        variant="secondary"
                         onclick="getCurrentLocation()"
                         class="w-full"
                         id="get-location-btn">
@@ -208,15 +206,15 @@
 
                 {{-- Tombol Submit --}}
                 <div class="flex gap-3 pt-4">
-                    <x-button 
-                        type="button" 
+                    <x-button
+                        type="button"
                         variant="secondary"
                         onclick="window.location.href='{{ route('admin.attendance.index') }}'"
                         class="flex-1">
                         Batal
                     </x-button>
-                    <x-button 
-                        type="submit" 
+                    <x-button
+                        type="submit"
                         variant="primary"
                         class="flex-1">
                         <i class="fas fa-sign-in-alt mr-2"></i>
@@ -245,13 +243,59 @@
     let marker;
     let circles = [];
 
-    // Update current time
-    function updateCurrentTime() {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        document.getElementById('current-time').textContent = timeStr;
+    // World Time tracking
+    let serverTime = null;
+    let lastSyncTime = null;
+
+    // Fetch waktu dari World Time API (online time)
+    async function fetchWorldTime() {
+        try {
+            const response = await fetch('{{ route('api.world-time') }}');
+            const data = await response.json();
+
+            if (data.success) {
+                serverTime = new Date(data.datetime);
+                lastSyncTime = Date.now();
+                console.log('Time synced from:', data.source || 'unknown');
+                console.log('Server datetime:', data.datetime);
+                console.log('Parsed time:', serverTime.toLocaleString('id-ID', { timeZone: 'Asia/Makassar' }));
+
+                if (data.fallback) {
+                    console.warn('Using fallback server time');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to fetch world time:', error);
+            // Fallback to local time if API fails
+            serverTime = new Date();
+            lastSyncTime = Date.now();
+        }
     }
-    setInterval(updateCurrentTime, 1000);
+
+    // Update display waktu (setiap detik)
+    function updateCurrentTime() {
+        if (serverTime && lastSyncTime) {
+            // Calculate time passed since last sync
+            const timePassed = Date.now() - lastSyncTime;
+            const currentTime = new Date(serverTime.getTime() + timePassed);
+
+            const timeStr = currentTime.toLocaleTimeString('id-ID', {
+                timeZone: 'Asia/Makassar',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            document.getElementById('current-time').textContent = timeStr + ' WITA';
+        } else {
+            document.getElementById('current-time').textContent = 'Memuat...';
+        }
+    }
+
+    // Initialize time
+    fetchWorldTime(); // Initial fetch
+    setInterval(updateCurrentTime, 1000); // Update display every second
+    setInterval(fetchWorldTime, 30000); // Re-sync every 30 seconds
     updateCurrentTime();
 
     // Initialize map
@@ -305,7 +349,7 @@
 
         const button = document.getElementById('get-location-btn');
         const statusEl = document.getElementById('location-status');
-        
+
         if (button) {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengambil lokasi...';

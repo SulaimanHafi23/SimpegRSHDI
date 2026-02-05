@@ -81,6 +81,41 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
 
+// ========== WORLD TIME API ==========
+Route::get('/api/world-time', function () {
+    try {
+        // Try World Time API first
+        $response = \Illuminate\Support\Facades\Http::timeout(3)->get('https://worldtimeapi.org/api/timezone/Asia/Makassar');
+
+        if ($response->successful()) {
+            $data = $response->json();
+            return response()->json([
+                'success' => true,
+                'datetime' => $data['datetime'],
+                'timezone' => $data['timezone'],
+                'utc_offset' => $data['utc_offset'],
+                'source' => 'worldtimeapi'
+            ]);
+        }
+    } catch (\Exception $e) {
+        \Log::warning('World Time API failed, using server time', ['error' => $e->getMessage()]);
+    }
+
+    // Fallback: Use server time with correct timezone
+    // Make sure server timezone is set correctly in config/app.php
+    $now = \Carbon\Carbon::now('Asia/Makassar');
+
+    return response()->json([
+        'success' => true,
+        'datetime' => $now->toIso8601String(),
+        'timezone' => 'Asia/Makassar',
+        'utc_offset' => '+08:00',
+        'fallback' => true,
+        'source' => 'server',
+        'server_time' => $now->format('Y-m-d H:i:s')
+    ]);
+})->name('api.world-time');
+
 // ========== AUTHENTICATED ROUTES ==========
 Route::middleware(['auth', 'redirect_role'])->group(function () {
 
@@ -289,23 +324,22 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/stats/{worker}/export-excel', [AttendanceController::class, 'exportStatsExcel'])->name('stats.export-excel');
         // Export absensi pegawai (PDF/Excel)
         Route::get('/history/{worker}/export', [AttendanceController::class, 'exportWorkerAttendance'])->name('history.export');
+            Route::get('/history/{worker_id}', [AttendanceController::class, 'history'])->name('history');
         // Index default tetap bisa untuk legacy
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
         Route::get('/create', [AttendanceController::class, 'create'])->name('create');
-        Route::get('/report/daily', [AttendanceController::class, 'dailyReport'])->name('report.daily');
-        Route::get('/report/monthly', [AttendanceController::class, 'monthlyReport'])->name('report.monthly');
-        Route::get('/export', [AttendanceController::class, 'export'])->name('export');
-        // Check-in routes
-        Route::get('/{workerId}/check-in', [AttendanceController::class, 'checkInForm'])->name('check-in-form');
-        Route::post('/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');
-        // Check-out routes
-        Route::get('/{id}/check-out', [AttendanceController::class, 'checkOutForm'])->name('check-out-form');
-        Route::post('/{id}/check-out', [AttendanceController::class, 'checkOut'])->name('check-out');
-        // CRUD routes
+        // Admin check-in/check-out untuk worker tertentu
+        Route::get('/{worker}/check-in', [AttendanceController::class, 'checkInForm'])->name('check-in-form');
+        Route::post('/{worker}/check-in', [AttendanceController::class, 'checkIn'])->name('check-in');
+        Route::get('/{worker}/check-out', [AttendanceController::class, 'checkOutForm'])->name('check-out-form');
+        Route::post('/{worker}/check-out', [AttendanceController::class, 'checkOut'])->name('check-out');
+        Route::get('/{id}', [AttendanceController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [AttendanceController::class, 'edit'])->name('edit');
         Route::put('/{id}', [AttendanceController::class, 'update'])->name('update');
         Route::delete('/{id}', [AttendanceController::class, 'destroy'])->name('destroy');
-        Route::get('/{id}', [AttendanceController::class, 'show'])->name('show');
+        Route::get('/report/daily', [AttendanceController::class, 'dailyReport'])->name('report.daily');
+        Route::get('/report/monthly', [AttendanceController::class, 'monthlyReport'])->name('report.monthly');
+        Route::get('/export', [AttendanceController::class, 'export'])->name('export');
     });
 
     // ========== WORKER SHIFT MANAGEMENT ==========
@@ -425,7 +459,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
 // ========== API ROUTES ==========
 Route::prefix('api')->middleware(['auth'])->group(function () {
     Route::get('/workers/{workerId}/future-shifts', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getFutureShifts']);
-    Route::get('/attendance/{id}/detail', [AttendanceController::class, 'getAttendanceDetail'])->name('api.attendance.detail');
 });
 
 // ========== FALLBACK ROUTE ==========

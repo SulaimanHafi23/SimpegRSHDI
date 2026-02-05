@@ -15,14 +15,40 @@
             <div id="real-time-clock" class="mt-2 text-sm text-blue-600 font-semibold"></div>
         </div>
         <div class="flex gap-2">
-            <!-- <a href="{{ route('admin.attendance.create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 shadow-md">
-                <i class="fas fa-plus mr-2"></i>
-                Tambah Absensi
-            </a> -->
-            <a href="{{ route('admin.attendance.export') }}{{ request()->getQueryString() ? '?' . request()->getQueryString() : '' }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 shadow-md">
-                <i class="fas fa-file-excel mr-2"></i>
-                Export Excel
-            </a>
+            <!-- Export Dropdown -->
+            <div class="relative inline-block text-left" x-data="{ open: false }">
+                <button @click="open = !open" type="button" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 shadow-md">
+                    <i class="fas fa-download mr-2"></i>
+                    Export Data
+                    <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                </button>
+
+                <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 z-10 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div class="py-1">
+                        <a href="{{ route('admin.attendance.export', array_merge(request()->all(), ['format' => 'pdf'])) }}" class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
+                            <i class="fas fa-file-pdf mr-3 text-red-500 group-hover:text-red-700"></i>
+                            <div>
+                                <div class="font-medium">Export PDF</div>
+                                <div class="text-xs text-gray-500">Format dokumen cetak</div>
+                            </div>
+                        </a>
+                        <a href="{{ route('admin.attendance.export', array_merge(request()->all(), ['format' => 'excel'])) }}" class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
+                            <i class="fas fa-file-excel mr-3 text-green-500 group-hover:text-green-700"></i>
+                            <div>
+                                <div class="font-medium">Export Excel</div>
+                                <div class="text-xs text-gray-500">Format spreadsheet</div>
+                            </div>
+                        </a>
+                        <a href="{{ route('admin.attendance.export', array_merge(request()->all(), ['format' => 'csv'])) }}" class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
+                            <i class="fas fa-file-csv mr-3 text-blue-500 group-hover:text-blue-700"></i>
+                            <div>
+                                <div class="font-medium">Export CSV</div>
+                                <div class="text-xs text-gray-500">Format comma separated</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -122,11 +148,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Pencarian</label>
-                        <input type="text" name="search" value="{{ $historyFilters['search'] ?? '' }}" 
-                               placeholder="Nama, NIP, Email..." 
+                        <input type="text" name="search" value="{{ $historyFilters['search'] ?? '' }}"
+                               placeholder="Nama, NIP, Email..."
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Pegawai</label>
                         <select name="worker_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
@@ -166,13 +192,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Dari</label>
-                        <input type="date" name="date_from" value="{{ $historyFilters['date_from'] ?? '' }}" 
+                        <input type="date" name="date_from" value="{{ $historyFilters['date_from'] ?? '' }}"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
-                    
+
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Sampai</label>
-                        <input type="date" name="date_to" value="{{ $historyFilters['date_to'] ?? '' }}" 
+                        <input type="date" name="date_to" value="{{ $historyFilters['date_to'] ?? '' }}"
                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
                     </div>
                 </div>
@@ -202,7 +228,7 @@
                 'on_leave' => $workersWithAttendance->whereIn('attendance_status', ['leave', 'sick', 'permission'])->count(),
             ];
         @endphp
-        
+
         <div class="bg-white rounded-lg shadow-md p-6">
             <div class="flex items-center">
                 <div class="flex-shrink-0">
@@ -346,7 +372,7 @@
                                             return is_null($ws->effective_until) || $ws->effective_until >= now()->format('Y-m-d');
                                         })
                                         ->first();
-                                    
+
                                     if ($activeWorkerShift && $activeWorkerShift->shift) {
                                         $shift = $activeWorkerShift->shift;
                                     } elseif ($worker->shift) {
@@ -447,7 +473,7 @@
                                     <i class="fas {{ $status['icon'] }} mr-1"></i>
                                     {{ $status['label'] }}
                                 </span>
-                                
+
                                 @if($worker->today_attendance)
                                     @if($worker->today_attendance->notes)
                                         <div class="text-sm text-gray-600 mt-1">
@@ -455,14 +481,14 @@
                                             {{ Str::limit($worker->today_attendance->notes, 50) }}
                                         </div>
                                     @endif
-                                    
+
                                     @if($worker->is_late && $worker->late_minutes > 0)
                                         <div class="text-xs text-red-600">
                                             <i class="fas fa-exclamation-triangle mr-1"></i>
                                             Keterlambatan: {{ $worker->late_minutes }} menit
                                         </div>
                                     @endif
-                                    
+
                                     @if($worker->today_attendance->location)
                                         <div class="text-xs text-gray-500">
                                             <i class="fas fa-map-marker-alt mr-1"></i>
@@ -522,7 +548,7 @@
                 <div>
                     <h3 class="text-lg font-semibold text-gray-900">Riwayat Absensi</h3>
                     <p class="text-sm text-gray-500 mt-1">
-                        Statistik kehadiran 
+                        Statistik kehadiran
                         @if($statsFilters['period'] === 'year')
                             Tahun {{ $statsFilters['year'] }}
                         @elseif($statsFilters['period'] === 'custom')
@@ -536,7 +562,7 @@
 
             <!-- Filter Periode Statistik -->
             <div x-data="{ showStatsPeriodForm: false }" class="mb-4">
-                <button @click="showStatsPeriodForm = !showStatsPeriodForm" 
+                <button @click="showStatsPeriodForm = !showStatsPeriodForm"
                         class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg transition duration-200">
                     <i class="fas fa-calendar-alt mr-2"></i>
                     Ubah Periode
@@ -577,13 +603,13 @@
 
                             <div id="date-from-field" style="display: {{ ($statsFilters['period'] ?? '') == 'custom' ? 'block' : 'none' }}">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Dari</label>
-                                <input type="date" name="stats_date_from" value="{{ $statsFilters['date_from'] ?? '' }}" 
+                                <input type="date" name="stats_date_from" value="{{ $statsFilters['date_from'] ?? '' }}"
                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                             </div>
 
                             <div id="date-to-field" style="display: {{ ($statsFilters['period'] ?? '') == 'custom' ? 'block' : 'none' }}">
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Tanggal Sampai</label>
-                                <input type="date" name="stats_date_to" value="{{ $statsFilters['date_to'] ?? '' }}" 
+                                <input type="date" name="stats_date_to" value="{{ $statsFilters['date_to'] ?? '' }}"
                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
                             </div>
                         </div>
@@ -619,14 +645,14 @@
                     @forelse($workersWithAttendance as $worker)
                     @php
                         $stats = $workerStats[$worker->id] ?? [
-                            'total_present' => 0, 
-                            'total_late' => 0, 
+                            'total_present' => 0,
+                            'total_late' => 0,
                             'total_late_minutes' => 0,
                             'avg_late_minutes' => 0,
-                            'total_early_leave' => 0, 
+                            'total_early_leave' => 0,
                             'total_early_leave_minutes' => 0,
                             'avg_early_leave_minutes' => 0,
-                            'total_perfect' => 0, 
+                            'total_perfect' => 0,
                             'total_absent' => 0,
                             'total_sick' => 0,
                             'total_permission' => 0,
@@ -749,7 +775,7 @@
             // Show history view (statistik)
             historyView.classList.remove('hidden');
             todayView.classList.add('hidden');
-            
+
             // Update button styles
             btnHistoryView.classList.remove('bg-gray-200', 'text-gray-700');
             btnHistoryView.classList.add('bg-blue-600', 'text-white');
@@ -761,7 +787,7 @@
             // Show today view (detail)
             todayView.classList.remove('hidden');
             historyView.classList.add('hidden');
-            
+
             // Update button styles
             btnTodayView.classList.remove('bg-gray-200', 'text-gray-700');
             btnTodayView.classList.add('bg-blue-600', 'text-white');
@@ -822,13 +848,13 @@
     function updateClock() {
         const now = new Date();
         const timeString = now.toLocaleTimeString('id-ID');
-        const dateString = now.toLocaleDateString('id-ID', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        const dateString = now.toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
-        
+
         // Update clock if element exists
         const clockElement = document.getElementById('real-time-clock');
         if (clockElement) {
