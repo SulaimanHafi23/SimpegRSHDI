@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Services\Leave\LeaveRequestService;
 use App\Services\Master\LeaveTypeService;
 use App\Services\Export\PdfExportService;
+use App\Exports\EmployeeLeaveExport;
 use App\DTOs\LeaveRequestDTO;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
 class LeaveController extends Controller
@@ -185,6 +187,52 @@ class LeaveController extends Controller
             return back()->with('error', 'Gagal membatalkan cuti: ' . $e->getMessage());
         }
     }
+    /**
+     * Export leave data (PDF, Excel, CSV)
+     */
+    public function export(Request $request)
+    {
+        $user = auth()->user();
+        $worker = $user->worker;
+
+        if (!$worker) {
+            return redirect()->route('employee.dashboard')
+                ->with('error', 'Data pekerja tidak ditemukan.');
+        }
+
+        $format = $request->format ?? 'pdf';
+
+        $filters = [
+            'worker_id' => $worker->id,
+            'status' => $request->status,
+            'leave_type_id' => $request->leave_type_id,
+            'search' => $request->search,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'year' => $request->year ?? now()->year,
+        ];
+
+        // Get all records without pagination
+        $leaves = collect($this->leaveService->getAll(array_merge($filters, ['per_page' => 10000]))->items());
+
+        if ($format === 'excel') {
+            return Excel::download(
+                new EmployeeLeaveExport($leaves, $worker),
+                'laporan-cuti-' . now()->format('Y-m-d') . '.xlsx'
+            );
+        }
+
+        if ($format === 'csv') {
+            return Excel::download(
+                new EmployeeLeaveExport($leaves, $worker),
+                'laporan-cuti-' . now()->format('Y-m-d') . '.csv'
+            );
+        }
+
+        // Default: PDF
+        return $this->pdfExportService->exportLeaveReport($leaves->toArray(), $worker, $filters);
+    }
+
     /**
      * Export leave to PDF
      */

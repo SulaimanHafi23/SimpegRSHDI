@@ -5,14 +5,17 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Manajemen Cuti" 
+    <x-page-header
+        title="Manajemen Cuti"
         description="Kelola pengajuan cuti pegawai"
         icon="fas fa-calendar-times">
         <x-slot:actions>
+            {{-- Export Dropdown --}}
+            <x-export-dropdown route="admin.leave.export" />
+
             @can('create-leave')
-                <x-button 
-                    variant="success" 
+                <x-button
+                    variant="success"
                     icon="fas fa-plus"
                     onclick="window.location.href='{{ route('admin.leave.create') }}'">
                     Ajukan Cuti
@@ -23,41 +26,41 @@
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <x-stats-card 
-            title="Total Pengajuan" 
-            :value="$statistics['total'] ?? 0" 
-            icon="fas fa-file-alt" 
+        <x-stats-card
+            title="Total Pengajuan"
+            :value="$statistics['total'] ?? 0"
+            icon="fas fa-file-alt"
             color="blue" />
-        
-        <x-stats-card 
-            title="Menunggu" 
-            :value="$statistics['pending'] ?? 0" 
-            icon="fas fa-clock" 
+
+        <x-stats-card
+            title="Menunggu"
+            :value="$statistics['pending'] ?? 0"
+            icon="fas fa-clock"
             color="yellow" />
-        
-        <x-stats-card 
-            title="Disetujui" 
-            :value="$statistics['approved'] ?? 0" 
-            icon="fas fa-check-circle" 
+
+        <x-stats-card
+            title="Disetujui"
+            :value="$statistics['approved'] ?? 0"
+            icon="fas fa-check-circle"
             color="green" />
-        
-        <x-stats-card 
-            title="Ditolak" 
-            :value="$statistics['rejected'] ?? 0" 
-            icon="fas fa-times-circle" 
+
+        <x-stats-card
+            title="Ditolak"
+            :value="$statistics['rejected'] ?? 0"
+            icon="fas fa-times-circle"
             color="red" />
-        
-        <x-stats-card 
-            title="Dibatalkan" 
-            :value="$statistics['cancelled'] ?? 0" 
-            icon="fas fa-ban" 
+
+        <x-stats-card
+            title="Dibatalkan"
+            :value="$statistics['cancelled'] ?? 0"
+            icon="fas fa-ban"
             color="gray" />
     </div>
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('admin.leave.index') }}">
-        <x-form.select 
-            name="worker_id" 
+        <x-form.select
+            name="worker_id"
             label="Pegawai"
             :selected="$filters['worker_id'] ?? ''"
             placeholder="Semua Pegawai">
@@ -66,8 +69,8 @@
             @endforeach
         </x-form.select>
 
-        <x-form.select 
-            name="leave_type" 
+        <x-form.select
+            name="leave_type"
             label="Jenis Cuti"
             :selected="$filters['leave_type'] ?? ''"
             placeholder="Semua Jenis">
@@ -76,8 +79,8 @@
             @endforeach
         </x-form.select>
 
-        <x-form.select 
-            name="status" 
+        <x-form.select
+            name="status"
             label="Status"
             :options="[
                 'Pending' => 'Menunggu',
@@ -88,8 +91,8 @@
             :selected="$filters['status'] ?? ''"
             placeholder="Semua Status" />
 
-        <x-form.select 
-            name="month" 
+        <x-form.select
+            name="month"
             label="Bulan"
             :selected="$filters['month'] ?? ''"
             placeholder="Semua Bulan">
@@ -98,8 +101,8 @@
             @endfor
         </x-form.select>
 
-        <x-form.select 
-            name="year" 
+        <x-form.select
+            name="year"
             label="Tahun"
             :selected="$filters['year'] ?? ''"
             placeholder="Semua Tahun">
@@ -112,7 +115,7 @@
     {{-- Leave Requests Table --}}
     <x-card>
         @if(isset($leaves) && $leaves->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-calendar-times"
                 title="Tidak ada data pengajuan cuti"
                 description="Pengajuan cuti akan ditampilkan di sini"
@@ -135,7 +138,7 @@
                 @foreach($leaves as $index => $leave)
                     <x-table.row>
                         <x-table.cell>{{ $leaves->firstItem() + $index }}</x-table.cell>
-                        
+
                         <x-table.cell>
                             <div class="font-medium text-gray-900">{{ $leave->worker->name ?? '-' }}</div>
                             <div class="text-sm text-gray-500">{{ $leave->worker->nip ?? '-' }}</div>
@@ -166,8 +169,8 @@
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
                                 {{-- Always show view button --}}
-                                <a href="{{ route('admin.leave.show', $leave->id) }}" 
-                                   class="text-blue-600 hover:text-blue-900" 
+                                <a href="{{ route('admin.leave.show', $leave->id) }}"
+                                   class="text-blue-600 hover:text-blue-900"
                                    title="Detail">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -177,15 +180,15 @@
 
                                 @if($leave->status == 'pending')
                                     {{-- Approve button --}}
-                                    <button onclick="approveLeave('{{ $leave->id }}')" 
-                                            class="text-green-600 hover:text-green-900" 
+                                    <button onclick="approveLeave('{{ $leave->id }}')"
+                                            class="text-green-600 hover:text-green-900"
                                             title="Setujui">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                         </svg>
                                     </button>
-                                    <button onclick="rejectLeave('{{ $leave->id }}')" 
-                                            class="text-red-600 hover:text-red-900" 
+                                    <button onclick="rejectLeave('{{ $leave->id }}')"
+                                            class="text-red-600 hover:text-red-900"
                                             title="Tolak">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -194,8 +197,8 @@
                                 @endif
 
                                 @if($leave->status == 'pending')
-                                        <a href="{{ route('admin.leave.edit', $leave->id) }}" 
-                                           class="text-indigo-600 hover:text-indigo-900" 
+                                        <a href="{{ route('admin.leave.edit', $leave->id) }}"
+                                           class="text-indigo-600 hover:text-indigo-900"
                                            title="Edit">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -205,8 +208,8 @@
                                     <form action="{{ route('admin.leave.destroy', $leave->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" 
-                                                class="text-red-600 hover:text-red-900" 
+                                        <button type="submit"
+                                                class="text-red-600 hover:text-red-900"
                                                 title="Hapus"
                                                 onclick="return confirm('Yakin ingin menghapus pengajuan cuti ini?')">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -227,7 +230,7 @@
                 </div>
             @endif
         @else
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-calendar-times"
                 title="Tidak ada data pengajuan cuti"
                 description="Gunakan filter di atas untuk melihat data" />
@@ -242,13 +245,13 @@
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/leaves/${id}/approve`;
-            
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
             csrfInput.name = '_token';
             csrfInput.value = csrfToken;
-            
+
             form.appendChild(csrfInput);
             document.body.appendChild(form);
             form.submit();
@@ -261,18 +264,18 @@
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/leaves/${id}/reject`;
-            
+
             const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
             const csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
             csrfInput.name = '_token';
             csrfInput.value = csrfToken;
-            
+
             const reasonInput = document.createElement('input');
             reasonInput.type = 'hidden';
             reasonInput.name = 'rejection_reason';
             reasonInput.value = reason;
-            
+
             form.appendChild(csrfInput);
             form.appendChild(reasonInput);
             document.body.appendChild(form);

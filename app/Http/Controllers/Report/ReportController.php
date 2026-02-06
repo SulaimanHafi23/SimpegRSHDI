@@ -11,6 +11,12 @@ use Illuminate\Http\Request;
 use App\Models\Worker;
 use App\Models\Location;
 use App\Models\DocumentType;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\ReportAttendanceExport;
+use App\Exports\ReportLeavesExport;
+use App\Exports\ReportOvertimesExport;
+use App\Exports\ReportWorkerDocumentsExport;
 
 class ReportController extends Controller
 {
@@ -195,5 +201,130 @@ class ReportController extends Controller
         $departments = \App\Models\Department::select('id','name')->orderBy('name')->get();
 
         return view('admin.reports.workers', compact('workers', 'filters', 'departments'));
+    }
+
+    /**
+     * Export Attendance Report
+     */
+    public function exportAttendance(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
+            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'worker_id' => $request->input('worker_id'),
+            'location_id' => $request->input('location_id'),
+        ];
+
+        $attendances = $this->attendanceService->getAll($filters);
+        $collection = $attendances instanceof \Illuminate\Contracts\Pagination\Paginator ? $attendances->getCollection() : collect($attendances);
+
+        $format = $request->input('format', 'pdf');
+        $filename = 'laporan-presensi-' . now()->format('Y-m-d-His');
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('exports.report-attendance-pdf', [
+                'attendances' => $collection,
+                'filters' => $filters,
+            ]);
+            return $pdf->download($filename . '.pdf');
+        } elseif ($format === 'excel') {
+            return Excel::download(new ReportAttendanceExport($collection, $filters), $filename . '.xlsx');
+        } else {
+            return Excel::download(new ReportAttendanceExport($collection, $filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
+    }
+
+    /**
+     * Export Leaves Report
+     */
+    public function exportLeaves(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
+            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'worker_id' => $request->input('worker_id'),
+            'status' => $request->input('status'),
+        ];
+
+        $leaves = $this->leaveService->getAll($filters);
+        $collection = $leaves instanceof \Illuminate\Contracts\Pagination\Paginator ? $leaves->getCollection() : collect($leaves);
+
+        $format = $request->input('format', 'pdf');
+        $filename = 'laporan-cuti-' . now()->format('Y-m-d-His');
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('exports.report-leaves-pdf', [
+                'leaves' => $collection,
+                'filters' => $filters,
+            ]);
+            return $pdf->download($filename . '.pdf');
+        } elseif ($format === 'excel') {
+            return Excel::download(new ReportLeavesExport($collection, $filters), $filename . '.xlsx');
+        } else {
+            return Excel::download(new ReportLeavesExport($collection, $filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
+    }
+
+    /**
+     * Export Overtimes Report
+     */
+    public function exportOvertimes(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
+            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'worker_id' => $request->input('worker_id'),
+            'status' => $request->input('status'),
+        ];
+
+        $overtimes = $this->overtimeService->getAll($filters);
+        $collection = $overtimes instanceof \Illuminate\Contracts\Pagination\Paginator ? $overtimes->getCollection() : collect($overtimes);
+
+        $format = $request->input('format', 'pdf');
+        $filename = 'laporan-lembur-' . now()->format('Y-m-d-His');
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('exports.report-overtimes-pdf', [
+                'overtimes' => $collection,
+                'filters' => $filters,
+            ]);
+            return $pdf->download($filename . '.pdf');
+        } elseif ($format === 'excel') {
+            return Excel::download(new ReportOvertimesExport($collection, $filters), $filename . '.xlsx');
+        } else {
+            return Excel::download(new ReportOvertimesExport($collection, $filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
+    }
+
+    /**
+     * Export Worker Documents Report
+     */
+    public function exportWorkerDocuments(Request $request)
+    {
+        $filters = [
+            'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
+            'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+            'worker_id' => $request->input('worker_id'),
+            'document_type_id' => $request->input('document_type_id'),
+            'status' => $request->input('status'),
+        ];
+
+        $documents = $this->workerDocumentService->getAll($filters);
+        $collection = $documents instanceof \Illuminate\Contracts\Pagination\Paginator ? $documents->getCollection() : collect($documents);
+
+        $format = $request->input('format', 'pdf');
+        $filename = 'laporan-dokumen-pegawai-' . now()->format('Y-m-d-His');
+
+        if ($format === 'pdf') {
+            $pdf = Pdf::loadView('exports.report-worker-documents-pdf', [
+                'documents' => $collection,
+                'filters' => $filters,
+            ]);
+            return $pdf->download($filename . '.pdf');
+        } elseif ($format === 'excel') {
+            return Excel::download(new ReportWorkerDocumentsExport($collection, $filters), $filename . '.xlsx');
+        } else {
+            return Excel::download(new ReportWorkerDocumentsExport($collection, $filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
+        }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Overtime;
 
 use App\Http\Controllers\Controller;
+use App\Traits\DepartmentFilterable;
 use App\Services\Overtime\OvertimeRequestService;
 use App\Services\Worker\WorkerService;
 use Illuminate\Http\Request;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class OvertimeRequestController extends Controller
 {
+    use DepartmentFilterable;
     public function __construct(
         protected OvertimeRequestService $overtimeRequestService,
         protected WorkerService $workerService
@@ -20,6 +22,8 @@ class OvertimeRequestController extends Controller
 
     public function index(Request $request)
     {
+        $departmentId = $this->getManagerDepartmentFilter();
+
         $filters = [
             'status' => $request->status,
             'worker_id' => $request->worker_id,
@@ -27,19 +31,34 @@ class OvertimeRequestController extends Controller
             'end_date' => $request->end_date,
             'month' => $request->month,
             'year' => $request->year,
+            'department_id' => $departmentId,
             'per_page' => $request->per_page ?? 15,
         ];
 
         $overtimes = $this->overtimeRequestService->getAll($filters);
-        $workers = $this->workerService->getAllActive();
-        
-        // Statistics
+
+        // Get workers from user's department if Manager
+        if ($departmentId) {
+            $workers = $this->workerService->getByDepartment($departmentId);
+        } else {
+            $workers = $this->workerService->getAllActive();
+        }
+
+        // Statistics - filter by department if Manager
+        $baseFilters = $departmentId ? ['department_id' => $departmentId, 'per_page' => 9999] : ['per_page' => 9999];
+
         $statistics = [
-            'total' => $this->overtimeRequestService->getAll(['per_page' => 9999])->total(),
-            'pending' => $this->overtimeRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total(),
-            'approved' => $this->overtimeRequestService->getAll(['status' => 'approved', 'per_page' => 9999])->total(),
-            'rejected' => $this->overtimeRequestService->getAll(['status' => 'rejected', 'per_page' => 9999])->total(),
-            'total_hours' => \App\Models\OvertimeRequest::where('status', 'approved')->sum('total_hours'),
+            'total' => $this->overtimeRequestService->getAll($baseFilters)->total(),
+            'pending' => $this->overtimeRequestService->getAll([...$baseFilters, 'status' => 'pending'])->total(),
+            'approved' => $this->overtimeRequestService->getAll([...$baseFilters, 'status' => 'approved'])->total(),
+            'rejected' => $this->overtimeRequestService->getAll([...$baseFilters, 'status' => 'rejected'])->total(),
+            'total_hours' => \App\Models\OvertimeRequest::where('status', 'approved')
+                ->when($departmentId, function($q) use ($departmentId) {
+                    $q->whereHas('worker', function($w) use ($departmentId) {
+                        $w->where('department_id', $departmentId);
+                    });
+                })
+                ->sum('total_hours'),
         ];
 
         return view('admin.overtime.index', compact('overtimes', 'workers', 'statistics', 'filters'));
@@ -164,6 +183,69 @@ class OvertimeRequestController extends Controller
             return back()->with('success', 'Permohonan lembur berhasil disetujui secara massal');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            $format = $request->input('format', 'excel');
+
+            $filters = [
+                'worker_id' => $request->input('worker_id'),
+                'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
+                'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+                'status' => $request->input('status'),
+            ];
+
+            $query = \App\Models\OvertimeRequest::with(['worker.department', 'approver']);
+
+            if ($filters['worker_id']) {
+                $query->where('worker_id', $filters['worker_id']);
+            }
+            if ($filters['date_from']) {
+                $query->whereDate('overtime_date', '>=', $filters['date_from']);
+            }
+            if ($filters['date_to']) {
+                $query->whereDate('overtime_date', '<=', $filters['date_to']);
+            }
+            if ($filters['status']) {
+                $query->where('status', $filters['status']);
+            }
+
+            $overtimes = $query->orderBy('overtime_date', 'desc')->get();
+
+            $dateFrom = \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y');
+            $dateTo = \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y');
+
+            $filename = 'laporan-lembur-' . now()->format('Y-m-d-His');
+
+            switch ($format) {
+                case 'pdf':
+                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.overtime-pdf', [
+                        'overtimes' => $overtimes,
+                        'dateFrom' => $dateFrom,
+                        'dateTo' => $dateTo,
+                        'status' => $filters['status'],
+                    ]);
+                    $pdf->setPaper('a4', 'landscape');
+                    return $pdf->download($filename . '.pdf');
+
+                case 'csv':
+                    return \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\OvertimeExport($filters),
+                        $filename . '.csv',
+                        \Maatwebsite\Excel\Excel::CSV
+                    );
+
+                default:
+                    return \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\OvertimeExport($filters),
+                        $filename . '.xlsx'
+                    );
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat export: ' . $e->getMessage());
         }
     }
 }

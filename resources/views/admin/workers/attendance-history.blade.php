@@ -7,8 +7,8 @@
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center space-x-3">
-            <x-button 
-                variant="secondary" 
+            <x-button
+                variant="secondary"
                 size="sm"
                 icon="fas fa-arrow-left"
                 onclick="window.history.back()">
@@ -49,28 +49,28 @@
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <x-stats-card 
-            title="Total Hadir" 
-            :value="$totalPresent" 
-            icon="fas fa-check-circle" 
+        <x-stats-card
+            title="Total Hadir"
+            :value="$totalPresent"
+            icon="fas fa-check-circle"
             color="green" />
-        
-        <x-stats-card 
-            title="Total Terlambat" 
-            :value="$totalLate" 
-            icon="fas fa-clock" 
+
+        <x-stats-card
+            title="Total Terlambat"
+            :value="$totalLate"
+            icon="fas fa-clock"
             color="yellow" />
-        
-        <x-stats-card 
-            title="Total Absen" 
-            :value="$totalAbsent" 
-            icon="fas fa-times-circle" 
+
+        <x-stats-card
+            title="Total Absen"
+            :value="$totalAbsent"
+            icon="fas fa-times-circle"
             color="red" />
-        
-        <x-stats-card 
-            title="Total Cuti" 
-            :value="$totalLeave" 
-            icon="fas fa-calendar-times" 
+
+        <x-stats-card
+            title="Total Cuti"
+            :value="$totalLeave"
+            icon="fas fa-calendar-times"
             color="blue" />
     </div>
 
@@ -81,7 +81,7 @@
                 <i class="fas fa-clock text-indigo-600 text-2xl mr-3"></i>
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">Jadwal Shift Aktif</h3>
-                    <p class="text-sm text-gray-600">Periode: {{ $worker->activeWorkerShift->effective_from->format('d M Y') }} 
+                    <p class="text-sm text-gray-600">Periode: {{ $worker->activeWorkerShift->effective_from->format('d M Y') }}
                         @if($worker->activeWorkerShift->effective_until)
                             - {{ $worker->activeWorkerShift->effective_until->format('d M Y') }}
                         @else
@@ -252,25 +252,28 @@
             </h3>
         </div>
 
-        {{-- Calendar Header (Days of Week) --}}
-        <div class="grid grid-cols-7 gap-2 mb-2">
-            <div class="text-center font-semibold text-sm text-red-600 py-2">Minggu</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Senin</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Selasa</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Rabu</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Kamis</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Jumat</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Sabtu</div>
-        </div>
+        {{-- Scrollable Calendar Container for Mobile --}}
+        <div class="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <div class="min-w-[700px]">
+                {{-- Calendar Header (Days of Week) --}}
+                <div class="grid grid-cols-7 gap-2 mb-2">
+                    <div class="text-center font-semibold text-sm text-red-600 py-2">Minggu</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Senin</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Selasa</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Rabu</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Kamis</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Jumat</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Sabtu</div>
+                </div>
 
-        {{-- Calendar Grid --}}
-        <div class="grid grid-cols-7 gap-2">
+                {{-- Calendar Grid --}}
+                <div class="grid grid-cols-7 gap-2">
             {{-- Empty cells for days before month starts --}}
             @php
                 $startDayOfWeek = $startDate->dayOfWeek; // 0 = Sunday, 6 = Saturday
                 $emptyCells = $startDayOfWeek;
             @endphp
-            
+
             @for ($i = 0; $i < $emptyCells; $i++)
                 <div class="border border-gray-200 rounded-lg p-2 bg-gray-50 min-h-[120px]"></div>
             @endfor
@@ -283,7 +286,7 @@
                     $shift = $dayData['shift'];
                     $isWeekend = $dayData['isWeekend'];
                     $isToday = $date->isToday();
-                    
+
                     // Determine background color
                     $bgColor = 'bg-white';
                     if ($isToday) {
@@ -291,7 +294,7 @@
                     } elseif ($isWeekend) {
                         $bgColor = 'bg-gray-50';
                     }
-                    
+
                     // Status badge config
                     $statusConfig = [
                         'present' => ['bg' => 'bg-green-100', 'text' => 'text-green-700', 'icon' => 'fas fa-check-circle', 'label' => 'Hadir'],
@@ -301,7 +304,7 @@
                         'permission' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-700', 'icon' => 'fas fa-file-signature', 'label' => 'Izin'],
                     ];
                 @endphp
-                
+
                 <div class="border border-gray-300 rounded-lg p-3 {{ $bgColor }} min-h-[180px] hover:shadow-lg transition-all relative overflow-hidden">
                     {{-- Date Number --}}
                     <div class="flex items-center justify-between mb-2">
@@ -336,14 +339,14 @@
                         @php
                             $config = $statusConfig[$attendance->status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-700', 'icon' => 'fas fa-question-circle', 'label' => 'Unknown'];
                         @endphp
-                        
+
                         <div class="space-y-1.5">
                             {{-- Status Badge --}}
                             <div class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold {{ $config['bg'] }} {{ $config['text'] }} w-full justify-center">
                                 <i class="{{ $config['icon'] }} mr-1"></i>
                                 {{ $config['label'] }}
                             </div>
-                            
+
                             {{-- Late & Early Leave Info --}}
                             <div class="flex gap-1">
                                 @if($attendance->is_late && $attendance->late_minutes)
@@ -352,7 +355,7 @@
                                         +{{ $attendance->late_minutes }}m
                                     </div>
                                 @endif
-                                
+
                                 @if($attendance->is_early_leave && $attendance->early_leave_minutes)
                                     <div class="flex-1 inline-flex items-center justify-center px-2 py-1 rounded text-xs font-medium bg-amber-100 text-amber-700">
                                         <i class="fas fa-running mr-1"></i>
@@ -431,6 +434,8 @@
                     @endif
                 </div>
             @endforeach
+                </div>
+            </div>
         </div>
 
         {{-- Legend --}}
@@ -494,25 +499,25 @@
     function showAttendanceDetail(attendanceId, date) {
         const modal = document.getElementById('attendanceDetailModal');
         const content = document.getElementById('attendanceDetailContent');
-        
+
         // Show modal
         modal.classList.remove('hidden');
-        
+
         // Show loading
         content.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i><p class="mt-2 text-gray-600">Memuat data...</p></div>';
-        
+
         // Fetch attendance detail
         fetch(`/api/attendance/${attendanceId}/detail`)
             .then(response => response.json())
             .then(data => {
                 let html = '<div class="space-y-4">';
-                
+
                 // Date
                 html += `<div class="bg-blue-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Tanggal</div><div class="font-semibold text-gray-900">${date}</div></div>`;
-                
+
                 // Status
                 html += `<div class="bg-gray-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Status</div><div class="font-semibold text-gray-900 capitalize">${data.status}</div></div>`;
-                
+
                 // Check-in
                 if (data.check_in_time) {
                     html += `<div class="bg-green-50 p-3 rounded-lg">
@@ -521,7 +526,7 @@
                         ${data.is_late ? `<div class="text-xs text-orange-600 mt-1"><i class="fas fa-exclamation-triangle mr-1"></i>Terlambat ${data.late_minutes} menit</div>` : ''}
                     </div>`;
                 }
-                
+
                 // Check-out
                 if (data.check_out_time) {
                     html += `<div class="bg-red-50 p-3 rounded-lg">
@@ -530,17 +535,17 @@
                         ${data.is_early_leave ? `<div class="text-xs text-amber-600 mt-1"><i class="fas fa-running mr-1"></i>Pulang ${data.early_leave_minutes} menit lebih cepat</div>` : ''}
                     </div>`;
                 }
-                
+
                 // Location
                 if (data.location) {
                     html += `<div class="bg-indigo-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Lokasi</div><div class="font-semibold text-gray-900">${data.location}</div></div>`;
                 }
-                
+
                 // Notes
                 if (data.notes) {
                     html += `<div class="bg-yellow-50 p-3 rounded-lg"><div class="text-sm text-gray-600">Catatan</div><div class="text-gray-900">${data.notes}</div></div>`;
                 }
-                
+
                 html += '</div>';
                 content.innerHTML = html;
             })
@@ -549,11 +554,11 @@
                 console.error('Error:', error);
             });
     }
-    
+
     function closeAttendanceDetail() {
         document.getElementById('attendanceDetailModal').classList.add('hidden');
     }
-    
+
     // Close modal when clicking outside
     document.getElementById('attendanceDetailModal')?.addEventListener('click', function(e) {
         if (e.target === this) {

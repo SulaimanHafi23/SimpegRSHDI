@@ -62,10 +62,10 @@ class AttendanceController extends Controller
 
         // Hitung jumlah yang terlambat (is_late = true)
         $lateCount = $monthlySummary->where('is_late', true)->count();
-        
+
         // Hitung jumlah pulang cepat (is_early_leave = true)
         $earlyLeaveCount = $monthlySummary->where('is_early_leave', true)->count();
-        
+
         // Hitung hadir sempurna (present, tidak terlambat, tidak pulang cepat)
         $perfectCount = $monthlySummary
             ->whereIn('status', ['present'])
@@ -382,19 +382,19 @@ class AttendanceController extends Controller
             // Check for early checkout and provide appropriate feedback
             $message = 'Check-out berhasil!';
             $alertType = 'success';
-            
+
             if ($updatedAttendance->is_early_leave && $updatedAttendance->early_leave_minutes > 0) {
                 $hours = floor($updatedAttendance->early_leave_minutes / 60);
                 $minutes = $updatedAttendance->early_leave_minutes % 60;
                 $earlyText = '';
-                
+
                 if ($hours > 0) {
                     $earlyText .= $hours . ' jam ';
                 }
                 if ($minutes > 0) {
                     $earlyText .= $minutes . ' menit';
                 }
-                
+
                 $message = "Check-out berhasil! Catatan: Anda pulang lebih awal {$earlyText} dari jadwal. Pastikan sudah mendapat izin dari atasan.";
                 $alertType = 'warning';
             }
@@ -439,9 +439,9 @@ class AttendanceController extends Controller
     }
 
     /**
-     * Export attendance to PDF
+     * Export attendance to PDF/Excel/CSV
      */
-    public function exportPdf(Request $request)
+    public function export(Request $request)
     {
         $user = auth()->user();
         $worker = $user->worker;
@@ -459,9 +459,36 @@ class AttendanceController extends Controller
             'search' => $request->search,
         ];
 
-        // Get all records without pagination for PDF
+        // Get all records without pagination
         $attendances = $this->attendanceService->getAll(array_merge($filters, ['per_page' => 10000]))->items();
 
+        $format = $request->input('format', 'pdf');
+
+        if ($format === 'excel') {
+            return \Maatwebsite\Excel\Facades\Excel::download(
+                new \App\Exports\EmployeeAttendanceExport(collect($attendances), $worker),
+                'absensi_' . $worker->nip . '_' . now()->format('Y-m-d') . '.xlsx'
+            );
+        }
+
+        if ($format === 'csv') {
+            return \Maatwebsite\Excel\Facades\Excel::download(
+                new \App\Exports\EmployeeAttendanceExport(collect($attendances), $worker),
+                'absensi_' . $worker->nip . '_' . now()->format('Y-m-d') . '.csv',
+                \Maatwebsite\Excel\Excel::CSV
+            );
+        }
+
+        // Default PDF
         return $this->pdfExportService->exportAttendanceReport($attendances, $worker, $filters);
+    }
+
+    /**
+     * Export attendance to PDF (legacy route)
+     */
+    public function exportPdf(Request $request)
+    {
+        $request->merge(['format' => 'pdf']);
+        return $this->export($request);
     }
 }

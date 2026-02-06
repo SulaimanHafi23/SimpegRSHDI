@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Attendance;
 
 use App\Http\Controllers\Controller;
+use App\Traits\DepartmentFilterable;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Worker\WorkerService;
 use App\Services\Master\LocationService;
@@ -15,6 +16,7 @@ use App\Exports\AttendanceExport;
 
 class AttendanceController extends Controller
 {
+    use DepartmentFilterable;
     public function __construct(
         protected AttendanceService $attendanceService,
         protected WorkerService $workerService,
@@ -26,6 +28,8 @@ class AttendanceController extends Controller
 
     public function index(Request $request)
     {
+        $departmentId = $this->getManagerDepartmentFilter();
+
         // Filter untuk riwayat absensi (tanpa default tanggal)
         $historyFilters = [
             'search' => $request->search,
@@ -33,24 +37,32 @@ class AttendanceController extends Controller
             'date_from' => $request->date_from,
             'date_to' => $request->date_to,
             'worker_id' => $request->worker_id,
+            'department_id' => $departmentId,
             'per_page' => $request->per_page ?? 15,
         ];
 
         // Ambil data riwayat absensi berdasarkan filter
         $attendances = $this->attendanceService->getAll($historyFilters);
-        $workers = $this->workerService->getAllActive();
-        $locations = $this->locationService->getAllActive();
 
-        // Ambil semua pegawai aktif untuk menampilkan yang belum absen
-        $allWorkers = $this->workerService->getAllActive();
+        // Get workers from user's department if Manager
+        if ($departmentId) {
+            $workers = $this->workerService->getByDepartment($departmentId);
+            $allWorkers = $this->workerService->getByDepartment($departmentId);
+        } else {
+            $workers = $this->workerService->getAllActive();
+            $allWorkers = $this->workerService->getAllActive();
+        }
+
+        $locations = $this->locationService->getAllActive();
 
         // Load relationships yang diperlukan
         $allWorkers->load(['shift', 'workerShifts.shift', 'department']);
 
-        // Ambil data absensi hari ini untuk semua pegawai
+        // Ambil data absensi hari ini untuk semua pegawai (dengan department filter)
         $todayAttendances = $this->attendanceService->getAll([
             'date_from' => now()->format('Y-m-d'),
             'date_to' => now()->format('Y-m-d'),
+            'department_id' => $departmentId,
             'per_page' => 1000, // Ambil semua data hari ini
         ]);
 
@@ -110,6 +122,7 @@ class AttendanceController extends Controller
                 'worker_id' => $worker->id,
                 'date_from' => $statsStartDate,
                 'date_to' => $statsEndDate,
+                'department_id' => $departmentId,
                 'per_page' => 1000,
             ]);
 

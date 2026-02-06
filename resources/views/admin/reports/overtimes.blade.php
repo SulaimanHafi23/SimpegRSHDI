@@ -5,23 +5,19 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Laporan Lembur" 
+    <x-page-header
+        title="Laporan Lembur"
         description="Ringkasan permohonan lembur berdasarkan rentang tanggal dan status"
         icon="fas fa-business-time">
         <x-slot:actions>
-            <a href="{{ route('reports.overtimes.export', request()->only(['start_date','end_date','status','worker_id'])) }}"
-               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium">
-                <i class="fas fa-file-excel mr-2"></i>
-                Export Excel
-            </a>
+            <x-export-dropdown route="reports.overtimes.export" />
         </x-slot:actions>
     </x-page-header>
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('reports.overtimes') }}">
-        <x-form.select 
-            name="worker_id" 
+        <x-form.select
+            name="worker_id"
             label="Pegawai"
             :selected="request('worker_id') ?? ''"
             placeholder="Semua Pegawai">
@@ -32,8 +28,8 @@
             @endif
         </x-form.select>
 
-        <x-form.select 
-            name="status" 
+        <x-form.select
+            name="status"
             label="Status"
             :options="[
                 'pending' => 'Menunggu',
@@ -43,8 +39,8 @@
             :selected="request('status') ?? ''"
             placeholder="Semua Status" />
 
-        <x-form.select 
-            name="month" 
+        <x-form.select
+            name="month"
             label="Bulan"
             :selected="request('month') ?? ''"
             placeholder="Semua Bulan">
@@ -53,8 +49,8 @@
             @endfor
         </x-form.select>
 
-        <x-form.select 
-            name="year" 
+        <x-form.select
+            name="year"
             label="Tahun"
             :selected="request('year') ?? ''"
             placeholder="Semua Tahun">
@@ -67,7 +63,7 @@
     {{-- Table --}}
     <x-card>
         @if($overtimes->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-business-time"
                 title="Tidak ada data lembur"
                 description="Data lembur akan ditampilkan di sini" />
@@ -88,7 +84,7 @@
                 @foreach($overtimes as $index => $ot)
                     <x-table.row>
                         <x-table.cell>{{ $overtimes->firstItem() + $index }}</x-table.cell>
-                        
+
                         <x-table.cell>
                             <div class="font-medium text-gray-900">{{ $ot->worker->name ?? '-' }}</div>
                             <div class="text-sm text-gray-500">{{ $ot->worker->nip ?? '-' }}</div>
@@ -113,8 +109,8 @@
                         </x-table.cell>
 
                         <x-table.cell>
-                            <a href="{{ route('approvals.overtimes.show', $ot->id) }}" 
-                               class="text-blue-600 hover:text-blue-900" 
+                            <a href="{{ route('approvals.overtimes.show', $ot->id) }}"
+                               class="text-blue-600 hover:text-blue-900"
                                title="Detail">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

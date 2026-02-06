@@ -40,6 +40,13 @@ class WorkerDocumentRepository implements WorkerDocumentRepositoryInterface
             $query->whereDate('created_at', '<=', $filters['date_to']);
         }
 
+        // Department filter (for Manager access control)
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
         // Advanced search
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -86,12 +93,12 @@ class WorkerDocumentRepository implements WorkerDocumentRepositoryInterface
     public function delete(string $id): bool
     {
         $document = $this->model->findOrFail($id);
-        
+
         // Delete file if exists
         if ($document->file_path && \Storage::exists($document->file_path)) {
             \Storage::delete($document->file_path);
         }
-        
+
         return $document->delete();
     }
 

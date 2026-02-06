@@ -15,14 +15,8 @@
                 <p class="text-gray-600 mt-2">Kelola permohonan lembur Anda</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('employee.overtimes.export-pdf', request()->all()) }}" 
-                   class="inline-flex items-center px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-150"
-                   target="_blank">
-                    <i class="fas fa-file-pdf mr-2"></i>
-                    <span class="hidden sm:inline">Export PDF</span>
-                    <span class="sm:hidden">PDF</span>
-                </a>
-                <a href="{{ route('employee.overtimes.create') }}" 
+                <x-employee-export-dropdown route="employee.overtimes.export" />
+                <a href="{{ route('employee.overtimes.create') }}"
                    class="inline-flex items-center px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-150">
                     <i class="fas fa-plus-circle mr-2"></i>
                     <span class="hidden sm:inline">Ajukan Lembur</span>
@@ -111,8 +105,8 @@
                         <i class="fas fa-search mr-1"></i>
                         Cari
                     </label>
-                    <input type="text" 
-                           name="search" 
+                    <input type="text"
+                           name="search"
                            value="{{ $filters['search'] ?? '' }}"
                            placeholder="Cari tanggal, deskripsi, jam, status..."
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
@@ -159,8 +153,8 @@
                         <i class="far fa-calendar-alt mr-1"></i>
                         Dari Tanggal
                     </label>
-                    <input type="date" 
-                           name="date_from" 
+                    <input type="date"
+                           name="date_from"
                            value="{{ $filters['date_from'] ?? '' }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                 </div>
@@ -171,8 +165,8 @@
                         <i class="far fa-calendar-check mr-1"></i>
                         Sampai Tanggal
                     </label>
-                    <input type="date" 
-                           name="date_to" 
+                    <input type="date"
+                           name="date_to"
                            value="{{ $filters['date_to'] ?? '' }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
                 </div>
@@ -194,12 +188,12 @@
 
             <!-- Action Buttons -->
             <div class="flex gap-2">
-                <button type="submit" 
+                <button type="submit"
                         class="flex-1 px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition duration-150 flex items-center justify-center">
                     <i class="fas fa-search mr-2"></i>
                     Terapkan Filter
                 </button>
-                <a href="{{ route('employee.overtimes.index') }}" 
+                <a href="{{ route('employee.overtimes.index') }}"
                    class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition duration-150 flex items-center justify-center">
                     <i class="fas fa-redo mr-2"></i>
                     Reset
@@ -214,19 +208,19 @@
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                         <i class="fas fa-search mr-1"></i>
                         "{{ $filters['search'] }}"
-                        <a href="{{ route('employee.overtimes.index', array_diff_key(request()->all(), ['search' => ''])) }}" 
+                        <a href="{{ route('employee.overtimes.index', array_diff_key(request()->all(), ['search' => ''])) }}"
                            class="ml-2 text-blue-600 hover:text-blue-800">
                             <i class="fas fa-times"></i>
                         </a>
                     </span>
                 @endif
                 @if(!empty($filters['status']))
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                         {{ $filters['status'] == 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
                         {{ $filters['status'] == 'approved' ? 'bg-green-100 text-green-800' : '' }}
                         {{ $filters['status'] == 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
                         Status: {{ ucfirst($filters['status']) }}
-                        <a href="{{ route('employee.overtimes.index', array_diff_key(request()->all(), ['status' => ''])) }}" 
+                        <a href="{{ route('employee.overtimes.index', array_diff_key(request()->all(), ['status' => ''])) }}"
                            class="ml-2 hover:opacity-75">
                             <i class="fas fa-times"></i>
                         </a>
@@ -335,7 +329,7 @@
                                 {{ \Carbon\Carbon::parse($overtime->overtime_date)->format('d M Y') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - 
+                                {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} -
                                 {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -360,7 +354,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex space-x-2">
-                                    <a href="{{ route('employee.overtimes.show', $overtime->id) }}" 
+                                    <a href="{{ route('employee.overtimes.show', $overtime->id) }}"
                                        class="text-blue-600 hover:text-blue-900" title="Detail">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -371,8 +365,8 @@
                                         <form action="{{ route('employee.overtimes.cancel', $overtime->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" 
-                                                    class="text-red-600 hover:text-red-900" 
+                                            <button type="submit"
+                                                    class="text-red-600 hover:text-red-900"
                                                     title="Batalkan"
                                                     onclick="return confirm('Yakin ingin membatalkan permohonan lembur ini?')">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

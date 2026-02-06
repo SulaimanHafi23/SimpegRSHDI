@@ -17,13 +17,7 @@
             </h1>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <a href="{{ route('employee.attendance.export-pdf', request()->all()) }}"
-               class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-150"
-               target="_blank">
-                <i class="fas fa-file-pdf mr-2 text-xs sm:text-sm"></i>
-                <span class="hidden sm:inline">Export PDF</span>
-                <span class="sm:hidden">PDF</span>
-            </a>
+            <x-employee-export-dropdown route="employee.attendance.export" />
             @if(isset($activeAttendance) && $activeAttendance && $activeAttendance->status === 'present')
                 <a href="{{ route('employee.attendance.check-out-form') }}"
                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg shadow-sm transition duration-150">
@@ -288,7 +282,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-xs text-gray-700">
                             <div class="flex items-center gap-1">
-                                <i class="fas fa-sign-in-alt text-green-600"></i> 
+                                <i class="fas fa-sign-in-alt text-green-600"></i>
                                 <span>In: {{ $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i') : '-' }}</span>
                                 @if($attendance->check_in && $attendance->is_late && $attendance->late_minutes > 0)
                                     <span class="text-red-500 ml-1">({{ $attendance->late_minutes }}m)</span>
@@ -297,7 +291,7 @@
                                 @endif
                             </div>
                             <div class="flex items-center gap-1">
-                                <i class="fas fa-sign-out-alt text-red-500"></i> 
+                                <i class="fas fa-sign-out-alt text-red-500"></i>
                                 <span>Out: {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '-' }}</span>
                             </div>
                             @php
@@ -305,7 +299,7 @@
                                 $shiftOverride = $attendance->worker->shiftOverrides
                                     ->where('override_date', $attendanceDate->format('Y-m-d'))
                                     ->first();
-                                
+
                                 $mobileShift = null;
                                 if ($shiftOverride && $shiftOverride->shift) {
                                     $mobileShift = $shiftOverride->shift;
@@ -317,7 +311,7 @@
                                             return is_null($ws->effective_until) || $ws->effective_until >= $attendanceDate->format('Y-m-d');
                                         })
                                         ->first();
-                                    
+
                                     if ($activeWorkerShift && $activeWorkerShift->shift) {
                                         $mobileShift = $activeWorkerShift->shift;
                                     } elseif ($attendance->worker->shift) {
@@ -402,15 +396,15 @@
                                 <td class="px-4 lg:px-6 py-4 whitespace-nowrap text-sm">
                                     @php
                                         $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
-                                        
+
                                         // Cek shift override untuk tanggal ini
                                         $shiftOverride = $attendance->worker->shiftOverrides
                                             ->where('override_date', $attendanceDate->format('Y-m-d'))
                                             ->first();
-                                        
+
                                         $shift = null;
                                         $shiftSource = '';
-                                        
+
                                         if ($shiftOverride && $shiftOverride->shift) {
                                             $shift = $shiftOverride->shift;
                                             $shiftSource = 'override';
@@ -423,7 +417,7 @@
                                                     return is_null($ws->effective_until) || $ws->effective_until >= $attendanceDate->format('Y-m-d');
                                                 })
                                                 ->first();
-                                            
+
                                             if ($activeWorkerShift && $activeWorkerShift->shift) {
                                                 $shift = $activeWorkerShift->shift;
                                                 $shiftSource = 'active';

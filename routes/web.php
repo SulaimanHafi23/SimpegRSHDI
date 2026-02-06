@@ -129,11 +129,12 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('role:Manager')->name('manager.dashboard');
 
     // ========== EMPLOYEE ROUTES ==========
-    Route::prefix('employee')->name('employee.')->middleware('role_or_permission:Employee|Manager|dashboard.employee')->group(function () {
+    Route::prefix('employee')->name('employee.')->middleware('role_or_permission:Employee|Manager|HR|Super Admin|dashboard.employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         // Attendance for employees
         Route::prefix('attendance')->name('attendance.')->group(function () {
             Route::get('/', [EmployeeAttendanceController::class, 'index'])->name('index');
+            Route::get('/export', [EmployeeAttendanceController::class, 'export'])->name('export');
             Route::get('/export-pdf', [EmployeeAttendanceController::class, 'exportPdf'])->name('export-pdf');
             Route::get('/check-in', [EmployeeAttendanceController::class, 'checkInForm'])->name('check-in-form');
             Route::post('/check-in', [EmployeeAttendanceController::class, 'checkIn'])->name('check-in');
@@ -163,6 +164,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Leave requests for employees
         Route::prefix('leaves')->name('leaves.')->group(function () {
             Route::get('/', [EmployeeLeaveController::class, 'index'])->name('index');
+            Route::get('/export', [EmployeeLeaveController::class, 'export'])->name('export');
             Route::get('/export-pdf', [EmployeeLeaveController::class, 'exportPdf'])->name('export-pdf');
             Route::get('/create', [EmployeeLeaveController::class, 'create'])->name('create');
             Route::post('/', [EmployeeLeaveController::class, 'store'])->name('store');
@@ -173,6 +175,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Overtime requests for employees
         Route::prefix('overtimes')->name('overtimes.')->group(function () {
             Route::get('/', [EmployeeOvertimeController::class, 'index'])->name('index');
+            Route::get('/export', [EmployeeOvertimeController::class, 'export'])->name('export');
             Route::get('/export-pdf', [EmployeeOvertimeController::class, 'exportPdf'])->name('export-pdf');
             Route::get('/create', [EmployeeOvertimeController::class, 'create'])->name('create');
             Route::post('/', [EmployeeOvertimeController::class, 'store'])->name('store');
@@ -272,6 +275,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     // Business Trip Approvals (separate - needs Manager|HR|Super Admin role)
     Route::prefix('approvals/business-trips')->name('approvals.business-trips.')->middleware('role:Manager|HR|Super Admin')->group(function () {
         Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
+        Route::get('/export', [BusinessTripApprovalController::class, 'export'])->name('export');
         Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
         Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
@@ -284,8 +288,12 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/reports/leaves', [ReportController::class, 'leaves'])->name('reports.leaves');
     Route::get('/reports/overtimes', [ReportController::class, 'overtimes'])->name('reports.overtimes');
     Route::get('/reports/worker-documents', [ReportController::class, 'workerDocuments'])->name('reports.worker-documents');
+
+    // Export routes with format support (pdf, excel, csv)
+    Route::get('/reports/attendance/export', [ReportController::class, 'exportAttendance'])->name('reports.attendance.export');
     Route::get('/reports/leaves/export', [ReportController::class, 'exportLeaves'])->name('reports.leaves.export');
     Route::get('/reports/overtimes/export', [ReportController::class, 'exportOvertimes'])->name('reports.overtimes.export');
+    Route::get('/reports/worker-documents/export', [ReportController::class, 'exportWorkerDocuments'])->name('reports.worker-documents.export');
 
     // ========== ROLE MANAGEMENT ==========
     Route::middleware(['permission:role.manage'])->group(function () {
@@ -369,6 +377,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     // ========== LEAVE REQUEST MANAGEMENT ==========
     Route::prefix('leaves')->name('admin.leave.')->group(function () {
         Route::get('/', [LeaveRequestController::class, 'index'])->name('index');
+        Route::get('/export', [LeaveRequestController::class, 'export'])->name('export');
         Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
         Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
         Route::get('/{id}', [LeaveRequestController::class, 'show'])->name('show');
@@ -384,6 +393,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     // ========== OVERTIME MANAGEMENT ==========
     Route::prefix('overtimes')->name('admin.overtime.')->group(function () {
         Route::get('/', [OvertimeRequestController::class, 'index'])->name('index');
+        Route::get('/export', [OvertimeRequestController::class, 'export'])->name('export');
         Route::get('/create', [OvertimeRequestController::class, 'create'])->name('create');
         Route::post('/', [OvertimeRequestController::class, 'store'])->name('store');
         Route::get('/{id}', [OvertimeRequestController::class, 'show'])->name('show');
@@ -442,7 +452,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== HOLIDAYS MANAGEMENT ==========
-    Route::prefix('holidays')->name('admin.holidays.')->middleware(['auth', 'role:Super Admin|HR'])->group(function () {
+    Route::prefix('holidays')->name('admin.holidays.')->middleware(['auth', 'role:Super Admin|HR|Manager'])->group(function () {
         Route::get('/', [HolidayController::class, 'index'])->name('index');
         Route::get('/create', [HolidayController::class, 'create'])->name('create');
         Route::post('/', [HolidayController::class, 'store'])->name('store');

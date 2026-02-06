@@ -42,6 +42,13 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
             $query->whereYear('overtime_date', $filters['year']);
         }
 
+        // Department filter (for Manager access control)
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
         // Advanced search
         if (!empty($filters['search'])) {
             $search = $filters['search'];

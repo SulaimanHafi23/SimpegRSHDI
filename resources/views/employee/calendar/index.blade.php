@@ -60,48 +60,50 @@
         </div>
 
         <!-- Calendar Grid -->
-        <div class="p-4">
-            <!-- Day Headers -->
-            <div class="grid grid-cols-7 gap-2 mb-2">
-                <template x-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']">
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2" x-text="day"></div>
-                </template>
-            </div>
+        <div class="p-4 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-4">
+            <div class="min-w-[700px]">
+                <!-- Day Headers -->
+                <div class="grid grid-cols-7 gap-2 mb-2">
+                    <template x-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']">
+                        <div class="text-center text-sm font-semibold text-gray-600 py-2" x-text="day"></div>
+                    </template>
+                </div>
 
-            <!-- Calendar Days -->
-            <div class="grid grid-cols-7 gap-2">
-                <template x-for="(day, index) in calendarDays" :key="index">
-                    <div :class="getDayClass(day)" 
-                         @click="day.date ? showDayEvents(day) : null"
-                         class="min-h-24 border rounded-lg p-2 relative">
-                        <!-- Date Number -->
-                        <div class="text-sm font-semibold mb-1" 
-                             :class="day.isToday ? 'text-white' : (day.isCurrentMonth ? 'text-gray-700' : 'text-gray-400')"
-                             x-text="day.day"></div>
-                        
-                        <!-- Events for this day -->
-                        <template x-if="day.events && day.events.length > 0">
-                            <div class="space-y-1">
-                                <template x-for="event in day.events.slice(0, 2)" :key="event.id">
-                                    <div class="text-xs px-2 py-1 rounded truncate text-white"
-                                         :style="'background-color: ' + event.color"
-                                         x-text="event.title"></div>
-                                </template>
-                                <template x-if="day.events.length > 2">
-                                    <div class="text-xs text-gray-500 font-semibold">
-                                        +<span x-text="day.events.length - 2"></span> lainnya
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
-                    </div>
-                </template>
+                <!-- Calendar Days -->
+                <div class="grid grid-cols-7 gap-2">
+                    <template x-for="(day, index) in calendarDays" :key="index">
+                        <div :class="getDayClass(day)"
+                             @click="day.date ? showDayEvents(day) : null"
+                             class="min-h-24 border rounded-lg p-2 relative">
+                            <!-- Date Number -->
+                            <div class="text-sm font-semibold mb-1"
+                                 :class="day.isToday ? 'text-white' : (day.isCurrentMonth ? 'text-gray-700' : 'text-gray-400')"
+                                 x-text="day.day"></div>
+
+                            <!-- Events for this day -->
+                            <template x-if="day.events && day.events.length > 0">
+                                <div class="space-y-1">
+                                    <template x-for="event in day.events.slice(0, 2)" :key="event.id">
+                                        <div class="text-xs px-2 py-1 rounded truncate text-white"
+                                             :style="'background-color: ' + event.color"
+                                             x-text="event.title"></div>
+                                    </template>
+                                    <template x-if="day.events.length > 2">
+                                        <div class="text-xs text-gray-500 font-semibold">
+                                            +<span x-text="day.events.length - 2"></span> lainnya
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Event Detail Modal -->
-    <div x-show="showModal" 
+    <div x-show="showModal"
          @click="showModal = false"
          x-transition
          class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-white/30">
@@ -179,29 +181,29 @@ function calendarApp() {
         updateCalendar() {
             const year = this.currentDate.getFullYear();
             const month = this.currentDate.getMonth(); // 0-indexed (0=Jan, 11=Dec)
-            
+
             // Update month/year display
-            this.currentMonthYear = this.currentDate.toLocaleDateString('id-ID', { 
-                month: 'long', 
-                year: 'numeric' 
+            this.currentMonthYear = this.currentDate.toLocaleDateString('id-ID', {
+                month: 'long',
+                year: 'numeric'
             });
 
             // Get first day of month and last day
             const firstDay = new Date(year, month, 1);
             const lastDay = new Date(year, month + 1, 0);
-            
+
             // Get day of week for first day (0 = Sunday)
             const startingDayOfWeek = firstDay.getDay();
-            
+
             // Calculate days to show from previous month
             const daysFromPrevMonth = startingDayOfWeek;
-            
+
             // Calculate total cells needed
             const totalDays = lastDay.getDate();
             const totalCells = Math.ceil((daysFromPrevMonth + totalDays) / 7) * 7;
-            
+
             this.calendarDays = [];
-            
+
             // Previous month days
             const prevMonthLastDay = new Date(year, month, 0).getDate();
             for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
@@ -215,15 +217,15 @@ function calendarApp() {
                     events: []
                 });
             }
-            
+
             // Current month days
             const today = new Date();
             today.setHours(0, 0, 0, 0); // Reset time for comparison
-            
+
             for (let i = 1; i <= totalDays; i++) {
                 const date = new Date(year, month, i);
                 date.setHours(0, 0, 0, 0); // Reset time for comparison
-                
+
                 this.calendarDays.push({
                     day: i,
                     date: date,
@@ -232,13 +234,13 @@ function calendarApp() {
                     events: []
                 });
             }
-            
+
             // Next month days
             const remainingCells = totalCells - this.calendarDays.length;
             for (let i = 1; i <= remainingCells; i++) {
                 const date = new Date(year, month + 1, i);
                 date.setHours(0, 0, 0, 0); // Reset time for comparison
-                
+
                 this.calendarDays.push({
                     day: i,
                     date: date,
@@ -272,19 +274,19 @@ function calendarApp() {
         assignEventsToCalendar() {
             this.calendarDays.forEach(day => {
                 if (!day.date) return;
-                
+
                 // Reset day time to midnight for accurate comparison
                 const dayDate = new Date(day.date);
                 dayDate.setHours(0, 0, 0, 0);
-                
+
                 day.events = this.events.filter(event => {
                     // Parse event dates and reset to midnight
                     const eventStart = new Date(event.start);
                     eventStart.setHours(0, 0, 0, 0);
-                    
+
                     const eventEnd = new Date(event.end);
                     eventEnd.setHours(0, 0, 0, 0);
-                    
+
                     // Check if day matches event date range
                     return dayDate >= eventStart && dayDate < eventEnd;
                 });
@@ -305,19 +307,19 @@ function calendarApp() {
 
         getDayClass(day) {
             let classes = 'cursor-pointer hover:bg-gray-50 transition';
-            
+
             if (day.isToday) {
                 classes += ' bg-green-600';
             } else if (!day.isCurrentMonth) {
                 classes += ' bg-gray-50';
             }
-            
+
             return classes;
         },
 
         showDayEvents(day) {
             if (!day.date || !day.events || day.events.length === 0) return;
-            
+
             this.selectedDate = day.date.toLocaleDateString('id-ID', {
                 weekday: 'long',
                 year: 'numeric',

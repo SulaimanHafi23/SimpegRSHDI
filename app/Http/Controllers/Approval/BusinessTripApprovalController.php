@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Approval;
 
 use App\Http\Controllers\Controller;
+use App\Traits\DepartmentFilterable;
 use App\Models\BusinessTrip;
 use App\Models\Worker;
 use Illuminate\Http\Request;
 
 class BusinessTripApprovalController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -17,23 +20,23 @@ class BusinessTripApprovalController extends Controller
 
     public function index(Request $request)
     {
-        $user = auth()->user();
-        $isSuperAdmin = $user->hasRole('Super Admin');
+        $departmentId = $this->getManagerDepartmentFilter();
 
         $filters = [
             'status' => $request->input('status', ''),
             'worker_id' => $request->input('worker_id'),
             'month' => $request->input('month'),
             'year' => $request->input('year'),
+            'department_id' => $departmentId,
             'per_page' => 15,
         ];
 
         $query = BusinessTrip::with(['worker.user', 'worker.department']);
 
-        // If user is Manager, only show requests from their department
-        if ($user->hasRole('Manager') && $user->worker) {
-            $query->whereHas('worker', function($q) use ($user) {
-                $q->where('department_id', $user->worker->department_id);
+        // Apply department filter if Manager
+        if ($departmentId) {
+            $query->whereHas('worker', function($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
             });
         }
 
@@ -57,20 +60,13 @@ class BusinessTripApprovalController extends Controller
             $query->whereYear('start_date', $filters['year']);
         }
 
-        // Manager can only see trips from their department, Super Admin sees all
-        if (!$isSuperAdmin && $user->hasRole('Manager') && $user->worker) {
-            $query->whereHas('worker', function ($q) use ($user) {
-                $q->where('department_id', $user->worker->department_id);
-            });
-        }
-
         $trips = $query->orderBy('start_date', 'desc')->paginate($filters['per_page']);
 
         // Calculate statistics
         $statsQuery = BusinessTrip::query();
-        if (!$isSuperAdmin && $user->hasRole('Manager') && $user->worker) {
-            $statsQuery->whereHas('worker', function ($q) use ($user) {
-                $q->where('department_id', $user->worker->department_id);
+        if ($departmentId) {
+            $statsQuery->whereHas('worker', function ($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
             });
         }
 
@@ -83,11 +79,11 @@ class BusinessTripApprovalController extends Controller
         ];
 
         // Get workers for filter
-        $workersQuery = Worker::orderBy('name');
-        if (!$isSuperAdmin && $user->hasRole('Manager') && $user->worker) {
-            $workersQuery->where('department_id', $user->worker->department_id);
+        if ($departmentId) {
+            $workers = Worker::where('department_id', $departmentId)->orderBy('name')->get();
+        } else {
+            $workers = Worker::orderBy('name')->get();
         }
-        $workers = $workersQuery->get();
 
         return view('approvals.business-trips.index', compact('trips', 'statistics', 'workers'));
     }
@@ -144,5 +140,79 @@ class BusinessTripApprovalController extends Controller
         ]);
 
         return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas ditolak.');
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            $format = $request->input('format', 'excel');
+            $user = auth()->user();
+
+            $filters = [
+                'worker_id' => $request->input('worker_id'),
+                'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
+                'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+                'status' => $request->input('status'),
+            ];
+
+            // Department filter for Manager
+            if ($user->hasRole('Manager') && $user->worker) {
+                $filters['department_id'] = $user->worker->department_id;
+            }
+
+            $query = BusinessTrip::with(['worker.department', 'approvedBy']);
+
+            if ($filters['worker_id']) {
+                $query->where('worker_id', $filters['worker_id']);
+            }
+            if ($filters['date_from']) {
+                $query->whereDate('start_date', '>=', $filters['date_from']);
+            }
+            if ($filters['date_to']) {
+                $query->whereDate('start_date', '<=', $filters['date_to']);
+            }
+            if ($filters['status']) {
+                $query->where('status', $filters['status']);
+            }
+            if (!empty($filters['department_id'])) {
+                $query->whereHas('worker', function ($q) use ($filters) {
+                    $q->where('department_id', $filters['department_id']);
+                });
+            }
+
+            $trips = $query->orderBy('start_date', 'desc')->get();
+
+            $dateFrom = \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y');
+            $dateTo = \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y');
+
+            $filename = 'laporan-perjalanan-dinas-' . now()->format('Y-m-d-His');
+
+            switch ($format) {
+                case 'pdf':
+                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.business-trip-pdf', [
+                        'trips' => $trips,
+                        'dateFrom' => $dateFrom,
+                        'dateTo' => $dateTo,
+                        'status' => $filters['status'],
+                    ]);
+                    $pdf->setPaper('a4', 'landscape');
+                    return $pdf->download($filename . '.pdf');
+
+                case 'csv':
+                    return \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\BusinessTripExport($filters),
+                        $filename . '.csv',
+                        \Maatwebsite\Excel\Excel::CSV
+                    );
+
+                default:
+                    return \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\BusinessTripExport($filters),
+                        $filename . '.xlsx'
+                    );
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat export: ' . $e->getMessage());
+        }
     }
 }

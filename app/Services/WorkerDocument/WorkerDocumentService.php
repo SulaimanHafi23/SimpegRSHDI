@@ -19,6 +19,12 @@ class WorkerDocumentService
         return $this->workerDocumentRepository->getAll($filters);
     }
 
+    public function getAllPaginated(int $perPage = 15, array $filters = [])
+    {
+        $filters['per_page'] = $perPage;
+        return $this->getAll($filters);
+    }
+
     public function getById(string $id)
     {
         return $this->workerDocumentRepository->getById($id);
@@ -108,7 +114,7 @@ class WorkerDocumentService
     public function verify(string $id, string $verifiedBy, ?string $notes = null)
     {
         $result = $this->workerDocumentRepository->verify($id, $verifiedBy, $notes);
-        
+
         if ($result) {
             $document = $this->workerDocumentRepository->getById($id);
             $user = \App\Models\User::where('worker_id', $document->worker_id)->first();
@@ -122,14 +128,14 @@ class WorkerDocumentService
                 );
             }
         }
-        
+
         return $result;
     }
 
     public function reject(string $id, string $verifiedBy, string $notes)
     {
         $result = $this->workerDocumentRepository->reject($id, $verifiedBy, $notes);
-        
+
         if ($result) {
             $document = $this->workerDocumentRepository->getById($id);
             $user = \App\Models\User::where('worker_id', $document->worker_id)->first();
@@ -144,7 +150,7 @@ class WorkerDocumentService
                 );
             }
         }
-        
+
         return $result;
     }
 

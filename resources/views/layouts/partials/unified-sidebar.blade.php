@@ -196,8 +196,8 @@
 
         @endif
 
-        <!-- Attendance Section - Employee or with permissions -->
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('attendance.view') || auth()->user()->can('attendance.checkin') || auth()->user()->can('schedule.view') || auth()->user()->can('shift-swap.request'))
+        <!-- Attendance Section - Employee/Manager/Super Admin with worker profile -->
+        @if((auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR')) && auth()->user()->worker)
 
         <!-- KEHADIRAN Label -->
         <div class="pt-3 pb-1.5 px-3">
@@ -232,8 +232,8 @@
         </a>
         @endif
 
-        <!-- Request Section - Employee or with permissions -->
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('leave.request') || auth()->user()->can('leave.view') || auth()->user()->can('overtime.request') || auth()->user()->can('overtime.view') || auth()->user()->can('business-trip.request') || auth()->user()->can('business-trip.view'))
+        <!-- Request Section - All roles with worker profile -->
+        @if((auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR')) && auth()->user()->worker)
 
         <!-- PENGAJUAN Label -->
         <div class="pt-3 pb-1.5 px-3">
@@ -280,9 +280,9 @@
         </div>
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
-        <a href="{{ route('approvals.leaves.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('approvals.leaves.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('approvals.leaves.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
+        <a href="{{ route('admin.leave.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.leave.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-calendar-times text-xs {{ request()->routeIs('admin.leave.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('admin.leave.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Cuti</span>
@@ -293,9 +293,9 @@
         @endif
 
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('overtime.manage') || auth()->user()->can('overtime.approve'))
-        <a href="{{ route('approvals.overtimes.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('approvals.overtimes.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('approvals.overtimes.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
+        <a href="{{ route('admin.overtime.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.overtime.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-clock text-xs {{ request()->routeIs('admin.overtime.*') ? 'text-white' : 'text-orange-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('admin.overtime.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur</span>
@@ -367,8 +367,8 @@
         </a>
         @endif
 
-        <!-- HR & Finance Section - Employee with permissions -->
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('worker-document.view') || auth()->user()->can('calendar.view'))
+        <!-- HR & Finance Section - All roles with worker profile -->
+        @if((auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR')) && auth()->user()->worker)
 
         <!-- HR & KEUANGAN Label -->
         <div class="pt-3 pb-1.5 px-3">
@@ -378,7 +378,7 @@
             </div>
         </div>
 
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->can('worker-document.view'))
+        @if((auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR')) && auth()->user()->worker)
         <a href="{{ route('employee.documents.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.documents.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.documents.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
@@ -388,7 +388,7 @@
         </a>
         @endif
 
-        @if(auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->can('calendar.view'))
+        @if((auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR')) && auth()->user()->worker)
         <a href="{{ route('employee.calendar.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.calendar.*') ? 'bg-white/20' : 'bg-teal-500/20' }} rounded-lg flex-shrink-0">
@@ -400,7 +400,7 @@
         @endif
 
         <!-- Settings Section - Admin Only -->
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('holiday.manage') || auth()->user()->can('role.manage') || auth()->user()->can('user.manage') || auth()->user()->can('system-settings.manage'))
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('holiday.manage') || auth()->user()->can('role.manage') || auth()->user()->can('user.manage') || auth()->user()->can('system-settings.manage'))
 
         <!-- PENGATURAN Label -->
         <div class="pt-3 pb-1.5 px-3">
@@ -410,7 +410,7 @@
             </div>
         </div>
 
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('holiday.manage'))
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('holiday.manage'))
         <a href="{{ route('admin.holidays.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.holidays.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.holidays.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">

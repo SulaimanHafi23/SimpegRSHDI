@@ -18,10 +18,10 @@ class AttendanceRepository implements AttendanceRepositoryInterface
     public function getAll(array $filters = []): LengthAwarePaginator
     {
         $query = $this->model->with([
-            'worker.shift', 
-            'worker.workerShifts.shift', 
+            'worker.shift',
+            'worker.workerShifts.shift',
             'worker.shiftOverrides.shift',
-            'shift', 
+            'shift',
             'location'
         ]);
 
@@ -43,6 +43,13 @@ class AttendanceRepository implements AttendanceRepositoryInterface
 
         if (!empty($filters['is_late'])) {
             $query->where('is_late', $filters['is_late']);
+        }
+
+        // Department filter (for Manager access control)
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
         }
 
         // Advanced search functionality

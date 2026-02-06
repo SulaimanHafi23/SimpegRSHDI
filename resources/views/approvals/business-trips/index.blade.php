@@ -5,49 +5,53 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Approval Perjalanan Dinas" 
+    <x-page-header
+        title="Approval Perjalanan Dinas"
         description="Kelola pengajuan perjalanan dinas pegawai"
         icon="fas fa-plane">
+        <x-slot:actions>
+            {{-- Export Dropdown --}}
+            <x-export-dropdown route="approvals.business-trips.export" />
+        </x-slot:actions>
     </x-page-header>
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <x-stats-card 
-            title="Total Pengajuan" 
-            :value="$statistics['total'] ?? 0" 
-            icon="fas fa-file-alt" 
+        <x-stats-card
+            title="Total Pengajuan"
+            :value="$statistics['total'] ?? 0"
+            icon="fas fa-file-alt"
             color="blue" />
-        
-        <x-stats-card 
-            title="Menunggu" 
-            :value="$statistics['pending'] ?? 0" 
-            icon="fas fa-clock" 
+
+        <x-stats-card
+            title="Menunggu"
+            :value="$statistics['pending'] ?? 0"
+            icon="fas fa-clock"
             color="yellow" />
-        
-        <x-stats-card 
-            title="Disetujui" 
-            :value="$statistics['approved'] ?? 0" 
-            icon="fas fa-check-circle" 
+
+        <x-stats-card
+            title="Disetujui"
+            :value="$statistics['approved'] ?? 0"
+            icon="fas fa-check-circle"
             color="green" />
-        
-        <x-stats-card 
-            title="Ditolak" 
-            :value="$statistics['rejected'] ?? 0" 
-            icon="fas fa-times-circle" 
+
+        <x-stats-card
+            title="Ditolak"
+            :value="$statistics['rejected'] ?? 0"
+            icon="fas fa-times-circle"
             color="red" />
-        
-        <x-stats-card 
-            title="Dibatalkan" 
-            :value="$statistics['cancelled'] ?? 0" 
-            icon="fas fa-ban" 
+
+        <x-stats-card
+            title="Dibatalkan"
+            :value="$statistics['cancelled'] ?? 0"
+            icon="fas fa-ban"
             color="gray" />
     </div>
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('approvals.business-trips.index') }}">
-        <x-form.select 
-            name="worker_id" 
+        <x-form.select
+            name="worker_id"
             label="Pegawai"
             :selected="request('worker_id') ?? ''"
             placeholder="Semua Pegawai">
@@ -58,8 +62,8 @@
             @endif
         </x-form.select>
 
-        <x-form.select 
-            name="status" 
+        <x-form.select
+            name="status"
             label="Status"
             :options="[
                 'pending' => 'Menunggu',
@@ -70,8 +74,8 @@
             :selected="request('status') ?? ''"
             placeholder="Semua Status" />
 
-        <x-form.select 
-            name="month" 
+        <x-form.select
+            name="month"
             label="Bulan"
             :selected="request('month') ?? ''"
             placeholder="Semua Bulan">
@@ -80,8 +84,8 @@
             @endfor
         </x-form.select>
 
-        <x-form.select 
-            name="year" 
+        <x-form.select
+            name="year"
             label="Tahun"
             :selected="request('year') ?? ''"
             placeholder="Semua Tahun">
@@ -94,7 +98,7 @@
     {{-- Business Trip Requests Table --}}
     <x-card>
         @if($trips->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-plane"
                 title="Tidak ada data pengajuan perjalanan dinas"
                 description="Pengajuan perjalanan dinas akan ditampilkan di sini" />
@@ -115,7 +119,7 @@
                 @foreach($trips as $index => $trip)
                     <x-table.row>
                         <x-table.cell>{{ $trips->firstItem() + $index }}</x-table.cell>
-                        
+
                         <x-table.cell>
                             <div class="font-medium text-gray-900">{{ $trip->worker->name ?? '-' }}</div>
                             <div class="text-sm text-gray-500">{{ $trip->worker->nip ?? '-' }}</div>
@@ -148,8 +152,8 @@
 
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
-                                <a href="{{ route('approvals.business-trips.show', $trip->id) }}" 
-                                   class="text-blue-600 hover:text-blue-900" 
+                                <a href="{{ route('approvals.business-trips.show', $trip->id) }}"
+                                   class="text-blue-600 hover:text-blue-900"
                                    title="Detail">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -160,8 +164,8 @@
                                 @if($trip->status == 'pending')
                                     <form action="{{ route('approvals.business-trips.approve', $trip->id) }}" method="POST" class="inline">
                                         @csrf
-                                        <button type="submit" 
-                                                class="text-green-600 hover:text-green-900" 
+                                        <button type="submit"
+                                                class="text-green-600 hover:text-green-900"
                                                 title="Setujui"
                                                 onclick="return confirm('Apakah Anda yakin ingin menyetujui perjalanan dinas ini?')">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,8 +175,8 @@
                                     </form>
                                     <form action="{{ route('approvals.business-trips.reject', $trip->id) }}" method="POST" class="inline">
                                         @csrf
-                                        <button type="submit" 
-                                                class="text-red-600 hover:text-red-900" 
+                                        <button type="submit"
+                                                class="text-red-600 hover:text-red-900"
                                                 title="Tolak"
                                                 onclick="return confirm('Apakah Anda yakin ingin menolak perjalanan dinas ini?')">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

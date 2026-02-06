@@ -5,23 +5,19 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Laporan Presensi" 
+    <x-page-header
+        title="Laporan Presensi"
         description="Lihat dan ekspor data presensi pegawai"
         icon="fas fa-calendar-check">
         <x-slot:actions>
-            <a href="?{{ http_build_query(array_merge(request()->except('page'), ['export' => 'csv'])) }}"
-               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium">
-                <i class="fas fa-file-csv mr-2"></i>
-                Export CSV
-            </a>
+            <x-export-dropdown route="reports.attendance.export" />
         </x-slot:actions>
     </x-page-header>
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('reports.attendance') }}">
-        <x-form.select 
-            name="worker_id" 
+        <x-form.select
+            name="worker_id"
             label="Pegawai"
             :selected="$filters['worker_id'] ?? ''"
             placeholder="Semua Pegawai">
@@ -30,8 +26,8 @@
             @endforeach
         </x-form.select>
 
-        <x-form.select 
-            name="month" 
+        <x-form.select
+            name="month"
             label="Bulan"
             :selected="$filters['month'] ?? ''"
             placeholder="Semua Bulan">
@@ -40,8 +36,8 @@
             @endfor
         </x-form.select>
 
-        <x-form.select 
-            name="year" 
+        <x-form.select
+            name="year"
             label="Tahun"
             :selected="$filters['year'] ?? ''"
             placeholder="Semua Tahun">
@@ -68,7 +64,7 @@
     {{-- Table --}}
     <x-card>
         @if($attendances->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-calendar-check"
                 title="Tidak ada data presensi"
                 description="Data presensi akan ditampilkan di sini" />

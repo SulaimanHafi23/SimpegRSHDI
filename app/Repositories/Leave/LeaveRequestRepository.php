@@ -22,6 +22,13 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
             $query->where('worker_id', $filters['worker_id']);
         }
 
+        // Filter by department (for Manager role)
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }

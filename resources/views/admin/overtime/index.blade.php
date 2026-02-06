@@ -5,14 +5,17 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Manajemen Lembur" 
+    <x-page-header
+        title="Manajemen Lembur"
         description="Kelola data lembur pegawai"
         icon="fas fa-business-time">
         <x-slot:actions>
+            {{-- Export Dropdown --}}
+            <x-export-dropdown route="admin.overtime.export" />
+
             @can('create-overtime')
-                <x-button 
-                    variant="success" 
+                <x-button
+                    variant="success"
                     icon="fas fa-plus"
                     onclick="window.location.href='{{ route('admin.overtime.create') }}'">
                     Input Lembur
@@ -23,35 +26,35 @@
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <x-stats-card 
-            title="Total Lembur" 
-            :value="$statistics['total'] ?? 0" 
-            icon="fas fa-clock" 
+        <x-stats-card
+            title="Total Lembur"
+            :value="$statistics['total'] ?? 0"
+            icon="fas fa-clock"
             color="blue" />
-        
-        <x-stats-card 
-            title="Pending" 
-            :value="$statistics['pending'] ?? 0" 
-            icon="fas fa-hourglass-half" 
+
+        <x-stats-card
+            title="Pending"
+            :value="$statistics['pending'] ?? 0"
+            icon="fas fa-hourglass-half"
             color="yellow" />
-        
-        <x-stats-card 
-            title="Approved" 
-            :value="$statistics['approved'] ?? 0" 
-            icon="fas fa-check-circle" 
+
+        <x-stats-card
+            title="Approved"
+            :value="$statistics['approved'] ?? 0"
+            icon="fas fa-check-circle"
             color="green" />
-        
-        <x-stats-card 
-            title="Total Jam" 
-            :value="($statistics['total_hours'] ?? 0) . ' Jam'" 
-            icon="fas fa-stopwatch" 
+
+        <x-stats-card
+            title="Total Jam"
+            :value="($statistics['total_hours'] ?? 0) . ' Jam'"
+            icon="fas fa-stopwatch"
             color="purple" />
     </div>
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('admin.overtime.index') }}">
-        <x-form.select 
-            name="worker_id" 
+        <x-form.select
+            name="worker_id"
             label="Pegawai"
             :selected="$filters['worker_id'] ?? ''"
             placeholder="Semua Pegawai">
@@ -60,8 +63,8 @@
             @endforeach
         </x-form.select>
 
-        <x-form.select 
-            name="status" 
+        <x-form.select
+            name="status"
             label="Status"
             :options="[
                 'Pending' => 'Pending',
@@ -71,15 +74,15 @@
             :selected="$filters['status'] ?? ''"
             placeholder="Semua Status" />
 
-        <x-form.input 
-            name="start_date" 
-            label="Tanggal Mulai" 
+        <x-form.input
+            name="start_date"
+            label="Tanggal Mulai"
             type="date"
             :value="$filters['start_date'] ?? ''" />
 
-        <x-form.input 
-            name="end_date" 
-            label="Tanggal Akhir" 
+        <x-form.input
+            name="end_date"
+            label="Tanggal Akhir"
             type="date"
             :value="$filters['end_date'] ?? ''" />
 
@@ -107,7 +110,7 @@
     {{-- Overtime Table --}}
     <x-card>
         @if(isset($overtimes) && $overtimes->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-business-time"
                 title="Tidak ada data lembur"
                 description="Data lembur akan ditampilkan di sini"
@@ -131,7 +134,7 @@
                 @foreach($overtimes as $index => $overtime)
                     <x-table.row>
                         <x-table.cell>{{ $overtimes->firstItem() + $index }}</x-table.cell>
-                        
+
                         <x-table.cell>
                             <div class="font-medium text-gray-900">{{ $overtime->worker->name ?? '-' }}</div>
                             <div class="text-sm text-gray-500">{{ $overtime->worker->nip ?? '-' }}</div>
@@ -164,20 +167,20 @@
 
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
-                                <a href="{{ route('admin.overtime.show', $overtime->id) }}" 
-                                   class="text-blue-600 hover:text-blue-900 inline-flex items-center" 
+                                <a href="{{ route('admin.overtime.show', $overtime->id) }}"
+                                   class="text-blue-600 hover:text-blue-900 inline-flex items-center"
                                    title="Detail">
                                     <i class="fas fa-eye"></i>
                                 </a>
 
                                 @if($overtime->status === 'pending')
-                                    <button onclick="approveOvertime('{{ $overtime->id }}')" 
-                                            class="text-green-600 hover:text-green-900 inline-flex items-center" 
+                                    <button onclick="approveOvertime('{{ $overtime->id }}')"
+                                            class="text-green-600 hover:text-green-900 inline-flex items-center"
                                             title="Setujui">
                                         <i class="fas fa-check"></i>
                                     </button>
-                                    <button onclick="rejectOvertime('{{ $overtime->id }}')" 
-                                            class="text-red-600 hover:text-red-900 inline-flex items-center" 
+                                    <button onclick="rejectOvertime('{{ $overtime->id }}')"
+                                            class="text-red-600 hover:text-red-900 inline-flex items-center"
                                             title="Tolak">
                                         <i class="fas fa-times"></i>
                                     </button>
@@ -195,7 +198,7 @@
                 </div>
             @endif
         @else
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-business-time"
                 title="Tidak ada data lembur"
                 description="Gunakan filter di atas untuk melihat data" />
@@ -210,13 +213,13 @@
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/admin/overtimes/${id}/approve`;
-            
+
             const csrfToken = document.createElement('input');
             csrfToken.type = 'hidden';
             csrfToken.name = '_token';
             csrfToken.value = '{{ csrf_token() }}';
             form.appendChild(csrfToken);
-            
+
             document.body.appendChild(form);
             form.submit();
         }
@@ -228,19 +231,19 @@
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/admin/overtimes/${id}/reject`;
-            
+
             const csrfToken = document.createElement('input');
             csrfToken.type = 'hidden';
             csrfToken.name = '_token';
             csrfToken.value = '{{ csrf_token() }}';
             form.appendChild(csrfToken);
-            
+
             const reasonInput = document.createElement('input');
             reasonInput.type = 'hidden';
             reasonInput.name = 'rejection_reason';
             reasonInput.value = reason;
             form.appendChild(reasonInput);
-            
+
             document.body.appendChild(form);
             form.submit();
         } else if (reason !== null) {

@@ -176,7 +176,7 @@ class RolePermissionSeeder extends Seeder
          * - View workers and schedules
          * - Approve leave and overtime
          * - View reports
-         * - Limited master data access (read-only)
+         * - Full management access for leaves, overtimes, business trips, shift swaps
          */
         $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
         $manager->syncPermissions([
@@ -192,15 +192,23 @@ class RolePermissionSeeder extends Seeder
             'attendance.manage',  // Can view attendance records
             'schedule.manage',    // Can view and adjust schedules
 
-            // Approval Authority
+            // Full Management & Approval Authority
+            'leave.manage',       // Full CRUD + approve/reject all leave requests
             'leave.approve',
             'leave.view',
+            'overtime.manage',    // Full CRUD + approve/reject all overtime
             'overtime.approve',
             'overtime.view',
+            'business-trip.manage',  // Full CRUD + approve/reject all business trips
             'business-trip.approve',
             'business-trip.view',
+            'shift-swap.manage',  // Full CRUD + approve/reject all shift swaps
             'shift-swap.approve',
             'shift-swap.view',
+            'worker-document.manage', // Manage worker documents
+
+            // Holiday management
+            'holiday.manage',
 
             // Notifications
             'notification.view',

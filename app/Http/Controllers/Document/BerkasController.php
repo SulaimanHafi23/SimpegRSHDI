@@ -5,6 +5,7 @@
 namespace App\Http\Controllers\Document;
 
 use App\Http\Controllers\Controller;
+use App\Traits\DepartmentFilterable;
 use App\DTOs\BerkasDTO;
 use App\Http\Requests\Document\BerkasRequest;
 use App\Services\Document\BerkasService;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Storage;
 
 class BerkasController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct(
         private readonly BerkasService $service,
         private readonly WorkerService $workerService,
@@ -35,24 +38,34 @@ class BerkasController extends Controller
     {
         $this->authorizeAnyPermission(['view-documents', 'view-own-documents']);
 
+        $departmentId = $this->getManagerDepartmentFilter();
+
         $filters = [
             'worker_id' => $request->input('worker_id'),
             'document_type_id' => $request->input('document_type_id'),
             'status' => $request->input('status'),
+            'department_id' => $departmentId,
         ];
 
         // Apply permission-based filters
-        if (auth()->user()->can('view-own-documents') && 
+        if (auth()->user()->can('view-own-documents') &&
             !auth()->user()->can('view-documents')) {
             $filters['worker_id'] = auth()->user()->worker_id;
         }
 
         $documents = $this->service->getAllPaginated(15, $filters);
-        
-        $workers = auth()->user()->can('view-documents')
-            ? $this->workerService->getActive()
-            : collect([auth()->user()->worker]);
-            
+
+        // Get workers from user's department if Manager
+        if ($departmentId) {
+            $workers = auth()->user()->can('view-documents')
+                ? $this->workerService->getByDepartment($departmentId)
+                : collect([auth()->user()->worker]);
+        } else {
+            $workers = auth()->user()->can('view-documents')
+                ? $this->workerService->getActive()
+                : collect([auth()->user()->worker]);
+        }
+
         $documentTypes = $this->documentTypeService->getAll();
 
         return view('admin.documents.index', compact('documents', 'workers', 'documentTypes', 'filters'));
@@ -65,7 +78,7 @@ class BerkasController extends Controller
         $document = $this->service->findById($id);
 
         // Check own data permission
-        if (auth()->user()->can('view-own-documents') && 
+        if (auth()->user()->can('view-own-documents') &&
             !auth()->user()->can('view-documents') &&
             !$this->isOwnData($document->worker_id)) {
             abort(403, 'Anda hanya dapat melihat dokumen Anda sendiri.');
@@ -81,7 +94,7 @@ class BerkasController extends Controller
         $workers = auth()->user()->can('view-documents')
             ? $this->workerService->getActive()
             : collect([auth()->user()->worker]);
-            
+
         $documentTypes = $this->documentTypeService->getAll();
 
         return view('admin.documents.create', compact('workers', 'documentTypes'));
@@ -117,7 +130,7 @@ class BerkasController extends Controller
         $document = $this->service->findById($id);
 
         // Check own data permission
-        if (auth()->user()->can('view-own-documents') && 
+        if (auth()->user()->can('view-own-documents') &&
             !auth()->user()->can('edit-documents') &&
             !$this->isOwnData($document->worker_id)) {
             abort(403, 'Anda hanya dapat mengedit dokumen Anda sendiri.');
@@ -126,7 +139,7 @@ class BerkasController extends Controller
         $workers = auth()->user()->can('view-documents')
             ? $this->workerService->getActive()
             : collect([auth()->user()->worker]);
-            
+
         $documentTypes = $this->documentTypeService->getAll();
 
         return view('admin.documents.edit', compact('document', 'workers', 'documentTypes'));
@@ -139,7 +152,7 @@ class BerkasController extends Controller
         $document = $this->service->findById($id);
 
         // Check own data permission
-        if (auth()->user()->can('view-own-documents') && 
+        if (auth()->user()->can('view-own-documents') &&
             !auth()->user()->can('edit-documents') &&
             !$this->isOwnData($document->worker_id)) {
             abort(403);
@@ -166,7 +179,7 @@ class BerkasController extends Controller
         $document = $this->service->findById($id);
 
         // Check own data permission
-        if (auth()->user()->can('view-own-documents') && 
+        if (auth()->user()->can('view-own-documents') &&
             !auth()->user()->can('delete-documents') &&
             !$this->isOwnData($document->worker_id)) {
             abort(403);

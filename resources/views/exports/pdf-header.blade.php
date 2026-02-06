@@ -5,7 +5,7 @@
     <title>{{ $title ?? 'Laporan' }}</title>
     <style>
         @page {
-            margin: 100px 50px 50px 50px;
+            margin: 20px 30px 30px 30px;
         }
         * {
             margin: 0;
@@ -17,62 +17,67 @@
             font-size: 11px;
             line-height: 1.4;
         }
-        header {
-            position: fixed;
-            top: -80px;
-            left: 0;
-            right: 0;
-            height: 80px;
+        .header {
             text-align: center;
-            border-bottom: 3px solid #047857;
-            padding-bottom: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
         }
-        .header-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
+        .header-table {
+            width: 100%;
+            border: none;
+            margin-bottom: 5px;
+        }
+        .header-table td {
+            border: none;
+            vertical-align: middle;
+        }
+        .logo-cell {
+            width: 80px;
+            text-align: center;
         }
         .logo {
-            width: 60px;
-            height: 60px;
+            max-width: 65px;
+            max-height: 65px;
         }
-        .header-text {
+        .header-text-cell {
             text-align: center;
+            padding-left: 10px;
         }
-        .header-text h1 {
-            font-size: 18px;
+        .header-gov {
+            margin: 0;
+            font-size: 11px;
+            font-weight: normal;
+        }
+        .header-dept {
+            margin: 0;
+            font-size: 11px;
+            font-weight: normal;
+        }
+        .header-hospital {
+            margin: 2px 0;
+            font-size: 16px;
             font-weight: bold;
-            color: #047857;
-            margin-bottom: 2px;
         }
-        .header-text h2 {
+        .header-address {
+            margin: 0;
+            font-size: 9px;
+        }
+        .header-line {
+            border-bottom: 3px double #000;
+            margin-bottom: 15px;
+        }
+        .report-title {
             font-size: 14px;
             font-weight: bold;
-            color: #059669;
-            margin-bottom: 2px;
+            color: #047857;
+            margin: 10px 0 5px 0;
         }
-        .header-text p {
-            font-size: 9px;
+        .print-date {
+            font-size: 10px;
             color: #666;
-        }
-        footer {
-            position: fixed;
-            bottom: -30px;
-            left: 0;
-            right: 0;
-            height: 30px;
-            text-align: center;
-            font-size: 9px;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 5px;
-        }
-        .page-number:before {
-            content: "Halaman " counter(page);
         }
         main {
-            margin-top: 20px;
+            margin-top: 15px;
         }
         h3 {
             font-size: 14px;
@@ -102,14 +107,11 @@
         table tbody tr:nth-child(even) {
             background-color: #f9fafb;
         }
-        table tbody tr:hover {
-            background-color: #f3f4f6;
-        }
         .info-box {
-            background-color: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 4px;
-            padding: 10px;
+            background-color: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            padding: 15px;
             margin-bottom: 15px;
         }
         .info-box p {
@@ -148,28 +150,58 @@
             background-color: #e5e7eb;
             color: #374151;
         }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 15px;
+        }
+        .summary-box {
+            margin-top: 20px;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        .summary-box p {
+            margin: 5px 0;
+            font-size: 10px;
+        }
+        .summary-box strong {
+            color: #333;
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <img src="{{ public_path('images/logo-rs.png') }}" alt="Logo RSUD" class="logo">
-            <div class="header-text">
-                <h1>RUMAH SAKIT UMUM DAERAH</h1>
-                <h2>HAJI DARLAN ISMAIL</h2>
-                <p>Jl. Rumah Sakit No. 1, Kotabaru, Kalimantan Selatan 72113</p>
-                <p>Telp: (0518) 21234 | Email: info@rsudhdi.go.id</p>
-            </div>
-        </div>
-    </header>
-
-    <footer>
-        <p class="page-number"></p>
-        <p>Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} WIB</p>
-    </footer>
+    <div class="header">
+        <table class="header-table">
+            <tr>
+                <td class="logo-cell">
+                    @if(file_exists(public_path('images/logo-rs.png')))
+                        <img src="{{ public_path('images/logo-rs.png') }}" alt="Logo" class="logo">
+                    @endif
+                </td>
+                <td class="header-text-cell">
+                    <p class="header-gov">PEMERINTAH KABUPATEN TANAH LAUT</p>
+                    <p class="header-dept">DINAS KESEHATAN</p>
+                    <h2 class="header-hospital">UPTD RSUD HAJI DARLAN ISMAIL</h2>
+                    <p class="header-address">Jl. Swadaya RT.003 Desa Bumi Harapan Kecamatan Bumi Makmur</p>
+                    <p class="header-address">Kabupaten Tanah Laut Kode Pos 70853</p>
+                    <p class="header-address">Email: Rsudhajidarlanismail@gmail.com</p>
+                </td>
+                <td style="width: 80px;"></td>
+            </tr>
+        </table>
+        <div class="header-line"></div>
+    </div>
 
     <main>
         @yield('content')
     </main>
+
+    <div class="footer">
+        <p>Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} WITA</p>
+        <p>UPTD RSUD Haji Darlan Ismail - Sistem Informasi Manajemen Kepegawaian</p>
+    </div>
 </body>
 </html>

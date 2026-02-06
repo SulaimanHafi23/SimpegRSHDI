@@ -8,12 +8,15 @@ use App\Http\Controllers\Controller;
 use App\Services\Leave\LeaveRequestService;
 use App\Services\Worker\WorkerService;
 use App\Services\Master\LeaveTypeService;
+use App\Traits\DepartmentFilterable;
 use App\Http\Requests\Leave\LeaveRequestRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class LeaveRequestController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct(
         protected LeaveRequestService $leaveRequestService,
         protected WorkerService $workerService,
@@ -25,6 +28,8 @@ class LeaveRequestController extends Controller
 
     public function index(Request $request)
     {
+        $departmentId = $this->getManagerDepartmentFilter();
+
         $filters = [
             'status' => $request->status,
             'worker_id' => $request->worker_id,
@@ -32,20 +37,30 @@ class LeaveRequestController extends Controller
             'leave_type' => $request->leave_type,
             'month' => $request->month,
             'year' => $request->year,
+            'department_id' => $departmentId,
             'per_page' => $request->per_page ?? 15,
         ];
 
         $leaveRequests = $this->leaveRequestService->getAll($filters);
-        $workers = $this->workerService->getAllActive();
+
+        // Get workers from user's department if Manager
+        if ($departmentId) {
+            $workers = $this->workerService->getByDepartment($departmentId);
+        } else {
+            $workers = $this->workerService->getAllActive();
+        }
+
         $leaveTypes = $this->leaveTypeService->getAllActive();
-        
-        // Statistics
+
+        // Statistics - filter by department if Manager
+        $baseFilters = $departmentId ? ['department_id' => $departmentId, 'per_page' => 9999] : ['per_page' => 9999];
+
         $statistics = [
-            'total' => $this->leaveRequestService->getAll(['per_page' => 9999])->total(),
-            'pending' => $this->leaveRequestService->getAll(['status' => 'pending', 'per_page' => 9999])->total(),
-            'approved' => $this->leaveRequestService->getAll(['status' => 'approved', 'per_page' => 9999])->total(),
-            'rejected' => $this->leaveRequestService->getAll(['status' => 'rejected', 'per_page' => 9999])->total(),
-            'cancelled' => $this->leaveRequestService->getAll(['status' => 'cancelled', 'per_page' => 9999])->total(),
+            'total' => $this->leaveRequestService->getAll($baseFilters)->total(),
+            'pending' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'pending'])->total(),
+            'approved' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'approved'])->total(),
+            'rejected' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'rejected'])->total(),
+            'cancelled' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'cancelled'])->total(),
         ];
 
         // Rename for view compatibility
@@ -158,11 +173,78 @@ class LeaveRequestController extends Controller
         }
     }
 
+    public function export(Request $request)
+    {
+        try {
+            $format = $request->input('format', 'excel');
+
+            $filters = [
+                'worker_id' => $request->input('worker_id'),
+                'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
+                'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+                'status' => $request->input('status'),
+                'leave_type_id' => $request->input('leave_type_id'),
+            ];
+
+            $query = \App\Models\LeaveRequest::with(['worker.department', 'leaveType', 'approver']);
+
+            if ($filters['worker_id']) {
+                $query->where('worker_id', $filters['worker_id']);
+            }
+            if ($filters['date_from']) {
+                $query->whereDate('start_date', '>=', $filters['date_from']);
+            }
+            if ($filters['date_to']) {
+                $query->whereDate('start_date', '<=', $filters['date_to']);
+            }
+            if ($filters['status']) {
+                $query->where('status', $filters['status']);
+            }
+            if ($filters['leave_type_id']) {
+                $query->where('leave_type_id', $filters['leave_type_id']);
+            }
+
+            $leaves = $query->orderBy('start_date', 'desc')->get();
+
+            $dateFrom = \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y');
+            $dateTo = \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y');
+
+            $filename = 'laporan-cuti-' . now()->format('Y-m-d-His');
+
+            switch ($format) {
+                case 'pdf':
+                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.leave-pdf', [
+                        'leaves' => $leaves,
+                        'dateFrom' => $dateFrom,
+                        'dateTo' => $dateTo,
+                        'status' => $filters['status'],
+                    ]);
+                    $pdf->setPaper('a4', 'landscape');
+                    return $pdf->download($filename . '.pdf');
+
+                case 'csv':
+                    return \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\LeaveExport($filters),
+                        $filename . '.csv',
+                        \Maatwebsite\Excel\Excel::CSV
+                    );
+
+                default:
+                    return \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\LeaveExport($filters),
+                        $filename . '.xlsx'
+                    );
+            }
+        } catch (\Exception $e) {
+            return back()->with('error', 'Terjadi kesalahan saat export: ' . $e->getMessage());
+        }
+    }
+
     public function workerLeaveBalance(string $workerId)
     {
         $worker = $this->workerService->getById($workerId);
         $leaveTypes = $this->leaveTypeService->getAllActive();
-        
+
         $balances = [];
         foreach ($leaveTypes as $leaveType) {
             $balances[$leaveType->id] = $this->leaveRequestService->getLeaveBalance(

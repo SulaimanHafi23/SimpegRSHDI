@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Services\Overtime\OvertimeRequestService;
 use App\Services\Export\PdfExportService;
+use App\Exports\EmployeeOvertimeExport;
 use App\DTOs\OvertimeRequestDTO;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class OvertimeController extends Controller
 {
@@ -177,6 +179,52 @@ class OvertimeController extends Controller
             return back()->with('error', 'Gagal membatalkan lembur: ' . $e->getMessage());
         }
     }
+
+    /**
+     * Export overtime data (PDF, Excel, CSV)
+     */
+    public function export(Request $request)
+    {
+        $user = auth()->user();
+        $worker = $user->worker;
+
+        if (!$worker) {
+            return redirect()->route('employee.dashboard')
+                ->with('error', 'Data pekerja tidak ditemukan.');
+        }
+
+        $format = $request->format ?? 'pdf';
+
+        $filters = [
+            'worker_id' => $worker->id,
+            'status' => $request->status,
+            'search' => $request->search,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'year' => $request->year ?? now()->year,
+        ];
+
+        // Get all records without pagination
+        $overtimes = collect($this->overtimeService->getAll(array_merge($filters, ['per_page' => 10000]))->items());
+
+        if ($format === 'excel') {
+            return Excel::download(
+                new EmployeeOvertimeExport($overtimes, $worker),
+                'laporan-lembur-' . now()->format('Y-m-d') . '.xlsx'
+            );
+        }
+
+        if ($format === 'csv') {
+            return Excel::download(
+                new EmployeeOvertimeExport($overtimes, $worker),
+                'laporan-lembur-' . now()->format('Y-m-d') . '.csv'
+            );
+        }
+
+        // Default: PDF
+        return $this->pdfExportService->exportOvertimeReport($overtimes->toArray(), $worker, $filters);
+    }
+
     /**
      * Export overtime to PDF
      */

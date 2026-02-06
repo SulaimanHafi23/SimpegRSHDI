@@ -5,16 +5,12 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Laporan Dokumen Pegawai" 
+    <x-page-header
+        title="Laporan Dokumen Pegawai"
         description="Lihat ringkasan dan ekspor data dokumen pegawai"
         icon="fas fa-folder-open">
         <x-slot:actions>
-            <a href="{{ route('reports.worker-documents', array_merge($filters ?? [], ['export' => 'csv'])) }}"
-               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm font-medium">
-                <i class="fas fa-file-csv mr-2"></i>
-                Export CSV
-            </a>
+            <x-export-dropdown route="reports.worker-documents.export" />
         </x-slot:actions>
     </x-page-header>
 
@@ -25,35 +21,35 @@
         $rejectedCount = $documents->where('status', 'rejected')->count();
     @endphp
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <x-stats-card 
-            title="Total Dokumen" 
-            :value="$documents->total() ?? 0" 
-            icon="fas fa-folder" 
+        <x-stats-card
+            title="Total Dokumen"
+            :value="$documents->total() ?? 0"
+            icon="fas fa-folder"
             color="blue" />
-        
-        <x-stats-card 
-            title="Pending" 
-            :value="$pendingCount" 
-            icon="fas fa-clock" 
+
+        <x-stats-card
+            title="Pending"
+            :value="$pendingCount"
+            icon="fas fa-clock"
             color="yellow" />
-        
-        <x-stats-card 
-            title="Terverifikasi" 
-            :value="$verifiedCount" 
-            icon="fas fa-check-circle" 
+
+        <x-stats-card
+            title="Terverifikasi"
+            :value="$verifiedCount"
+            icon="fas fa-check-circle"
             color="green" />
-        
-        <x-stats-card 
-            title="Ditolak" 
-            :value="$rejectedCount" 
-            icon="fas fa-times-circle" 
+
+        <x-stats-card
+            title="Ditolak"
+            :value="$rejectedCount"
+            icon="fas fa-times-circle"
             color="red" />
     </div>
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('reports.worker-documents') }}">
-        <x-form.select 
-            name="worker_id" 
+        <x-form.select
+            name="worker_id"
             label="Pegawai"
             :selected="$filters['worker_id'] ?? ''"
             placeholder="Semua Pegawai">
@@ -64,8 +60,8 @@
             @endif
         </x-form.select>
 
-        <x-form.select 
-            name="document_type_id" 
+        <x-form.select
+            name="document_type_id"
             label="Jenis Dokumen"
             :selected="$filters['document_type_id'] ?? ''"
             placeholder="Semua Jenis">
@@ -76,8 +72,8 @@
             @endif
         </x-form.select>
 
-        <x-form.select 
-            name="status" 
+        <x-form.select
+            name="status"
             label="Status"
             :options="[
                 'pending' => 'Pending',
@@ -87,8 +83,8 @@
             :selected="$filters['status'] ?? ''"
             placeholder="Semua Status" />
 
-        <x-form.select 
-            name="month" 
+        <x-form.select
+            name="month"
             label="Bulan"
             :selected="$filters['month'] ?? ''"
             placeholder="Semua Bulan">
@@ -97,8 +93,8 @@
             @endfor
         </x-form.select>
 
-        <x-form.select 
-            name="year" 
+        <x-form.select
+            name="year"
             label="Tahun"
             :selected="$filters['year'] ?? ''"
             placeholder="Semua Tahun">
@@ -111,7 +107,7 @@
     {{-- Table --}}
     <x-card>
         @if($documents->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-folder-open"
                 title="Tidak ada data dokumen"
                 description="Data dokumen pegawai akan ditampilkan di sini" />
@@ -132,7 +128,7 @@
                 @foreach($documents as $index => $doc)
                     <x-table.row>
                         <x-table.cell>{{ $documents->firstItem() + $index }}</x-table.cell>
-                        
+
                         <x-table.cell>
                             <div class="font-medium text-gray-900">{{ $doc->worker->name ?? '-' }}</div>
                             <div class="text-sm text-gray-500">{{ $doc->worker->nip ?? '-' }}</div>
@@ -166,8 +162,8 @@
                         <x-table.cell>{{ $doc->created_at->format('d M Y') }}</x-table.cell>
 
                         <x-table.cell>
-                            <a href="{{ route('approvals.documents.show', $doc->id) }}" 
-                               class="text-blue-600 hover:text-blue-900" 
+                            <a href="{{ route('approvals.documents.show', $doc->id) }}"
+                               class="text-blue-600 hover:text-blue-900"
                                title="Detail">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>

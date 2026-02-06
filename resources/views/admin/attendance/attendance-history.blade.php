@@ -252,19 +252,22 @@
             </h3>
         </div>
 
-        {{-- Calendar Header (Days of Week) --}}
-        <div class="grid grid-cols-7 gap-2 mb-2">
-            <div class="text-center font-semibold text-sm text-red-600 py-2">Minggu</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Senin</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Selasa</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Rabu</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Kamis</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Jumat</div>
-            <div class="text-center font-semibold text-sm text-gray-700 py-2">Sabtu</div>
-        </div>
+        {{-- Scrollable Calendar Container for Mobile --}}
+        <div class="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <div class="min-w-[700px]">
+                {{-- Calendar Header (Days of Week) --}}
+                <div class="grid grid-cols-7 gap-2 mb-2">
+                    <div class="text-center font-semibold text-sm text-red-600 py-2">Minggu</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Senin</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Selasa</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Rabu</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Kamis</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Jumat</div>
+                    <div class="text-center font-semibold text-sm text-gray-700 py-2">Sabtu</div>
+                </div>
 
-        {{-- Calendar Grid --}}
-        <div class="grid grid-cols-7 gap-2">
+                {{-- Calendar Grid --}}
+                <div class="grid grid-cols-7 gap-2">
             {{-- Empty cells for days before month starts --}}
             @php
                 $startDayOfWeek = $startDate->dayOfWeek; // 0 = Sunday, 6 = Saturday
@@ -431,6 +434,8 @@
                     @endif
                 </div>
             @endforeach
+                </div>
+            </div>
         </div>
 
         {{-- Legend --}}

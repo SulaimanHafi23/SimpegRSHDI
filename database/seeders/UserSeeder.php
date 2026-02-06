@@ -62,19 +62,21 @@ class UserSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Assign role based on position
-            $positionName = $worker->position->name ?? '';
+            // Assign role based on NIP
             $workerNip = $worker->nip ?? '';
 
-            if (str_contains(strtolower($positionName), 'admin')) {
-                $user->assignRole($roleHR);
-                $role = 'HR';
-            } elseif (str_contains(strtolower($positionName), 'manager') || $workerNip === 'MGR001') {
+            if (str_starts_with($workerNip, 'MGR')) {
+                // Manager role for MGR001, MGR002, MGR003, MGR004
                 $user->assignRole($roleManager);
                 $role = 'Manager';
+            } elseif (str_starts_with($workerNip, 'HR')) {
+                // HR role for HR001
+                $user->assignRole($roleHR);
+                $role = 'HR';
             } else {
+                // Employee role for everyone else
                 $user->assignRole($roleUser);
-                $role = 'User';
+                $role = 'Employee';
             }
 
             $this->command->info("✅ {$worker->name} → {$username} [{$role}]");

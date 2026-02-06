@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Worker;
 
 use App\DTOs\WorkerDTO;
+use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Worker\WorkerRequest;
@@ -20,6 +21,8 @@ use App\Imports\WorkersImport;
 
 class WorkerController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct(
         private readonly WorkerService $service,
         private readonly ReligionService $religionService,
@@ -41,7 +44,7 @@ class WorkerController extends Controller
             'location_id' => $request->input('location_id'),
             'status' => $request->input('status'),
             'employment_status' => $request->input('employment_status'),
-            'department_id' => $request->input('department_id'),
+            'department_id' => $request->input('department_id') ?? $this->getManagerDepartmentFilter(),
             'per_page' => $request->input('per_page', 15),
         ];
 
@@ -59,6 +62,11 @@ class WorkerController extends Controller
 
         try {
             $worker = $this->service->getById($id);
+
+            // Manager can only view workers in their department
+            if (!$this->canManageWorker($id)) {
+                abort(403, 'Anda tidak memiliki akses untuk melihat data pegawai ini.');
+            }
             // Attendance this month
             $month = now()->month;
             $year = now()->year;
@@ -90,8 +98,8 @@ class WorkerController extends Controller
             ]);
 
             return view('admin.workers.show', compact(
-                'worker', 
-                'attendanceThisMonth', 
+                'worker',
+                'attendanceThisMonth',
                 'totalOvertime',
                 'leaveRequests',
                 'overtimeRequests'
@@ -109,18 +117,18 @@ class WorkerController extends Controller
 
         try {
             $worker = $this->service->getById($id);
-            
+
             // Get month and year from request, default to current month
             $month = $request->input('month', now()->month);
             $year = $request->input('year', now()->year);
-            
+
             // Get attendance data for the month using getAll with filters
             $attendanceService = app(\App\Services\Attendance\AttendanceService::class);
-            
+
             // Create date range for the month
             $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
             $endDate = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
-            
+
             // Get attendances using getAll method with proper filters
             $attendancePaginated = $attendanceService->getAll([
                 'worker_id' => $worker->id,
@@ -128,38 +136,38 @@ class WorkerController extends Controller
                 'date_to' => $endDate->format('Y-m-d'),
                 'per_page' => 999,
             ]);
-            
+
             // Extract items from paginator - these are already loaded with relations
             $attendances = collect($attendancePaginated->items());
-            
+
             // Calculate statistics
             $totalPresent = $attendances->whereIn('status', ['present', 'late'])->count();
             $totalAbsent = $attendances->where('status', 'absent')->count();
             $totalLate = $attendances->where('is_late', true)->count();
             $totalLeave = $attendances->where('status', 'leave')->count();
-            
+
             $daysInMonth = $startDate->daysInMonth;
-            
+
             // Get worker's active shift with relation
             $worker->load(['activeWorkerShift.shift', 'workerShifts.shift', 'department']);
-            
+
             // Get all shifts for reference
             $allShifts = \App\Models\Shift::where('is_active', true)
                 ->orderBy('start_time')
                 ->get();
-            
+
             // Create calendar array with all dates
             $calendarData = [];
             for ($day = 1; $day <= $daysInMonth; $day++) {
                 $date = \Carbon\Carbon::create($year, $month, $day);
                 $dateKey = $date->format('Y-m-d');
-                
+
                 // Find attendance for this date
                 $dayAttendance = $attendances->first(function($att) use ($dateKey) {
-                    return $att->attendance_date && 
+                    return $att->attendance_date &&
                            \Carbon\Carbon::parse($att->attendance_date)->format('Y-m-d') === $dateKey;
                 });
-                
+
                 // Get shift schedule for this date
                 $shift = null;
                 if (method_exists($worker, 'getShiftForDate')) {
@@ -169,7 +177,7 @@ class WorkerController extends Controller
                     // Fallback: use active shift if getShiftForDate doesn't exist
                     $shift = $worker->activeWorkerShift->shift;
                 }
-                
+
                 $calendarData[] = [
                     'date' => $date,
                     'day' => $day,
@@ -179,11 +187,11 @@ class WorkerController extends Controller
                     'isWeekend' => $date->isSunday(), // Only Sunday is weekend
                 ];
             }
-            
+
             return view('admin.workers.attendance-history', compact(
-                'worker', 
-                'calendarData', 
-                'month', 
+                'worker',
+                'calendarData',
+                'month',
                 'year',
                 'totalPresent',
                 'totalAbsent',
@@ -310,7 +318,7 @@ class WorkerController extends Controller
             ];
 
             $filename = 'data-pegawai-' . now()->format('Y-m-d-His') . '.xlsx';
-            
+
             return Excel::download(new WorkersExport($filters), $filename);
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -329,22 +337,22 @@ class WorkerController extends Controller
             // TODO: Implement import functionality
             $import = new WorkersImport();
             Excel::import($import, $request->file('file'));
-            
+
             $successCount = $import->getSuccessCount();
             $errors = $import->getErrors();
-            
+
             if (!empty($errors)) {
                 $errorMessage = implode('<br>', array_slice($errors, 0, 5));
                 if (count($errors) > 5) {
                     $errorMessage .= '<br>... dan ' . (count($errors) - 5) . ' error lainnya';
                 }
-                
+
                 if ($successCount > 0) {
                     return back()->with('warning', "Berhasil import {$successCount} pegawai, namun ada beberapa error:<br>{$errorMessage}");
                 }
                 return back()->with('error', "Gagal import pegawai:<br>{$errorMessage}");
             }
-            
+
             return back()->with('success', "Berhasil import {$successCount} pegawai");
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
