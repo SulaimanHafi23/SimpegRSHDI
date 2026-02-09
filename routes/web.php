@@ -325,6 +325,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/workers', [AttendanceController::class, 'workerList'])->name('worker-list');
         // Riwayat absensi per pegawai
         Route::get('/history/{worker}', [AttendanceController::class, 'history'])->name('history');
+        // Export riwayat absensi per pegawai (PDF/Excel)
+        Route::get('/history/{worker}/export-daily', [AttendanceController::class, 'exportWorkerHistory'])->name('history.export-daily');
         // Statistik detail pegawai
         Route::get('/stats/{worker}', [AttendanceController::class, 'workerStats'])->name('worker-stats');
         // Export statistik pegawai
@@ -333,6 +335,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Export absensi pegawai (PDF/Excel)
         Route::get('/history/{worker}/export', [AttendanceController::class, 'exportWorkerAttendance'])->name('history.export');
             Route::get('/history/{worker_id}', [AttendanceController::class, 'history'])->name('history');
+        // Export Absensi Hari Ini
+        Route::get('/today/export', [AttendanceController::class, 'exportTodayAttendance'])->name('today.export');
         // Index default tetap bisa untuk legacy
         Route::get('/', [AttendanceController::class, 'index'])->name('index');
         Route::get('/create', [AttendanceController::class, 'create'])->name('create');

@@ -16,7 +16,7 @@
         </div>
         <div class="flex gap-2">
             <!-- Export Dropdown -->
-            <div class="relative inline-block text-left" x-data="{ open: false }">
+            <!-- <div class="relative inline-block text-left" x-data="{ open: false }">
                 <button @click="open = !open" type="button" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 shadow-md">
                     <i class="fas fa-download mr-2"></i>
                     Export Data
@@ -48,7 +48,7 @@
                         </a>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 
@@ -59,8 +59,10 @@
                 <i class="fas fa-chart-pie text-sm"></i>
             </span>
             <div>
-                <p class="text-xs text-gray-500">Statistik Hari Ini</p>
-                <p class="text-base font-semibold text-gray-800">{{ now()->translatedFormat('l, d F Y') }}</p>
+                <p class="text-xs text-gray-500">Statistik Tanggal</p>
+                <p class="text-base font-semibold text-gray-800">
+                    {{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->translatedFormat('l, d F Y') : now()->translatedFormat('l, d F Y') }}
+                </p>
             </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -144,7 +146,8 @@
         </button>
 
         <div x-show="showFilters" x-collapse class="border-t border-gray-200">
-            <form method="GET" action="{{ route('admin.attendance.index') }}" class="p-6">
+            <form method="GET" action="{{ route('admin.attendance.index') }}" class="p-6" id="history-filter-form">
+                <input type="hidden" name="tab" id="history-tab-input" value="history">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Pencarian</label>
@@ -208,7 +211,7 @@
                         <i class="fas fa-search mr-2"></i>
                         Terapkan
                     </button>
-                    <a href="{{ route('admin.attendance.index') }}" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition duration-200">
+                    <a href="{{ route('admin.attendance.index', ['tab' => request('tab', 'history')]) }}" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition duration-200">
                         <i class="fas fa-redo mr-2"></i>
                         Reset
                     </a>
@@ -305,20 +308,79 @@
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Tampilan Data</h3>
             <div class="flex space-x-2">
-                <button id="btn-history-view" class="px-4 py-2 bg-blue-600 text-white rounded-lg transition duration-200 hover:bg-blue-700">
+                <button id="btn-history-view" class="px-4 py-2 rounded-lg transition duration-200 @if(request('tab') == 'history') bg-blue-600 text-white hover:bg-blue-700 @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
                     Riwayat Absensi
                 </button>
-                <button id="btn-today-view" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg transition duration-200 hover:bg-gray-300">
+                <button id="btn-today-view" class="px-4 py-2 rounded-lg transition duration-200 @if(request('tab') == 'history') bg-gray-200 text-gray-700 hover:bg-gray-300 @else bg-blue-600 text-white hover:bg-blue-700 @endif">
                     Absensi Hari Ini
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Table for Today's Attendance (Detail) - Hidden by default -->
-    <div id="today-view" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+    <!-- Table for Today's Attendance (Detail) - Default visible -->
+    <div id="today-view" class="bg-white rounded-lg shadow-md overflow-hidden @if(request('tab') == 'history') hidden @endif">
         <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900">Absensi Hari Ini - {{ now()->isoFormat('dddd, D MMMM Y') }}</h3>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    Absensi Tanggal: 
+                    <span id="selected-date-display" class="text-blue-600">{{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->isoFormat('dddd, D MMMM Y') : now()->isoFormat('dddd, D MMMM Y') }}</span>
+                </h3>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <!-- Export Dropdown -->
+                    <div class="relative inline-block text-left" x-data="{ openExport: false }">
+                        <button @click="openExport = !openExport" type="button" class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition duration-200 shadow-sm">
+                            <i class="fas fa-download mr-2"></i>
+                            Export
+                            <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                        </button>
+
+                        <div x-show="openExport" @click.away="openExport = false" x-transition class="absolute right-0 z-10 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                            <div class="py-1">
+                                <a href="{{ route('admin.attendance.today.export', ['format' => 'pdf', 'attendance_date' => request('attendance_date', now()->format('Y-m-d'))]) }}" 
+                                   class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
+                                    <i class="fas fa-file-pdf mr-3 text-red-500 group-hover:text-red-700"></i>
+                                    <div>
+                                        <div class="font-medium">Export PDF</div>
+                                        <div class="text-xs text-gray-500">Laporan detail</div>
+                                    </div>
+                                </a>
+                                <a href="{{ route('admin.attendance.today.export', ['format' => 'excel', 'attendance_date' => request('attendance_date', now()->format('Y-m-d'))]) }}" 
+                                   class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
+                                    <i class="fas fa-file-excel mr-3 text-green-500 group-hover:text-green-700"></i>
+                                    <div>
+                                        <div class="font-medium">Export Excel</div>
+                                        <div class="text-xs text-gray-500">Format spreadsheet</div>
+                                    </div>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Date Filter Form -->
+                    <form method="GET" action="{{ route('admin.attendance.index') }}" class="flex items-center gap-2" id="date-filter-form">
+                        <input type="hidden" name="tab" id="tab-input" value="{{ request('tab', 'today') }}">
+                        <label for="attendance_date" class="text-sm font-medium text-gray-700 whitespace-nowrap">
+                            <i class="fas fa-calendar-alt mr-1 text-blue-600"></i>
+                            Pilih Tanggal:
+                        </label>
+                        <input type="date" 
+                               id="attendance_date" 
+                               name="attendance_date" 
+                               value="{{ request('attendance_date', now()->format('Y-m-d')) }}"
+                               max="{{ now()->format('Y-m-d') }}"
+                               class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                               onchange="this.form.submit()">
+                        @if(request('attendance_date'))
+                            <a href="{{ route('admin.attendance.index', ['tab' => request('tab', 'today')]) }}" 
+                               class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm transition">
+                                <i class="fas fa-redo mr-1"></i>
+                                Reset
+                            </a>
+                        @endif
+                    </form>
+                </div>
+            </div>
         </div>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -405,7 +467,26 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            @if($worker->check_in_time)
+                            @if($worker->leave_request)
+                                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <div class="flex items-start space-x-2">
+                                        <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
+                                        <div>
+                                            <div class="text-sm font-semibold text-blue-900">
+                                                {{ $worker->leave_request->leaveType->name }}
+                                            </div>
+                                            <div class="text-xs text-blue-700 mt-1">
+                                                {{ $worker->leave_request->start_date->format('d M Y') }} - {{ $worker->leave_request->end_date->format('d M Y') }}
+                                            </div>
+                                            @if($worker->leave_request->reason)
+                                                <div class="text-xs text-blue-600 mt-1">
+                                                    {{ Str::limit($worker->leave_request->reason, 50) }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            @elseif($worker->check_in_time)
                                 <div class="text-sm text-gray-900 font-medium">{{ $worker->check_in_time->format('H:i:s') }}</div>
                                 @if($worker->is_late)
                                     <div class="text-xs text-red-500">
@@ -427,7 +508,12 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            @if($worker->check_out_time)
+                            @if($worker->leave_request)
+                                <div class="text-sm text-blue-600 font-medium">
+                                    <i class="fas fa-calendar-check mr-1"></i>
+                                    Sedang {{ strtolower($worker->leave_request->leaveType->name) }}
+                                </div>
+                            @elseif($worker->check_out_time)
                                 <div class="text-sm text-gray-900 font-medium">{{ $worker->check_out_time->format('H:i:s') }}</div>
                                 @if($worker->is_early_leave && $worker->early_leave_minutes > 0)
                                     <div class="text-xs text-orange-600">
@@ -469,43 +555,81 @@
                                 $status = $statusConfig[$worker->attendance_status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Unknown', 'icon' => 'fa-question'];
                             @endphp
                             <div class="space-y-2">
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $status['bg'] }} {{ $status['text'] }}">
-                                    <i class="fas {{ $status['icon'] }} mr-1"></i>
-                                    {{ $status['label'] }}
-                                </span>
-
-                                @if($worker->today_attendance)
-                                    @if($worker->today_attendance->notes)
-                                        <div class="text-sm text-gray-600 mt-1">
-                                            <i class="fas fa-sticky-note mr-1 text-gray-400"></i>
-                                            {{ Str::limit($worker->today_attendance->notes, 50) }}
-                                        </div>
-                                    @endif
-
-                                    @if($worker->is_late && $worker->late_minutes > 0)
-                                        <div class="text-xs text-red-600">
-                                            <i class="fas fa-exclamation-triangle mr-1"></i>
-                                            Keterlambatan: {{ $worker->late_minutes }} menit
-                                        </div>
-                                    @endif
-
-                                    @if($worker->today_attendance->location)
-                                        <div class="text-xs text-gray-500">
-                                            <i class="fas fa-map-marker-alt mr-1"></i>
-                                            {{ $worker->today_attendance->location->name }}
-                                        </div>
-                                    @endif
-                                @elseif($worker->attendance_status == 'not_checked_in')
-                                    <div class="text-xs text-gray-500 mt-1">
-                                        <i class="fas fa-info-circle mr-1"></i>
-                                        Belum melakukan absensi hari ini
+                                @if($worker->leave_request)
+                                    {{-- Tampilkan badge cuti/sakit/izin --}}
+                                    @php
+                                        $leaveTypeMap = [
+                                            'Cuti' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'icon' => 'fa-umbrella-beach'],
+                                            'Sakit' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'icon' => 'fa-medkit'],
+                                            'Izin' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'icon' => 'fa-info-circle'],
+                                        ];
+                                        $leaveTypeName = $worker->leave_request->leaveType->name;
+                                        $leaveStyle = ['bg' => 'bg-indigo-100', 'text' => 'text-indigo-800', 'icon' => 'fa-calendar-times'];
+                                        
+                                        foreach ($leaveTypeMap as $key => $style) {
+                                            if (str_contains($leaveTypeName, $key)) {
+                                                $leaveStyle = $style;
+                                                break;
+                                            }
+                                        }
+                                    @endphp
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $leaveStyle['bg'] }} {{ $leaveStyle['text'] }}">
+                                        <i class="fas {{ $leaveStyle['icon'] }} mr-1"></i>
+                                        {{ $leaveTypeName }}
+                                    </span>
+                                    <div class="text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-calendar mr-1"></i>
+                                        {{ $worker->leave_request->start_date->format('d/m/Y') }} - {{ $worker->leave_request->end_date->format('d/m/Y') }}
                                     </div>
+                                    <div class="text-xs text-gray-500">
+                                        <i class="fas fa-clock mr-1"></i>
+                                        Total: {{ $worker->leave_request->total_days }} hari
+                                    </div>
+                                @else
+                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $status['bg'] }} {{ $status['text'] }}">
+                                        <i class="fas {{ $status['icon'] }} mr-1"></i>
+                                        {{ $status['label'] }}
+                                    </span>
+
+                                    @if($worker->today_attendance)
+                                        @if($worker->today_attendance->notes)
+                                            <div class="text-sm text-gray-600 mt-1">
+                                                <i class="fas fa-sticky-note mr-1 text-gray-400"></i>
+                                                {{ Str::limit($worker->today_attendance->notes, 50) }}
+                                            </div>
+                                        @endif
+
+                                        @if($worker->is_late && $worker->late_minutes > 0)
+                                            <div class="text-xs text-red-600">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                Keterlambatan: {{ $worker->late_minutes }} menit
+                                            </div>
+                                        @endif
+
+                                        @if($worker->today_attendance->location)
+                                            <div class="text-xs text-gray-500">
+                                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                                {{ $worker->today_attendance->location->name }}
+                                            </div>
+                                        @endif
+                                    @elseif($worker->attendance_status == 'not_checked_in')
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            <i class="fas fa-info-circle mr-1"></i>
+                                            Belum melakukan absensi pada tanggal {{ \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')))->isoFormat('D MMMM Y') }}
+                                        </div>
+                                    @endif
                                 @endif
                             </div>
                         </td>
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center space-x-1">
-                                @if($worker->today_attendance)
+                                @if($worker->leave_request)
+                                    {{-- Pegawai sedang cuti/sakit/izin, tampilkan info saja --}}
+                                    <div class="text-xs text-gray-500 italic">
+                                        <i class="fas fa-info-circle mr-1"></i>
+                                        Sedang {{ strtolower($worker->leave_request->leaveType->name) }}
+                                    </div>
+                                @elseif($worker->today_attendance)
                                     <a href="{{ route('admin.attendance.show', $worker->today_attendance->id) }}"
                                        class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Detail">
                                         <i class="fas fa-eye w-4 h-4"></i>
@@ -541,8 +665,8 @@
         </div>
     </div>
 
-    <!-- Table for Attendance History (Statistik) - Default visible -->
-    <div id="history-view" class="bg-white rounded-lg shadow-md overflow-hidden">
+    <!-- Table for Attendance History (Statistik) - Hidden by default -->
+    <div id="history-view" class="bg-white rounded-lg shadow-md overflow-hidden @if(request('tab') != 'history') hidden @endif">
         <div class="p-6 border-b border-gray-200">
             <div class="flex items-center justify-between mb-4">
                 <div>
@@ -770,8 +894,18 @@
         const btnHistoryView = document.getElementById('btn-history-view');
         const todayView = document.getElementById('today-view');
         const historyView = document.getElementById('history-view');
+        const tabInput = document.getElementById('tab-input');
+        const historyTabInput = document.getElementById('history-tab-input');
 
-        btnHistoryView.addEventListener('click', function() {
+        // Function to update URL parameter without refresh
+        function updateUrlParameter(key, value) {
+            const url = new URL(window.location);
+            url.searchParams.set(key, value);
+            window.history.pushState({}, '', url);
+        }
+
+        // Function to switch to history view
+        function switchToHistoryView() {
             // Show history view (statistik)
             historyView.classList.remove('hidden');
             todayView.classList.add('hidden');
@@ -781,9 +915,15 @@
             btnHistoryView.classList.add('bg-blue-600', 'text-white');
             btnTodayView.classList.remove('bg-blue-600', 'text-white');
             btnTodayView.classList.add('bg-gray-200', 'text-gray-700');
-        });
 
-        btnTodayView.addEventListener('click', function() {
+            // Update URL and hidden inputs
+            updateUrlParameter('tab', 'history');
+            if (tabInput) tabInput.value = 'history';
+            if (historyTabInput) historyTabInput.value = 'history';
+        }
+
+        // Function to switch to today view
+        function switchToTodayView() {
             // Show today view (detail)
             todayView.classList.remove('hidden');
             historyView.classList.add('hidden');
@@ -793,7 +933,31 @@
             btnTodayView.classList.add('bg-blue-600', 'text-white');
             btnHistoryView.classList.remove('bg-blue-600', 'text-white');
             btnHistoryView.classList.add('bg-gray-200', 'text-gray-700');
-        });
+
+            // Update URL and hidden inputs
+            updateUrlParameter('tab', 'today');
+            if (tabInput) tabInput.value = 'today';
+            if (historyTabInput) historyTabInput.value = 'today';
+        }
+
+        // Event listeners for tab buttons
+        btnHistoryView.addEventListener('click', switchToHistoryView);
+        btnTodayView.addEventListener('click', switchToTodayView);
+
+        // Restore active tab from URL parameter on page load
+        const urlParams = new URLSearchParams(window.location.search);
+        const activeTab = urlParams.get('tab') || 'today'; // Default to 'today'
+
+        console.log('Current URL params:', window.location.search);
+        console.log('Active tab from URL:', activeTab);
+
+        if (activeTab === 'today') {
+            console.log('Switching to TODAY view');
+            switchToTodayView();
+        } else if (activeTab === 'history') {
+            console.log('Switching to HISTORY view');
+            switchToHistoryView();
+        }
 
         // Toggle fields based on stats period selection
         const statsPeriodSelect = document.getElementById('stats_period');

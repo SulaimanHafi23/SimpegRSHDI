@@ -58,19 +58,31 @@ class AttendanceController extends Controller
         // Load relationships yang diperlukan
         $allWorkers->load(['shift', 'workerShifts.shift', 'department']);
 
-        // Ambil data absensi hari ini untuk semua pegawai (dengan department filter)
+        // Ambil tanggal yang dipilih untuk view "Absensi Hari Ini"
+        $selectedDate = $request->attendance_date ?? now()->format('Y-m-d');
+
+        // Ambil data absensi untuk tanggal yang dipilih (dengan department filter)
         $todayAttendances = $this->attendanceService->getAll([
-            'date_from' => now()->format('Y-m-d'),
-            'date_to' => now()->format('Y-m-d'),
+            'date_from' => $selectedDate,
+            'date_to' => $selectedDate,
             'department_id' => $departmentId,
-            'per_page' => 1000, // Ambil semua data hari ini
+            'per_page' => 1000, // Ambil semua data untuk tanggal tersebut
         ]);
 
-        // Buat array workers dengan status absensi hari ini
-        $workersWithAttendance = $allWorkers->map(function ($worker) use ($todayAttendances) {
+        // Buat array workers dengan status absensi untuk tanggal yang dipilih
+        $workersWithAttendance = $allWorkers->map(function ($worker) use ($todayAttendances, $selectedDate) {
             $todayAttendance = $todayAttendances->firstWhere('worker_id', $worker->id);
 
+            // Cek apakah pegawai sedang cuti/sakit/izin pada tanggal ini
+            $leaveRequest = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $selectedDate)
+                ->whereDate('end_date', '>=', $selectedDate)
+                ->with('leaveType')
+                ->first();
+
             $worker->today_attendance = $todayAttendance;
+            $worker->leave_request = $leaveRequest;
             $worker->attendance_status = $todayAttendance ? $todayAttendance->status : 'not_checked_in';
             $worker->check_in_time = $todayAttendance ? $todayAttendance->check_in : null;
             $worker->check_out_time = $todayAttendance ? $todayAttendance->check_out : null;
@@ -82,7 +94,7 @@ class AttendanceController extends Controller
             return $worker;
         });
 
-        // Hitung statistik untuk hari ini
+        // Hitung statistik untuk tanggal yang dipilih
         $summary = [
             'total_workers' => $allWorkers->count(),
             'present' => $todayAttendances->whereIn('status', ['present', 'late'])->count(),
@@ -649,6 +661,45 @@ class AttendanceController extends Controller
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\AttendanceExport($filters), $filename);
     }
 
+    // Export riwayat absensi pegawai per hari (PDF/Excel)
+    public function exportWorkerHistory(Request $request, $workerId)
+    {
+        $worker = $this->workerService->getById($workerId);
+        if (!$worker) {
+            return back()->with('error', 'Pegawai tidak ditemukan');
+        }
+
+        $format = $request->input('format', 'pdf');
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+
+        $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
+
+        $worker->load(['activeWorkerShift.shift', 'workerShifts.shift', 'department']);
+
+        $rows = $this->buildWorkerAttendanceCalendarRows($worker, $startDate, $endDate);
+        $filename = 'riwayat-absensi-' . str_replace(' ', '-', strtolower($worker->name)) . '-' . $startDate->format('Y-m') . '-' . now()->format('His');
+
+        switch ($format) {
+            case 'excel':
+                return \Maatwebsite\Excel\Facades\Excel::download(
+                    new \App\Exports\WorkerAttendanceCalendarExport($worker, $rows, $startDate, $endDate),
+                    $filename . '.xlsx'
+                );
+            case 'pdf':
+            default:
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.worker-attendance-calendar-pdf', [
+                    'worker' => $worker,
+                    'rows' => $rows,
+                    'startDate' => $startDate,
+                    'endDate' => $endDate,
+                ]);
+                $pdf->setPaper('a4', 'landscape');
+                return $pdf->download($filename . '.pdf');
+        }
+    }
+
     /**
      * Menampilkan detail statistik kehadiran pegawai
      */
@@ -763,6 +814,93 @@ class AttendanceController extends Controller
         $stats['absence_percentage'] = $totalWorkDays > 0 ? round(($stats['total_absent'] / $totalWorkDays) * 100, 1) : 0;
 
         return $stats;
+    }
+
+    private function buildWorkerAttendanceCalendarRows($worker, $startDate, $endDate): array
+    {
+        $attendances = \App\Models\Attendance::with(['location', 'shift'])
+            ->where('worker_id', $worker->id)
+            ->whereDate('attendance_date', '>=', $startDate->format('Y-m-d'))
+            ->whereDate('attendance_date', '<=', $endDate->format('Y-m-d'))
+            ->get();
+
+        $attendanceByDate = $attendances->keyBy(function ($attendance) {
+            return \Carbon\Carbon::parse($attendance->attendance_date)->format('Y-m-d');
+        });
+
+        $leaveRequests = \App\Models\LeaveRequest::with('leaveType')
+            ->where('worker_id', $worker->id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
+            ->whereDate('end_date', '>=', $startDate->format('Y-m-d'))
+            ->get();
+
+        $rows = [];
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $dateKey = $date->format('Y-m-d');
+            $attendance = $attendanceByDate->get($dateKey);
+
+            $leaveRequest = $leaveRequests->first(function ($leave) use ($date) {
+                return $date->between($leave->start_date, $leave->end_date);
+            });
+
+            $shift = null;
+            if (method_exists($worker, 'getShiftForDate')) {
+                $shiftId = $worker->getShiftForDate($date);
+                $shift = $shiftId ? \App\Models\Shift::find($shiftId) : null;
+            } elseif ($worker->activeWorkerShift && $worker->activeWorkerShift->shift) {
+                $shift = $worker->activeWorkerShift->shift;
+            }
+
+            $statusLabel = 'Tidak Hadir';
+            $notes = '-';
+            $checkIn = '-';
+            $checkOut = '-';
+            $lateInfo = '-';
+
+            if ($attendance) {
+                $statusLabel = match ($attendance->status) {
+                    'present' => 'Hadir',
+                    'late' => 'Terlambat',
+                    'absent' => 'Tidak Hadir',
+                    'leave' => 'Cuti',
+                    'sick' => 'Sakit',
+                    'permission' => 'Izin',
+                    default => ucfirst($attendance->status),
+                };
+                $checkIn = $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i:s') : '-';
+                $checkOut = $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i:s') : '-';
+                $lateInfo = $attendance->is_late ? ($attendance->late_minutes . ' menit') : '-';
+                $notes = $attendance->notes ?? '-';
+            } elseif ($leaveRequest) {
+                $leaveName = $leaveRequest->leaveType->name;
+                $leaveNameLower = strtolower($leaveName);
+                if (str_contains($leaveNameLower, 'sakit')) {
+                    $statusLabel = 'Sakit';
+                } elseif (str_contains($leaveNameLower, 'izin')) {
+                    $statusLabel = 'Izin';
+                } else {
+                    $statusLabel = 'Cuti';
+                }
+                $notes = $leaveName;
+            }
+
+            $rows[] = [
+                'date' => $date->format('d/m/Y'),
+                'day_name' => $date->translatedFormat('l'),
+                'shift_name' => $shift ? $shift->name : '-',
+                'shift_time' => $shift
+                    ? (\Carbon\Carbon::parse($shift->start_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($shift->end_time)->format('H:i'))
+                    : '-',
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'status' => $statusLabel,
+                'late' => $lateInfo,
+                'notes' => $notes,
+            ];
+        }
+
+        return $rows;
     }
 
     /**
@@ -907,6 +1045,125 @@ class AttendanceController extends Controller
             new \App\Exports\AttendanceStatsExport($worker, $attendances, $stats, $dateFrom, $dateTo),
             $filename
         );
+    }
+
+    /**
+     * Export Absensi Hari Ini (Today's Attendance)
+     */
+    public function exportTodayAttendance(Request $request)
+    {
+        try {
+            $format = $request->input('format', 'excel'); // pdf, excel
+            $selectedDate = $request->attendance_date ?? now()->format('Y-m-d');
+
+            // Get all active workers with relationships
+            $workers = $this->workerService->getAllActive();
+            $workers->load(['shift', 'department', 'workerShifts.shift']);
+            
+            // Get today's attendances dengan relationship - FIXED: gunakan attendance_date
+            $attendances = \App\Models\Attendance::with(['worker.department', 'location'])
+                ->whereDate('attendance_date', $selectedDate)
+                ->get();
+
+            // Map attendance data to workers
+            $workersWithAttendance = $workers->map(function ($worker) use ($attendances, $selectedDate) {
+                $todayAttendance = $attendances->where('worker_id', $worker->id)->first();
+
+                // Cek apakah pegawai sedang cuti/sakit/izin pada tanggal ini
+                $leaveRequest = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+                    ->where('status', 'approved')
+                    ->whereDate('start_date', '<=', $selectedDate)
+                    ->whereDate('end_date', '>=', $selectedDate)
+                    ->with('leaveType')
+                    ->first();
+
+                $worker->today_attendance = $todayAttendance;
+                $worker->leave_request = $leaveRequest;
+                $worker->check_in_time = $todayAttendance && $todayAttendance->check_in ? 
+                    \Carbon\Carbon::parse($todayAttendance->check_in)->format('H:i:s') : null;
+                $worker->check_out_time = $todayAttendance && $todayAttendance->check_out ? 
+                    \Carbon\Carbon::parse($todayAttendance->check_out)->format('H:i:s') : null;
+                $worker->is_late = $todayAttendance ? $todayAttendance->is_late : false;
+                $worker->late_minutes = $todayAttendance ? ($todayAttendance->late_minutes ?? 0) : 0;
+
+                // Determine attendance status - prioritaskan leave request
+                if ($leaveRequest) {
+                    $leaveTypeName = $leaveRequest->leaveType->name;
+                    // Deteksi tipe leave berdasarkan nama
+                    if (str_contains(strtolower($leaveTypeName), 'sakit')) {
+                        $worker->attendance_status = 'sick';
+                        $worker->status_label = 'Sakit';
+                    } elseif (str_contains(strtolower($leaveTypeName), 'izin')) {
+                        $worker->attendance_status = 'permission';
+                        $worker->status_label = 'Izin';
+                    } else {
+                        $worker->attendance_status = 'leave';
+                        $worker->status_label = $leaveTypeName;
+                    }
+                } elseif (!$todayAttendance) {
+                    $worker->attendance_status = 'not_checked_in';
+                    $worker->status_label = 'Belum Absen';
+                } elseif ($todayAttendance->status === 'leave') {
+                    $worker->attendance_status = 'leave';
+                    $worker->status_label = 'Cuti';
+                } elseif ($todayAttendance->status === 'sick') {
+                    $worker->attendance_status = 'sick';
+                    $worker->status_label = 'Sakit';
+                } elseif ($todayAttendance->status === 'permission') {
+                    $worker->attendance_status = 'permission';
+                    $worker->status_label = 'Izin';
+                } elseif ($todayAttendance->is_late) {
+                    $worker->attendance_status = 'late';
+                    $worker->status_label = 'Terlambat';
+                } else {
+                    $worker->attendance_status = 'present';
+                    $worker->status_label = 'Hadir';
+                }
+
+                return $worker;
+            });
+
+            // Calculate statistics
+            $stats = [
+                'total_workers' => $workersWithAttendance->count(),
+                'present' => $workersWithAttendance->whereIn('attendance_status', ['present', 'late'])->count(),
+                'late' => $workersWithAttendance->where('attendance_status', 'late')->count(),
+                'not_checked_in' => $workersWithAttendance->where('attendance_status', 'not_checked_in')->count(),
+                'leave' => $workersWithAttendance->where('attendance_status', 'leave')->count(),
+                'sick' => $workersWithAttendance->where('attendance_status', 'sick')->count(),
+                'permission' => $workersWithAttendance->where('attendance_status', 'permission')->count(),
+                'on_leave_total' => $workersWithAttendance->whereIn('attendance_status', ['leave', 'sick', 'permission'])->count(),
+            ];
+
+            $filename = 'absensi-' . \Carbon\Carbon::parse($selectedDate)->format('Y-m-d');
+            $dateFormatted = \Carbon\Carbon::parse($selectedDate)->translatedFormat('l, d F Y');
+
+            // Export based on format
+            switch ($format) {
+                case 'pdf':
+                    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.today-attendance-pdf', [
+                        'workers' => $workersWithAttendance,
+                        'stats' => $stats,
+                        'date' => $dateFormatted,
+                        'dateRaw' => $selectedDate,
+                    ]);
+                    $pdf->setPaper('a4', 'portrait'); // Changed to portrait
+                    return $pdf->download($filename . '.pdf');
+
+                case 'excel':
+                    return \Maatwebsite\Excel\Facades\Excel::download(
+                        new \App\Exports\TodayAttendanceExport($workersWithAttendance, $stats, $selectedDate),
+                        $filename . '.xlsx'
+                    );
+
+                default:
+                    return back()->with('error', 'Format tidak didukung');
+            }
+        } catch (\Exception $e) {
+            \Log::error('Export today attendance error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return back()->with('error', 'Terjadi kesalahan saat export: ' . $e->getMessage());
+        }
     }
 
     /**
