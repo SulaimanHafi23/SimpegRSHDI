@@ -44,6 +44,16 @@
             <x-button type="submit" variant="primary" icon="fas fa-search">
                 Tampilkan
             </x-button>
+            <a href="{{ route('admin.attendance.history.export-daily', ['worker' => $worker->id, 'format' => 'pdf', 'month' => $month, 'year' => $year]) }}"
+               class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200 shadow-sm">
+                <i class="fas fa-file-pdf mr-2"></i>
+                Export PDF
+            </a>
+            <a href="{{ route('admin.attendance.history.export-daily', ['worker' => $worker->id, 'format' => 'excel', 'month' => $month, 'year' => $year]) }}"
+               class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 shadow-sm">
+                <i class="fas fa-file-excel mr-2"></i>
+                Export Excel
+            </a>
         </form>
     </x-card>
 

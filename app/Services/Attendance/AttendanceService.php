@@ -297,7 +297,7 @@ class AttendanceService
             }
 
             // ========== VALIDATE CHECK-OUT TIME WINDOW ==========
-            $checkOutWindowAfterHours = config('attendance.check_out_window_after_hours', 4);
+            $checkOutWindowAfterHours = (int) config('attendance.check_out_window_after_hours', 4);
             $strictTimeWindow = config('attendance.strict_time_window', false);
 
             // Calculate latest allowed check-out time (including potential overtime)

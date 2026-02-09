@@ -70,12 +70,12 @@
         </x-form.select>
 
         <x-form.select
-            name="leave_type"
+            name="leave_type_id"
             label="Jenis Cuti"
-            :selected="$filters['leave_type'] ?? ''"
+            :selected="$filters['leave_type_id'] ?? ''"
             placeholder="Semua Jenis">
             @foreach($leaveTypes as $type)
-                <option value="{{ $type }}">{{ $type }}</option>
+                <option value="{{ $type->id }}">{{ $type->name }}</option>
             @endforeach
         </x-form.select>
 
