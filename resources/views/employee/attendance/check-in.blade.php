@@ -334,9 +334,10 @@ function getLocation(useFallback = false) {
 
             updateUserMarker(latitude, longitude, accuracy);
 
-            // Enforce accuracy threshold
+            // Enforce accuracy threshold only for present status
             const submit = document.getElementById('btn-checkin');
-            if (accuracy && accuracy > ACC_THRESHOLD) {
+            const statusValue = document.getElementById('status')?.value || 'present';
+            if (statusValue === 'present' && accuracy && accuracy > ACC_THRESHOLD) {
                 submit.disabled = true;
                 submit.classList.add('opacity-50','cursor-not-allowed');
                 statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>Akurasi buruk: ±${Math.round(accuracy)} m. Silakan gunakan ponsel atau pilih lokasi manual.`;
@@ -538,7 +539,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (checkinForm) {
         checkinForm.addEventListener('submit', function(e) {
             const acc = parseFloat(document.getElementById('accuracy').value) || null;
-            if (acc && acc > ACC_THRESHOLD) {
+            const statusValue = document.getElementById('status')?.value || 'present';
+            if (statusValue === 'present' && acc && acc > ACC_THRESHOLD) {
                 e.preventDefault();
                 alert('Lokasi tidak cukup akurat (±' + Math.round(acc) + ' m). Silakan gunakan ponsel atau pilih lokasi manual.');
                 return false;

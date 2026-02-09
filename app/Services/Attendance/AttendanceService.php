@@ -91,6 +91,8 @@ class AttendanceService
                 throw new \Exception('Anda sedang dalam perjalanan dinas ke ' . $approvedBusinessTrip->destination . '. Tidak perlu melakukan absensi.');
             }
 
+            $status = $data['status'] ?? 'present';
+
             // Get worker's shift for today
             $workerShift = $this->workerShiftRepository->getActiveByWorkerId($workerId);
             if (!$workerShift) {
@@ -103,14 +105,14 @@ class AttendanceService
             $checkInTime = now();
             $shiftStartTimeStr = \Carbon\Carbon::parse($shift->start_time)->format('H:i:s');
             $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
-            
+
             // Special handling for overnight shifts
             // If shift is overnight (e.g., 22:00-06:00) and current time is in the morning,
             // the shift actually starts tonight, not this morning
             if ($shift->is_overnight) {
                 $shiftStartHour = (int) \Carbon\Carbon::parse($shift->start_time)->format('H');
                 $currentHour = $checkInTime->hour;
-                
+
                 // If current time is before noon and shift starts after noon (evening shift),
                 // the shift hasn't started yet (it will start tonight)
                 if ($currentHour < 12 && $shiftStartHour >= 12) {
@@ -126,53 +128,56 @@ class AttendanceService
                     $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr)->subDay();
                 }
             }
-            
-            // Get time window configuration
-            $checkInWindowBeforeHours = config('attendance.check_in_window_before_hours', 2);
-            $earlyCheckInGraceMinutes = config('attendance.early_checkin_grace_minutes', 30);
-            $strictTimeWindow = config('attendance.strict_time_window', false);
-            
-            // Calculate earliest allowed check-in time
-            $earliestCheckInTime = $shiftStartDateTime->copy()->subHours($checkInWindowBeforeHours);
-            $veryEarlyCheckInTime = $earliestCheckInTime->copy()->subMinutes($earlyCheckInGraceMinutes);
-            
-            // Validation: Too early check-in
-            if ($checkInTime->lessThan($veryEarlyCheckInTime)) {
-                $hoursDiff = $checkInTime->diffInHours($shiftStartDateTime);
-                $minutesDiff = $checkInTime->diffInMinutes($shiftStartDateTime) % 60;
-                
-                $message = sprintf(
-                    'Check-in terlalu dini! Anda mencoba check-in %d jam %d menit sebelum shift dimulai (pukul %s). ' .
-                    'Batas check-in paling awal adalah %d jam sebelum shift (pukul %s).',
-                    $hoursDiff,
-                    $minutesDiff,
-                    $shiftStartDateTime->format('H:i'),
-                    $checkInWindowBeforeHours,
-                    $earliestCheckInTime->format('H:i')
-                );
-                
-                if ($strictTimeWindow) {
-                    throw new \Exception($message);
-                } else {
-                    // Log warning but allow (non-strict mode)
-                    \Log::warning('Very early check-in attempt', [
+
+            // Skip time window restrictions for non-present statuses
+            if ($status === 'present') {
+                // Get time window configuration
+                $checkInWindowBeforeHours = config('attendance.check_in_window_before_hours', 2);
+                $earlyCheckInGraceMinutes = config('attendance.early_checkin_grace_minutes', 30);
+                $strictTimeWindow = config('attendance.strict_time_window', false);
+
+                // Calculate earliest allowed check-in time
+                $earliestCheckInTime = $shiftStartDateTime->copy()->subHours($checkInWindowBeforeHours);
+                $veryEarlyCheckInTime = $earliestCheckInTime->copy()->subMinutes($earlyCheckInGraceMinutes);
+
+                // Validation: Too early check-in
+                if ($checkInTime->lessThan($veryEarlyCheckInTime)) {
+                    $hoursDiff = $checkInTime->diffInHours($shiftStartDateTime);
+                    $minutesDiff = $checkInTime->diffInMinutes($shiftStartDateTime) % 60;
+
+                    $message = sprintf(
+                        'Check-in terlalu dini! Anda mencoba check-in %d jam %d menit sebelum shift dimulai (pukul %s). ' .
+                        'Batas check-in paling awal adalah %d jam sebelum shift (pukul %s).',
+                        $hoursDiff,
+                        $minutesDiff,
+                        $shiftStartDateTime->format('H:i'),
+                        $checkInWindowBeforeHours,
+                        $earliestCheckInTime->format('H:i')
+                    );
+
+                    if ($strictTimeWindow) {
+                        throw new \Exception($message);
+                    } else {
+                        // Log warning but allow (non-strict mode)
+                        \Log::warning('Very early check-in attempt', [
+                            'worker_id' => $workerId,
+                            'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
+                            'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
+                            'earliest_allowed' => $veryEarlyCheckInTime->format('Y-m-d H:i:s'),
+                            'hours_too_early' => $hoursDiff,
+                            'is_overnight_shift' => $shift->is_overnight,
+                        ]);
+                    }
+                } elseif ($checkInTime->lessThan($earliestCheckInTime)) {
+                    // Warning for slightly early check-in (within grace period)
+                    \Log::info('Early check-in (within grace period)', [
                         'worker_id' => $workerId,
                         'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
                         'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
-                        'earliest_allowed' => $veryEarlyCheckInTime->format('Y-m-d H:i:s'),
-                        'hours_too_early' => $hoursDiff,
+                        'earliest_allowed' => $earliestCheckInTime->format('Y-m-d H:i:s'),
                         'is_overnight_shift' => $shift->is_overnight,
                     ]);
                 }
-            } elseif ($checkInTime->lessThan($earliestCheckInTime)) {
-                // Warning for slightly early check-in (within grace period)
-                \Log::info('Early check-in (within grace period)', [
-                    'worker_id' => $workerId,
-                    'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
-                    'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
-                    'earliest_allowed' => $earliestCheckInTime->format('Y-m-d H:i:s'),
-                    'is_overnight_shift' => $shift->is_overnight,
-                ]);
             }
 
             // Validate location
@@ -182,13 +187,13 @@ class AttendanceService
             $isOutsideRadius = $distance > $location->radius;
 
             // Enforce radius only for 'present' status
-            $statusForRadius = $data['status'] ?? 'present';
+            $statusForRadius = $status;
             if ($statusForRadius === 'present' && $isOutsideRadius) {
                 throw new \Exception('Anda berada di luar radius lokasi absensi. Silakan mendekat ke lokasi yang ditentukan.');
             }
 
             // Calculate if late (only for present status)
-            $statusForLate = $data['status'] ?? 'present';
+            $statusForLate = $status;
             if ($statusForLate === 'present') {
                 $graceTime = $shiftStartDateTime->copy()->addMinutes($shift->grace_period_minutes);
 
@@ -260,7 +265,7 @@ class AttendanceService
 
             $checkOutTime = now();
             $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
-            
+
             // Validasi: Tidak boleh checkout setelah hari berikutnya
             $nextDayStart = $attendanceDate->copy()->addDay()->startOfDay();
             if ($checkOutTime->greaterThanOrEqualTo($nextDayStart)) {
@@ -294,16 +299,16 @@ class AttendanceService
             // ========== VALIDATE CHECK-OUT TIME WINDOW ==========
             $checkOutWindowAfterHours = config('attendance.check_out_window_after_hours', 4);
             $strictTimeWindow = config('attendance.strict_time_window', false);
-            
+
             // Calculate latest allowed check-out time (including potential overtime)
             $latestCheckOutTime = $shiftEndDateTime->copy()->addHours($checkOutWindowAfterHours);
-            
+
             // Check for approved overtime request
             $hasApprovedOvertime = \App\Models\OvertimeRequest::where('worker_id', $attendance->worker_id)
                 ->where('status', 'approved')
                 ->whereDate('overtime_date', $attendance->attendance_date)
                 ->exists();
-            
+
             // If there's approved overtime, extend the window
             if ($hasApprovedOvertime) {
                 // Add extra 2 hours for overtime flexibility
@@ -314,12 +319,12 @@ class AttendanceService
                     'extended_latest_checkout' => $latestCheckOutTime->format('Y-m-d H:i:s'),
                 ]);
             }
-            
+
             // Validation: Check-out too late
             if ($checkOutTime->greaterThan($latestCheckOutTime)) {
                 $hoursDiff = $shiftEndDateTime->diffInHours($checkOutTime);
                 $minutesDiff = $shiftEndDateTime->diffInMinutes($checkOutTime) % 60;
-                
+
                 $message = sprintf(
                     'Check-out terlalu terlambat! Anda mencoba check-out %d jam %d menit setelah shift berakhir (pukul %s). ' .
                     'Batas check-out paling akhir adalah %d jam setelah shift berakhir (pukul %s). ' .
@@ -330,7 +335,7 @@ class AttendanceService
                     $checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0),
                     $latestCheckOutTime->format('H:i')
                 );
-                
+
                 if ($strictTimeWindow) {
                     throw new \Exception($message);
                 } else {
@@ -352,19 +357,19 @@ class AttendanceService
 
             if ($isEarlyLeave) {
                 $earlyLeaveMinutes = $checkOutTime->diffInMinutes($shiftEndDateTime);
-                
+
                 // Peringatan untuk pulang lebih awal
                 $earlyLeaveHours = floor($earlyLeaveMinutes / 60);
                 $earlyLeaveRemainingMinutes = $earlyLeaveMinutes % 60;
                 $earlyLeaveText = '';
-                
+
                 if ($earlyLeaveHours > 0) {
                     $earlyLeaveText .= $earlyLeaveHours . ' jam ';
                 }
                 if ($earlyLeaveRemainingMinutes > 0) {
                     $earlyLeaveText .= $earlyLeaveRemainingMinutes . ' menit';
                 }
-                
+
                 \Log::warning('Early check-out detected', [
                     'worker_id' => $attendance->worker_id,
                     'attendance_id' => $attendanceId,
@@ -372,7 +377,7 @@ class AttendanceService
                     'actual_checkout' => $checkOutTime->format('H:i'),
                     'early_minutes' => $earlyLeaveMinutes
                 ]);
-                
+
                 // Optional: Bisa ditambahkan notifikasi atau approval untuk early leave
                 $earlyLeaveWarning = "Perhatian: Anda pulang lebih awal {$earlyLeaveText} dari jadwal ({$shiftEndDateTime->format('H:i')}). Pastikan Anda sudah mendapat izin dari atasan.";
             } else {

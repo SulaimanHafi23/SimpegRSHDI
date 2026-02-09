@@ -225,10 +225,10 @@ class AttendanceController extends Controller
         ]);
 
         try {
-            // Server-side check for accuracy
+            // Server-side check for accuracy (only enforce for present)
             $maxAcc = config('attendance.max_accuracy', 300);
             $accuracy = $validated['accuracy'] ?? ($request->input('accuracy') ?? null);
-            if ($accuracy !== null && is_numeric($accuracy) && $accuracy > $maxAcc) {
+            if ($validated['status'] === 'present' && $accuracy !== null && is_numeric($accuracy) && $accuracy > $maxAcc) {
                 return back()->withInput()->with('error', "Lokasi tidak cukup akurat (±{$accuracy} m). Silakan gunakan ponsel atau pilih lokasi manual.");
             }
 
