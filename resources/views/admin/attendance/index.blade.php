@@ -22,7 +22,7 @@
                     Export Data
                     <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
-
+phpinfo() di browser
                 <div x-show="open" @click.away="open = false" x-transition class="absolute right-0 z-10 mt-2 w-56 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                     <div class="py-1">
                         <a href="{{ route('admin.attendance.export', array_merge(request()->all(), ['format' => 'pdf'])) }}" class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
@@ -896,6 +896,15 @@
         const historyView = document.getElementById('history-view');
         const tabInput = document.getElementById('tab-input');
         const historyTabInput = document.getElementById('history-tab-input');
+        const attendanceDateInput = document.getElementById('attendance_date');
+
+        if (attendanceDateInput) {
+            const localToday = new Date();
+            const yyyy = localToday.getFullYear();
+            const mm = String(localToday.getMonth() + 1).padStart(2, '0');
+            const dd = String(localToday.getDate()).padStart(2, '0');
+            attendanceDateInput.max = `${yyyy}-${mm}-${dd}`;
+        }
 
         // Function to update URL parameter without refresh
         function updateUrlParameter(key, value) {
