@@ -355,7 +355,7 @@ function getLocation(useFallback = false) {
                     const lng = parseFloat(selectedOption.dataset.lng);
                     const radius = parseFloat(selectedOption.dataset.radius);
 
-                    if (lat && lng && radius) {
+                    if (Number.isFinite(lat) && Number.isFinite(lng) && Number.isFinite(radius)) {
                         const distance = computeDistance(parseFloat(latitude), parseFloat(longitude), lat, lng);
                         const info = document.createElement('div');
                         info.className = 'text-xs mt-1';
@@ -524,11 +524,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const lng = parseFloat(selectedOption.dataset.lng);
                 const radius = parseFloat(selectedOption.dataset.radius);
 
-                if (lat && lng && radius) {
+                if (Number.isFinite(lat) && Number.isFinite(lng) && Number.isFinite(radius)) {
                     // Show office location on map
                     updateOfficeCircle(lat, lng, radius);
                     // Center map to office location
                     map.setView([lat, lng], 15);
+                } else if (officeCircle) {
+                    map.removeLayer(officeCircle);
                 }
             }
         });
