@@ -13,11 +13,14 @@ use App\Services\Master\LocationService;
 use App\Services\Master\ReligionService;
 use App\Services\Master\DepartmentService;
 use App\Services\Role\RoleService;
+use App\Models\Department;
+use App\Models\Worker;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WorkersExport;
 use App\Exports\WorkersTemplateExport;
 use App\Imports\WorkersImport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class WorkerController extends Controller
 {
@@ -314,12 +317,57 @@ class WorkerController extends Controller
             $filters = [
                 'status' => $request->input('status'),
                 'employment_status' => $request->input('employment_status'),
-                'department_id' => $request->input('department_id'),
+                'department_id' => $request->input('department_id') ?? $this->getManagerDepartmentFilter(),
+                'search' => $request->input('search'),
             ];
 
-            $filename = 'data-pegawai-' . now()->format('Y-m-d-His') . '.xlsx';
+            $format = $request->input('format', 'excel');
+            $filename = 'data-pegawai-' . now()->format('Y-m-d-His');
 
-            return Excel::download(new WorkersExport($filters), $filename);
+            if ($format === 'pdf') {
+                $query = Worker::with(['department', 'gender', 'religion']);
+
+                if (!empty($filters['status'])) {
+                    $query->where('status', $filters['status']);
+                }
+
+                if (!empty($filters['employment_status'])) {
+                    $query->where('employment_status', $filters['employment_status']);
+                }
+
+                if (!empty($filters['department_id'])) {
+                    $query->where('department_id', $filters['department_id']);
+                }
+
+                if (!empty($filters['search'])) {
+                    $searchTerm = strtolower($filters['search']);
+                    $query->where(function ($q) use ($searchTerm) {
+                        $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                            ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $searchTerm . '%'])
+                            ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $searchTerm . '%']);
+                    });
+                }
+
+                $workers = $query->orderBy('name')->get();
+                $departmentName = null;
+                if (!empty($filters['department_id'])) {
+                    $departmentName = Department::find($filters['department_id'])->name ?? null;
+                }
+
+                $pdf = Pdf::loadView('exports.workers-pdf', [
+                    'workers' => $workers,
+                    'filters' => $filters,
+                    'departmentName' => $departmentName,
+                ]);
+                $pdf->setPaper('a4', 'landscape');
+                return $pdf->download($filename . '.pdf');
+            }
+
+            if ($format === 'csv') {
+                return Excel::download(new WorkersExport($filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
+            }
+
+            return Excel::download(new WorkersExport($filters), $filename . '.xlsx');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
