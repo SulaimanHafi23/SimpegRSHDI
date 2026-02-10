@@ -5,7 +5,7 @@
     <title>{{ $title ?? 'Laporan' }}</title>
     <style>
         @page {
-            margin: 20px 30px 30px 30px;
+            margin: 0;
         }
         * {
             margin: 0;
@@ -16,6 +16,9 @@
             font-family: Arial, sans-serif;
             font-size: 11px;
             line-height: 1.4;
+        }
+        .page {
+            padding: 30px 35px 35px 35px;
         }
         .header {
             text-align: center;
@@ -108,11 +111,12 @@
             background-color: #f9fafb;
         }
         .info-box {
-            background-color: #f3f4f6;
-            border: 1px solid #e5e7eb;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 15px;
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+            border: 1px solid #a7f3d0;
+            border-left: 4px solid #047857;
+            border-radius: 6px;
+            padding: 15px 18px;
+            margin-bottom: 18px;
         }
         .info-box p {
             margin-bottom: 5px;
@@ -159,9 +163,11 @@
             padding-top: 15px;
         }
         .summary-box {
-            margin-top: 20px;
-            padding: 10px 15px;
-            border-radius: 5px;
+            margin-top: 10px;
+            margin-bottom: 18px;
+            padding: 12px 18px;
+            border-radius: 6px;
+            border-left: 4px solid #047857;
         }
         .summary-box p {
             margin: 5px 0;
@@ -173,35 +179,37 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <table class="header-table">
-            <tr>
-                <td class="logo-cell">
-                    @if(file_exists(public_path('images/logo-rs.png')))
-                        <img src="{{ public_path('images/logo-rs.png') }}" alt="Logo" class="logo">
-                    @endif
-                </td>
-                <td class="header-text-cell">
-                    <p class="header-gov">PEMERINTAH KABUPATEN TANAH LAUT</p>
-                    <p class="header-dept">DINAS KESEHATAN</p>
-                    <h2 class="header-hospital">UPTD RSUD HAJI DARLAN ISMAIL</h2>
-                    <p class="header-address">Jl. Swadaya RT.003 Desa Bumi Harapan Kecamatan Bumi Makmur</p>
-                    <p class="header-address">Kabupaten Tanah Laut Kode Pos 70853</p>
-                    <p class="header-address">Email: Rsudhajidarlanismail@gmail.com</p>
-                </td>
-                <td style="width: 80px;"></td>
-            </tr>
-        </table>
-        <div class="header-line"></div>
-    </div>
+    <div class="page">
+        <div class="header">
+            <table class="header-table">
+                <tr>
+                    <td class="logo-cell">
+                        @if(file_exists(public_path('images/logo-rs.png')))
+                            <img src="{{ public_path('images/logo-rs.png') }}" alt="Logo" class="logo">
+                        @endif
+                    </td>
+                    <td class="header-text-cell">
+                        <p class="header-gov">PEMERINTAH KABUPATEN TANAH LAUT</p>
+                        <p class="header-dept">DINAS KESEHATAN</p>
+                        <h2 class="header-hospital">UPTD RSUD HAJI DARLAN ISMAIL</h2>
+                        <p class="header-address">Jl. Swadaya RT.003 Desa Bumi Harapan Kecamatan Bumi Makmur</p>
+                        <p class="header-address">Kabupaten Tanah Laut Kode Pos 70853</p>
+                        <p class="header-address">Email: Rsudhajidarlanismail@gmail.com</p>
+                    </td>
+                    <td style="width: 80px;"></td>
+                </tr>
+            </table>
+            <div class="header-line"></div>
+        </div>
 
-    <main>
-        @yield('content')
-    </main>
+        <main>
+            @yield('content')
+        </main>
 
-    <div class="footer">
-        <p>Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} WITA</p>
-        <p>UPTD RSUD Haji Darlan Ismail - Sistem Informasi Manajemen Kepegawaian</p>
+        <div class="footer">
+            <p>Dicetak pada: {{ now()->translatedFormat('d F Y H:i') }} WITA</p>
+            <p>UPTD RSUD Haji Darlan Ismail - Sistem Informasi Manajemen Kepegawaian</p>
+        </div>
     </div>
 </body>
 </html>

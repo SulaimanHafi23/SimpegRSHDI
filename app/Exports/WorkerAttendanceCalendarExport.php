@@ -44,26 +44,41 @@ class WorkerAttendanceCalendarExport implements FromCollection, WithHeadings, Wi
 
     public function headings(): array
     {
+        $period = $this->startDate->translatedFormat('d M Y') . ' - ' . $this->endDate->translatedFormat('d M Y');
         return [
-            'No',
-            'Tanggal',
-            'Hari',
-            'Shift',
-            'Jadwal Shift',
-            'Check In',
-            'Check Out',
-            'Status',
-            'Terlambat',
-            'Catatan',
+            $this->padRow(['PEGAWAI', $this->worker->name ?? '-']),
+            $this->padRow(['NIP', $this->worker->nip ?? '-']),
+            $this->padRow(['DEPARTEMEN', $this->worker->department->name ?? '-']),
+            $this->padRow(['PERIODE', $period]),
+            $this->padRow(['']),
+            [
+                'No',
+                'Tanggal',
+                'Hari',
+                'Shift',
+                'Jadwal Shift',
+                'Check In',
+                'Check Out',
+                'Status',
+                'Terlambat',
+                'Catatan',
+            ],
         ];
     }
 
     public function styles(Worksheet $sheet): array
     {
         return [
-            1 => [
-                'font' => ['bold' => true],
-            ],
+            1 => ['font' => ['bold' => true]],
+            2 => ['font' => ['bold' => true]],
+            3 => ['font' => ['bold' => true]],
+            4 => ['font' => ['bold' => true]],
+            6 => ['font' => ['bold' => true]],
         ];
+    }
+
+    private function padRow(array $row): array
+    {
+        return array_pad($row, 10, '');
     }
 }

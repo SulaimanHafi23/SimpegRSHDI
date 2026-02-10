@@ -679,6 +679,16 @@ class AttendanceController extends Controller
         $worker->load(['activeWorkerShift.shift', 'workerShifts.shift', 'department']);
 
         $rows = $this->buildWorkerAttendanceCalendarRows($worker, $startDate, $endDate);
+        $rowsCollection = collect($rows);
+        $summary = [
+            'total_days' => $rowsCollection->count(),
+            'present' => $rowsCollection->whereIn('status', ['Hadir', 'Terlambat'])->count(),
+            'late' => $rowsCollection->where('status', 'Terlambat')->count(),
+            'absent' => $rowsCollection->where('status', 'Tidak Hadir')->count(),
+            'leave' => $rowsCollection->where('status', 'Cuti')->count(),
+            'sick' => $rowsCollection->where('status', 'Sakit')->count(),
+            'permission' => $rowsCollection->where('status', 'Izin')->count(),
+        ];
         $filename = 'riwayat-absensi-' . str_replace(' ', '-', strtolower($worker->name)) . '-' . $startDate->format('Y-m') . '-' . now()->format('His');
 
         switch ($format) {
@@ -694,8 +704,9 @@ class AttendanceController extends Controller
                     'rows' => $rows,
                     'startDate' => $startDate,
                     'endDate' => $endDate,
+                    'summary' => $summary,
                 ]);
-                $pdf->setPaper('a4', 'landscape');
+                $pdf->setPaper('a4', 'portrait');
                 return $pdf->download($filename . '.pdf');
         }
     }
