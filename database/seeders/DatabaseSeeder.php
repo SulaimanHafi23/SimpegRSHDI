@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             LocationSeeder::class,
             ShiftSeeder::class,
+            ShiftDayTimeSeeder::class,
             DocumentTypeSeeder::class,
             DepartmentDocumentTypeSeeder::class, // Maps documents to departments
             LeaveTypeSeeder::class,

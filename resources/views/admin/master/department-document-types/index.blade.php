@@ -26,6 +26,36 @@
     @endif
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @if(isset($universalDocumentTypes) && $universalDocumentTypes->isNotEmpty())
+            <div class="bg-white rounded-lg shadow p-4 sm:p-6 border-2 border-green-300">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="font-semibold flex items-center gap-3">
+                            <span>Universal (Semua Departemen)</span>
+                            <span class="inline-block px-2 py-0.5 text-xs bg-green-50 text-green-700 rounded">{{ $universalDocumentTypes->count() }} tipe</span>
+                        </h2>
+                        <p class="text-sm text-gray-600">Dokumen yang dapat diunggah oleh semua pegawai.</p>
+                    </div>
+                    <div class="space-x-2">
+                        <a href="{{ route('admin.master.department-document-types.create', ['department_id' => 'universal']) }}" class="px-3 py-1 bg-green-600 text-white rounded">Tambah</a>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h3 class="text-sm font-medium text-gray-700 mb-2">Tipe Dokumen Universal:</h3>
+                    <ul class="text-sm text-gray-700 divide-y">
+                        @foreach($universalDocumentTypes as $dt)
+                            <li class="py-2">
+                                <div class="font-medium">{{ $dt->name }}</div>
+                                @if($dt->description)
+                                    <div class="text-xs text-gray-500">{{ $dt->description }}</div>
+                                @endif
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
         @forelse($departments as $department)
             <div class="bg-white rounded-lg shadow p-4 sm:p-6 hover:shadow-lg transition-shadow">
                 <div class="flex items-start justify-between gap-4">

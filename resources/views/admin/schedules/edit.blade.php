@@ -85,64 +85,6 @@
                 @enderror
             </div>
 
-            <!-- Pattern Type -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Pola</label>
-                <div class="flex items-center space-x-4">
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="pattern_type" value="fixed" class="pattern-type" {{ old('pattern_type', $workerShift->pattern_type) == 'fixed' ? 'checked' : '' }}>
-                        <span class="ml-2">Fixed (selalu pakai shift ini)</span>
-                    </label>
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="pattern_type" value="rotating" class="pattern-type" {{ old('pattern_type', $workerShift->pattern_type) == 'rotating' ? 'checked' : '' }}>
-                        <span class="ml-2">Rotating (atur per hari: Sen–Ming)</span>
-                    </label>
-                    <label class="inline-flex items-center">
-                        <input type="radio" name="pattern_type" value="custom" class="pattern-type" {{ old('pattern_type', $workerShift->pattern_type) == 'custom' ? 'checked' : '' }}>
-                        <span class="ml-2">Custom (pilih hari kerja)</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Rotating mapping -->
-            <div id="rotating-section" class="mb-6" style="display: none;">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Rotating Days (mapping hari → shift)</label>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    @php $dayNames = ['1'=>'Senin','2'=>'Selasa','3'=>'Rabu','4'=>'Kamis','5'=>'Jumat','6'=>'Sabtu','7'=>'Minggu']; @endphp
-                    @foreach($dayNames as $num => $label)
-                        <div>
-                            <label class="block text-xs text-gray-600 mb-1">{{ $label }}</label>
-                            <select name="rotating_days[{{ $num }}]" class="w-full px-2 py-2 border border-gray-300 rounded">
-                                <option value="">-- Tidak ada --</option>
-                                @foreach($shifts as $shiftOption)
-                                    @php
-                                        $current = old('rotating_days.'.$num) ?? ($workerShift->rotating_days[$num] ?? null);
-                                    @endphp
-                                    <option value="{{ $shiftOption->id }}" {{ ($current == $shiftOption->id) ? 'selected' : '' }}>
-                                        {{ $shiftOption->name }} ({{ $shiftOption->start_time }} - {{ $shiftOption->end_time }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-
-            <!-- Custom working days -->
-            <div id="custom-section" class="mb-6" style="display: none;">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Hari Kerja (Custom)</label>
-                <div class="flex flex-wrap gap-3">
-                    @php $dayNames = [1=>'Senin',2=>'Selasa',3=>'Rabu',4=>'Kamis',5=>'Jumat',6=>'Sabtu',7=>'Minggu']; @endphp
-                    @foreach($dayNames as $num => $label)
-                        @php $checked = in_array($num, old('custom_working_days', $workerShift->custom_working_days ?? [])) ? true : false; @endphp
-                        <label class="inline-flex items-center">
-                            <input type="checkbox" name="custom_working_days[]" value="{{ $num }}" {{ $checked ? 'checked' : '' }}>
-                            <span class="ml-2">{{ $label }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                <p class="text-gray-500 text-xs mt-2">Kosongkan Minggu (7) jika tidak masuk kerja hari Minggu.</p>
-            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Tanggal Mulai -->
@@ -224,21 +166,6 @@ document.addEventListener('DOMContentLoaded', function() {
         endDateInput.setAttribute('min', startDateInput.value);
     }
 
-    // Show/hide rotating/custom sections based on pattern type
-    function togglePatternSections() {
-        const selected = document.querySelector('input[name="pattern_type"]:checked')?.value || '{{ $workerShift->pattern_type }}';
-        const rot = document.getElementById('rotating-section');
-        const cust = document.getElementById('custom-section');
-        if (rot) rot.style.display = (selected === 'rotating') ? 'block' : 'none';
-        if (cust) cust.style.display = (selected === 'custom') ? 'block' : 'none';
-    }
-
-    document.querySelectorAll('.pattern-type').forEach(function(el){
-        el.addEventListener('change', togglePatternSections);
-    });
-
-    // Initialize visibility
-    togglePatternSections();
 });
 </script>
 @endsection

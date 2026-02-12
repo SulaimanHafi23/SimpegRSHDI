@@ -444,8 +444,12 @@ phpinfo() di browser
                                 }
                             @endphp
                             @if($shift)
+                                @php
+                                    $selectedDate = \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')));
+                                    $schedule = $shift->getScheduleForDate($selectedDate);
+                                @endphp
                                 <div class="text-sm text-gray-900 font-medium">{{ $shift->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $shift->start_time }} - {{ $shift->end_time }}</div>
+                                <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
                                 @if($todayShift)
                                     <div class="text-xs text-blue-600">
                                         <i class="fas fa-exchange-alt mr-1"></i>Shift Override
@@ -498,12 +502,12 @@ phpinfo() di browser
                                     </div>
                                 @endif
                                 @if($shift)
-                                    <div class="text-xs text-gray-400">Target: {{ $shift->start_time }}</div>
+                                    <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }}</div>
                                 @endif
                             @else
                                 <div class="text-sm text-gray-400">Belum check-in</div>
                                 @if($shift)
-                                    <div class="text-xs text-gray-500">Target: {{ $shift->start_time }}</div>
+                                    <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }}</div>
                                 @endif
                             @endif
                         </td>
@@ -525,19 +529,19 @@ phpinfo() di browser
                                     </div>
                                 @endif
                                 @if($shift)
-                                    <div class="text-xs text-gray-400">Target: {{ $shift->end_time }}</div>
+                                    <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
                                 @endif
                             @elseif($worker->check_in_time)
                                 <div class="text-sm text-yellow-600">
                                     <i class="fas fa-clock mr-1"></i>Belum check-out
                                 </div>
                                 @if($shift)
-                                    <div class="text-xs text-gray-500">Target: {{ $shift->end_time }}</div>
+                                    <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
                                 @endif
                             @else
                                 <div class="text-sm text-gray-400">-</div>
                                 @if($shift)
-                                    <div class="text-xs text-gray-500">Target: {{ $shift->end_time }}</div>
+                                    <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
                                 @endif
                             @endif
                         </td>

@@ -32,10 +32,13 @@ class WorkerDocumentController extends Controller
         $workersWithDocStats = $workers->map(function($worker) use ($filters) {
             // Get required document types for this worker's department
             // Required = document types that are linked to the department in department_document_type pivot table
-            $totalRequired = \App\Models\DocumentType::whereHas('departments', function($q) use ($worker) {
-                    $q->where('departments.id', $worker->department_id);
+            $totalRequired = \App\Models\DocumentType::where('is_active', true)
+                ->where(function ($query) use ($worker) {
+                    $query->where('is_universal', true)
+                        ->orWhereHas('departments', function ($inner) use ($worker) {
+                            $inner->where('departments.id', $worker->department_id);
+                        });
                 })
-                ->where('is_active', true)
                 ->count();
             
             // Get uploaded documents count
@@ -152,7 +155,7 @@ class WorkerDocumentController extends Controller
                     $documentType->load('departments');
                 }
 
-                if ($documentType->departments->isNotEmpty()) {
+                if ($documentType->departments->isNotEmpty() && ! $documentType->is_universal) {
                     // Document type is mapped to departments but no matching mapping found for this worker
                     return back()->withInput()->withErrors(['document_type_id' => 'Tipe dokumen ini tidak diperbolehkan untuk departemen pegawai tersebut']);
                 }
@@ -197,6 +200,10 @@ class WorkerDocumentController extends Controller
             // load departments relationship if not loaded
             if ($dt->relationLoaded('departments') === false) {
                 $dt->load('departments');
+            }
+
+            if ($dt->is_universal) {
+                return true;
             }
 
             // If the document type has no departments assigned, treat it as global/allowed
@@ -270,10 +277,14 @@ class WorkerDocumentController extends Controller
         
         // Get required document types for this worker's department
         // Required = document types that are linked to the department in department_document_type pivot table
-        $allRequiredDocTypes = \App\Models\DocumentType::whereHas('departments', function($q) use ($worker) {
-                $q->where('departments.id', $worker->department_id);
+        $allRequiredDocTypes = \App\Models\DocumentType::where('is_active', true)
+            ->where(function ($query) use ($worker) {
+                $query->where('is_universal', true)
+                    ->orWhereHas('departments', function ($inner) use ($worker) {
+                        $inner->where('departments.id', $worker->department_id);
+                    });
             })
-            ->where('is_active', true)
+            ->orderBy('name')
             ->get();
         
         // Calculate statistics

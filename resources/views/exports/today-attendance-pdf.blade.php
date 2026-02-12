@@ -269,7 +269,11 @@
             @foreach($workers as $index => $worker)
             @php
                 $shift = $worker->shift ?? $worker->workerShifts->first()?->shift;
-                $shiftInfo = $shift ? $shift->name . ' (' . \Carbon\Carbon::parse($shift->start_time)->format('H:i') . '-' . \Carbon\Carbon::parse($shift->end_time)->format('H:i') . ')' : '-';
+                $shiftInfo = '-';
+                if ($shift) {
+                    $schedule = $shift->getScheduleForDate($dateRaw ?? now());
+                    $shiftInfo = $shift->name . ' (' . \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') . '-' . \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') . ')';
+                }
                 
                 // Jika ada leave request, gunakan info dari leave request
                 $checkInDisplay = '-';

@@ -3,20 +3,29 @@
 @section('title', 'Manajemen Jadwal Pegawai')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="container mx-auto px-4 py-6" x-data="{ activeTab: '{{ request('tab', 'list') }}' }">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Manajemen Jadwal Pegawai</h1>
             <p class="text-gray-600 mt-1">Kelola jadwal shift pegawai</p>
         </div>
-        <a href="{{ route('admin.worker-shifts.create') }}" 
-           class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Tambah Jadwal
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('admin.worker-shifts.generate') }}"
+               class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0114-7M19 5a9 9 0 00-14 7"/>
+                </svg>
+                Generate Rotasi
+            </a>
+            <a href="{{ route('admin.worker-shifts.create') }}"
+               class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Tambah Jadwal
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
@@ -31,6 +40,28 @@
         </div>
     @endif
 
+    <!-- Tabs -->
+    <div class="mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button @click="activeTab = 'list'; window.history.pushState({}, '', '?tab=list')"
+                        :class="activeTab === 'list' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    <i class="fas fa-list mr-2"></i>
+                    Daftar Jadwal
+                </button>
+                <button @click="activeTab = 'calendar'; window.history.pushState({}, '', '?tab=calendar')"
+                        :class="activeTab === 'calendar' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                    <i class="fas fa-calendar-alt mr-2"></i>
+                    Kalender Shift
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Tab Content: List View -->
+    <div x-show="activeTab === 'list'" x-cloak>
     <!-- Filter Section -->
     <div x-data="{ showFilters: false }" class="mb-6">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -175,16 +206,8 @@
                         </td>
                         <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                             @if($worker->latestShift)
-                                @php
-                                    $patternConfig = [
-                                        'fixed' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Tetap'],
-                                        'rotating' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'label' => 'Rotasi'],
-                                        'flexible' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'label' => 'Fleksibel'],
-                                    ];
-                                    $config = $patternConfig[$worker->latestShift->pattern_type] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => $worker->latestShift->pattern_type];
-                                @endphp
-                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $config['bg'] }} {{ $config['text'] }}">
-                                    {{ $config['label'] }}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Tetap
                                 </span>
                             @else
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-400 italic">
@@ -302,5 +325,12 @@
             </div>
         </div>
     </div>
+    </div>{{-- End Tab List --}}
+
+    <!-- Tab Content: Calendar View -->
+    <div x-show="activeTab === 'calendar'" x-cloak>
+        @include('admin.schedules.partials.calendar')
+    </div>
+
 </div>
 @endsection

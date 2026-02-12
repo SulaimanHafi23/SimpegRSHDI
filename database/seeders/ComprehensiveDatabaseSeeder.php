@@ -33,6 +33,7 @@ class ComprehensiveDatabaseSeeder extends Seeder
             DepartmentSeeder::class,
             LocationSeeder::class,
             ShiftSeeder::class,
+            ShiftDayTimeSeeder::class,
             LeaveTypeSeeder::class,
             DocumentTypeSeeder::class,
             DepartmentDocumentTypeSeeder::class,

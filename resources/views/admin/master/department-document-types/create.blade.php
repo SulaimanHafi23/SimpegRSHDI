@@ -4,9 +4,14 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl sm:text-2xl font-bold">Tambah Relasi Departemen - Tipe Dokumen</h1>
-        <a href="{{ route('admin.master.department-document-types.index') }}" class="px-4 py-2 bg-gray-200 rounded">Kembali</a>
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold">Tambah Relasi Departemen - Tipe Dokumen</h1>
+            <p class="text-sm text-gray-600">Pilih departemen dan tipe dokumen yang ingin ditetapkan.</p>
+        </div>
+        <a href="{{ route('admin.master.department-document-types.index') }}" class="inline-flex items-center justify-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg">
+            <i class="fas fa-arrow-left mr-2"></i>Kembali
+        </a>
     </div>
 
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">
@@ -14,31 +19,42 @@
             <div class="mb-4 text-red-600">{{ session('error') }}</div>
         @endif
 
-        <form action="{{ route('admin.master.department-document-types.store') }}" method="POST" class="space-y-4">
+        @php
+            $selectedDepartment = old('department_id', request('department_id'));
+        @endphp
+
+        <form action="{{ route('admin.master.department-document-types.store') }}" method="POST" class="space-y-6">
             @csrf
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Departemen <span class="text-red-500">*</span></label>
                 <select name="department_id" class="w-full mt-1 rounded border px-3 py-2">
                     <option value="">Pilih departemen</option>
+                    <option value="universal" {{ $selectedDepartment == 'universal' ? 'selected' : '' }}>Universal (Semua Departemen)</option>
                     @foreach($departments as $d)
-                        <option value="{{ $d->id }}" {{ old('department_id') == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
+                        <option value="{{ $d->id }}" {{ $selectedDepartment == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
                     @endforeach
                 </select>
                 @error('department_id') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                <p class="text-xs text-gray-500 mt-1">Pilih "Universal" agar dokumen bisa diunggah oleh semua pegawai.</p>
             </div>
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Tipe Dokumen <span class="text-red-500">*</span></label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto border rounded p-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[420px] overflow-y-auto border rounded-lg p-3">
                     @foreach($documentTypes as $dt)
                         @php
                             $checked = in_array($dt->id, old('document_type_ids', []));
                         @endphp
-                        <label class="flex items-start space-x-2">
-                            <input type="checkbox" name="document_type_ids[]" value="{{ $dt->id }}" data-description="{{ htmlentities($dt->description ?? '') }}" {{ $checked ? 'checked' : '' }} class="mt-1">
+                        <label class="flex items-start space-x-2 rounded-lg border border-gray-200 p-2 hover:bg-gray-50">
+                            <input type="checkbox" name="document_type_ids[]" value="{{ $dt->id }}" data-description="{{ htmlentities($dt->description ?? '') }}" {{ $checked ? 'checked' : '' }} {{ $dt->is_universal ? 'disabled' : '' }} class="mt-1">
                             <div>
-                                <div class="font-medium">{{ $dt->name }}</div>
+                                <div class="font-medium">
+                                    {{ $dt->name }}
+                                    @if($dt->is_universal)
+                                        <span class="ml-2 inline-block px-2 py-0.5 text-xs bg-green-50 text-green-700 rounded">Universal</span>
+                                    @endif
+                                </div>
                                 <div class="text-xs text-gray-500">{{ \Illuminate\Support\Str::limit($dt->description ?? '-', 80) }}</div>
                             </div>
                         </label>
@@ -49,6 +65,7 @@
                 <div id="document-description" class="mt-2 text-sm text-gray-600">
                     <em>Pilih satu atau beberapa tipe dokumen; deskripsi akan muncul di sini jika dipilih.</em>
                 </div>
+                <p class="text-xs text-gray-500 mt-2">Tipe dokumen berlabel "Universal" sudah berlaku untuk semua departemen dan tidak perlu dipilih lagi.</p>
             </div>
 
             <div class="flex space-x-2">

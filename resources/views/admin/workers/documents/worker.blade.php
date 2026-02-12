@@ -131,7 +131,7 @@
         <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                 <i class="fas fa-clipboard-check text-indigo-600 mr-2"></i>
-                Daftar Dokumen Wajib
+                Daftar Dokumen
             </h3>
         </div>
         <div class="divide-y divide-gray-200">
@@ -221,99 +221,5 @@
             @endforelse
         </div>
     </div>
-
-    <!-- All Documents History -->
-    @if($documents->isNotEmpty())
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-history text-indigo-600 mr-2"></i>
-                    Riwayat Semua Dokumen
-                </h3>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipe Dokumen</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">File</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal Upload</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expired</th>
-                            <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($documents->sortByDesc('created_at') as $doc)
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $doc->documentType->name ?? '-' }}</div>
-                                    @if($doc->status === 'verified' && $doc->verified_at)
-                                        <div class="text-xs text-green-600 mt-1">
-                                            <i class="fas fa-check-circle mr-1"></i>
-                                            Diverifikasi pada {{ \Carbon\Carbon::parse($doc->verified_at)->format('d M Y H:i') }}
-                                        </div>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm text-gray-900 max-w-xs truncate">{{ $doc->file_name ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $doc->created_at->format('d M Y') }}</div>
-                                    <div class="text-xs text-gray-500">{{ $doc->created_at->format('H:i') }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($doc->expired_date)
-                                        @php
-                                            $expiredDate = \Carbon\Carbon::parse($doc->expired_date);
-                                            $isExpired = $expiredDate->isPast();
-                                            $daysUntilExpiry = now()->diffInDays($expiredDate, false);
-                                        @endphp
-                                        <div class="text-sm {{ $isExpired ? 'text-red-600 font-semibold' : ($daysUntilExpiry <= 30 ? 'text-orange-600' : 'text-gray-900') }}">
-                                            {{ $expiredDate->format('d M Y') }}
-                                        </div>
-                                        @if($isExpired)
-                                            <span class="text-xs text-red-600">Kadaluarsa</span>
-                                        @elseif($daysUntilExpiry <= 30)
-                                            <span class="text-xs text-orange-600">{{ $daysUntilExpiry }} hari lagi</span>
-                                        @endif
-                                    @else
-                                        <span class="text-sm text-gray-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-center">
-                                    @if($doc->status === 'verified')
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            Terverifikasi
-                                        </span>
-                                    @elseif($doc->status === 'pending')
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                            Menunggu
-                                        </span>
-                                    @elseif($doc->status === 'rejected')
-                                        <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            Ditolak
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <div class="flex justify-end space-x-2">
-                                        <a href="{{ route('admin.worker-documents.show', $doc->id) }}" 
-                                           class="text-blue-600 hover:text-blue-900" title="Detail">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="{{ route('admin.worker-documents.download', $doc->id) }}" 
-                                           class="text-indigo-600 hover:text-indigo-900" title="Download">
-                                            <i class="fas fa-download"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    @endif
 </div>
 @endsection

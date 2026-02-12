@@ -36,8 +36,10 @@ class WorkerShiftService
     {
         DB::beginTransaction();
         try {
+            $skipDeactivate = (bool) ($data['skip_deactivate'] ?? false);
+
             // Deactivate old shifts if setting new active shift
-            if ($data['is_active'] ?? true) {
+            if (($data['is_active'] ?? true) && !$skipDeactivate) {
                 $this->workerShiftRepository->deactivateOldShifts($data['worker_id']);
             }
 
@@ -45,6 +47,8 @@ class WorkerShiftService
             $data = array_filter($data, function($value) {
                 return $value !== '' && $value !== null && $value !== [];
             });
+
+            unset($data['skip_deactivate']);
 
             $dto = WorkerShiftDTO::fromRequest($data);
             $workerShift = $this->workerShiftRepository->create($dto);
@@ -90,13 +94,16 @@ class WorkerShiftService
         return $this->workerShiftRepository->delete($id);
     }
 
+    public function deactivateOldShifts(string $workerId): void
+    {
+        $this->workerShiftRepository->deactivateOldShifts($workerId);
+    }
+
     public function assignShiftToWorker(string $workerId, string $shiftId, array $options = [])
     {
         return $this->create([
             'worker_id' => $workerId,
             'shift_id' => $shiftId,
-            'pattern_type' => $options['pattern_type'] ?? 'fixed',
-            'rotating_days' => $options['rotating_days'] ?? null,
             'effective_from' => $options['effective_from'] ?? now()->format('Y-m-d'),
             'effective_until' => $options['effective_until'] ?? null,
             'is_active' => true,

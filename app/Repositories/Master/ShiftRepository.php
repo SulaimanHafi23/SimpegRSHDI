@@ -57,7 +57,7 @@ class ShiftRepository implements ShiftRepositoryInterface
 
     public function findById(string $id): ?object
     {
-        return $this->model->with(['workerShifts'])
+        return $this->model->with(['workerShifts', 'dayTimes'])
             ->withCount('workerShifts')
             ->find($id);
     }

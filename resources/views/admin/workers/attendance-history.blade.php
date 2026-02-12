@@ -156,68 +156,16 @@
                         <div class="bg-white rounded px-3 py-2">
                             <span class="text-xs text-gray-500 block mb-1">Tipe Pola</span>
                             <span class="font-semibold text-gray-900 capitalize">
-                                @if($worker->activeWorkerShift->pattern_type === 'fixed')
-                                    <i class="fas fa-lock text-blue-600 mr-1"></i>Tetap
-                                @elseif($worker->activeWorkerShift->pattern_type === 'rotating')
-                                    <i class="fas fa-sync-alt text-purple-600 mr-1"></i>Bergilir
-                                @elseif($worker->activeWorkerShift->pattern_type === 'custom')
-                                    <i class="fas fa-cog text-orange-600 mr-1"></i>Custom
-                                @else
-                                    {{ $worker->activeWorkerShift->pattern_type }}
-                                @endif
+                                <i class="fas fa-lock text-blue-600 mr-1"></i>Tetap
                             </span>
                         </div>
 
-                        @if($worker->activeWorkerShift->pattern_type === 'fixed')
-                            <div class="bg-white rounded px-3 py-2">
-                                <span class="text-xs text-gray-500 block mb-2">Hari Kerja</span>
-                                <div class="flex flex-wrap gap-1">
-                                    @php
-                                        $dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                                        // For fixed pattern, if custom_working_days is set, use it. Otherwise default to Mon-Fri (1-5)
-                                        $workingDays = $worker->activeWorkerShift->custom_working_days ?? [1, 2, 3, 4, 5];
-                                    @endphp
-                                    @foreach($workingDays as $dayIndex)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                            {{ $dayNames[$dayIndex] ?? $dayIndex }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                                <p class="text-xs text-gray-500 mt-2 italic">
-                                    <i class="fas fa-info-circle mr-1"></i>
-                                    Shift tetap {{ $worker->activeWorkerShift->shift->name }} setiap hari kerja
-                                </p>
-                            </div>
-                        @endif
-
-                        @if($worker->activeWorkerShift->pattern_type === 'rotating' && $worker->activeWorkerShift->rotating_days)
-                            <div class="bg-white rounded px-3 py-2">
-                                <span class="text-xs text-gray-500 block mb-2">Hari Kerja Bergilir</span>
-                                <div class="flex flex-wrap gap-1">
-                                    @foreach($worker->activeWorkerShift->rotating_days as $day)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                                            {{ $day }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
-                        @if($worker->activeWorkerShift->pattern_type === 'custom' && $worker->activeWorkerShift->custom_working_days)
-                            <div class="bg-white rounded px-3 py-2">
-                                <span class="text-xs text-gray-500 block mb-2">Hari Kerja Custom</span>
-                                <div class="flex flex-wrap gap-1">
-                                    @php
-                                        $dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-                                    @endphp
-                                    @foreach($worker->activeWorkerShift->custom_working_days as $dayIndex)
-                                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                                            {{ $dayNames[$dayIndex] ?? $dayIndex }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
+                        <div class="bg-white rounded px-3 py-2">
+                            <span class="text-xs text-gray-500 block mb-1">Keterangan</span>
+                            <span class="text-sm text-gray-700">
+                                Jadwal kerja mengikuti shift {{ $worker->activeWorkerShift->shift->name }}. Variasi jam per hari diatur di master shift.
+                            </span>
+                        </div>
 
                         @if($worker->activeWorkerShift->notes)
                             <div class="bg-yellow-50 border border-yellow-200 rounded px-3 py-2">

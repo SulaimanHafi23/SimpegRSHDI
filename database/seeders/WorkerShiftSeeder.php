@@ -35,12 +35,10 @@ class WorkerShiftSeeder extends Seeder
             WorkerShift::create([
                 'worker_id' => $worker->id,
                 'shift_id' => $shift->id,
-                'pattern_type' => 'fixed',
-                'rotating_days' => null,
                 'effective_from' => Carbon::now()->subMonths(1)->format('Y-m-d'),
                 'effective_until' => Carbon::now()->addMonths(3)->format('Y-m-d'),
                 'is_active' => true,
-                'notes' => "Shift tetap: {$shift->name}",
+                'notes' => "Shift: {$shift->name}",
             ]);
         }
 

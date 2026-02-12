@@ -901,7 +901,7 @@ class AttendanceController extends Controller
                 'day_name' => $date->translatedFormat('l'),
                 'shift_name' => $shift ? $shift->name : '-',
                 'shift_time' => $shift
-                    ? (\Carbon\Carbon::parse($shift->start_time)->format('H:i') . ' - ' . \Carbon\Carbon::parse($shift->end_time)->format('H:i'))
+                    ? (\Carbon\Carbon::parse($shift->getScheduleForDate($date)['start_time'])->format('H:i') . ' - ' . \Carbon\Carbon::parse($shift->getScheduleForDate($date)['end_time'])->format('H:i'))
                     : '-',
                 'check_in' => $checkIn,
                 'check_out' => $checkOut,

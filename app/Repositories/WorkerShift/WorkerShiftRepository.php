@@ -27,10 +27,6 @@ class WorkerShiftRepository implements WorkerShiftRepositoryInterface
             $query->where('is_active', $filters['is_active']);
         }
 
-        if (!empty($filters['pattern_type'])) {
-            $query->where('pattern_type', $filters['pattern_type']);
-        }
-
         return $query->latest()->paginate($filters['per_page'] ?? 15);
     }
 

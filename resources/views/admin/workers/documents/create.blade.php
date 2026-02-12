@@ -31,11 +31,9 @@
                 <label for="document_type_id" class="block text-sm font-medium text-gray-700">Tipe Dokumen <span class="text-red-500">*</span></label>
                 <select name="document_type_id" id="document_type_id" class="w-full mt-1 rounded border px-3 py-2">
                     <option value="">Pilih tipe dokumen</option>
-                    @foreach($documentTypes as $dt)
-                        <option value="{{ $dt->id }}" {{ old('document_type_id') == $dt->id ? 'selected' : '' }}>{{ $dt->name }}</option>
-                    @endforeach
                 </select>
                 @error('document_type_id') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                <p class="text-xs text-gray-500 mt-1">Tipe dokumen akan muncul sesuai departemen pegawai.</p>
             </div>
 
             <div>

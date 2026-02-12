@@ -30,7 +30,11 @@ class TodayAttendanceExport implements FromCollection, WithHeadings, WithStyles,
     {
         return $this->workers->map(function ($worker, $index) {
             $shift = $worker->shift ?? $worker->workerShifts->first()?->shift;
-            $shiftInfo = $shift ? $shift->name . ' (' . \Carbon\Carbon::parse($shift->start_time)->format('H:i') . '-' . \Carbon\Carbon::parse($shift->end_time)->format('H:i') . ')' : '-';
+            $shiftInfo = '-';
+            if ($shift) {
+                $schedule = $shift->getScheduleForDate($this->date);
+                $shiftInfo = $shift->name . ' (' . \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') . '-' . \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') . ')';
+            }
             
             // Jika ada leave request, tampilkan info cuti/sakit/izin
             if ($worker->leave_request) {
