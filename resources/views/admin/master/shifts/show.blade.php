@@ -50,7 +50,7 @@
                     </div>
                     
                     <div>
-                        <label class="text-sm text-gray-600">Jam Masuk</label>
+                        <label class="text-sm text-gray-600">Jam Masuk (Default)</label>
                         <p class="text-lg font-semibold text-green-600">
                             <i class="fas fa-clock mr-1"></i>
                             {{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}
@@ -58,7 +58,7 @@
                     </div>
                     
                     <div>
-                        <label class="text-sm text-gray-600">Jam Keluar</label>
+                        <label class="text-sm text-gray-600">Jam Keluar (Default)</label>
                         <p class="text-lg font-semibold text-red-600">
                             <i class="fas fa-clock mr-1"></i>
                             {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}
@@ -92,6 +92,35 @@
                             @endif
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Jadwal Kerja Per Hari</h2>
+                @php
+                    $days = [
+                        1 => 'Senin',
+                        2 => 'Selasa',
+                        3 => 'Rabu',
+                        4 => 'Kamis',
+                        5 => 'Jumat',
+                        6 => 'Sabtu',
+                        0 => 'Minggu',
+                    ];
+                    $dayTimesByKey = $shift->dayTimes?->keyBy('day_of_week') ?? collect();
+                @endphp
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @foreach($days as $dayKey => $dayLabel)
+                        @php
+                            $dayTime = $dayTimesByKey->get($dayKey);
+                            $start = $dayTime?->start_time ? \Carbon\Carbon::parse($dayTime->start_time)->format('H:i') : \Carbon\Carbon::parse($shift->start_time)->format('H:i');
+                            $end = $dayTime?->end_time ? \Carbon\Carbon::parse($dayTime->end_time)->format('H:i') : \Carbon\Carbon::parse($shift->end_time)->format('H:i');
+                        @endphp
+                        <div class="rounded-lg border border-gray-200 p-3">
+                            <div class="text-sm font-semibold text-gray-700">{{ $dayLabel }}</div>
+                            <div class="text-xs text-gray-500 mt-1">{{ $start }} - {{ $end }}</div>
+                        </div>
+                    @endforeach
                 </div>
             </div>
         </div>

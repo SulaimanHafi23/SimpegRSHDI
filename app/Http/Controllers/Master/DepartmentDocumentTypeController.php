@@ -22,7 +22,11 @@ class DepartmentDocumentTypeController extends Controller
     {
         // Show departments that have at least one mapping, display as cards
         $departments = Department::has('documentTypes')->with('documentTypes')->orderBy('name')->paginate(20);
-        return view('admin.master.department-document-types.index', compact('departments'));
+        $universalDocumentTypes = DocumentType::where('is_universal', true)
+            ->orderBy('name')
+            ->get();
+
+        return view('admin.master.department-document-types.index', compact('departments', 'universalDocumentTypes'));
     }
 
     public function create()
@@ -36,13 +40,30 @@ class DepartmentDocumentTypeController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'department_id' => 'required|uuid|exists:departments,id',
+            'department_id' => 'required',
             'document_type_ids' => 'required|array|min:1',
             'document_type_ids.*' => 'required|uuid|exists:document_types,id',
         ]);
 
         $departmentId = $data['department_id'];
         $selected = $data['document_type_ids'];
+
+        if ($departmentId === 'universal') {
+            foreach ($selected as $docTypeId) {
+                DocumentType::whereKey($docTypeId)->update(['is_universal' => true]);
+                DepartmentDocumentType::where('document_type_id', $docTypeId)->delete();
+            }
+
+            return redirect()
+                ->route('admin.master.department-document-types.index')
+                ->with('success', 'Relasi universal berhasil ditambahkan');
+        }
+
+        if (! Department::whereKey($departmentId)->exists()) {
+            return back()
+                ->withInput()
+                ->withErrors(['department_id' => 'Departemen tidak valid']);
+        }
 
         foreach ($selected as $docTypeId) {
             DepartmentDocumentType::firstOrCreate([

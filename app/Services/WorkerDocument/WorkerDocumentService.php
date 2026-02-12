@@ -119,7 +119,7 @@ class WorkerDocumentService
             $document = $this->workerDocumentRepository->getById($id);
             $user = \App\Models\User::where('worker_id', $document->worker_id)->first();
             if ($user) {
-                $this->notificationService->notifyDocumentApproved(
+                $this->notificationService->notifyDocumentVerified(
                     $user->id,
                     [
                         'id' => $document->id,

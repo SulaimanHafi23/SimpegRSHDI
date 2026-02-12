@@ -100,17 +100,22 @@ class AttendanceService
             }
 
             $shift = $this->shiftRepository->findById($workerShift->shift_id);
+            if (! $shift) {
+                throw new \Exception('Jadwal shift tidak ditemukan.');
+            }
+
+            $schedule = $shift->getScheduleForDate($today);
 
             // ========== VALIDATE CHECK-IN TIME WINDOW ==========
             $checkInTime = now();
-            $shiftStartTimeStr = \Carbon\Carbon::parse($shift->start_time)->format('H:i:s');
+            $shiftStartTimeStr = $schedule['start_time'];
             $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
 
             // Special handling for overnight shifts
             // If shift is overnight (e.g., 22:00-06:00) and current time is in the morning,
             // the shift actually starts tonight, not this morning
-            if ($shift->is_overnight) {
-                $shiftStartHour = (int) \Carbon\Carbon::parse($shift->start_time)->format('H');
+            if ($schedule['is_overnight']) {
+                $shiftStartHour = (int) \Carbon\Carbon::parse($shiftStartTimeStr)->format('H');
                 $currentHour = $checkInTime->hour;
 
                 // If current time is before noon and shift starts after noon (evening shift),
@@ -165,7 +170,7 @@ class AttendanceService
                             'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
                             'earliest_allowed' => $veryEarlyCheckInTime->format('Y-m-d H:i:s'),
                             'hours_too_early' => $hoursDiff,
-                            'is_overnight_shift' => $shift->is_overnight,
+                            'is_overnight_shift' => $schedule['is_overnight'],
                         ]);
                     }
                 } elseif ($checkInTime->lessThan($earliestCheckInTime)) {
@@ -175,7 +180,7 @@ class AttendanceService
                         'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
                         'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
                         'earliest_allowed' => $earliestCheckInTime->format('Y-m-d H:i:s'),
-                        'is_overnight_shift' => $shift->is_overnight,
+                        'is_overnight_shift' => $schedule['is_overnight'],
                     ]);
                 }
             }
@@ -287,12 +292,14 @@ class AttendanceService
                 throw new \Exception('Jadwal shift tidak ditemukan.');
             }
 
+            $schedule = $shift->getScheduleForDate($attendance->attendance_date);
+
             // Calculate shift end time based on attendance date
-            $shiftEndTime = \Carbon\Carbon::parse($shift->end_time)->format('H:i:s');
+            $shiftEndTime = $schedule['end_time'];
             $shiftEndDateTime = \Carbon\Carbon::parse($attendance->attendance_date->format('Y-m-d') . ' ' . $shiftEndTime);
 
             // Jika shift melewati tengah malam (overnight), tambahkan satu hari ke tanggal akhir shift
-            if ($shift->is_overnight) {
+            if ($schedule['is_overnight']) {
                 $shiftEndDateTime->addDay();
             }
 

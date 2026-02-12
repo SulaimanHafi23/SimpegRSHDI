@@ -45,6 +45,11 @@ class ShiftController extends Controller
                 'grace_period_minutes' => 'nullable|integer|min:0|max:60',
                 'is_overnight' => 'nullable|boolean',
                 'is_active' => 'nullable|boolean',
+                'day_times' => 'nullable|array',
+                'day_times.*.start_time' => 'nullable|date_format:H:i',
+                'day_times.*.end_time' => 'nullable|date_format:H:i',
+                'day_active' => 'nullable|array',
+                'per_day_enabled' => 'nullable|boolean',
             ]);
 
             // Convert checkbox value
@@ -55,6 +60,16 @@ class ShiftController extends Controller
             $result = $this->shiftService->create($dto);
 
             if ($result['success']) {
+                $perDayEnabled = $request->boolean('per_day_enabled');
+                if ($perDayEnabled) {
+                    $this->syncDayTimes(
+                        $result['data'],
+                        $validated['day_times'] ?? [],
+                        array_keys($validated['day_active'] ?? [])
+                    );
+                } else {
+                    $this->syncDayTimes($result['data'], [], []);
+                }
                 return redirect()
                     ->route('admin.master.shifts.index')
                     ->with('success', $result['message']);
@@ -114,6 +129,11 @@ class ShiftController extends Controller
             'grace_period_minutes' => 'nullable|integer|min:0|max:60',
             'is_overnight' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
+            'day_times' => 'nullable|array',
+            'day_times.*.start_time' => 'nullable|date_format:H:i',
+            'day_times.*.end_time' => 'nullable|date_format:H:i',
+            'day_active' => 'nullable|array',
+            'per_day_enabled' => 'nullable|boolean',
         ]);
 
         try {
@@ -121,6 +141,16 @@ class ShiftController extends Controller
             $result = $this->shiftService->update($id, $dto);
 
             if ($result['success']) {
+                $perDayEnabled = $request->boolean('per_day_enabled');
+                if ($perDayEnabled) {
+                    $this->syncDayTimes(
+                        $result['data'],
+                        $validated['day_times'] ?? [],
+                        array_keys($validated['day_active'] ?? [])
+                    );
+                } else {
+                    $this->syncDayTimes($result['data'], [], []);
+                }
                 return redirect()
                     ->route('admin.master.shifts.show', $id)
                     ->with('success', $result['message']);
@@ -150,6 +180,49 @@ class ShiftController extends Controller
             return back()->with('error', $result['message']);
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    private function syncDayTimes($shift, array $dayTimes, array $activeDays): void
+    {
+        $cleaned = [];
+
+        $activeDays = array_map('intval', $activeDays);
+
+        if (empty($activeDays)) {
+            $shift->dayTimes()->delete();
+            return;
+        }
+
+        foreach ($dayTimes as $day => $times) {
+            if (!in_array((int) $day, $activeDays, true)) {
+                continue;
+            }
+            $start = $times['start_time'] ?? null;
+            $end = $times['end_time'] ?? null;
+
+            if ($start === null || $end === null) {
+                throw new \InvalidArgumentException('Jam masuk dan jam keluar per hari harus diisi lengkap.');
+            }
+
+            $cleaned[(int) $day] = [
+                'start_time' => $start,
+                'end_time' => $end,
+            ];
+        }
+
+        if (empty($cleaned)) {
+            $shift->dayTimes()->delete();
+            return;
+        }
+
+        $shift->dayTimes()->whereNotIn('day_of_week', array_keys($cleaned))->delete();
+
+        foreach ($cleaned as $day => $times) {
+            $shift->dayTimes()->updateOrCreate(
+                ['day_of_week' => $day],
+                ['start_time' => $times['start_time'], 'end_time' => $times['end_time']]
+            );
         }
     }
 }

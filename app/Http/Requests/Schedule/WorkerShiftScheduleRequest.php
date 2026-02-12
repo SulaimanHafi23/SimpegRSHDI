@@ -19,11 +19,6 @@ class WorkerShiftScheduleRequest extends FormRequest
             'worker_ids' => ['nullable', 'array'],
             'worker_ids.*' => [Rule::exists('workers', 'id')],
             'shift_id' => ['required', Rule::exists('shifts', 'id')],
-            'pattern_type' => ['required', Rule::in(['fixed','rotating','custom'])],
-            'rotating_days' => ['nullable','array'],
-            'rotating_days.*' => ['nullable','string', Rule::exists('shifts','id')],
-            'custom_working_days' => ['nullable','array'],
-            'custom_working_days.*' => ['integer', Rule::in([1,2,3,4,5,6,7])],
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'is_active' => 'nullable|boolean',
@@ -55,9 +50,6 @@ class WorkerShiftScheduleRequest extends FormRequest
             'start_date' => 'Tanggal Mulai',
             'end_date' => 'Tanggal Selesai',
             'is_active' => 'Status Aktif',
-            'pattern_type' => 'Tipe Pola',
-            'rotating_days' => 'Rotasi Hari',
-            'custom_working_days' => 'Hari Kerja Khusus',
         ];
     }
 

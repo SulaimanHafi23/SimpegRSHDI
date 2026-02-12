@@ -210,7 +210,8 @@ class ShiftSwapService
             : $now;
 
         $shift = $requesterShift->shift;
-        $shiftStartDateTime = Carbon::parse($shiftDate->format('Y-m-d') . ' ' . $shift->start_time->format('H:i:s'));
+        $schedule = $shift->getScheduleForDate($shiftDate);
+        $shiftStartDateTime = Carbon::parse($shiftDate->format('Y-m-d') . ' ' . $schedule['start_time']);
 
         // Determine required lead time based on department
         $department = $requester->department;
@@ -263,11 +264,12 @@ class ShiftSwapService
             ? Carbon::parse($workerShift->effective_from)
             : Carbon::now();
 
-        $shiftStart = Carbon::parse($shiftDate->format('Y-m-d') . ' ' . $shift->start_time->format('H:i:s'));
-        $shiftEnd = Carbon::parse($shiftDate->format('Y-m-d') . ' ' . $shift->end_time->format('H:i:s'));
+        $schedule = $shift->getScheduleForDate($shiftDate);
+        $shiftStart = Carbon::parse($shiftDate->format('Y-m-d') . ' ' . $schedule['start_time']);
+        $shiftEnd = Carbon::parse($shiftDate->format('Y-m-d') . ' ' . $schedule['end_time']);
 
         // Handle overnight shift
-        if ($shift->is_overnight && $shiftEnd->lt($shiftStart)) {
+        if ($schedule['is_overnight'] && $shiftEnd->lt($shiftStart)) {
             $shiftEnd->addDay();
         }
 
@@ -300,7 +302,8 @@ class ShiftSwapService
         if ($nextShift) {
             $nextShiftObj = $nextShift->shift;
             $nextShiftDate = Carbon::parse($nextShift->effective_from);
-            $nextShiftStart = Carbon::parse($nextShiftDate->format('Y-m-d') . ' ' . $nextShiftObj->start_time->format('H:i:s'));
+            $nextSchedule = $nextShiftObj->getScheduleForDate($nextShiftDate);
+            $nextShiftStart = Carbon::parse($nextShiftDate->format('Y-m-d') . ' ' . $nextSchedule['start_time']);
 
             $restPeriod = $shiftEnd->diffInHours($nextShiftStart, false);
 

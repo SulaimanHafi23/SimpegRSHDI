@@ -359,6 +359,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [WorkerShiftController::class, 'index'])->name('index');
         Route::get('/create', [WorkerShiftController::class, 'create'])->name('create');
         Route::post('/', [WorkerShiftController::class, 'store'])->name('store');
+        Route::get('/generate', [WorkerShiftController::class, 'generate'])->name('generate');
+        Route::post('/generate', [WorkerShiftController::class, 'generateStore'])->name('generate.store');
+        Route::get('/calendar-data', [WorkerShiftController::class, 'calendarData'])->name('calendar-data');
         Route::get('/{id}', [WorkerShiftController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [WorkerShiftController::class, 'edit'])->name('edit');
         Route::put('/{id}', [WorkerShiftController::class, 'update'])->name('update');

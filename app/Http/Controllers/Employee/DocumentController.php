@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\WorkerDocument\WorkerDocumentService;
 use App\Services\Master\DocumentTypeService;
 use App\DTOs\WorkerDocumentDTO;
+use App\Models\DocumentType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -41,21 +42,7 @@ class DocumentController extends Controller
 
         $documents = $this->documentService->getAll($filters);
         
-        // Get document types based on worker's department
-        if ($worker->department_id) {
-            $documentTypes = \App\Models\Department::find($worker->department_id)
-                ?->documentTypes()
-                ->select('document_types.*')
-                ->where('document_types.is_active', true)
-                ->orderBy('document_types.name')
-                ->get();
-            
-            if (!$documentTypes || $documentTypes->isEmpty()) {
-                $documentTypes = $this->documentTypeService->getActive();
-            }
-        } else {
-            $documentTypes = $this->documentTypeService->getActive();
-        }
+        $documentTypes = $this->getAllowedDocumentTypes($worker);
 
         // Calculate summary
         $summaryFilters = ['worker_id' => $worker->id];
@@ -82,27 +69,7 @@ class DocumentController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        // Get document types based on worker's department
-        $documentTypes = collect();
-        
-        if ($worker->department_id) {
-            // Get document types assigned to this department via our seeder
-            $departmentDocTypes = \App\Models\Department::find($worker->department_id)
-                ?->documentTypes()
-                ->select('document_types.*')
-                ->where('document_types.is_active', true)
-                ->orderBy('document_types.name')
-                ->get();
-            
-            if ($departmentDocTypes && $departmentDocTypes->isNotEmpty()) {
-                $documentTypes = $departmentDocTypes;
-            }
-        }
-        
-        // If no department-specific documents or department not set, show all active
-        if ($documentTypes->isEmpty()) {
-            $documentTypes = $this->documentTypeService->getActive();
-        }
+        $documentTypes = $this->getAllowedDocumentTypes($worker);
         
         // Get already uploaded document types for this worker (to mark with checkmark)
         $uploadedDocTypes = $this->documentService->getAll([
@@ -140,24 +107,7 @@ class DocumentController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        // Validate document type is allowed for worker's department
-        $allowedDocumentTypes = [];
-        
-        if ($worker->department_id) {
-            $departmentDocTypes = \App\Models\Department::find($worker->department_id)
-                ?->documentTypes()
-                ->select('document_types.id')
-                ->where('document_types.is_active', true)
-                ->pluck('document_types.id')
-                ->toArray();
-            
-            $allowedDocumentTypes = $departmentDocTypes ?? [];
-        }
-
-        // If no department-specific documents found, allow all active document types
-        if (empty($allowedDocumentTypes)) {
-            $allowedDocumentTypes = $this->documentTypeService->getActive()->pluck('id')->toArray();
-        }
+        $allowedDocumentTypes = $this->getAllowedDocumentTypes($worker)->pluck('id')->toArray();
 
         $validated = $request->validate([
             'document_type_id' => [
@@ -230,6 +180,27 @@ class DocumentController extends Controller
         }
 
         return view('employee.documents.show', compact('document'));
+    }
+
+    private function getAllowedDocumentTypes($worker)
+    {
+        if (! $worker) {
+            return collect();
+        }
+
+        $query = DocumentType::where('is_active', true)
+            ->where(function ($builder) use ($worker) {
+                $builder->where('is_universal', true);
+
+                if ($worker->department_id) {
+                    $builder->orWhereHas('departments', function ($inner) use ($worker) {
+                        $inner->where('departments.id', $worker->department_id);
+                    });
+                }
+            })
+            ->orderBy('name');
+
+        return $query->get();
     }
 
     /**

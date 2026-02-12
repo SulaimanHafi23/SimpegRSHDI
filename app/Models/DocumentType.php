@@ -18,11 +18,13 @@ class DocumentType extends Model
         'max_file_size',
         'description',
         'is_required',
+        'is_universal',
         'is_active',
     ];
 
     protected $casts = [
         'is_required' => 'boolean',
+        'is_universal' => 'boolean',
         'is_active' => 'boolean',
     ];
 
