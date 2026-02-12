@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\DTOs\Auth\LoginDTO;
+use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Auth\AuthService;
@@ -31,7 +32,7 @@ class LoginController extends Controller
         try {
             // Create DTO from request
             $dto = LoginDTO::fromRequest($request->validated());
-            
+
             // Authenticate user
             $result = $this->authService->login($dto);
 
@@ -62,7 +63,7 @@ class LoginController extends Controller
     public function logout(): RedirectResponse
     {
         $this->authService->logout(auth()->user() ?? null);
-        
+
         request()->session()->invalidate();
         request()->session()->regenerateToken();
 
@@ -75,20 +76,6 @@ class LoginController extends Controller
      */
     private function getRedirectUrl($user): string
     {
-        // Check if user has roles
-        if (!$user->roles || $user->roles->isEmpty()) {
-            return route('employee.dashboard');
-        }
-
-        $role = $user->roles->first()->name;
-
-        return match($role) {
-            'super-admin' => route('admin.dashboard'),
-            'admin' => route('admin.dashboard'),
-            'hr-manager' => route('admin.dashboard'),
-            'supervisor' => route('admin.dashboard'),
-            'employee' => route('employee.dashboard'),
-            default => route('employee.dashboard'),
-        };
+        return PermissionHelper::getDefaultRoute();
     }
 }

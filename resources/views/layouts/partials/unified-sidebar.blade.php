@@ -29,8 +29,8 @@
     <!-- Navigation with Smooth Scrolling -->
     <nav id="sidebar-nav" class="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto custom-scrollbar min-h-0">
 
-        <!-- Dashboard Admin - if user has admin roles or dashboard.admin permission -->
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('dashboard.admin'))
+        <!-- Dashboard Super Admin -->
+        @if(auth()->user()->hasRole('Super Admin'))
             <a href="{{ route('admin.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('admin.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('admin.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
@@ -40,7 +40,29 @@
             </a>
         @endif
 
-        <!-- Dashboard Employee - if user has employee role or dashboard.employee permission -->
+        <!-- Dashboard HR (Director) -->
+        @if(auth()->user()->hasRole('HR'))
+            <a href="{{ route('hr.dashboard') }}"
+               class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('hr.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
+                <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('hr.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
+                    <i class="fas fa-user-tie text-sm {{ request()->routeIs('hr.dashboard') ? 'text-white' : 'text-green-300' }}"></i>
+                </div>
+                <span class="font-medium text-sm {{ request()->routeIs('hr.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard HR</span>
+            </a>
+        @endif
+
+        <!-- Dashboard Manager (Department Head) -->
+        @if(auth()->user()->hasRole('Manager'))
+            <a href="{{ route('manager.dashboard') }}"
+               class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('manager.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
+                <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('manager.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
+                    <i class="fas fa-building text-sm {{ request()->routeIs('manager.dashboard') ? 'text-white' : 'text-green-300' }}"></i>
+                </div>
+                <span class="font-medium text-sm {{ request()->routeIs('manager.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard Manager</span>
+            </a>
+        @endif
+
+        <!-- Dashboard Employee -->
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('dashboard.employee'))
             <a href="{{ route('employee.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('employee.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">

@@ -4,92 +4,56 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Manager Dashboard</h1>
-            <p class="text-gray-600 mt-1">Selamat datang, {{ auth()->user()->name }}</p>
-            <p class="text-sm text-gray-500 mt-1">
-                <i class="fas fa-building mr-1"></i>{{ $manager->department->name }}
-            </p>
-        </div>
-        <div class="text-sm text-gray-500">
-            <i class="fas fa-calendar mr-2"></i>{{ now()->format('l, d F Y') }}
-        </div>
-    </div>
+    {{-- Page Header --}}
+    <x-page-header
+        title="Dashboard Manager"
+        description="Ketua Departemen: {{ $manager->department->name }}"
+        icon="fas fa-building" />
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Total Department Workers -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Pegawai</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $departmentWorkers }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Departemen Anda</p>
-                </div>
-                <div class="bg-blue-100 rounded-full p-4">
-                    <i class="fas fa-users text-blue-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+    {{-- Statistics Cards --}}
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <x-stats-card
+            title="Total Pegawai"
+            :value="$departmentWorkers"
+            icon="fas fa-users"
+            color="blue"
+            trend="Departemen Anda" />
 
-        <!-- Attendance Today -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Hadir Hari Ini</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $departmentAttendanceToday }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ $attendanceRate }}% tingkat kehadiran</p>
-                </div>
-                <div class="bg-green-100 rounded-full p-4">
-                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <x-stats-card
+            title="Hadir Hari Ini"
+            :value="$departmentAttendanceToday"
+            icon="fas fa-clipboard-check"
+            color="green"
+            :trend="$attendanceRate . '% Kehadiran'"
+            trendUp />
 
-        <!-- Late Today -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Terlambat</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $departmentLateToday }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Hari ini</p>
-                </div>
-                <div class="bg-yellow-100 rounded-full p-4">
-                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <x-stats-card
+            title="Terlambat"
+            :value="$departmentLateToday"
+            icon="fas fa-clock"
+            color="yellow"
+            trend="Hari Ini" />
 
-        <!-- Absent Today -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Tidak Hadir</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $departmentAbsentToday }}</p>
-                    <p class="text-xs text-gray-500 mt-1">Hari ini</p>
-                </div>
-                <div class="bg-red-100 rounded-full p-4">
-                    <i class="fas fa-times-circle text-red-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <x-stats-card
+            title="Tidak Hadir"
+            :value="$departmentAbsentToday"
+            icon="fas fa-times-circle"
+            color="red"
+            trend="Hari Ini" />
     </div>
 
     <!-- Pending Approvals & Chart -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Pending Approvals -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+        <x-card>
+            <x-slot:header>
+                <div class="flex items-center">
                     <i class="fas fa-hourglass-half text-yellow-500 mr-2"></i>
-                    Pending Approval
-                </h3>
-            </div>
-            <div class="p-6">
-                <div class="space-y-4">
-                    <a href="{{ route('approvals.leaves.index') }}" 
+                    <span class="text-lg font-semibold text-gray-900">Pending Approval</span>
+                </div>
+            </x-slot:header>
+            <div class="space-y-4">
+                          <a href="{{ route('admin.leave.index') }}"
                        class="flex items-center justify-between p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition group">
                         <div class="flex items-center">
                             <div class="bg-blue-500 rounded-lg p-3 group-hover:scale-110 transition">
@@ -103,7 +67,7 @@
                         <span class="text-2xl font-bold text-blue-600">{{ $pendingLeaves }}</span>
                     </a>
 
-                    <a href="{{ route('approvals.overtimes.index') }}" 
+                          <a href="{{ route('admin.overtime.index') }}"
                        class="flex items-center justify-between p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition group">
                         <div class="flex items-center">
                             <div class="bg-purple-500 rounded-lg p-3 group-hover:scale-110 transition">
@@ -117,7 +81,7 @@
                         <span class="text-2xl font-bold text-purple-600">{{ $pendingOvertimes }}</span>
                     </a>
 
-                    <a href="#" 
+                    <a href="#"
                        class="flex items-center justify-between p-4 bg-green-50 hover:bg-green-100 rounded-lg transition group">
                         <div class="flex items-center">
                             <div class="bg-green-500 rounded-lg p-3 group-hover:scale-110 transition">
@@ -130,32 +94,27 @@
                         </div>
                         <span class="text-2xl font-bold text-green-600">{{ $pendingShiftSwaps }}</span>
                     </a>
-                </div>
             </div>
-        </div>
+        </x-card>
 
         <!-- Attendance Chart (Last 7 Days) -->
-        <div class="bg-white rounded-lg shadow lg:col-span-2">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Absensi Departemen 7 Hari Terakhir</h3>
-            </div>
-            <div class="p-6">
-                <canvas id="attendanceChart" height="250"></canvas>
-            </div>
-        </div>
+        <x-card title="Absensi Departemen 7 Hari Terakhir" class="lg:col-span-2">
+            <canvas id="attendanceChart" height="250"></canvas>
+        </x-card>
     </div>
 
     <!-- Top Performers -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-900 flex items-center">
-                <i class="fas fa-trophy text-yellow-500 mr-2"></i>
-                Top Performers Bulan Ini
-            </h3>
-            <p class="text-sm text-gray-600 mt-1">Pegawai dengan kehadiran terbaik (tidak terlambat)</p>
-        </div>
-        <div class="p-6">
-            <div class="space-y-4">
+    <x-card>
+        <x-slot:header>
+            <div>
+                <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-trophy text-yellow-500 mr-2"></i>
+                    Top Performers Bulan Ini
+                </h3>
+                <p class="text-sm text-gray-600 mt-1">Pegawai dengan kehadiran terbaik (tidak terlambat)</p>
+            </div>
+        </x-slot:header>
+        <div class="space-y-4">
                 @forelse($topPerformers as $index => $performer)
                 <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                     <div class="flex items-center">
@@ -175,18 +134,19 @@
                 @empty
                 <p class="text-center text-gray-500 py-8">Belum ada data performa bulan ini</p>
                 @endforelse
-            </div>
         </div>
-    </div>
+    </x-card>
 
     <!-- Recent Leave Requests -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-gray-900">Pengajuan Cuti Terbaru</h3>
-            <a href="{{ route('approvals.leaves.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-        </div>
+    <x-card>
+        <x-slot:header>
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">Pengajuan Cuti Terbaru</h3>
+                <a href="{{ route('admin.leave.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </x-slot:header>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -207,14 +167,14 @@
                         </td>
                         <td class="px-6 py-4 text-sm">{{ $leave->leaveType->name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($leave->start_date)->format('d M') }} - 
+                            {{ \Carbon\Carbon::parse($leave->start_date)->format('d M') }} -
                             {{ \Carbon\Carbon::parse($leave->end_date)->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4 text-sm">
                             <span class="font-semibold text-gray-900">{{ $leave->total_days }}</span> hari
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="{{ route('approvals.leaves.show', $leave->id) }}" 
+                                     <a href="{{ route('admin.leave.show', $leave->id) }}"
                                class="text-blue-600 hover:text-blue-900 font-medium text-sm">
                                 Review <i class="fas fa-arrow-right ml-1"></i>
                             </a>
@@ -230,16 +190,18 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </x-card>
 
     <!-- Recent Overtime Requests -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-gray-900">Pengajuan Lembur Terbaru</h3>
-            <a href="{{ route('approvals.overtimes.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-        </div>
+    <x-card>
+        <x-slot:header>
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900">Pengajuan Lembur Terbaru</h3>
+                <a href="{{ route('admin.overtime.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                    Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+                </a>
+            </div>
+        </x-slot:header>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -262,14 +224,14 @@
                             {{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - 
+                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} -
                             {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
                         </td>
                         <td class="px-6 py-4 text-sm">
                             <span class="font-semibold text-gray-900">{{ number_format($overtime->total_hours, 1) }}</span> jam
                         </td>
                         <td class="px-6 py-4 text-right">
-                            <a href="{{ route('approvals.overtimes.show', $overtime->id) }}" 
+                                     <a href="{{ route('admin.overtime.show', $overtime->id) }}"
                                class="text-blue-600 hover:text-blue-900 font-medium text-sm">
                                 Review <i class="fas fa-arrow-right ml-1"></i>
                             </a>
@@ -285,7 +247,7 @@
                 </tbody>
             </table>
         </div>
-    </div>
+    </x-card>
 
     <!-- Recent Shift Swap Requests -->
     @if($recentShiftSwaps->count() > 0)
@@ -333,6 +295,55 @@
         </div>
     </div>
     @endif
+
+    {{-- Quick Actions for Manager --}}
+    <x-card title="Aksi Cepat">
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('attendance.manage'))
+                <x-button 
+                    variant="success" 
+                    icon="fas fa-clipboard-check"
+                    onclick="window.location.href='{{ route('admin.attendance.index') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Lihat Absensi</span>
+                    <span class="sm:hidden">Absensi</span>
+                </x-button>
+            @endif
+            
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('leave.approve'))
+                <x-button 
+                    variant="warning" 
+                    icon="fas fa-calendar-check"
+                    onclick="window.location.href='{{ route('admin.leave.index') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Approval Cuti</span>
+                    <span class="sm:hidden">Cuti</span>
+                </x-button>
+            @endif
+            
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('overtime.approve'))
+                <x-button 
+                    variant="purple" 
+                    icon="fas fa-clock"
+                    onclick="window.location.href='{{ route('admin.overtime.index') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Approval Lembur</span>
+                    <span class="sm:hidden">Lembur</span>
+                </x-button>
+            @endif
+            
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('schedule.manage'))
+                <x-button 
+                    variant="secondary" 
+                    icon="fas fa-user-clock"
+                    onclick="window.location.href='{{ route('admin.worker-shifts.index') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Jadwal Pegawai</span>
+                    <span class="sm:hidden">Jadwal</span>
+                </x-button>
+            @endif
+        </div>
+    </x-card>
 </div>
 
 @push('scripts')

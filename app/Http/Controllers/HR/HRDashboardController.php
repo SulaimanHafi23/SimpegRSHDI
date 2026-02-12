@@ -71,13 +71,13 @@ class HRDashboardController extends Controller
         // ========== OVERTIME REQUESTS ==========
         $pendingOvertimes = OvertimeRequest::where('status', 'pending')->count();
         $approvedOvertimesThisMonth = OvertimeRequest::where('status', 'approved')
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
+            ->whereMonth('overtime_date', now()->month)
+            ->whereYear('overtime_date', now()->year)
             ->count();
 
         $totalOvertimeHours = OvertimeRequest::where('status', 'approved')
-            ->whereMonth('date', now()->month)
-            ->whereYear('date', now()->year)
+            ->whereMonth('overtime_date', now()->month)
+            ->whereYear('overtime_date', now()->year)
             ->sum('total_hours');
 
         // Recent Overtime Requests
@@ -124,7 +124,7 @@ class HRDashboardController extends Controller
 
         // Add recent hires
         $recentHires = Worker::where('status', 'active')
-            ->latest('join_date')
+            ->latest('hire_date')
             ->take(3)
             ->get()
             ->map(function ($worker) {
@@ -134,7 +134,7 @@ class HRDashboardController extends Controller
                     'color' => 'blue',
                     'title' => 'Pegawai Baru',
                     'description' => $worker->name . ' bergabung sebagai ' . ($worker->position->name ?? 'Pegawai'),
-                    'time' => $worker->join_date->diffForHumans(),
+                    'time' => $worker->hire_date?->diffForHumans() ?? '-',
                 ];
             });
 

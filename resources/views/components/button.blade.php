@@ -15,6 +15,7 @@
         'danger' => 'bg-red-600 hover:bg-red-700 text-white',
         'warning' => 'bg-yellow-600 hover:bg-yellow-700 text-white',
         'info' => 'bg-indigo-600 hover:bg-indigo-700 text-white',
+        'purple' => 'bg-purple-600 hover:bg-purple-700 text-white',
         'outline' => 'border-2 border-gray-300 text-gray-700 hover:bg-gray-50',
         'outline-primary' => 'border-2 border-blue-600 text-blue-600 hover:bg-blue-50',
         'outline-secondary' => 'border-2 border-gray-600 text-gray-600 hover:bg-gray-50',

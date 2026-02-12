@@ -4,81 +4,55 @@
 
 @section('content')
 <div class="space-y-6">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">HR Dashboard</h1>
-            <p class="text-gray-600 mt-1">Selamat datang, {{ auth()->user()->name }}</p>
-        </div>
-        <div class="text-sm text-gray-500">
-            <i class="fas fa-calendar mr-2"></i>{{ now()->format('l, d F Y') }}
-        </div>
-    </div>
+    {{-- Page Header --}}
+    <x-page-header
+        title="Dashboard HR"
+        description="Direktur: {{ auth()->user()->name }}"
+        icon="fas fa-user-tie" />
 
-    <!-- Worker Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Total Workers -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Pegawai</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $totalWorkers }}</p>
-                </div>
-                <div class="bg-blue-100 rounded-full p-4">
-                    <i class="fas fa-users text-blue-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+    {{-- Worker Statistics Cards --}}
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <x-stats-card
+            title="Total Pegawai"
+            :value="$totalWorkers"
+            icon="fas fa-users"
+            color="blue"
+            :trend="$activeWorkers . ' Aktif'"
+            trendUp />
 
-        <!-- Active Workers -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Pegawai Aktif</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $activeWorkers }}</p>
-                </div>
-                <div class="bg-green-100 rounded-full p-4">
-                    <i class="fas fa-user-check text-green-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <x-stats-card
+            title="Pegawai Aktif"
+            :value="$activeWorkers"
+            icon="fas fa-user-check"
+            color="green"
+            :trend="$inactiveWorkers . ' Nonaktif'" />
 
-        <!-- Inactive Workers -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-yellow-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Tidak Aktif</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $inactiveWorkers }}</p>
-                </div>
-                <div class="bg-yellow-100 rounded-full p-4">
-                    <i class="fas fa-user-slash text-yellow-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <x-stats-card
+            title="Tidak Aktif"
+            :value="$inactiveWorkers"
+            icon="fas fa-user-slash"
+            color="yellow"
+            trend="Status Pegawai" />
 
-        <!-- Resigned Workers -->
-        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-red-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Resign</p>
-                    <p class="text-3xl font-bold text-gray-900 mt-2">{{ $resignedWorkers }}</p>
-                </div>
-                <div class="bg-red-100 rounded-full p-4">
-                    <i class="fas fa-user-minus text-red-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
+        <x-stats-card
+            title="Resign"
+            :value="$resignedWorkers"
+            icon="fas fa-user-minus"
+            color="red"
+            trend="Riwayat" />
     </div>
 
     <!-- Employment Status -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- By Employment Type -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Status Kepegawaian</h3>
-            </div>
-            <div class="p-6">
-                <div class="space-y-4">
+        <x-card>
+            <x-slot:header>
+                <div class="flex items-center">
+                    <i class="mr-2 text-green-600 fas fa-id-badge"></i>
+                    <span class="text-lg font-semibold text-gray-900">Status Kepegawaian</span>
+                </div>
+            </x-slot:header>
+            <div class="space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center">
                             <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
@@ -108,16 +82,17 @@
                         <span class="font-semibold text-gray-900">{{ $internWorkers }}</span>
                     </div>
                 </div>
-            </div>
-        </div>
+            </x-card>
 
         <!-- By Department -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Pegawai per Departemen</h3>
-            </div>
-            <div class="p-6">
-                <div class="space-y-3 max-h-48 overflow-y-auto">
+        <x-card>
+            <x-slot:header>
+                <div class="flex items-center">
+                    <i class="mr-2 text-green-600 fas fa-chart-pie"></i>
+                    <span class="text-lg font-semibold text-gray-900">Pegawai per Departemen</span>
+                </div>
+            </x-slot:header>
+            <div class="space-y-3 max-h-48 overflow-y-auto">
                     @foreach($workersByDepartment as $dept)
                     <div class="flex items-center justify-between">
                         <span class="text-gray-700">{{ $dept['department'] }}</span>
@@ -126,18 +101,19 @@
                         </span>
                     </div>
                     @endforeach
-                </div>
             </div>
-        </div>
+        </x-card>
     </div>
 
     <!-- Attendance Today -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Absensi Hari Ini</h3>
-                <i class="fas fa-calendar-check text-blue-500 text-xl"></i>
-            </div>
+        <x-card>
+            <x-slot:header>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Absensi Hari Ini</h3>
+                    <i class="fas fa-calendar-check text-blue-500 text-xl"></i>
+                </div>
+            </x-slot:header>
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600 flex items-center">
@@ -161,22 +137,24 @@
                     <span class="font-bold text-red-600">{{ $absentToday }}</span>
                 </div>
             </div>
-        </div>
+        </x-card>
 
         <!-- Pending Approvals -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Pending Approval</h3>
-                <i class="fas fa-hourglass-half text-yellow-500 text-xl"></i>
-            </div>
+        <x-card>
+            <x-slot:header>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Pending Approval</h3>
+                    <i class="fas fa-hourglass-half text-yellow-500 text-xl"></i>
+                </div>
+            </x-slot:header>
             <div class="space-y-3">
-                <a href="{{ route('approvals.leaves.index') }}" class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition">
+                <a href="{{ route('admin.leave.index') }}" class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition">
                     <span class="text-gray-600">Cuti</span>
                     <span class="font-bold text-blue-600 bg-blue-100 px-3 py-1 rounded-full text-sm">
                         {{ $pendingLeaves }}
                     </span>
                 </a>
-                <a href="{{ route('approvals.overtimes.index') }}" class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition">
+                <a href="{{ route('admin.overtime.index') }}" class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition">
                     <span class="text-gray-600">Lembur</span>
                     <span class="font-bold text-purple-600 bg-purple-100 px-3 py-1 rounded-full text-sm">
                         {{ $pendingOvertimes }}
@@ -189,14 +167,16 @@
                     </span>
                 </a>
             </div>
-        </div>
+        </x-card>
 
         <!-- Monthly Stats -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Bulan Ini</h3>
-                <i class="fas fa-chart-line text-green-500 text-xl"></i>
-            </div>
+        <x-card>
+            <x-slot:header>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Bulan Ini</h3>
+                    <i class="fas fa-chart-line text-green-500 text-xl"></i>
+                </div>
+            </x-slot:header>
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600 text-sm">Cuti Disetujui</span>
@@ -215,28 +195,19 @@
                     <span class="font-bold text-gray-900">{{ $verifiedDocumentsThisMonth }}</span>
                 </div>
             </div>
-        </div>
+        </x-card>
     </div>
 
     <!-- Charts and Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Attendance Chart (Last 7 Days) -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Absensi 7 Hari Terakhir</h3>
-            </div>
-            <div class="p-6">
-                <canvas id="attendanceChart" height="300"></canvas>
-            </div>
-        </div>
+        <x-card title="Absensi 7 Hari Terakhir">
+            <canvas id="attendanceChart" height="300"></canvas>
+        </x-card>
 
         <!-- Recent Activities -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-900">Aktivitas Terbaru</h3>
-            </div>
-            <div class="p-6">
-                <div class="space-y-4 max-h-80 overflow-y-auto">
+        <x-card title="Aktivitas Terbaru">
+            <div class="space-y-4 max-h-80 overflow-y-auto">
                     @forelse($recentActivities as $activity)
                     <div class="flex items-start space-x-3">
                         <div class="flex-shrink-0">
@@ -254,8 +225,7 @@
                     <p class="text-center text-gray-500 py-8">Tidak ada aktivitas terbaru</p>
                     @endforelse
                 </div>
-            </div>
-        </div>
+            </x-card>
     </div>
 
     <!-- Recent Leave Requests -->
@@ -289,7 +259,7 @@
                             <span class="text-sm text-gray-900">{{ $leave->leaveType->name }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($leave->start_date)->format('d M Y') }} - 
+                            {{ \Carbon\Carbon::parse($leave->start_date)->format('d M Y') }} -
                             {{ \Carbon\Carbon::parse($leave->end_date)->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
@@ -349,7 +319,7 @@
                             {{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - 
+                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} -
                             {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -377,6 +347,55 @@
             </table>
         </div>
     </div>
+
+    {{-- Quick Actions for HR --}}
+    <x-card title="Aksi Cepat">
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('worker.manage'))
+                <x-button 
+                    variant="primary" 
+                    icon="fas fa-user-plus"
+                    onclick="window.location.href='{{ route('admin.workers.create') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Tambah Pegawai</span>
+                    <span class="sm:hidden">Pegawai</span>
+                </x-button>
+            @endif
+            
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('attendance.manage'))
+                <x-button 
+                    variant="success" 
+                    icon="fas fa-clipboard-check"
+                    onclick="window.location.href='{{ route('admin.attendance.create') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Input Absensi</span>
+                    <span class="sm:hidden">Absensi</span>
+                </x-button>
+            @endif
+            
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('report.view'))
+                <x-button 
+                    variant="warning" 
+                    icon="fas fa-chart-bar"
+                    onclick="window.location.href='{{ route('admin.attendance.report.monthly') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Laporan Absensi</span>
+                    <span class="sm:hidden">Laporan</span>
+                </x-button>
+            @endif
+            
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
+                <x-button 
+                    variant="secondary" 
+                    icon="fas fa-tasks"
+                    onclick="window.location.href='{{ route('admin.leave.index') }}'"
+                    class="w-full justify-center">
+                    <span class="hidden sm:inline">Kelola Cuti</span>
+                    <span class="sm:hidden">Cuti</span>
+                </x-button>
+            @endif
+        </div>
+    </x-card>
 </div>
 
 @push('scripts')
