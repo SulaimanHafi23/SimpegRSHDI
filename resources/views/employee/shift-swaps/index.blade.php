@@ -141,7 +141,13 @@
                                         <span class="font-medium">{{ $openRequest->requesterShift?->shift->name ?? 'N/A' }}</span>
                                         <span class="mx-2">|</span>
                                         <i class="fas fa-calendar mr-1"></i>
-                                        {{ $openRequest->requesterShift?->effective_from?->format('d M Y') ?? 'N/A' }}
+                                        @if($openRequest->swap_type === 'single_date' && $openRequest->swap_date)
+                                            {{ $openRequest->swap_date->format('d M Y') }}
+                                        @elseif($openRequest->swap_type === 'date_range' && $openRequest->swap_start_date && $openRequest->swap_end_date)
+                                            {{ $openRequest->swap_start_date->format('d M Y') }} s/d {{ $openRequest->swap_end_date->format('d M Y') }}
+                                        @else
+                                            {{ $openRequest->created_at->format('d M Y') }}
+                                        @endif
                                     </div>
                                     @if($openRequest->reason)
                                     <p class="mt-1 text-sm text-gray-500 italic">
@@ -226,19 +232,18 @@
                                 </div>
                             </div>
 
+                            @php
+                                $reqShift = $item->requesterShift?->shift;
+                            @endphp
                             <div class="bg-gray-50 rounded-lg p-3">
                                 <p class="text-xs text-gray-500 mb-1">Shift Peminta</p>
                                 <div class="flex items-center space-x-2 flex-wrap">
                                     <i class="fas fa-clock text-gray-400"></i>
-                                    <span class="font-medium text-gray-900">{{ $item->requesterShift?->shift->name ?? 'N/A' }}</span>
+                                    <span class="font-medium text-gray-900">{{ $reqShift->name ?? 'N/A' }}</span>
                                 </div>
-                                <p class="text-sm text-gray-600 mt-1">
-                                    <i class="fas fa-calendar text-gray-400 mr-1"></i>
-                                    {{ $item->requesterShift?->effective_from?->format('d M Y') ?? 'N/A' }}
-                                </p>
                                 <p class="text-sm text-gray-600">
                                     <i class="fas fa-history text-gray-400 mr-1"></i>
-                                    {{ $item->requesterShift?->shift->start_time ?? '' }} - {{ $item->requesterShift?->shift->end_time ?? '' }}
+                                    {{ $reqShift->start_time ?? '' }} - {{ $reqShift->end_time ?? '' }}
                                 </p>
                             </div>
                         </div>
@@ -261,23 +266,48 @@
                             </div>
 
                             @if($item->targetShift)
+                                @php
+                                    $tgtShift = $item->targetShift?->shift;
+                                @endphp
                                 <div class="bg-gray-50 rounded-lg p-3">
                                     <p class="text-xs text-gray-500 mb-1">Shift Target</p>
                                     <div class="flex items-center space-x-2 flex-wrap">
                                         <i class="fas fa-clock text-gray-400"></i>
-                                        <span class="font-medium text-gray-900">{{ $item->targetShift->shift->name ?? 'N/A' }}</span>
+                                        <span class="font-medium text-gray-900">{{ $tgtShift->name ?? 'N/A' }}</span>
                                     </div>
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        <i class="fas fa-calendar text-gray-400 mr-1"></i>
-                                        {{ $item->targetShift->effective_from?->format('d M Y') ?? 'N/A' }}
-                                    </p>
                                     <p class="text-sm text-gray-600">
                                         <i class="fas fa-history text-gray-400 mr-1"></i>
-                                        {{ $item->targetShift->shift->start_time ?? '' }} - {{ $item->targetShift->shift->end_time ?? '' }}
+                                        {{ $tgtShift->start_time ?? '' }} - {{ $tgtShift->end_time ?? '' }}
                                     </p>
                                 </div>
                             @endif
                         </div>
+                    </div>
+
+                    <!-- Tanggal Tukar Shift -->
+                    <div class="mt-4 p-3 bg-indigo-50 border-l-4 border-indigo-400 rounded">
+                        <p class="text-xs text-indigo-700 font-medium mb-1">
+                            <i class="fas fa-calendar-alt mr-1"></i>Tanggal Tukar Shift:
+                        </p>
+                        @if($item->swap_type === 'single_date' && $item->swap_date)
+                            <p class="text-sm text-indigo-900 font-semibold">
+                                {{ $item->swap_date->format('d M Y') }}
+                            </p>
+                        @elseif($item->swap_type === 'date_range' && $item->swap_start_date && $item->swap_end_date)
+                            <p class="text-sm text-indigo-900 font-semibold">
+                                {{ $item->swap_start_date->format('d M Y') }} s/d {{ $item->swap_end_date->format('d M Y') }}
+                            </p>
+                        @elseif($item->swap_type === 'recurring' && $item->swap_dates)
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                @foreach($item->swap_dates as $swapDate)
+                                    <span class="inline-flex items-center px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded">
+                                        {{ \Carbon\Carbon::parse($swapDate)->format('d M Y') }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            <p class="text-sm text-indigo-600">Tanggal belum ditentukan</p>
+                        @endif
                     </div>
 
                     <!-- Reason -->
@@ -294,7 +324,7 @@
                             <div class="flex items-center">
                                 <i class="fas fa-user-tie text-blue-600 mr-2"></i>
                                 <div>
-                                    <p class="text-xs text-blue-700 font-medium">Memerlukan Persetujuan Manager</p>
+                                    <p class="text-xs text-blue-700 font-medium">Memerlukan Persetujuan Manager/HR</p>
                                     <p class="text-xs text-blue-600 mt-1">
                                         {{ $item->requester->department->name ?? 'N/A' }} ↔ {{ $item->targetWorker?->department->name ?? 'N/A' }} (Beda Departemen)
                                     </p>
@@ -305,7 +335,7 @@
                         <div class="mt-4 p-3 bg-green-50 border-l-4 border-green-400 rounded">
                             <div class="flex items-center">
                                 <i class="fas fa-check-circle text-green-600 mr-2"></i>
-                                <p class="text-xs text-green-700 font-medium">Tidak memerlukan persetujuan manager (Satu Departemen)</p>
+                                <p class="text-xs text-green-700 font-medium">Tidak memerlukan persetujuan (Satu Departemen)</p>
                             </div>
                         </div>
                     @endif

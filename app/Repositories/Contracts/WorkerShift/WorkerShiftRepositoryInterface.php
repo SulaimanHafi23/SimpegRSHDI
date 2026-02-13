@@ -16,5 +16,7 @@ interface WorkerShiftRepositoryInterface
     public function create(WorkerShiftDTO $dto): object;
     public function update(string $id, WorkerShiftDTO $dto): object;
     public function delete(string $id): bool;
-    public function deactivateOldShifts(string $workerId): void;
+    public function deactivateOldShifts(string $workerId, ?string $excludeId = null): void;
+    public function deleteOldShifts(string $workerId, ?string $excludeId = null): int;
+    public function updateOldShiftsEndDate(string $workerId, string $endDate): void;
 }

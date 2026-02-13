@@ -19,18 +19,34 @@ class UserRepository implements UserRepositoryInterface
     {
         $query = $this->model->with(['worker', 'roles']);
 
-        if (isset($filters['is_active'])) {
-            $query->where('is_active', $filters['is_active']);
+        // Filter by active status
+        if (isset($filters['is_active']) && $filters['is_active'] !== '') {
+            $query->where('is_active', (bool) $filters['is_active']);
         }
 
-        if (!empty($filters['search'])) {
-            $query->where(function ($q) use ($filters) {
-                $q->where('username', 'like', "%{$filters['search']}%")
-                    ->orWhere('email', 'like', "%{$filters['search']}%");
+        // Filter by role
+        if (!empty($filters['role'])) {
+            $query->whereHas('roles', function($q) use ($filters) {
+                $q->where('name', $filters['role']);
             });
         }
 
-        return $query->latest()->paginate($filters['per_page'] ?? 15);
+        // Search in username, email, and worker name
+        if (!empty($filters['search'])) {
+            $searchTerm = strtolower($filters['search']);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(username) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereHas('worker', function($subQ) use ($searchTerm) {
+                        $subQ->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                             ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $searchTerm . '%']);
+                    });
+            });
+        }
+
+        return $query->latest()
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
     }
 
     public function getById(string $id): ?object

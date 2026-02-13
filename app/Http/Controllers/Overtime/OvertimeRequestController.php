@@ -24,13 +24,30 @@ class OvertimeRequestController extends Controller
     {
         $departmentId = $this->getManagerDepartmentFilter();
 
+        $month = $request->month;
+        $year = $request->year;
+        $dateFrom = $request->start_date;
+        $dateTo = $request->end_date;
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $dateFrom = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $dateTo = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $dateFrom = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $dateTo = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        }
+
         $filters = [
             'status' => $request->status,
             'worker_id' => $request->worker_id,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
-            'month' => $request->month,
-            'year' => $request->year,
+            'month' => $month,
+            'year' => $year,
             'department_id' => $departmentId,
             'per_page' => $request->per_page ?? 15,
         ];

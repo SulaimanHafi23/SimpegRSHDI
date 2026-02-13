@@ -53,82 +53,92 @@ phpinfo() di browser
     </div>
 
     <!-- Summary Statistics - Absensi Hari Ini -->
-    <div class="bg-white rounded-lg shadow-md mb-6 p-6">
-        <div class="flex items-center gap-2 mb-4">
-            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-50 text-blue-700">
-                <i class="fas fa-chart-pie text-sm"></i>
+    <div class="bg-white rounded-lg shadow-md mb-6 p-3">
+        <div class="flex items-center gap-2 mb-2">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-700">
+                <i class="fas fa-chart-pie text-xs"></i>
             </span>
             <div>
-                <p class="text-xs text-gray-500">Statistik Tanggal</p>
-                <p class="text-base font-semibold text-gray-800">
-                    {{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->translatedFormat('l, d F Y') : now()->translatedFormat('l, d F Y') }}
+                <p class="text-xs text-gray-800 font-semibold">
+                    {{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->translatedFormat('d F Y') : now()->translatedFormat('d F Y') }}
                 </p>
             </div>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div class="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-gray-500 mb-1">Total Pegawai</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $summary['total_workers'] }}</p>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
+            <div class="bg-gray-50 rounded p-2 border border-gray-100">
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-gray-100 p-1.5 rounded flex-shrink-0">
+                        <i class="fas fa-users text-gray-600 text-sm"></i>
                     </div>
-                    <div class="bg-gray-100 p-3 rounded-lg">
-                        <i class="fas fa-users text-gray-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-green-50 rounded-lg p-4 border border-green-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-green-700 mb-1">Sudah Masuk</p>
-                        <p class="text-2xl font-bold text-green-600">{{ $summary['present'] }}</p>
-                    </div>
-                    <div class="bg-green-100 p-3 rounded-lg">
-                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs text-gray-500 truncate">Total</p>
+                        <p class="text-base font-bold text-gray-900">{{ $summary['total_workers'] }}</p>
                     </div>
                 </div>
             </div>
-            <div class="bg-emerald-50 rounded-lg p-4 border border-emerald-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-emerald-700 mb-1">Sempurna</p>
-                        <p class="text-2xl font-bold text-emerald-600">{{ $summary['perfect'] }}</p>
+            <div class="bg-green-50 rounded p-2 border border-green-100">
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-green-100 p-1.5 rounded flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-600 text-sm"></i>
                     </div>
-                    <div class="bg-emerald-100 p-3 rounded-lg">
-                        <i class="fas fa-star text-emerald-600 text-xl"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-yellow-50 rounded-lg p-4 border border-yellow-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-yellow-700 mb-1">Terlambat</p>
-                        <p class="text-2xl font-bold text-yellow-600">{{ $summary['late'] }}</p>
-                    </div>
-                    <div class="bg-yellow-100 p-3 rounded-lg">
-                        <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs text-green-700 truncate">Masuk</p>
+                        <p class="text-base font-bold text-green-600">{{ $summary['present'] }}</p>
                     </div>
                 </div>
             </div>
-            <div class="bg-orange-50 rounded-lg p-4 border border-orange-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-orange-700 mb-1">Pulang Cepat</p>
-                        <p class="text-2xl font-bold text-orange-600">{{ $summary['early_leave'] }}</p>
+            <div class="bg-emerald-50 rounded p-2 border border-emerald-100">
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-emerald-100 p-1.5 rounded flex-shrink-0">
+                        <i class="fas fa-star text-emerald-600 text-sm"></i>
                     </div>
-                    <div class="bg-orange-100 p-3 rounded-lg">
-                        <i class="fas fa-running text-orange-600 text-xl"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs text-emerald-700 truncate">Sempurna</p>
+                        <p class="text-base font-bold text-emerald-600">{{ $summary['perfect'] }}</p>
                     </div>
                 </div>
             </div>
-            <div class="bg-red-50 rounded-lg p-4 border border-red-100">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium text-red-700 mb-1">Belum Masuk</p>
-                        <p class="text-2xl font-bold text-red-600">{{ $summary['absent'] }}</p>
+            <div class="bg-yellow-50 rounded p-2 border border-yellow-100">
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-yellow-100 p-1.5 rounded flex-shrink-0">
+                        <i class="fas fa-clock text-yellow-600 text-sm"></i>
                     </div>
-                    <div class="bg-red-100 p-3 rounded-lg">
-                        <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                    <div class="min-w-0">
+                        <p class="text-xs text-yellow-700 truncate">Terlambat</p>
+                        <p class="text-base font-bold text-yellow-600">{{ $summary['late'] }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-orange-50 rounded p-2 border border-orange-100">
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-orange-100 p-1.5 rounded flex-shrink-0">
+                        <i class="fas fa-running text-orange-600 text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-orange-700 truncate">Pulang</p>
+                        <p class="text-base font-bold text-orange-600">{{ $summary['early_leave'] }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-purple-50 rounded p-2 border border-purple-100">
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-purple-100 p-1.5 rounded flex-shrink-0">
+                        <i class="fas fa-calendar-day text-purple-600 text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-purple-700 truncate">Cuti</p>
+                        <p class="text-base font-bold text-purple-600">{{ $summary['on_leave'] ?? 0 }}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-red-50 rounded p-2 border border-red-100">
+                <div class="flex items-center gap-1.5">
+                    <div class="bg-red-100 p-1.5 rounded flex-shrink-0">
+                        <i class="fas fa-times-circle text-red-600 text-sm"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-xs text-red-700 truncate">Absent</p>
+                        <p class="text-base font-bold text-red-600">{{ $summary['absent'] }}</p>
                     </div>
                 </div>
             </div>
@@ -147,7 +157,7 @@ phpinfo() di browser
 
         <div x-show="showFilters" x-collapse class="border-t border-gray-200">
             <form method="GET" action="{{ route('admin.attendance.index') }}" class="p-6" id="history-filter-form">
-                <input type="hidden" name="tab" id="history-tab-input" value="history">
+                <input type="hidden" name="tab" id="history-tab-input" value="{{ request('tab', 'today') }}">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Pencarian</label>
@@ -220,89 +230,6 @@ phpinfo() di browser
         </div>
     </div>
 
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
-        @php
-            $todayStats = [
-                'total_workers' => $workersWithAttendance->count(),
-                'checked_in' => $workersWithAttendance->whereNotNull('check_in_time')->count(),
-                'not_checked_in' => $workersWithAttendance->where('attendance_status', 'not_checked_in')->count(),
-                'late' => $workersWithAttendance->where('is_late', true)->count(),
-                'on_leave' => $workersWithAttendance->whereIn('attendance_status', ['leave', 'sick', 'permission'])->count(),
-            ];
-        @endphp
-
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-users text-blue-600"></i>
-                    </div>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Total Pegawai</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ $todayStats['total_workers'] }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-check text-green-600"></i>
-                    </div>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Sudah Masuk</p>
-                    <p class="text-2xl font-bold text-green-600">{{ $todayStats['checked_in'] }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-times text-red-600"></i>
-                    </div>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Belum Masuk</p>
-                    <p class="text-2xl font-bold text-red-600">{{ $todayStats['not_checked_in'] }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-clock text-yellow-600"></i>
-                    </div>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Terlambat</p>
-                    <p class="text-2xl font-bold text-yellow-600">{{ $todayStats['late'] }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-calendar-day text-purple-600"></i>
-                    </div>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-gray-600">Cuti/Izin</p>
-                    <p class="text-2xl font-bold text-purple-600">{{ $todayStats['on_leave'] }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Toggle View -->
     <div class="bg-white rounded-lg shadow-md mb-6 p-4">
         <div class="flex items-center justify-between">
@@ -323,7 +250,7 @@ phpinfo() di browser
         <div class="p-6 border-b border-gray-200">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <h3 class="text-lg font-semibold text-gray-900">
-                    Absensi Tanggal: 
+                    Absensi Tanggal:
                     <span id="selected-date-display" class="text-blue-600">{{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->isoFormat('dddd, D MMMM Y') : now()->isoFormat('dddd, D MMMM Y') }}</span>
                 </h3>
                 <div class="flex items-center gap-2 flex-wrap">
@@ -337,7 +264,7 @@ phpinfo() di browser
 
                         <div x-show="openExport" @click.away="openExport = false" x-transition class="absolute right-0 z-10 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                             <div class="py-1">
-                                <a href="{{ route('admin.attendance.today.export', ['format' => 'pdf', 'attendance_date' => request('attendance_date', now()->format('Y-m-d'))]) }}" 
+                                <a href="{{ route('admin.attendance.today.export', ['format' => 'pdf', 'attendance_date' => request('attendance_date', now()->format('Y-m-d'))]) }}"
                                    class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-red-700">
                                     <i class="fas fa-file-pdf mr-3 text-red-500 group-hover:text-red-700"></i>
                                     <div>
@@ -345,7 +272,7 @@ phpinfo() di browser
                                         <div class="text-xs text-gray-500">Laporan detail</div>
                                     </div>
                                 </a>
-                                <a href="{{ route('admin.attendance.today.export', ['format' => 'excel', 'attendance_date' => request('attendance_date', now()->format('Y-m-d'))]) }}" 
+                                <a href="{{ route('admin.attendance.today.export', ['format' => 'excel', 'attendance_date' => request('attendance_date', now()->format('Y-m-d'))]) }}"
                                    class="group flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-green-50 hover:text-green-700">
                                     <i class="fas fa-file-excel mr-3 text-green-500 group-hover:text-green-700"></i>
                                     <div>
@@ -364,15 +291,15 @@ phpinfo() di browser
                             <i class="fas fa-calendar-alt mr-1 text-blue-600"></i>
                             Pilih Tanggal:
                         </label>
-                        <input type="date" 
-                               id="attendance_date" 
-                               name="attendance_date" 
+                        <input type="date"
+                               id="attendance_date"
+                               name="attendance_date"
                                value="{{ request('attendance_date', now()->format('Y-m-d')) }}"
                                max="{{ now()->format('Y-m-d') }}"
                                class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                                onchange="this.form.submit()">
                         @if(request('attendance_date'))
-                            <a href="{{ route('admin.attendance.index', ['tab' => request('tab', 'today')]) }}" 
+                            <a href="{{ route('admin.attendance.index', ['tab' => request('tab', 'today')]) }}"
                                class="px-3 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg text-sm transition">
                                 <i class="fas fa-redo mr-1"></i>
                                 Reset
@@ -419,20 +346,58 @@ phpinfo() di browser
                         </td>
                         <td class="px-6 py-4">
                             @php
-                                // Cek shift override hari ini terlebih dahulu
-                                $todayShift = $worker->workerShifts->where('date', now()->format('Y-m-d'))->first();
-                                // Kalau tidak ada override, gunakan shift default worker atau shift aktif
                                 $shift = null;
-                                if ($todayShift && $todayShift->shift) {
-                                    $shift = $todayShift->shift;
+                                $activeWorkerShift = null;
+                                $selectedDate = \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')));
+
+                                // Cek shift override untuk tanggal ini (filter pakai format agar Carbon vs Carbon cocok)
+                                $override = $worker->shiftOverrides->filter(fn($o) => $o->override_date->format('Y-m-d') === $selectedDate->format('Y-m-d'))->first();
+
+                                // Cek apakah ada tukar shift yang sudah dieksekusi untuk tanggal ini
+                                $swapInfo = null;
+                                $dateStr = $selectedDate->format('Y-m-d');
+                                $executedSwap = $worker->shiftSwapRequestsAsRequester
+                                    ->where('status', 'executed')
+                                    ->filter(function($swap) use ($dateStr) {
+                                        return $swap->swap_type === 'single_date'
+                                            ? optional($swap->swap_date)->format('Y-m-d') === $dateStr
+                                            : ($swap->swap_type === 'date_range'
+                                                ? optional($swap->swap_start_date)->format('Y-m-d') <= $dateStr && optional($swap->swap_end_date)->format('Y-m-d') >= $dateStr
+                                                : ($swap->swap_type === 'recurring' && is_array($swap->swap_dates)
+                                                    ? in_array($dateStr, array_map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'), $swap->swap_dates))
+                                                    : false));
+                                    })->first();
+                                if (!$executedSwap) {
+                                    $executedSwap = $worker->shiftSwapRequestsAsTarget
+                                        ->where('status', 'executed')
+                                        ->filter(function($swap) use ($dateStr) {
+                                            return $swap->swap_type === 'single_date'
+                                                ? optional($swap->swap_date)->format('Y-m-d') === $dateStr
+                                                : ($swap->swap_type === 'date_range'
+                                                    ? optional($swap->swap_start_date)->format('Y-m-d') <= $dateStr && optional($swap->swap_end_date)->format('Y-m-d') >= $dateStr
+                                                    : ($swap->swap_type === 'recurring' && is_array($swap->swap_dates)
+                                                        ? in_array($dateStr, array_map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'), $swap->swap_dates))
+                                                        : false));
+                                        })->first();
+                                }
+                                if ($executedSwap) {
+                                    // Tentukan partner tukar shift
+                                    if ($executedSwap->requester_id === $worker->id) {
+                                        $swapInfo = $executedSwap->targetWorker;
+                                    } else {
+                                        $swapInfo = $executedSwap->requester;
+                                    }
+                                }
+
+                                if ($override && $override->shift) {
+                                    $shift = $override->shift;
                                 } else {
-                                    // Cari shift aktif dari workerShifts
+                                    // Cari shift aktif dari workerShifts menggunakan isActiveOnDate
                                     $activeWorkerShift = $worker->workerShifts
-                                        ->where('is_active', true)
-                                        ->where('effective_from', '<=', now()->format('Y-m-d'))
-                                        ->filter(function($ws) {
-                                            return is_null($ws->effective_until) || $ws->effective_until >= now()->format('Y-m-d');
+                                        ->filter(function($ws) use ($selectedDate) {
+                                            return $ws->isActiveOnDate($selectedDate);
                                         })
+                                        ->sortByDesc('effective_from')
                                         ->first();
 
                                     if ($activeWorkerShift && $activeWorkerShift->shift) {
@@ -445,14 +410,18 @@ phpinfo() di browser
                             @endphp
                             @if($shift)
                                 @php
-                                    $selectedDate = \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')));
                                     $schedule = $shift->getScheduleForDate($selectedDate);
                                 @endphp
                                 <div class="text-sm text-gray-900 font-medium">{{ $shift->name }}</div>
                                 <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
-                                @if($todayShift)
+                                @if($override)
                                     <div class="text-xs text-blue-600">
                                         <i class="fas fa-exchange-alt mr-1"></i>Shift Override
+                                    </div>
+                                @elseif($swapInfo)
+                                    <div class="text-xs text-indigo-600">
+                                        <i class="fas fa-people-arrows mr-1"></i>Tukar Shift
+                                        <span class="text-indigo-500">({{ $swapInfo->name ?? '-' }})</span>
                                     </div>
                                 @elseif($activeWorkerShift)
                                     <div class="text-xs text-green-600">
@@ -569,7 +538,7 @@ phpinfo() di browser
                                         ];
                                         $leaveTypeName = $worker->leave_request->leaveType->name;
                                         $leaveStyle = ['bg' => 'bg-indigo-100', 'text' => 'text-indigo-800', 'icon' => 'fa-calendar-times'];
-                                        
+
                                         foreach ($leaveTypeMap as $key => $style) {
                                             if (str_contains($leaveTypeName, $key)) {
                                                 $leaveStyle = $style;

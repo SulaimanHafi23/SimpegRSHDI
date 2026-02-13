@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Approval;
 
 use App\Http\Controllers\Controller;
 use App\Models\WorkerDocument;
+use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 
 class DocumentApprovalController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -16,20 +19,106 @@ class DocumentApprovalController extends Controller
 
     public function index(Request $request)
     {
-        $status = $request->input('status', 'pending');
+        $departmentId = $this->getManagerDepartmentFilter();
 
-        $documents = WorkerDocument::with(['worker.department', 'worker.position', 'documentType'])
-            ->where('status', $status)
-            ->latest()
-            ->paginate(20);
+        $filters = [
+            'status' => $request->input('status', ''),
+            'document_type_id' => $request->input('document_type_id') ?? $request->input('document_type'),
+            'date_from' => $request->input('date_from'),
+            'date_to' => $request->input('date_to'),
+            'search' => $request->input('search'),
+            'per_page' => $request->input('per_page', 20),
+        ];
 
-        return view('approvals.documents.index', compact('documents'));
+        $query = WorkerDocument::with(['worker.department', 'worker.position', 'documentType']);
+
+        // Filter by manager's department
+        if ($departmentId) {
+            $query->whereHas('worker', function($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['document_type_id'])) {
+            $query->where('document_type_id', $filters['document_type_id']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = strtolower($filters['search']);
+            $query->whereHas('worker', function ($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%'])
+                  ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $search . '%']);
+            });
+        }
+
+        $documents = $query->latest()
+            ->paginate($filters['per_page'])
+            ->appends($filters);
+
+        $baseQuery = WorkerDocument::query();
+        if ($departmentId) {
+            $baseQuery->whereHas('worker', function($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
+            });
+        }
+        if (!empty($filters['document_type_id'])) {
+            $baseQuery->where('document_type_id', $filters['document_type_id']);
+        }
+        if (!empty($filters['date_from'])) {
+            $baseQuery->whereDate('created_at', '>=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $baseQuery->whereDate('created_at', '<=', $filters['date_to']);
+        }
+        if (!empty($filters['search'])) {
+            $search = strtolower($filters['search']);
+            $baseQuery->whereHas('worker', function ($q) use ($search) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%'])
+                  ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $search . '%']);
+            });
+        }
+
+        $totalDocuments = (clone $baseQuery)->count();
+        $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
+        $verifiedCount = (clone $baseQuery)->where('status', 'verified')->count();
+        $rejectedCount = (clone $baseQuery)->where('status', 'rejected')->count();
+
+        $documentTypes = \App\Models\DocumentType::orderBy('name')->get();
+
+        return view('approvals.documents.index', compact(
+            'documents',
+            'documentTypes',
+            'totalDocuments',
+            'pendingCount',
+            'verifiedCount',
+            'rejectedCount'
+        ));
     }
 
     public function show(string $id)
     {
         $document = WorkerDocument::with(['worker.department', 'worker.position', 'documentType'])
             ->findOrFail($id);
+
+        // Check if manager can view this document
+        $user = auth()->user();
+        if ($user->hasRole('Manager') && $user->worker) {
+            if ($document->worker->department_id !== $user->worker->department_id) {
+                abort(403, 'Unauthorized');
+            }
+        }
 
         return view('approvals.documents.show', compact('document'));
     }
@@ -42,6 +131,14 @@ class DocumentApprovalController extends Controller
 
         try {
             $document = WorkerDocument::findOrFail($id);
+
+            // Check permission for manager
+            $user = auth()->user();
+            if ($user->hasRole('Manager') && $user->worker) {
+                if ($document->worker->department_id !== $user->worker->department_id) {
+                    return back()->with('error', 'Anda tidak memiliki akses untuk memverifikasi dokumen ini.');
+                }
+            }
 
             $document->update([
                 'status' => 'verified',
@@ -66,6 +163,14 @@ class DocumentApprovalController extends Controller
 
         try {
             $document = WorkerDocument::findOrFail($id);
+
+            // Check permission for manager
+            $user = auth()->user();
+            if ($user->hasRole('Manager') && $user->worker) {
+                if ($document->worker->department_id !== $user->worker->department_id) {
+                    return back()->with('error', 'Anda tidak memiliki akses untuk menolak dokumen ini.');
+                }
+            }
 
             $document->update([
                 'status' => 'rejected',

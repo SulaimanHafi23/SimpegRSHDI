@@ -38,10 +38,10 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Dokumen</label>
-                <select name="document_type" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200">
+                <select name="document_type_id" class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200">
                     <option value="">Semua Tipe</option>
                     @foreach($documentTypes as $type)
-                    <option value="{{ $type->id }}" {{ request('document_type') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
+                    <option value="{{ $type->id }}" {{ request('document_type_id') == $type->id ? 'selected' : '' }}>{{ $type->name }}</option>
                     @endforeach
                 </select>
             </div>

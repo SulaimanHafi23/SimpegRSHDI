@@ -20,7 +20,11 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
 
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = $this->model->with(['worker', 'approver']);
+        $query = $this->model->with([
+            'worker.shiftOverrides.shift',
+            'worker.activeWorkerShift.shift',
+            'approver'
+        ]);
 
         if (!empty($filters['worker_id'])) {
             $query->where('worker_id', $filters['worker_id']);
@@ -30,12 +34,15 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['date_from'])) {
-            $query->where('overtime_date', '>=', $filters['date_from']);
+        $dateFrom = $filters['date_from'] ?? $filters['start_date'] ?? null;
+        $dateTo = $filters['date_to'] ?? $filters['end_date'] ?? null;
+
+        if (!empty($dateFrom)) {
+            $query->where('overtime_date', '>=', $dateFrom);
         }
 
-        if (!empty($filters['date_to'])) {
-            $query->where('overtime_date', '<=', $filters['date_to']);
+        if (!empty($dateTo)) {
+            $query->where('overtime_date', '<=', $dateTo);
         }
 
         if (!empty($filters['year'])) {
@@ -70,12 +77,19 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
 
     public function getById(string $id): ?object
     {
-        return $this->model->with(['worker', 'approver'])->find($id);
+        return $this->model->with([
+            'worker.shiftOverrides.shift',
+            'worker.activeWorkerShift.shift',
+            'approver'
+        ])->find($id);
     }
 
     public function getByWorkerId(string $workerId, array $filters = []): Collection
     {
-        $query = $this->model->where('worker_id', $workerId);
+        $query = $this->model->with([
+            'worker.shiftOverrides.shift',
+            'worker.activeWorkerShift.shift'
+        ])->where('worker_id', $workerId);
 
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -95,7 +109,10 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
     public function getPendingRequests(): Collection
     {
         return $this->model->where('status', 'pending')
-            ->with(['worker'])
+            ->with([
+                'worker.shiftOverrides.shift',
+                'worker.activeWorkerShift.shift'
+            ])
             ->latest('overtime_date')
             ->get();
     }

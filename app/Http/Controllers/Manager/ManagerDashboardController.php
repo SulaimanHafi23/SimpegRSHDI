@@ -8,16 +8,20 @@ use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
 use App\Models\ShiftSwapRequest;
+use App\Services\Attendance\AttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class ManagerDashboardController extends Controller
 {
-    public function __construct()
+    protected AttendanceService $attendanceService;
+
+    public function __construct(AttendanceService $attendanceService)
     {
         $this->middleware('auth');
         $this->middleware('role:Manager');
+        $this->attendanceService = $attendanceService;
     }
 
     public function index()
@@ -58,7 +62,7 @@ class ManagerDashboardController extends Controller
 
         $departmentAbsentToday = $departmentWorkersActive - $departmentAttendanceToday;
 
-        $attendanceRate = $departmentWorkersActive > 0 
+        $attendanceRate = $departmentWorkersActive > 0
             ? round(($departmentAttendanceToday / $departmentWorkersActive) * 100, 1)
             : 0;
 
@@ -127,29 +131,29 @@ class ManagerDashboardController extends Controller
             $date = now()->subDays($i);
             $dateStr = $date->format('Y-m-d');
             $dayName = $date->format('D');
-            
+
             $present = Attendance::whereDate('attendance_date', $dateStr)
                 ->where('status', 'present')
                 ->whereHas('worker', function ($query) use ($departmentId) {
                     $query->where('department_id', $departmentId);
                 })
                 ->count();
-            
+
             $late = Attendance::whereDate('attendance_date', $dateStr)
                 ->where('is_late', true)
                 ->whereHas('worker', function ($query) use ($departmentId) {
                     $query->where('department_id', $departmentId);
                 })
                 ->count();
-            
+
             $totalAttendance = Attendance::whereDate('attendance_date', $dateStr)
                 ->whereHas('worker', function ($query) use ($departmentId) {
                     $query->where('department_id', $departmentId);
                 })
                 ->count();
-            
+
             $absent = $departmentWorkersActive - $totalAttendance;
-            
+
             $attendanceChart[] = [
                 'date' => $dayName,
                 'present' => $present,
@@ -179,6 +183,14 @@ class ManagerDashboardController extends Controller
                 ];
             });
 
+        // ========== PENDING CHECKOUTS ==========
+        // Get workers in this department who need to checkout
+        $allPendingCheckouts = $this->attendanceService->getPendingCheckouts();
+        $pendingCheckouts = $allPendingCheckouts->filter(function($checkout) use ($departmentId) {
+            $worker = \App\Models\Worker::find($checkout['worker_id']);
+            return $worker && $worker->department_id === $departmentId;
+        });
+
         return view('manager.dashboard.index', compact(
             'manager',
             'departmentWorkers',
@@ -193,7 +205,8 @@ class ManagerDashboardController extends Controller
             'recentOvertimes',
             'recentShiftSwaps',
             'attendanceChart',
-            'topPerformers'
+            'topPerformers',
+            'pendingCheckouts'
         ));
     }
 }

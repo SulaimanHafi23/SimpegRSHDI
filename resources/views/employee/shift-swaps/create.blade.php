@@ -66,16 +66,16 @@
                     Shift Anda Yang Akan Ditukar
                     <span class="text-red-500">*</span>
                 </label>
-                <select name="requester_shift_id" 
+                <select name="requester_shift_id"
                         id="requester_shift_id"
-                        required 
+                        required
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('requester_shift_id') border-red-500 @enderror">
                     <option value="">-- Pilih Shift Anda --</option>
                     @foreach($requesterShifts as $ws)
                         <option value="{{ $ws->id }}" {{ old('requester_shift_id') == $ws->id ? 'selected' : '' }}>
-                            {{ $ws->effective_from->format('d M Y') }} - 
-                            {{ $ws->shift?->name ?? 'N/A' }} 
+                            {{ $ws->shift?->name ?? 'N/A' }}
                             ({{ $ws->shift ? \Carbon\Carbon::parse($ws->shift->start_time)->format('H:i') : '' }} - {{ $ws->shift ? \Carbon\Carbon::parse($ws->shift->end_time)->format('H:i') : '' }})
+                            — Berlaku sejak {{ $ws->effective_from->format('d M Y') }}
                         </option>
                     @endforeach
                 </select>
@@ -90,12 +90,12 @@
                     <i class="fas fa-user-friends text-blue-600 mr-1"></i>
                     Rekan Kerja Target (Opsional)
                 </label>
-                <select name="target_worker_id" 
+                <select name="target_worker_id"
                         id="target_worker_id"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('target_worker_id') border-red-500 @enderror">
                     <option value="">-- Biarkan Kosong untuk Open Request --</option>
                     @foreach($workers as $w)
-                        <option value="{{ $w->id }}" 
+                        <option value="{{ $w->id }}"
                                 data-dept="{{ $w->department->name ?? 'N/A' }}"
                                 {{ old('target_worker_id') == $w->id ? 'selected' : '' }}>
                             {{ $w->name }} - {{ $w->department->name ?? 'N/A' }}
@@ -120,8 +120,8 @@
                 </label>
                 <div class="space-y-3">
                     <div class="flex items-center">
-                        <input type="radio" id="single_date" name="swap_type" value="single_date" 
-                               class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500" 
+                        <input type="radio" id="single_date" name="swap_type" value="single_date"
+                               class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
                                {{ old('swap_type', 'single_date') == 'single_date' ? 'checked' : '' }}>
                         <label for="single_date" class="ml-3 block text-sm text-gray-700">
                             <span class="font-medium">Tanggal Tertentu</span>
@@ -129,7 +129,7 @@
                         </label>
                     </div>
                     <div class="flex items-center">
-                        <input type="radio" id="date_range" name="swap_type" value="date_range" 
+                        <input type="radio" id="date_range" name="swap_type" value="date_range"
                                class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
                                {{ old('swap_type') == 'date_range' ? 'checked' : '' }}>
                         <label for="date_range" class="ml-3 block text-sm text-gray-700">
@@ -138,7 +138,7 @@
                         </label>
                     </div>
                     <div class="flex items-center">
-                        <input type="radio" id="recurring" name="swap_type" value="recurring" 
+                        <input type="radio" id="recurring" name="swap_type" value="recurring"
                                class="h-4 w-4 text-green-600 border-gray-300 focus:ring-green-500"
                                {{ old('swap_type') == 'recurring' ? 'checked' : '' }}>
                         <label for="recurring" class="ml-3 block text-sm text-gray-700">
@@ -156,8 +156,8 @@
                     Tanggal Tukar Shift
                     <span class="text-red-500">*</span>
                 </label>
-                <input type="date" 
-                       name="swap_date" 
+                <input type="date"
+                       name="swap_date"
                        id="swap_date"
                        min="{{ date('Y-m-d', strtotime("+{$minDays} days")) }}"
                        value="{{ old('swap_date') }}"
@@ -177,8 +177,8 @@
                             Tanggal Mulai
                             <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" 
-                               name="swap_start_date" 
+                        <input type="date"
+                               name="swap_start_date"
                                id="swap_start_date"
                                min="{{ date('Y-m-d', strtotime("+{$minDays} days")) }}"
                                value="{{ old('swap_start_date') }}"
@@ -193,8 +193,8 @@
                             Tanggal Akhir
                             <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" 
-                               name="swap_end_date" 
+                        <input type="date"
+                               name="swap_end_date"
                                id="swap_end_date"
                                min="{{ date('Y-m-d', strtotime("+{$minDays} days")) }}"
                                value="{{ old('swap_end_date') }}"
@@ -215,17 +215,17 @@
                 </label>
                 <div id="recurring_dates" class="space-y-2">
                     <div class="flex items-center gap-2">
-                        <input type="date" 
-                               name="swap_dates[]" 
+                        <input type="date"
+                               name="swap_dates[]"
                                min="{{ date('Y-m-d', strtotime("+{$minDays} days")) }}"
                                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                        <button type="button" onclick="addDateInput()" 
+                        <button type="button" onclick="addDateInput()"
                                 class="px-3 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition">
                             <i class="fas fa-plus"></i>
                         </button>
                     </div>
                 </div>
-                <button type="button" onclick="addDateInput()" 
+                <button type="button" onclick="addDateInput()"
                         class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition">
                     <i class="fas fa-plus mr-1"></i>
                     Tambah Tanggal
@@ -242,7 +242,7 @@
                     <i class="fas fa-calendar-alt text-purple-600 mr-1"></i>
                     Shift Target (Opsional)
                 </label>
-                <select name="target_shift_id" 
+                <select name="target_shift_id"
                         id="target_shift_id"
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('target_shift_id') border-red-500 @enderror">
                     <option value="">-- Pilih Rekan Kerja Terlebih Dahulu --</option>
@@ -259,10 +259,10 @@
                     <i class="fas fa-comment-alt text-amber-600 mr-1"></i>
                     Alasan Tukar Shift (Opsional)
                 </label>
-                <textarea name="reason" 
+                <textarea name="reason"
                           id="reason"
-                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('reason') border-red-500 @enderror" 
-                          rows="4" 
+                          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('reason') border-red-500 @enderror"
+                          rows="4"
                           placeholder="Contoh: Ada keperluan keluarga mendadak, perlu ke dokter, dll...">{{ old('reason') }}</textarea>
                 <p class="text-xs text-gray-500 mt-1">Alasan yang jelas meningkatkan kemungkinan disetujui</p>
                 @error('reason')
@@ -272,12 +272,12 @@
 
             <!-- Submit Buttons -->
             <div class="flex gap-3">
-                <button type="submit" 
+                <button type="submit"
                         class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
                     <i class="fas fa-paper-plane mr-2"></i>
                     Kirim Permintaan
                 </button>
-                <a href="{{ route('employee.shift-swaps.index') }}" 
+                <a href="{{ route('employee.shift-swaps.index') }}"
                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition duration-150 text-center">
                     <i class="fas fa-times mr-2"></i>
                     Batal
@@ -293,7 +293,7 @@
                     <div class="ml-3">
                         <h4 class="text-sm font-semibold text-blue-800">Informasi Penting</h4>
                         <p class="text-sm text-blue-700 mt-1">
-                            Semua permintaan tukar shift memerlukan persetujuan dari HR sebelum dapat diproses. 
+                            Semua permintaan tukar shift memerlukan persetujuan dari HR sebelum dapat diproses.
                             Pastikan alasan yang Anda berikan jelas dan dapat dipertanggungjawabkan.
                         </p>
                     </div>
@@ -311,7 +311,7 @@ document.querySelectorAll('input[name="swap_type"]').forEach(radio => {
         document.querySelectorAll('.swap-date-section').forEach(section => {
             section.style.display = 'none';
         });
-        
+
         // Show relevant section
         const selectedType = this.value;
         const sectionId = selectedType + '_section';
@@ -328,18 +328,18 @@ document.addEventListener('DOMContentLoaded', function() {
     if (selectedRadio) {
         selectedRadio.dispatchEvent(new Event('change'));
     }
-    
+
     // Set min date for end date based on start date
     const startDateInput = document.getElementById('swap_start_date');
     const endDateInput = document.getElementById('swap_end_date');
-    
+
     if (startDateInput && endDateInput) {
         startDateInput.addEventListener('change', function() {
             const startDate = new Date(this.value);
             startDate.setDate(startDate.getDate() + 1); // Minimum next day
             const minEndDate = startDate.toISOString().split('T')[0];
             endDateInput.min = minEndDate;
-            
+
             // Reset end date if it's before new minimum
             if (endDateInput.value && endDateInput.value < minEndDate) {
                 endDateInput.value = '';
@@ -353,20 +353,20 @@ function addDateInput() {
     const container = document.getElementById('recurring_dates');
     const newDateDiv = document.createElement('div');
     newDateDiv.className = 'flex items-center gap-2';
-    
+
     const minDate = '{{ date("Y-m-d", strtotime("+{$minDays} days")) }}';
-    
+
     newDateDiv.innerHTML = `
-        <input type="date" 
-               name="swap_dates[]" 
+        <input type="date"
+               name="swap_dates[]"
                min="${minDate}"
                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
-        <button type="button" onclick="removeDateInput(this)" 
+        <button type="button" onclick="removeDateInput(this)"
                 class="px-3 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
             <i class="fas fa-minus"></i>
         </button>
     `;
-    
+
     container.appendChild(newDateDiv);
 }
 
@@ -374,7 +374,7 @@ function addDateInput() {
 function removeDateInput(button) {
     const container = document.getElementById('recurring_dates');
     const dateInputs = container.querySelectorAll('.flex.items-center');
-    
+
     // Don't remove if it's the last one
     if (dateInputs.length > 1) {
         button.parentElement.remove();
@@ -384,31 +384,31 @@ function removeDateInput(button) {
 // Form validation before submit
 document.querySelector('form').addEventListener('submit', function(e) {
     const swapType = document.querySelector('input[name="swap_type"]:checked')?.value;
-    
+
     if (!swapType) {
         e.preventDefault();
         alert('Pilih jenis tukar shift.');
         return false;
     }
-    
+
     // Clear irrelevant fields before submit to avoid validation conflicts
     if (swapType !== 'single_date') {
         const swapDateInput = document.getElementById('swap_date');
         if (swapDateInput) swapDateInput.disabled = true;
     }
-    
+
     if (swapType !== 'date_range') {
         const startDateInput = document.getElementById('swap_start_date');
         const endDateInput = document.getElementById('swap_end_date');
         if (startDateInput) startDateInput.disabled = true;
         if (endDateInput) endDateInput.disabled = true;
     }
-    
+
     if (swapType !== 'recurring') {
         const dateInputs = document.querySelectorAll('input[name="swap_dates[]"]');
         dateInputs.forEach(input => input.disabled = true);
     }
-    
+
     // Validate based on swap type
     if (swapType === 'single_date') {
         const swapDate = document.getElementById('swap_date').value;
@@ -434,7 +434,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
             return false;
         }
     }
-    
+
     return true;
 });
 
@@ -442,17 +442,17 @@ document.querySelector('form').addEventListener('submit', function(e) {
 document.getElementById('target_worker_id').addEventListener('change', function() {
     const workerId = this.value;
     const targetShiftSelect = document.getElementById('target_shift_id');
-    
+
     // Clear existing shift options
     targetShiftSelect.innerHTML = '<option value="">-- Memuat shift... --</option>';
     targetShiftSelect.disabled = true;
-    
+
     if (!workerId) {
         targetShiftSelect.innerHTML = '<option value="">-- Pilih Rekan Kerja Terlebih Dahulu --</option>';
         targetShiftSelect.disabled = false;
         return;
     }
-    
+
     // Fetch shifts for selected worker
     fetch(`/api/workers/${workerId}/future-shifts`)
         .then(response => {
@@ -463,7 +463,7 @@ document.getElementById('target_worker_id').addEventListener('change', function(
         })
         .then(data => {
             targetShiftSelect.innerHTML = '<option value="">-- Pilih Shift Target --</option>';
-            
+
             if (data.length === 0) {
                 targetShiftSelect.innerHTML = '<option value="">-- Tidak ada shift tersedia --</option>';
             } else {
@@ -480,19 +480,19 @@ document.getElementById('target_worker_id').addEventListener('change', function(
             console.error('Error loading shifts:', error);
             targetShiftSelect.innerHTML = '<option value="">-- Gagal memuat shift --</option>';
             targetShiftSelect.disabled = false;
-            
+
             // Show user-friendly error message
             const errorDiv = document.createElement('div');
             errorDiv.className = 'mt-2 p-3 bg-red-100 text-red-700 text-sm rounded-lg';
             errorDiv.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i> Gagal memuat data shift. Silakan refresh halaman atau coba lagi.';
-            
+
             // Remove existing error message
             const existingError = targetShiftSelect.parentNode.querySelector('.error-message');
             if (existingError) existingError.remove();
-            
+
             errorDiv.classList.add('error-message');
             targetShiftSelect.parentNode.appendChild(errorDiv);
-            
+
             // Auto remove error message after 5 seconds
             setTimeout(() => {
                 if (errorDiv.parentNode) errorDiv.remove();

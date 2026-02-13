@@ -10,6 +10,48 @@
         description="Direktur: {{ auth()->user()->name }}"
         icon="fas fa-user-tie" />
 
+    {{-- Pending Checkouts Alert --}}
+    @if(isset($pendingCheckouts) && $pendingCheckouts->count() > 0)
+    <x-card class="border-yellow-200 bg-yellow-50">
+        <div class="flex items-start gap-3 text-yellow-800">
+            <div class="mt-1"><i class="fas fa-bell text-lg"></i></div>
+            <div class="flex-1">
+                <h3 class="font-semibold text-lg mb-1">Peringatan: {{ $pendingCheckouts->count() }} pegawai belum check-out</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="text-left text-xs uppercase text-yellow-700">
+                            <tr>
+                                <th class="py-2 pr-4">Pegawai</th>
+                                <th class="py-2 pr-4">Shift</th>
+                                <th class="py-2 pr-4">Tanggal</th>
+                                <th class="py-2 pr-4">Berakhir</th>
+                                <th class="py-2">Terlambat</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-yellow-100">
+                            @foreach($pendingCheckouts->take(10) as $item)
+                            <tr>
+                                <td class="py-2 pr-4">
+                                    <div class="font-semibold">{{ $item['worker_name'] }}</div>
+                                    <div class="text-xs text-yellow-700">{{ $item['position'] }}</div>
+                                </td>
+                                <td class="py-2 pr-4">{{ $item['shift_name'] }}</td>
+                                <td class="py-2 pr-4">{{ \Carbon\Carbon::parse($item['attendance_date'])->format('d M Y') }}</td>
+                                <td class="py-2 pr-4">{{ \Carbon\Carbon::parse($item['shift_end_time'])->format('d M Y H:i') }}</td>
+                                <td class="py-2 text-red-600 font-semibold">{{ $item['formatted_late'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if($pendingCheckouts->count() > 10)
+                    <p class="text-xs text-yellow-700 mt-2">Menampilkan 10 teratas dari {{ $pendingCheckouts->count() }} pending checkout.</p>
+                @endif
+            </div>
+        </div>
+    </x-card>
+    @endif
+
     {{-- Worker Statistics Cards --}}
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         <x-stats-card
@@ -352,8 +394,8 @@
     <x-card title="Aksi Cepat">
         <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('worker.manage'))
-                <x-button 
-                    variant="primary" 
+                <x-button
+                    variant="primary"
                     icon="fas fa-user-plus"
                     onclick="window.location.href='{{ route('admin.workers.create') }}'"
                     class="w-full justify-center">
@@ -361,10 +403,10 @@
                     <span class="sm:hidden">Pegawai</span>
                 </x-button>
             @endif
-            
+
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('attendance.manage'))
-                <x-button 
-                    variant="success" 
+                <x-button
+                    variant="success"
                     icon="fas fa-clipboard-check"
                     onclick="window.location.href='{{ route('admin.attendance.create') }}'"
                     class="w-full justify-center">
@@ -372,10 +414,10 @@
                     <span class="sm:hidden">Absensi</span>
                 </x-button>
             @endif
-            
+
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('report.view'))
-                <x-button 
-                    variant="warning" 
+                <x-button
+                    variant="warning"
                     icon="fas fa-chart-bar"
                     onclick="window.location.href='{{ route('admin.attendance.report.monthly') }}'"
                     class="w-full justify-center">
@@ -383,10 +425,10 @@
                     <span class="sm:hidden">Laporan</span>
                 </x-button>
             @endif
-            
+
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
-                <x-button 
-                    variant="secondary" 
+                <x-button
+                    variant="secondary"
                     icon="fas fa-tasks"
                     onclick="window.location.href='{{ route('admin.leave.index') }}'"
                     class="w-full justify-center">

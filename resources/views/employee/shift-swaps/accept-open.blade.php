@@ -45,18 +45,29 @@
             <!-- Requester Shift Info -->
             <div class="bg-gray-50 rounded-lg p-4">
                 <p class="text-sm text-gray-500 mb-2">Shift yang Ditawarkan</p>
+                @php
+                    $reqShift = $swapRequest->requesterShift?->shift;
+                @endphp
                 <div class="space-y-2">
                     <div class="flex items-center text-gray-800">
                         <i class="fas fa-clock text-gray-400 mr-2 w-5"></i>
-                        <span class="font-medium">{{ $swapRequest->requesterShift?->shift->name ?? 'N/A' }}</span>
+                        <span class="font-medium">{{ $reqShift->name ?? 'N/A' }}</span>
                     </div>
                     <div class="flex items-center text-gray-600 text-sm">
                         <i class="fas fa-calendar text-gray-400 mr-2 w-5"></i>
-                        {{ $swapRequest->requesterShift?->effective_from?->format('d M Y') ?? 'N/A' }}
+                        @if($swapRequest->swap_type === 'single_date' && $swapRequest->swap_date)
+                            {{ $swapRequest->swap_date->format('d M Y') }}
+                        @elseif($swapRequest->swap_type === 'date_range' && $swapRequest->swap_start_date && $swapRequest->swap_end_date)
+                            {{ $swapRequest->swap_start_date->format('d M Y') }} s/d {{ $swapRequest->swap_end_date->format('d M Y') }}
+                        @elseif($swapRequest->swap_type === 'recurring' && $swapRequest->swap_dates)
+                            {{ collect($swapRequest->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M Y'))->join(', ') }}
+                        @else
+                            N/A
+                        @endif
                     </div>
                     <div class="flex items-center text-gray-600 text-sm">
                         <i class="fas fa-history text-gray-400 mr-2 w-5"></i>
-                        {{ $swapRequest->requesterShift?->shift->start_time ?? '' }} - {{ $swapRequest->requesterShift?->shift->end_time ?? '' }}
+                        {{ $reqShift->start_time ?? '' }} - {{ $reqShift->end_time ?? '' }}
                     </div>
                 </div>
             </div>

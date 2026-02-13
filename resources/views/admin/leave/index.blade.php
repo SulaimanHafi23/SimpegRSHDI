@@ -83,10 +83,10 @@
             name="status"
             label="Status"
             :options="[
-                'Pending' => 'Menunggu',
-                'Approved' => 'Disetujui',
-                'Rejected' => 'Ditolak',
-                'Cancelled' => 'Dibatalkan'
+                'pending' => 'Menunggu',
+                'approved' => 'Disetujui',
+                'rejected' => 'Ditolak',
+                'cancelled' => 'Dibatalkan'
             ]"
             :selected="$filters['status'] ?? ''"
             placeholder="Semua Status" />

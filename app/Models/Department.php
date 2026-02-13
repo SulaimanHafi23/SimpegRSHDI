@@ -17,12 +17,14 @@ class Department extends Model
         'code',
         'description',
         'is_active',
+        'requires_holiday_attendance',
         'parent_id',
         'manager_id',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'requires_holiday_attendance' => 'boolean',
     ];
 
     public function workers(): HasMany

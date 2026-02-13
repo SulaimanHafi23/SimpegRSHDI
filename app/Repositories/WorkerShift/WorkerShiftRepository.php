@@ -64,7 +64,7 @@ class WorkerShiftRepository implements WorkerShiftRepositoryInterface
     public function update(string $id, WorkerShiftDTO $dto): object
     {
         $workerShift = $this->model->findOrFail($id);
-        $workerShift->update($dto->toArray());
+        $workerShift->update($dto->toUpdateArray());
         return $workerShift->fresh();
     }
 
@@ -73,10 +73,38 @@ class WorkerShiftRepository implements WorkerShiftRepositoryInterface
         return $this->model->findOrFail($id)->delete();
     }
 
-    public function deactivateOldShifts(string $workerId): void
+    public function deactivateOldShifts(string $workerId, ?string $excludeId = null): void
+    {
+        $query = $this->model->where('worker_id', $workerId)
+            ->where('is_active', true);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $query->update(['is_active' => false]);
+    }
+
+    /**
+     * Delete all old shifts for a worker, optionally excluding one.
+     * Returns the number of deleted records.
+     */
+    public function deleteOldShifts(string $workerId, ?string $excludeId = null): int
+    {
+        $query = $this->model->where('worker_id', $workerId);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query->delete();
+    }
+
+    public function updateOldShiftsEndDate(string $workerId, string $endDate): void
     {
         $this->model->where('worker_id', $workerId)
             ->where('is_active', true)
-            ->update(['is_active' => false]);
+            ->whereNull('effective_until')
+            ->update(['effective_until' => $endDate]);
     }
 }

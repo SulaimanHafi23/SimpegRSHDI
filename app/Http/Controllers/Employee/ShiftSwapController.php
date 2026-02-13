@@ -83,7 +83,7 @@ class ShiftSwapController extends Controller
             $swap = $this->shiftSwapService->acceptRequest($id, $worker->id);
 
             $message = $swap->requires_manager_approval
-                ? 'Permintaan diterima dan menunggu persetujuan manager.'
+                ? 'Permintaan diterima dan menunggu persetujuan manager/HR.'
                 : 'Permintaan tukar shift diterima.';
 
             return redirect()->route('employee.shift-swaps.index')->with('success', $message);
@@ -152,6 +152,9 @@ class ShiftSwapController extends Controller
         // Get worker's shifts for selection
         $workerShifts = $this->shiftSwapService->getFutureShifts($worker->id);
 
+        // Enrich with effective shift (considering ShiftOverride)
+        $this->shiftSwapService->enrichWithEffectiveShifts(collect([$swapRequest]));
+
         return view('employee.shift-swaps.accept-open', compact('swapRequest', 'workerShifts'));
     }
 
@@ -169,7 +172,7 @@ class ShiftSwapController extends Controller
 
         try {
             $this->shiftSwapService->acceptOpenRequest($id, $worker->id, $request->input('target_shift_id'));
-            return redirect()->route('employee.shift-swaps.index')->with('success', 'Anda berhasil menerima open request. Menunggu persetujuan manager.');
+            return redirect()->route('employee.shift-swaps.index')->with('success', 'Anda berhasil menerima open request. Menunggu persetujuan manager/HR.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menerima request: ' . $e->getMessage());
         }

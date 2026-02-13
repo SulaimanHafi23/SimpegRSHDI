@@ -5,12 +5,12 @@
             <i class="fas fa-filter text-indigo-600 mr-2"></i>
             Filter Kalender
         </h3>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Department Filter -->
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-                <select x-model="selectedDepartment" @change="loadCalendar()" 
+                <select x-model="selectedDepartment" @change="loadCalendar()"
                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                     <option value="">Semua Department</option>
                     @foreach($departments ?? [] as $dept)
@@ -25,8 +25,8 @@
                 <div class="space-y-2">
                     @foreach($shifts ?? [] as $shift)
                         <label class="inline-flex items-center mr-4">
-                            <input type="checkbox" 
-                                   x-model="selectedShifts" 
+                            <input type="checkbox"
+                                   x-model="selectedShifts"
                                    value="{{ $shift->id }}"
                                    @change="loadCalendar()"
                                    class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
@@ -40,13 +40,13 @@
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Bulan</label>
                 <div class="flex items-center gap-2">
-                    <button @click="previousMonth()" 
+                    <button @click="previousMonth()"
                             class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
                         <i class="fas fa-chevron-left"></i>
                     </button>
                     <input type="month" x-model="currentMonth" @change="loadCalendar()"
                            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                    <button @click="nextMonth()" 
+                    <button @click="nextMonth()"
                             class="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
                         <i class="fas fa-chevron-right"></i>
                     </button>
@@ -100,7 +100,7 @@
             <!-- Calendar Days -->
             <div class="grid grid-cols-7 gap-2">
                 <template x-for="(day, index) in calendarDays" :key="index">
-                    <div 
+                    <div
                         :class="{
                             'bg-gray-50': !day.isCurrentMonth,
                             'bg-white border-2 border-indigo-500': day.isToday,
@@ -113,7 +113,7 @@
                     >
                         <!-- Date Number -->
                         <div class="flex justify-between items-start mb-1">
-                            <span 
+                            <span
                                 :class="{
                                     'text-gray-400': !day.isCurrentMonth,
                                     'text-white bg-indigo-600 w-6 h-6 flex items-center justify-center rounded-full text-xs': day.isToday,
@@ -122,7 +122,7 @@
                                 class="text-sm"
                                 x-text="day.date"
                             ></span>
-                            <span x-show="day.workers.length > 0" 
+                            <span x-show="day.workers.length > 0"
                                   class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full font-semibold"
                                   x-text="day.workers.length">
                             </span>
@@ -131,20 +131,20 @@
                         <!-- Workers Preview -->
                         <div class="space-y-1">
                             <template x-for="(worker, idx) in day.workers.slice(0, 3)" :key="idx">
-                                <div class="text-xs truncate" 
+                                <div class="text-xs truncate"
                                      :class="getShiftColorClass(worker.shift_id)">
                                     <i class="fas fa-user-circle mr-1"></i>
                                     <span x-text="worker.name"></span>
                                 </div>
                             </template>
-                            <div x-show="day.workers.length > 3" 
+                            <div x-show="day.workers.length > 3"
                                  class="text-xs text-gray-500 italic">
                                 +<span x-text="day.workers.length - 3"></span> lainnya
                             </div>
                         </div>
 
                         <!-- Hover Tooltip -->
-                                <div x-show="day.workers.length > 0" 
+                                <div x-show="day.workers.length > 0"
                                     class="hidden group-hover:block absolute z-50 bg-white border-2 border-indigo-500 rounded-lg shadow-2xl p-4 min-w-72 max-w-md left-0 top-full mt-2"
                              style="display: none;"
                              @click.stop
@@ -165,7 +165,7 @@
                                 <template x-for="shift in groupWorkersByShift(day.workers)" :key="shift.id">
                                     <div class="mb-3 last:mb-0">
                                         <div class="flex items-center gap-2 mb-2">
-                                            <span :class="getShiftBadgeClass(shift.id)" 
+                                            <span :class="getShiftBadgeClass(shift.id)"
                                                   class="text-xs font-bold px-2 py-1 rounded">
                                                 <i class="fas fa-clock mr-1"></i>
                                                 <span x-text="shift.name"></span>
@@ -239,16 +239,17 @@
     </div>
 
     <!-- Day Detail Modal -->
-    <div x-show="showModal" 
+    <div x-show="showModal"
          x-cloak
-         @click.self="showModal = false"
-         class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto"
+         class="fixed inset-0 z-50 overflow-y-auto"
          style="display: none;">
         <!-- Background overlay (blur + close on click) -->
         <div class="fixed inset-0 bg-black/20 backdrop-blur-sm" @click="showModal = false"></div>
 
+        <!-- Scrollable wrapper -->
+        <div class="flex min-h-full items-center justify-center p-4">
         <!-- Modal panel -->
-        <div class="relative w-full max-w-2xl bg-white rounded-lg shadow-xl flex flex-col max-h-[85vh]">
+        <div class="relative w-full max-w-2xl bg-white rounded-lg shadow-xl flex flex-col max-h-[90vh]">
                 <!-- Header -->
                 <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
                     <div class="flex items-center justify-between">
@@ -269,7 +270,7 @@
                     <template x-for="shift in groupWorkersByShift(modalWorkers)" :key="shift.id">
                         <div class="mb-4">
                             <h4 class="text-sm font-semibold text-gray-700 mb-2 flex items-center">
-                                <span :class="getShiftBadgeClass(shift.id)" 
+                                <span :class="getShiftBadgeClass(shift.id)"
                                       class="px-2 py-1 rounded text-xs mr-2"
                                       x-text="shift.name"></span>
                                 <span class="text-gray-500" x-text="`(${shift.workers.length} pegawai)`"></span>
@@ -301,12 +302,13 @@
 
                 <!-- Footer -->
                 <div class="bg-gray-50 px-6 py-3 flex justify-end">
-                    <button @click="showModal = false" 
+                    <button @click="showModal = false"
                             class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg transition-colors">
                         Tutup
                     </button>
                 </div>
             </div>
+        </div>
     </div>
 </div>
 
@@ -315,35 +317,35 @@ function calendarData() {
     return {
         loading: false,
         currentMonth: '{{ now()->format("Y-m") }}',
-        selectedDepartment: '',
+        selectedDepartment: '{{ $departmentId ?? "" }}',
         selectedShifts: [],
         calendarDays: [],
         showModal: false,
         modalTitle: '',
         modalWorkers: [],
-        
+
         departments: @json($departments ?? []),
         shifts: @json($shifts ?? []),
-        
+
         init() {
             this.loadCalendar();
         },
-        
+
         async loadCalendar() {
             this.loading = true;
-            
+
             try {
                 const params = new URLSearchParams({
                     month: this.currentMonth,
                     department_id: this.selectedDepartment || '',
                     shift_ids: this.selectedShifts.join(',')
                 });
-                
+
                 const response = await fetch(`{{ route('admin.worker-shifts.calendar-data') }}?${params}`);
                 const data = await response.json();
-                
+
                 this.calendarDays = data.days || [];
-                
+
                 // Debug: Log first day with workers
                 const dayWithWorkers = this.calendarDays.find(d => d.workers && d.workers.length > 0);
                 if (dayWithWorkers) {
@@ -355,28 +357,28 @@ function calendarData() {
                 this.loading = false;
             }
         },
-        
+
         previousMonth() {
             const date = new Date(this.currentMonth + '-01');
             date.setMonth(date.getMonth() - 1);
             this.currentMonth = date.toISOString().substr(0, 7);
             this.loadCalendar();
         },
-        
+
         nextMonth() {
             const date = new Date(this.currentMonth + '-01');
             date.setMonth(date.getMonth() + 1);
             this.currentMonth = date.toISOString().substr(0, 7);
             this.loadCalendar();
         },
-        
+
         getMonthYearText() {
-            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                               'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
             const date = new Date(this.currentMonth + '-01');
             return `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
         },
-        
+
         getTotalWorkers() {
             const uniqueWorkers = new Set();
             this.calendarDays.forEach(day => {
@@ -384,58 +386,58 @@ function calendarData() {
             });
             return uniqueWorkers.size;
         },
-        
+
         getDepartmentName(id) {
             const dept = this.departments.find(d => d.id == id);
             return dept ? dept.name : '';
         },
-        
+
         getShiftName(id) {
             const shift = this.shifts.find(s => s.id == id);
             return shift ? shift.name : '';
         },
-        
+
         removeShift(shiftId) {
             this.selectedShifts = this.selectedShifts.filter(id => id !== shiftId);
             this.loadCalendar();
         },
-        
+
         getShiftColorClass(shiftId) {
             const shift = this.shifts.find(s => s.id == shiftId);
             if (!shift) return 'text-gray-600 bg-gray-50 px-2 py-1 rounded';
-            
+
             const name = shift.name.toLowerCase();
             if (name.includes('pagi')) return 'text-green-700 bg-green-50 px-2 py-1 rounded';
             if (name.includes('siang')) return 'text-yellow-700 bg-yellow-50 px-2 py-1 rounded';
             if (name.includes('malam')) return 'text-blue-700 bg-blue-50 px-2 py-1 rounded';
             return 'text-gray-700 bg-gray-50 px-2 py-1 rounded';
         },
-        
+
         getShiftBadgeClass(shiftId) {
             const shift = this.shifts.find(s => s.id == shiftId);
             if (!shift) return 'bg-gray-200 text-gray-700';
-            
+
             const name = shift.name.toLowerCase();
             if (name.includes('pagi')) return 'bg-green-100 text-green-800';
             if (name.includes('siang')) return 'bg-yellow-100 text-yellow-800';
             if (name.includes('malam')) return 'bg-blue-100 text-blue-800';
             return 'bg-gray-100 text-gray-800';
         },
-        
+
         showDayDetail(day) {
             const date = new Date(this.currentMonth + '-' + String(day.date).padStart(2, '0'));
             const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+            const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                               'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-            
+
             this.modalTitle = `${dayNames[date.getDay()]}, ${day.date} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
             this.modalWorkers = day.workers;
             this.showModal = true;
         },
-        
+
         groupWorkersByShift(workers) {
             const grouped = {};
-            
+
             workers.forEach(worker => {
                 if (!grouped[worker.shift_id]) {
                     grouped[worker.shift_id] = {
@@ -446,7 +448,7 @@ function calendarData() {
                 }
                 grouped[worker.shift_id].workers.push(worker);
             });
-            
+
             return Object.values(grouped);
         }
     };

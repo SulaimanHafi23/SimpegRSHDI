@@ -26,6 +26,22 @@ class WorkerShift extends Model
         'is_active' => 'boolean',
     ];
 
+    /**
+     * Accessor for start_date (alias for effective_from)
+     */
+    public function getStartDateAttribute(): ?string
+    {
+        return $this->effective_from?->format('Y-m-d');
+    }
+
+    /**
+     * Accessor for end_date (alias for effective_until)
+     */
+    public function getEndDateAttribute(): ?string
+    {
+        return $this->effective_until?->format('Y-m-d');
+    }
+
     public function worker(): BelongsTo
     {
         return $this->belongsTo(Worker::class);

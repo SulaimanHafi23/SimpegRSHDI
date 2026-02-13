@@ -265,6 +265,21 @@
                     </div>
                 </div>
 
+                <div class="text-sm text-gray-700">
+                    <p class="text-xs text-gray-500">Shift (sesuai tukar)</p>
+                    @if($overtime->actual_shift)
+                        <p class="font-medium">
+                            {{ $overtime->actual_shift->name }}
+                            <span class="text-xs text-gray-500">
+                                ({{ \Carbon\Carbon::parse($overtime->actual_shift->start_time)->format('H:i') }} -
+                                {{ \Carbon\Carbon::parse($overtime->actual_shift->end_time)->format('H:i') }})
+                            </span>
+                        </p>
+                    @else
+                        <p class="font-medium text-gray-400">-</p>
+                    @endif
+                </div>
+
                 @if($overtime->reason)
                     <div class="text-sm text-gray-700">
                         <p class="text-xs text-gray-500">Alasan</p>
@@ -309,6 +324,9 @@
                             <i class="far fa-clock mr-1"></i>Waktu
                         </th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            <i class="fas fa-exchange-alt mr-1"></i>Shift
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                             <i class="fas fa-business-time mr-1"></i>Durasi
                         </th>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
@@ -331,6 +349,17 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} -
                                 {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                @if($overtime->actual_shift)
+                                    <div class="font-medium">{{ $overtime->actual_shift->name }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ \Carbon\Carbon::parse($overtime->actual_shift->start_time)->format('H:i') }} -
+                                        {{ \Carbon\Carbon::parse($overtime->actual_shift->end_time)->format('H:i') }}
+                                    </div>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                 @php
@@ -380,7 +409,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-16 text-center">
+                            <td colspan="7" class="px-6 py-16 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="fas fa-inbox text-gray-300 text-6xl mb-4"></i>
                                     <p class="text-lg font-medium text-gray-500 mb-2">Belum ada permohonan lembur</p>

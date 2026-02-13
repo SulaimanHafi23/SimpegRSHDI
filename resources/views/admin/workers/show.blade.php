@@ -7,8 +7,8 @@
     {{-- Page Header with Actions --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div class="flex items-center space-x-3">
-            <x-button 
-                variant="secondary" 
+            <x-button
+                variant="secondary"
                 size="sm"
                 icon="fas fa-arrow-left"
                 onclick="window.location.href='{{ route('admin.workers.index') }}'">
@@ -20,16 +20,16 @@
         </div>
         <div class="flex space-x-2 w-full sm:w-auto">
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
-                <x-button 
-                    variant="warning" 
+                <x-button
+                    variant="warning"
                     icon="fas fa-edit"
                     onclick="window.location.href='{{ route('admin.workers.edit', $worker->id ?? 1) }}'">
                     Edit
                 </x-button>
             @endif
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
-                <x-button 
-                    variant="danger" 
+                <x-button
+                    variant="danger"
                     icon="fas fa-trash"
                     onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()">
                     Hapus
@@ -45,8 +45,8 @@
             <x-card>
                 <div class="flex flex-col items-center">
                     @if($worker->photo_url && Storage::disk('public')->exists($worker->photo_url))
-                        <img src="{{ asset('storage/' . $worker->photo_url) }}" 
-                             alt="{{ $worker->name ?? '' }}" 
+                        <img src="{{ asset('storage/' . $worker->photo_url) }}"
+                             alt="{{ $worker->name ?? '' }}"
                              class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-green-500 object-cover mb-4"
                              onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-green-500 overflow-hidden bg-gray-100 flex items-center justify-center mb-4\'><i class=\'fas fa-user text-4xl sm:text-5xl text-gray-400\'></i></div>';">
                     @else
@@ -203,17 +203,91 @@
 
             {{-- Statistics --}}
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <x-stats-card 
-                    title="Hadir Bulan Ini" 
+                <x-stats-card
+                    title="Hadir Bulan Ini"
                     :value="($attendanceThisMonth ?? 0) . ' Hari'"
-                    icon="fas fa-calendar-check" 
+                    icon="fas fa-calendar-check"
                     color="blue" />
-                <x-stats-card 
-                    title="Total Lembur" 
-                    :value="($totalOvertime ?? 0) . ' Jam'" 
-                    icon="fas fa-clock" 
+                <x-stats-card
+                    title="Total Lembur"
+                    :value="($totalOvertime ?? 0) . ' Jam'"
+                    icon="fas fa-clock"
                     color="green" />
             </div>
+
+            {{-- Riwayat Shift --}}
+            <x-card>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                        <i class="fas fa-exchange-alt text-green-600 mr-2"></i>
+                        Riwayat Perubahan Shift
+                    </h3>
+                </div>
+
+                @if(isset($shiftHistories) && $shiftHistories->isNotEmpty())
+                    <div class="space-y-3">
+                        {{-- Current active shift --}}
+                        @if($worker->activeWorkerShift)
+                            <div class="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">{{ $worker->activeWorkerShift->shift->name ?? '-' }}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($worker->activeWorkerShift->effective_from)->format('d M Y') }} — Sekarang
+                                        </p>
+                                    </div>
+                                    <x-badge variant="success" icon="fas fa-check-circle" size="sm">Aktif</x-badge>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Past shifts from history --}}
+                        @foreach($shiftHistories->take(5) as $history)
+                            <div class="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div class="flex justify-between items-start mb-2">
+                                    <div class="flex-1">
+                                        <h4 class="font-semibold text-gray-900">{{ $history->shift->name ?? '-' }}</h4>
+                                        <p class="text-sm text-gray-600 mt-1">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }}
+                                            <span class="text-gray-400 mx-1">—</span>
+                                            @if($history->effective_until)
+                                                {{ \Carbon\Carbon::parse($history->effective_until)->format('d M Y') }}
+                                            @else
+                                                {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}
+                                            @endif
+                                        </p>
+                                    </div>
+                                    <div>
+                                        @php
+                                            $reasonConfig = [
+                                                'shift_replaced' => ['variant' => 'primary', 'icon' => 'fas fa-sync', 'label' => 'Diganti'],
+                                                'shift_updated' => ['variant' => 'warning', 'icon' => 'fas fa-edit', 'label' => 'Diperbarui'],
+                                                'shift_deleted' => ['variant' => 'danger', 'icon' => 'fas fa-trash', 'label' => 'Dihapus'],
+                                            ];
+                                            $rCfg = $reasonConfig[$history->change_reason] ?? ['variant' => 'secondary', 'icon' => 'fas fa-question', 'label' => $history->change_reason];
+                                        @endphp
+                                        <x-badge :variant="$rCfg['variant']" :icon="$rCfg['icon']" size="sm">
+                                            {{ $rCfg['label'] }}
+                                        </x-badge>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gray-500">
+                                    <i class="fas fa-user mr-1"></i>
+                                    Diubah oleh: {{ $history->changedByUser->name ?? 'System' }}
+                                    pada {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}
+                                </p>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-8">
+                        <i class="fas fa-exchange-alt text-gray-300 text-5xl mb-3"></i>
+                        <p class="text-gray-500">Belum ada riwayat perubahan shift</p>
+                    </div>
+                @endif
+            </x-card>
 
             {{-- Daftar Cuti --}}
             <x-card>
@@ -293,7 +367,7 @@
                                         <h4 class="font-semibold text-gray-900">Lembur - {{ $overtime->overtime_date?->format('d M Y') }}</h4>
                                         <p class="text-sm text-gray-600 mt-1">
                                             <i class="fas fa-clock mr-1"></i>
-                                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - 
+                                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} -
                                             {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
                                             <span class="text-gray-500">({{ $overtime->total_hours }} jam)</span>
                                         </p>

@@ -20,7 +20,7 @@
         <div class="lg:col-span-2">
             <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
                 <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-4">Preview Dokumen</h3>
-                
+
                 <div class="border border-gray-200 rounded-lg overflow-hidden bg-gray-50" style="min-height: 400px;">
                     @php
                         $extension = pathinfo($document->file_path, PATHINFO_EXTENSION);
@@ -45,7 +45,7 @@
                     <a href="{{ route('workers.documents.download', $document->id) }}" class="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-center">
                         <i class="fas fa-download mr-2"></i>Download Dokumen
                     </a>
-                    @if($document->status !== 'Approved')
+                    @if($document->status !== 'verified')
                     <button onclick="deleteDocument({{ $document->id }})" class="flex-1 sm:flex-none px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                         <i class="fas fa-trash mr-2"></i>Hapus
                     </button>
@@ -61,20 +61,20 @@
                 <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-4">Status Dokumen</h3>
                 <div class="text-center">
                     <div class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold mb-3
-                        {{ $document->status === 'Approved' ? 'bg-green-100 text-green-800' : '' }}
-                        {{ $document->status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                        {{ $document->status === 'Rejected' ? 'bg-red-100 text-red-800' : '' }}">
+                        {{ $document->status === 'verified' ? 'bg-green-100 text-green-800' : '' }}
+                        {{ $document->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
+                        {{ $document->status === 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
                         <i class="fas fa-circle mr-2 text-xs"></i>
-                        @if($document->status === 'Approved')
+                        @if($document->status === 'verified')
                             Disetujui
-                        @elseif($document->status === 'Rejected')
+                        @elseif($document->status === 'rejected')
                             Ditolak
                         @else
                             Pending
                         @endif
                     </div>
-                    
-                    @if($document->status === 'Approved')
+
+                    @if($document->status === 'verified')
                         <p class="text-sm text-gray-600">
                             <i class="fas fa-check-circle text-green-600 mr-1"></i>
                             Diverifikasi oleh {{ $document->verifier->name ?? '-' }}
@@ -82,7 +82,7 @@
                         <p class="text-xs text-gray-500 mt-1">
                             {{ $document->verified_at?->format('d M Y H:i') }}
                         </p>
-                    @elseif($document->status === 'Rejected')
+                    @elseif($document->status === 'rejected')
                         <div class="mt-3 p-3 bg-red-50 rounded-lg text-left">
                             <p class="text-sm font-semibold text-red-900 mb-1">Alasan Penolakan:</p>
                             <p class="text-sm text-red-700">{{ $document->rejection_reason ?? 'Tidak ada keterangan' }}</p>
@@ -175,17 +175,17 @@ function deleteDocument(id) {
         const form = document.createElement('form');
         form.method = 'POST';
         form.action = `/workers/documents/${id}`;
-        
+
         const csrfInput = document.createElement('input');
         csrfInput.type = 'hidden';
         csrfInput.name = '_token';
         csrfInput.value = '{{ csrf_token() }}';
-        
+
         const methodInput = document.createElement('input');
         methodInput.type = 'hidden';
         methodInput.name = '_method';
         methodInput.value = 'DELETE';
-        
+
         form.appendChild(csrfInput);
         form.appendChild(methodInput);
         document.body.appendChild(form);

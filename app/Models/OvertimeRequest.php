@@ -58,4 +58,17 @@ class OvertimeRequest extends Model
     {
         return $this->reason;
     }
+
+    /**
+     * Get the actual shift for this overtime date, considering ShiftOverride (swap).
+     * Returns null if no shift found.
+     */
+    public function getActualShiftAttribute()
+    {
+        if (!$this->worker || !$this->overtime_date) {
+            return null;
+        }
+
+        return $this->worker->getShiftForDate($this->overtime_date);
+    }
 }

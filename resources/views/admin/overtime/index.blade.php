@@ -67,9 +67,9 @@
             name="status"
             label="Status"
             :options="[
-                'Pending' => 'Pending',
-                'Approved' => 'Approved',
-                'Rejected' => 'Rejected'
+                'pending' => 'Pending',
+                'approved' => 'Approved',
+                'rejected' => 'Rejected'
             ]"
             :selected="$filters['status'] ?? ''"
             placeholder="Semua Status" />
@@ -123,6 +123,7 @@
                         <x-table.cell header>No</x-table.cell>
                         <x-table.cell header>Pegawai</x-table.cell>
                         <x-table.cell header>Tanggal</x-table.cell>
+                        <x-table.cell header>Shift</x-table.cell>
                         <x-table.cell header>Waktu</x-table.cell>
                         <x-table.cell header>Durasi</x-table.cell>
                         <x-table.cell header>Keterangan</x-table.cell>
@@ -141,6 +142,18 @@
                         </x-table.cell>
 
                         <x-table.cell>{{ $overtime->date ?? '-' }}</x-table.cell>
+
+                        <x-table.cell>
+                            @if($overtime->actual_shift)
+                                <div class="text-sm text-gray-900">{{ $overtime->actual_shift->name }}</div>
+                                <div class="text-xs text-gray-500">
+                                    {{ \Carbon\Carbon::parse($overtime->actual_shift->start_time)->format('H:i') }} -
+                                    {{ \Carbon\Carbon::parse($overtime->actual_shift->end_time)->format('H:i') }}
+                                </div>
+                            @else
+                                <span class="text-sm text-gray-400">-</span>
+                            @endif
+                        </x-table.cell>
 
                         <x-table.cell>
                             <div class="text-sm">{{ $overtime->start_time ?? '-' }}</div>

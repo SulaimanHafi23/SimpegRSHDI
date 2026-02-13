@@ -24,7 +24,7 @@ class DashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
-        
+
         // Get worker data from user relationship
         $worker = $user->worker;
 
@@ -35,30 +35,33 @@ class DashboardController extends Controller
 
         // Get attendance summary
         $attendanceSummary = $this->dashboardService->getAttendanceSummary($worker->id, 'month');
-        
+
         // Get attendance chart data
         $attendanceChart = $this->dashboardService->getAttendanceChart($worker->id, 7);
-        
+
         // Get leave summary
         $leaveSummary = $this->dashboardService->getLeaveSummary($worker->id);
-        
+
         // Get overtime summary
         $overtimeSummary = $this->dashboardService->getOvertimeSummary($worker->id, 'month');
-        
+
         // Get recent activities
         $recentActivities = $this->dashboardService->getRecentActivities($worker->id, 5);
-        
+
         // Get upcoming leaves
         $upcomingLeaves = $this->dashboardService->getUpcomingLeaves($worker->id, 5);
-        
+
         // Get recent leave requests
         $recentLeaves = $this->leaveService->getAll([
             'worker_id' => $worker->id,
             'per_page' => 5,
         ]);
-        
+
         // Get leave balance with quota
         $leaveBalances = $this->dashboardService->getLeaveBalance($worker->id);
+
+        // Check if this worker needs to checkout (shift has ended but still no checkout)
+        $pendingCheckout = $this->attendanceService->getPendingCheckouts($worker->id)->first();
 
         return view('employee.dashboard.index', compact(
             'worker',
@@ -69,7 +72,8 @@ class DashboardController extends Controller
             'recentActivities',
             'upcomingLeaves',
             'recentLeaves',
-            'leaveBalances'
+            'leaveBalances',
+            'pendingCheckout'
         ));
     }
 }

@@ -23,10 +23,10 @@
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
         <form method="GET" action="{{ route('admin.master.departments.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div class="md:col-span-2">
-                <input type="text" 
-                       name="search" 
+                <input type="text"
+                       name="search"
                        value="{{ request('search') }}"
-                       placeholder="Cari nama atau kode departemen..." 
+                       placeholder="Cari nama atau kode departemen..."
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
             </div>
             <div>
@@ -93,27 +93,33 @@
                                 <i class="fas fa-times sm:hidden"></i>
                             </span>
                         @endif
+                        @if($department->requires_holiday_attendance)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 ml-1" title="Wajib hadir saat hari libur nasional">
+                                <i class="fas fa-hospital mr-1"></i>
+                                <span class="hidden sm:inline">Standby</span>
+                            </span>
+                        @endif
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex justify-end items-center space-x-1 sm:space-x-2">
-                            <a href="{{ route('admin.master.departments.show', $department->id) }}" 
-                               class="text-blue-600 hover:text-blue-900 p-1" 
+                            <a href="{{ route('admin.master.departments.show', $department->id) }}"
+                               class="text-blue-600 hover:text-blue-900 p-1"
                                title="Lihat Detail">
                                 <i class="fas fa-eye text-xs sm:text-sm"></i>
                             </a>
-                            <a href="{{ route('admin.master.departments.edit', $department->id) }}" 
-                               class="text-yellow-600 hover:text-yellow-900 p-1" 
+                            <a href="{{ route('admin.master.departments.edit', $department->id) }}"
+                               class="text-yellow-600 hover:text-yellow-900 p-1"
                                title="Edit">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                             </a>
-                            <form action="{{ route('admin.master.departments.destroy', $department->id) }}" 
-                                  method="POST" 
+                            <form action="{{ route('admin.master.departments.destroy', $department->id) }}"
+                                  method="POST"
                                   class="inline"
                                   onsubmit="return confirm('Apakah Anda yakin ingin menghapus departemen ini?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" 
-                                        class="text-red-600 hover:text-red-900 p-1" 
+                                <button type="submit"
+                                        class="text-red-600 hover:text-red-900 p-1"
                                         title="Hapus">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
                                 </button>

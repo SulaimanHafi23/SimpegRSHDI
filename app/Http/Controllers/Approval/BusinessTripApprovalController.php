@@ -60,7 +60,9 @@ class BusinessTripApprovalController extends Controller
             $query->whereYear('start_date', $filters['year']);
         }
 
-        $trips = $query->orderBy('start_date', 'desc')->paginate($filters['per_page']);
+        $trips = $query->orderBy('start_date', 'desc')
+            ->paginate($filters['per_page'])
+            ->appends($filters);
 
         // Calculate statistics
         $statsQuery = BusinessTrip::query();
@@ -148,11 +150,29 @@ class BusinessTripApprovalController extends Controller
             $format = $request->input('format', 'excel');
             $user = auth()->user();
 
+            $month = $request->input('month');
+            $year = $request->input('year');
+            if ($month || $year) {
+                $year = $year ?: now()->year;
+                if ($month) {
+                    $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                    $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+                } else {
+                    $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                    $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+                }
+            } else {
+                $startDate = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
+                $endDate = $request->input('date_to', now()->endOfMonth()->format('Y-m-d'));
+            }
+
             $filters = [
                 'worker_id' => $request->input('worker_id'),
-                'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
-                'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+                'date_from' => $startDate,
+                'date_to' => $endDate,
                 'status' => $request->input('status'),
+                'month' => $month,
+                'year' => $year,
             ];
 
             // Department filter for Manager

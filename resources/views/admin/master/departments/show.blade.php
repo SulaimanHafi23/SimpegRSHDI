@@ -79,6 +79,21 @@
                     </div>
 
                     <div>
+                        <label class="text-sm text-gray-600">Standby Hari Libur</label>
+                        <div>
+                            @if($department->requires_holiday_attendance)
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    <i class="fas fa-hospital mr-1"></i> Wajib Hadir saat Libur Nasional
+                                </span>
+                            @else
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                    <i class="fas fa-calendar-times mr-1"></i> Libur pada Hari Libur Nasional
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div>
                         <label class="text-sm text-gray-600">Jumlah Pegawai</label>
                         <p class="text-gray-900 font-medium">
                             <i class="fas fa-users text-blue-500 mr-1"></i>

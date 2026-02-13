@@ -37,12 +37,15 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
             $query->where('leave_type_id', $filters['leave_type_id']);
         }
 
-        if (!empty($filters['date_from'])) {
-            $query->where('start_date', '>=', $filters['date_from']);
+        $dateFrom = $filters['date_from'] ?? $filters['start_date'] ?? null;
+        $dateTo = $filters['date_to'] ?? $filters['end_date'] ?? null;
+
+        if (!empty($dateFrom)) {
+            $query->where('start_date', '>=', $dateFrom);
         }
 
-        if (!empty($filters['date_to'])) {
-            $query->where('end_date', '<=', $filters['date_to']);
+        if (!empty($dateTo)) {
+            $query->where('end_date', '<=', $dateTo);
         }
 
         if (!empty($filters['year'])) {

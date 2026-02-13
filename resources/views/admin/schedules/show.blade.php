@@ -17,7 +17,7 @@
                 <p class="text-gray-600 mt-1">Informasi lengkap jadwal shift pegawai</p>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('admin.worker-shifts.edit', $workerShift->id) }}" 
+                <a href="{{ route('admin.worker-shifts.edit', $workerShift->id) }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -27,7 +27,7 @@
                 <form action="{{ route('admin.worker-shifts.destroy', $workerShift->id) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" 
+                    <button type="submit"
                             onclick="return confirm('Yakin ingin menghapus jadwal shift ini?')"
                             class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@
                     <label class="block text-sm font-medium text-gray-500 mb-1">Pegawai</label>
                     <div class="flex items-center">
                         @if($workerShift->worker->photo_url)
-                            <img src="{{ Storage::url($workerShift->worker->photo_url) }}" 
+                            <img src="{{ Storage::url($workerShift->worker->photo_url) }}"
                                  alt="{{ $workerShift->worker->name }}"
                                  class="w-12 h-12 rounded-full object-cover mr-3">
                         @else
@@ -111,7 +111,7 @@
                         </div>
                         <div>
                             <p class="text-gray-900 font-medium">{{ $workerShift->shift->name }}</p>
-                            <p class="text-sm text-gray-500">{{ $workerShift->shift->start_time }} - {{ $workerShift->shift->end_time }}</p>
+                            <p class="text-sm text-gray-500">{{ \Carbon\Carbon::parse($workerShift->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($workerShift->shift->end_time)->format('H:i') }}</p>
                         </div>
                     </div>
                 </div>
@@ -179,20 +179,104 @@
         <div class="border-t border-gray-200 bg-gray-50 px-6 py-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
                 <div>
-                    <span class="font-medium">Dibuat:</span> 
+                    <span class="font-medium">Dibuat:</span>
                     {{ \Carbon\Carbon::parse($workerShift->created_at)->format('d M Y H:i') }}
                 </div>
                 <div>
-                    <span class="font-medium">Terakhir Diubah:</span> 
+                    <span class="font-medium">Terakhir Diubah:</span>
                     {{ \Carbon\Carbon::parse($workerShift->updated_at)->format('d M Y H:i') }}
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Shift History -->
+    @if(isset($shiftHistories) && $shiftHistories->count() > 0)
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-800">Riwayat Perubahan Shift</h2>
+                <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {{ $shiftHistories->count() }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mt-1">Daftar shift sebelumnya yang pernah berlaku untuk pegawai ini</p>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Berlaku</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Diganti</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diubah Oleh</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($shiftHistories as $history)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="bg-orange-100 rounded-lg p-2 mr-3">
+                                    <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</p>
+                                    @if($history->shift)
+                                        <p class="text-xs text-gray-500">
+                                            {{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} -
+                                            {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }}
+                            <span class="text-gray-400 mx-1">—</span>
+                            @if($history->effective_until)
+                                {{ \Carbon\Carbon::parse($history->effective_until)->format('d M Y') }}
+                            @else
+                                <span class="text-gray-400 italic">Tanpa batas</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php
+                                $reasonLabels = [
+                                    'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
+                                    'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
+                                    'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
+                                ];
+                                $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
+                                {{ $label[0] }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ $history->changedByUser->name ?? 'System' }}
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
     <!-- Back Button -->
     <div class="mt-6">
-        <a href="{{ route('admin.worker-shifts.index') }}" 
+        <a href="{{ route('admin.worker-shifts.index') }}"
            class="inline-flex items-center px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition duration-150">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>

@@ -7,12 +7,15 @@ use App\Services\WorkerShift\WorkerShiftService;
 use App\Services\Worker\WorkerService;
 use App\Services\Master\ShiftService;
 use App\Services\Master\DepartmentService;
+use App\Traits\DepartmentFilterable;
 use App\Http\Requests\Schedule\WorkerShiftScheduleRequest;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
 class WorkerShiftController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct(
         protected WorkerShiftService $workerShiftService,
         protected WorkerService $workerService,
@@ -30,22 +33,26 @@ class WorkerShiftController extends Controller
         ];
 
         // Get all active workers with their latest shift
-        $workers = $this->workerService->getAllActive();
-        
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = $departmentId
+            ? $this->workerService->getByDepartment($departmentId)
+            : $this->workerService->getAllActive();
+
         // Get all workers with their latest active shift
         $workersWithShifts = $workers->map(function($worker) use ($filters) {
-            // Get latest active shift for this worker
+            // Get latest shift for this worker (prioritize active ones)
             $latestShift = $worker->workerShifts()
                 ->with(['shift'])
-                ->when(isset($filters['shift_id']), function($q) use ($filters) {
+                ->when(isset($filters['shift_id']) && $filters['shift_id'] !== '', function($q) use ($filters) {
                     return $q->where('shift_id', $filters['shift_id']);
                 })
-                ->when(isset($filters['is_active']), function($q) use ($filters) {
+                ->when(isset($filters['is_active']) && $filters['is_active'] !== '', function($q) use ($filters) {
                     return $q->where('is_active', $filters['is_active']);
                 })
-                ->orderBy('effective_from', 'desc')
+                ->orderByDesc('is_active')
+                ->orderByDesc('effective_from')
                 ->first();
-            
+
             $worker->latestShift = $latestShift;
             return $worker;
         });
@@ -69,12 +76,15 @@ class WorkerShiftController extends Controller
         $shifts = $this->shiftService->getActive();
         $departments = $this->departmentService->getAllActive();
 
-        return view('admin.schedules.index', compact('workersWithShifts', 'workers', 'shifts', 'departments', 'filters'));
+        return view('admin.schedules.index', compact('workersWithShifts', 'workers', 'shifts', 'departments', 'filters', 'departmentId'));
     }
 
     public function create()
     {
-        $workers = $this->workerService->getAllActive();
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = $departmentId
+            ? $this->workerService->getByDepartment($departmentId)
+            : $this->workerService->getAllActive();
         $shifts = $this->shiftService->getActive();
 
         return view('admin.schedules.create', compact('workers', 'shifts'));
@@ -82,7 +92,10 @@ class WorkerShiftController extends Controller
 
     public function generate()
     {
-        $workers = $this->workerService->getAllActive();
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = $departmentId
+            ? $this->workerService->getByDepartment($departmentId)
+            : $this->workerService->getAllActive();
         $shifts = $this->shiftService->getActive();
 
         return view('admin.schedules.generate', compact('workers', 'shifts'));
@@ -138,7 +151,7 @@ class WorkerShiftController extends Controller
         $deactivateExisting = $request->boolean('deactivate_existing');
         if ($deactivateExisting) {
             foreach ($workerIds as $workerId) {
-                $this->workerShiftService->deactivateOldShifts($workerId);
+                $this->workerShiftService->deleteOldShifts($workerId);
             }
         }
 
@@ -197,7 +210,7 @@ class WorkerShiftController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi manual untuk menghindari konflik 'required_without' 
+        // Validasi manual untuk menghindari konflik 'required_without'
         // yang menyebabkan error "Pegawai field is required when Pegawai is not present"
         $data = $request->validate([
             'shift_id' => 'required|exists:shifts,id',
@@ -262,8 +275,9 @@ class WorkerShiftController extends Controller
     public function show(string $id)
     {
         $workerShift = $this->workerShiftService->getById($id);
+        $shiftHistories = $this->workerShiftService->getShiftHistories($workerShift->worker_id);
 
-        return view('admin.schedules.show', compact('workerShift'));
+        return view('admin.schedules.show', compact('workerShift', 'shiftHistories'));
     }
 
     public function edit(string $id)
@@ -338,8 +352,8 @@ class WorkerShiftController extends Controller
         try {
             $month = $request->input('month', now()->format('Y-m')); // Format: 2026-02
             $departmentId = $request->input('department_id');
-            $shiftIds = $request->input('shift_ids') 
-                ? explode(',', $request->input('shift_ids')) 
+            $shiftIds = $request->input('shift_ids')
+                ? explode(',', $request->input('shift_ids'))
                 : [];
 
             // Parse month to get start and end dates
@@ -357,17 +371,23 @@ class WorkerShiftController extends Controller
                 $dateString = $currentDate->format('Y-m-d');
                 $isCurrentMonth = $currentDate->month === $startDate->month;
 
-                // Get workers scheduled for this date
+                // Get workers scheduled for this date (with overrides)
                 $workers = \App\Models\Worker::query()
-                    ->with(['workerShifts' => function($query) use ($dateString) {
-                        $query->where('effective_from', '<=', $dateString)
-                            ->where(function($q) use ($dateString) {
-                                $q->whereNull('effective_until')
-                                  ->orWhere('effective_until', '>=', $dateString);
-                            })
-                            ->where('is_active', true)
-                            ->with('shift');
-                    }, 'department'])
+                    ->with([
+                        'workerShifts' => function($query) use ($dateString) {
+                            $query->where('effective_from', '<=', $dateString)
+                                ->where(function($q) use ($dateString) {
+                                    $q->whereNull('effective_until')
+                                      ->orWhere('effective_until', '>=', $dateString);
+                                })
+                                ->where('is_active', true)
+                                ->with('shift');
+                        },
+                        'shiftOverrides' => function($query) use ($dateString) {
+                            $query->where('override_date', $dateString)->with('shift');
+                        },
+                        'department'
+                    ])
                     ->when($departmentId, function($q) use ($departmentId) {
                         return $q->where('department_id', $departmentId);
                     })
@@ -385,8 +405,21 @@ class WorkerShiftController extends Controller
                     ->get();
 
                 $workersData = $workers->map(function($worker) use ($dateString) {
-                    $activeShift = $worker->workerShifts->first();
-                    
+                    // Check for shift override first (eager load already filters by date)
+                    $override = $worker->shiftOverrides->first();
+                    $activeShift = null;
+                    $shiftSource = 'workershift'; // track source for debugging
+
+                    if ($override && $override->shift) {
+                        // Use override shift
+                        $activeShift = $override;
+                        $shiftSource = 'override';
+                    } else {
+                        // Fall back to regular worker shift
+                        $activeShift = $worker->workerShifts->first();
+                        $shiftSource = 'regular';
+                    }
+
                     if (!$activeShift || !$activeShift->shift) {
                         return null;
                     }
@@ -408,6 +441,7 @@ class WorkerShiftController extends Controller
                         'shift_id' => $activeShift->shift_id,
                         'shift_name' => $activeShift->shift->name ?? 'Shift',
                         'shift_time' => $startLabel . ' - ' . $endLabel,
+                        'shift_source' => $shiftSource, // bisa 'override', 'regular'
                     ];
                 })->filter()->values()->toArray();
 

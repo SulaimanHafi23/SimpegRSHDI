@@ -41,7 +41,7 @@ class DocumentController extends Controller
         ];
 
         $documents = $this->documentService->getAll($filters);
-        
+
         $documentTypes = $this->getAllowedDocumentTypes($worker);
 
         // Calculate summary
@@ -49,7 +49,7 @@ class DocumentController extends Controller
         $summary = [
             'total' => $this->documentService->getAll($summaryFilters)->total(),
             'pending' => $this->documentService->getAll(array_merge($summaryFilters, ['status' => 'pending']))->total(),
-            'approved' => $this->documentService->getAll(array_merge($summaryFilters, ['status' => 'approved']))->total(),
+            'approved' => $this->documentService->getAll(array_merge($summaryFilters, ['status' => 'verified']))->total(),
             'rejected' => $this->documentService->getAll(array_merge($summaryFilters, ['status' => 'rejected']))->total(),
         ];
 
@@ -70,20 +70,20 @@ class DocumentController extends Controller
         }
 
         $documentTypes = $this->getAllowedDocumentTypes($worker);
-        
+
         // Get already uploaded document types for this worker (to mark with checkmark)
         $uploadedDocTypes = $this->documentService->getAll([
             'worker_id' => $worker->id,
-            'status' => ['pending', 'approved']
+            'status' => ['pending', 'verified']
         ])->pluck('document_type_id')->toArray();
-        
+
         // Get document statistics for each type
         $documentStats = $this->documentService->getAll([
             'worker_id' => $worker->id
         ])->groupBy('document_type_id')->map(function($docs) {
             return [
                 'total' => $docs->count(),
-                'approved' => $docs->where('status', 'approved')->count(),
+                'approved' => $docs->where('status', 'verified')->count(),
                 'pending' => $docs->where('status', 'pending')->count(),
                 'rejected' => $docs->where('status', 'rejected')->count(),
                 'latest_status' => $docs->sortByDesc('created_at')->first()?->status,
@@ -130,7 +130,7 @@ class DocumentController extends Controller
             $existingDocument = $this->documentService->getAll([
                 'worker_id' => $worker->id,
                 'document_type_id' => $validated['document_type_id'],
-                'status' => ['pending', 'approved'],
+                'status' => ['pending', 'verified'],
             ]);
 
             if ($existingDocument->isNotEmpty()) {

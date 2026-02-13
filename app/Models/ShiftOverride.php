@@ -17,6 +17,7 @@ class ShiftOverride extends Model
         'override_date',
         'reason',
         'created_by',
+        'shift_swap_request_id',
     ];
 
     protected $casts = [
@@ -36,5 +37,10 @@ class ShiftOverride extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function shiftSwapRequest(): BelongsTo
+    {
+        return $this->belongsTo(ShiftSwapRequest::class, 'shift_swap_request_id');
     }
 }

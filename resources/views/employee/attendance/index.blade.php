@@ -305,12 +305,9 @@
                                     $mobileShift = $shiftOverride->shift;
                                 } else {
                                     $activeWorkerShift = $attendance->worker->workerShifts
-                                        ->where('is_active', true)
-                                        ->where('effective_from', '<=', $attendanceDate->format('Y-m-d'))
-                                        ->filter(function($ws) use ($attendanceDate) {
-                                            return is_null($ws->effective_until) || $ws->effective_until >= $attendanceDate->format('Y-m-d');
-                                        })
-                                        ->first();
+                                        ->first(function($ws) use ($attendanceDate) {
+                                            return $ws->isActiveOnDate($attendanceDate);
+                                        });
 
                                     if ($activeWorkerShift && $activeWorkerShift->shift) {
                                         $mobileShift = $activeWorkerShift->shift;
@@ -409,14 +406,11 @@
                                             $shift = $shiftOverride->shift;
                                             $shiftSource = 'override';
                                         } else {
-                                            // Cari worker shift yang aktif untuk tanggal ini
+                                            // Cari worker shift yang aktif untuk tanggal ini menggunakan isActiveOnDate
                                             $activeWorkerShift = $attendance->worker->workerShifts
-                                                ->where('is_active', true)
-                                                ->where('effective_from', '<=', $attendanceDate->format('Y-m-d'))
-                                                ->filter(function($ws) use ($attendanceDate) {
-                                                    return is_null($ws->effective_until) || $ws->effective_until >= $attendanceDate->format('Y-m-d');
-                                                })
-                                                ->first();
+                                                ->first(function($ws) use ($attendanceDate) {
+                                                    return $ws->isActiveOnDate($attendanceDate);
+                                                });
 
                                             if ($activeWorkerShift && $activeWorkerShift->shift) {
                                                 $shift = $activeWorkerShift->shift;

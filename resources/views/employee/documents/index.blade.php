@@ -14,7 +14,7 @@
                 </h1>
                 <p class="text-gray-600 mt-2">Kelola dokumen pribadi Anda</p>
             </div>
-            <a href="{{ route('employee.documents.create') }}" 
+            <a href="{{ route('employee.documents.create') }}"
                class="inline-flex items-center px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-150">
                 <i class="fas fa-cloud-upload-alt mr-2"></i>
                 <span class="hidden sm:inline">Upload Dokumen</span>
@@ -91,8 +91,8 @@
                         <i class="fas fa-search mr-1"></i>
                         Cari
                     </label>
-                    <input type="text" 
-                           name="search" 
+                    <input type="text"
+                           name="search"
                            value="{{ $filters['search'] ?? '' }}"
                            placeholder="Cari nomor dokumen, jenis dokumen, catatan, status..."
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
@@ -125,7 +125,7 @@
                         <option value="pending" {{ ($filters['status'] ?? '') == 'pending' ? 'selected' : '' }}>
                             🕐 Pending
                         </option>
-                        <option value="approved" {{ ($filters['status'] ?? '') == 'approved' ? 'selected' : '' }}>
+                        <option value="verified" {{ ($filters['status'] ?? '') == 'verified' ? 'selected' : '' }}>
                             ✅ Disetujui
                         </option>
                         <option value="rejected" {{ ($filters['status'] ?? '') == 'rejected' ? 'selected' : '' }}>
@@ -151,12 +151,12 @@
 
             <!-- Action Buttons -->
             <div class="flex gap-2">
-                <button type="submit" 
+                <button type="submit"
                         class="flex-1 px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition duration-150 flex items-center justify-center">
                     <i class="fas fa-search mr-2"></i>
                     Terapkan Filter
                 </button>
-                <a href="{{ route('employee.documents.index') }}" 
+                <a href="{{ route('employee.documents.index') }}"
                    class="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition duration-150 flex items-center justify-center">
                     <i class="fas fa-redo mr-2"></i>
                     Reset
@@ -171,19 +171,19 @@
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                         <i class="fas fa-search mr-1"></i>
                         "{{ $filters['search'] }}"
-                        <a href="{{ route('employee.documents.index', array_diff_key(request()->all(), ['search' => ''])) }}" 
+                        <a href="{{ route('employee.documents.index', array_diff_key(request()->all(), ['search' => ''])) }}"
                            class="ml-2 text-blue-600 hover:text-blue-800">
                             <i class="fas fa-times"></i>
                         </a>
                     </span>
                 @endif
                 @if(!empty($filters['status']))
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium 
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                         {{ $filters['status'] == 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
                         {{ $filters['status'] == 'approved' ? 'bg-green-100 text-green-800' : '' }}
                         {{ $filters['status'] == 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
                         Status: {{ ucfirst($filters['status']) }}
-                        <a href="{{ route('employee.documents.index', array_diff_key(request()->all(), ['status' => ''])) }}" 
+                        <a href="{{ route('employee.documents.index', array_diff_key(request()->all(), ['status' => ''])) }}"
                            class="ml-2 hover:opacity-75">
                             <i class="fas fa-times"></i>
                         </a>
@@ -196,7 +196,7 @@
                     @if($selectedType)
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
                         Jenis: {{ $selectedType->name }}
-                        <a href="{{ route('employee.documents.index', array_diff_key(request()->all(), ['document_type_id' => ''])) }}" 
+                        <a href="{{ route('employee.documents.index', array_diff_key(request()->all(), ['document_type_id' => ''])) }}"
                            class="ml-2 text-indigo-600 hover:text-indigo-800">
                             <i class="fas fa-times"></i>
                         </a>
@@ -309,14 +309,14 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex space-x-2">
-                                    <a href="{{ route('employee.documents.show', $document->id) }}" 
+                                    <a href="{{ route('employee.documents.show', $document->id) }}"
                                        class="text-blue-600 hover:text-blue-900" title="Detail">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                     </a>
-                                    <a href="{{ route('employee.documents.download', $document->id) }}" 
+                                    <a href="{{ route('employee.documents.download', $document->id) }}"
                                        class="text-green-600 hover:text-green-900" title="Download">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -326,8 +326,8 @@
                                         <form action="{{ route('employee.documents.destroy', $document->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" 
-                                                    class="text-red-600 hover:text-red-900" 
+                                            <button type="submit"
+                                                    class="text-red-600 hover:text-red-900"
                                                     title="Hapus"
                                                     onclick="return confirm('Yakin ingin menghapus dokumen ini?')">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -30,13 +30,30 @@ class LeaveRequestController extends Controller
     {
         $departmentId = $this->getManagerDepartmentFilter();
 
+        $month = $request->month;
+        $year = $request->year;
+        $dateFrom = null;
+        $dateTo = null;
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $dateFrom = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $dateTo = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $dateFrom = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $dateTo = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        }
+
         $filters = [
             'status' => $request->status,
             'worker_id' => $request->worker_id,
             'leave_type_id' => $request->leave_type_id,
             'leave_type' => $request->leave_type,
-            'month' => $request->month,
-            'year' => $request->year,
+            'month' => $month,
+            'year' => $year,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
             'department_id' => $departmentId,
             'per_page' => $request->per_page ?? 15,
         ];

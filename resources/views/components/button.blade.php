@@ -21,7 +21,7 @@
         'outline-secondary' => 'border-2 border-gray-600 text-gray-600 hover:bg-gray-50',
         'outline-danger' => 'border-2 border-red-600 text-red-600 hover:bg-red-50',
     ];
-    
+
     $sizeClasses = [
         'xs' => 'px-2 py-1 text-xs',
         'sm' => 'px-3 py-1.5 text-sm',
@@ -29,11 +29,11 @@
         'lg' => 'px-6 py-3 text-lg',
         'xl' => 'px-8 py-4 text-xl',
     ];
-    
+
     $baseClasses = 'inline-flex items-center justify-center font-semibold rounded-lg shadow-md transition duration-150 disabled:opacity-50 disabled:cursor-not-allowed';
 @endphp
 
-<button 
+<button
     {{ $attributes->merge([
         'type' => 'button',
         'class' => $baseClasses . ' ' . $variantClasses[$variant] . ' ' . $sizeClasses[$size],
@@ -48,9 +48,9 @@
     @elseif($icon && $iconPosition === 'left')
         <i class="{{ $icon }} mr-2"></i>
     @endif
-    
+
     {{ $slot }}
-    
+
     @if($icon && $iconPosition === 'right')
         <i class="{{ $icon }} ml-2"></i>
     @endif

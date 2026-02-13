@@ -67,7 +67,14 @@ class AttendanceService
                 ->whereDate('date', $today)
                 ->first();
             if ($holiday) {
-                throw new \Exception('Hari ini adalah libur nasional (' . $holiday->name . '). Anda tidak perlu melakukan absensi.');
+                // Cek apakah departemen pegawai ini tetap wajib hadir saat libur nasional
+                $worker = \App\Models\Worker::with('department')->find($workerId);
+                $deptRequiresAttendance = $worker && $worker->department && $worker->department->requires_holiday_attendance;
+
+                if (!$deptRequiresAttendance) {
+                    throw new \Exception('Hari ini adalah libur nasional (' . $holiday->name . '). Anda tidak perlu melakukan absensi.');
+                }
+                // Jika departemen standby (requires_holiday_attendance = true), lanjutkan proses check-in
             }
 
             // Check if worker is on approved leave today
@@ -93,15 +100,25 @@ class AttendanceService
 
             $status = $data['status'] ?? 'present';
 
-            // Get worker's shift for today
-            $workerShift = $this->workerShiftRepository->getActiveByWorkerId($workerId);
-            if (!$workerShift) {
-                throw new \Exception('Tidak ada jadwal shift aktif untuk pegawai ini.');
-            }
+            // Get worker's shift for today (check ShiftOverride first, then active shift)
+            $worker = \App\Models\Worker::find($workerId);
+            $shiftOverride = $worker ? $worker->shiftOverrides()
+                ->where('override_date', $today)
+                ->with('shift')
+                ->first() : null;
 
-            $shift = $this->shiftRepository->findById($workerShift->shift_id);
-            if (! $shift) {
-                throw new \Exception('Jadwal shift tidak ditemukan.');
+            if ($shiftOverride && $shiftOverride->shift) {
+                $shift = $shiftOverride->shift;
+            } else {
+                $workerShift = $this->workerShiftRepository->getActiveByWorkerId($workerId);
+                if (!$workerShift) {
+                    throw new \Exception('Tidak ada jadwal shift aktif untuk pegawai ini.');
+                }
+
+                $shift = $this->shiftRepository->findById($workerShift->shift_id);
+                if (!$shift) {
+                    throw new \Exception('Jadwal shift tidak ditemukan.');
+                }
             }
 
             $schedule = $shift->getScheduleForDate($today);
@@ -271,44 +288,29 @@ class AttendanceService
             $checkOutTime = now();
             $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
 
-            // Validasi: Tidak boleh checkout setelah hari berikutnya
-            $nextDayStart = $attendanceDate->copy()->addDay()->startOfDay();
-            if ($checkOutTime->greaterThanOrEqualTo($nextDayStart)) {
-                throw new \Exception('Tidak dapat melakukan check-out setelah tengah malam hari berikutnya. Silakan hubungi admin untuk koreksi absensi.');
-            }
-
             // Validasi: Harus sudah check-in terlebih dahulu
             if (!$attendance->check_in) {
                 throw new \Exception('Anda belum melakukan check-in. Tidak dapat melakukan check-out.');
             }
 
-            // Validate location
-            $location = $this->locationRepository->findById($data['location_id']);
-            $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
-
-            // Get shift information for calculating early leave
+            // Get shift info early for date validation
             $shift = $this->shiftRepository->findById($attendance->shift_id);
             if (!$shift) {
                 throw new \Exception('Jadwal shift tidak ditemukan.');
             }
 
             $schedule = $shift->getScheduleForDate($attendance->attendance_date);
-
-            // Calculate shift end time based on attendance date
             $shiftEndTime = $schedule['end_time'];
-            $shiftEndDateTime = \Carbon\Carbon::parse($attendance->attendance_date->format('Y-m-d') . ' ' . $shiftEndTime);
+            $shiftEndDateTime = \Carbon\Carbon::parse($attendanceDate->format('Y-m-d') . ' ' . $shiftEndTime);
 
             // Jika shift melewati tengah malam (overnight), tambahkan satu hari ke tanggal akhir shift
             if ($schedule['is_overnight']) {
                 $shiftEndDateTime->addDay();
             }
 
-            // ========== VALIDATE CHECK-OUT TIME WINDOW ==========
+            // Validasi: Tidak boleh checkout terlalu lama setelah shift berakhir
+            // Max window = shift end + checkout window + overtime buffer
             $checkOutWindowAfterHours = (int) config('attendance.check_out_window_after_hours', 4);
-            $strictTimeWindow = config('attendance.strict_time_window', false);
-
-            // Calculate latest allowed check-out time (including potential overtime)
-            $latestCheckOutTime = $shiftEndDateTime->copy()->addHours($checkOutWindowAfterHours);
 
             // Check for approved overtime request
             $hasApprovedOvertime = \App\Models\OvertimeRequest::where('worker_id', $attendance->worker_id)
@@ -316,46 +318,20 @@ class AttendanceService
                 ->whereDate('overtime_date', $attendance->attendance_date)
                 ->exists();
 
-            // If there's approved overtime, extend the window
-            if ($hasApprovedOvertime) {
-                // Add extra 2 hours for overtime flexibility
-                $latestCheckOutTime->addHours(2);
-                \Log::info('Check-out window extended due to approved overtime', [
-                    'worker_id' => $attendance->worker_id,
-                    'attendance_date' => $attendance->attendance_date,
-                    'extended_latest_checkout' => $latestCheckOutTime->format('Y-m-d H:i:s'),
-                ]);
-            }
+            $maxCheckoutTime = $shiftEndDateTime->copy()->addHours($checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0));
 
-            // Validation: Check-out too late
-            if ($checkOutTime->greaterThan($latestCheckOutTime)) {
+            if ($checkOutTime->greaterThan($maxCheckoutTime)) {
                 $hoursDiff = $shiftEndDateTime->diffInHours($checkOutTime);
-                $minutesDiff = $shiftEndDateTime->diffInMinutes($checkOutTime) % 60;
-
-                $message = sprintf(
-                    'Check-out terlalu terlambat! Anda mencoba check-out %d jam %d menit setelah shift berakhir (pukul %s). ' .
-                    'Batas check-out paling akhir adalah %d jam setelah shift berakhir (pukul %s). ' .
-                    'Silakan hubungi admin untuk koreksi absensi.',
-                    $hoursDiff,
-                    $minutesDiff,
-                    $shiftEndDateTime->format('H:i'),
-                    $checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0),
-                    $latestCheckOutTime->format('H:i')
+                throw new \Exception(
+                    "Check-out terlalu terlambat ({$hoursDiff} jam setelah shift berakhir pukul {$shiftEndDateTime->format('H:i')}). " .
+                    "Batas checkout adalah {$maxCheckoutTime->format('d M Y H:i')}. " .
+                    "Silakan hubungi admin untuk koreksi absensi."
                 );
-
-                if ($strictTimeWindow) {
-                    throw new \Exception($message);
-                } else {
-                    // Log warning but allow (non-strict mode)
-                    \Log::warning('Very late check-out attempt', [
-                        'worker_id' => $attendance->worker_id,
-                        'attendance_id' => $attendanceId,
-                        'check_out_time' => $checkOutTime->format('H:i:s'),
-                        'shift_end' => $shiftEndDateTime->format('H:i:s'),
-                        'latest_allowed' => $latestCheckOutTime->format('H:i:s'),
-                    ]);
-                }
             }
+
+            // Validate location
+            $location = $this->locationRepository->findById($data['location_id']);
+            $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
 
             // Hitung early leave dan overtime
             $isEarlyLeave = $checkOutTime->lessThan($shiftEndDateTime);
@@ -500,5 +476,115 @@ class AttendanceService
 
         // Fallback: store original uploaded file
         return $photo->storeAs('attendance-photos', $filename, 'public');
+    }
+
+    /**
+     * Get pending checkouts (workers who have checked in but not checked out yet)
+     * Filtered to show only those whose shift has ended
+     *
+     * @param string|null $workerId If provided, only check this specific worker
+     * @param int $hoursThreshold How many hours after shift end to consider as "pending" (default: 0)
+     * @return \Illuminate\Support\Collection
+     */
+    public function getPendingCheckouts(?string $workerId = null, int $hoursThreshold = 0)
+    {
+        $now = now();
+
+        // Get all attendances with check_in but no check_out, status = 'present'
+        $query = \App\Models\Attendance::with([
+            'worker.workerShifts.shift',
+            'worker.shiftOverrides.shift'
+        ])
+        ->whereNotNull('check_in')
+        ->whereNull('check_out')
+        ->where('status', 'present');
+
+        if ($workerId) {
+            $query->where('worker_id', $workerId);
+        }
+
+        $pendingAttendances = $query->get();
+
+        $pendingCheckouts = collect();
+
+        foreach ($pendingAttendances as $attendance) {
+            $worker = $attendance->worker;
+            if (!$worker) continue;
+
+            $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
+
+            // Find the shift for this attendance date (same logic as checkout)
+            // Check ShiftOverride first
+            $shiftOverride = $worker->shiftOverrides()
+                ->where('override_date', $attendanceDate->format('Y-m-d'))
+                ->with('shift')
+                ->first();
+
+            $shift = null;
+            if ($shiftOverride && $shiftOverride->shift) {
+                $shift = $shiftOverride->shift;
+            } else {
+                // Use regular shift schedule
+                $activeShift = $worker->workerShifts->first(function($ws) use ($attendanceDate) {
+                    return $ws->isActiveOnDate($attendanceDate);
+                });
+
+                if ($activeShift) {
+                    $shift = $activeShift->shift;
+                }
+            }
+
+            if (!$shift) continue;
+
+            // Calculate shift end time
+            $shiftEndTime = \Carbon\Carbon::parse($attendanceDate->format('Y-m-d') . ' ' . $shift->end_time);
+
+            // Handle overnight shifts
+            if ($shift->is_overnight && $shiftEndTime->format('H:i') < $shift->start_time) {
+                $shiftEndTime->addDay();
+            }
+
+            // Add threshold hours
+            $thresholdTime = $shiftEndTime->copy()->addHours($hoursThreshold);
+
+            // Only include if shift has ended (past threshold)
+            if ($now->greaterThan($thresholdTime)) {
+                $hoursLate = $now->diffInHours($shiftEndTime);
+
+                $pendingCheckouts->push([
+                    'attendance_id' => $attendance->id,
+                    'worker_id' => $worker->id,
+                    'worker_name' => $worker->full_name,
+                    'position' => $worker->position->name ?? '-',
+                    'attendance_date' => $attendanceDate->format('Y-m-d'),
+                    'check_in_time' => \Carbon\Carbon::parse($attendance->check_in)->format('H:i'),
+                    'shift_name' => $shift->name,
+                    'shift_end_time' => $shiftEndTime->format('Y-m-d H:i'),
+                    'hours_late' => $hoursLate,
+                    'formatted_late' => $this->formatHoursLate($hoursLate),
+                ]);
+            }
+        }
+
+        return $pendingCheckouts->sortByDesc('hours_late');
+    }
+
+    /**
+     * Format hours late into human-readable string
+     */
+    private function formatHoursLate(int $hours): string
+    {
+        if ($hours < 1) {
+            return 'Baru berakhir';
+        } elseif ($hours < 24) {
+            return $hours . ' jam yang lalu';
+        } else {
+            $days = floor($hours / 24);
+            $remainingHours = $hours % 24;
+            if ($remainingHours > 0) {
+                return $days . ' hari ' . $remainingHours . ' jam yang lalu';
+            }
+            return $days . ' hari yang lalu';
+        }
     }
 }

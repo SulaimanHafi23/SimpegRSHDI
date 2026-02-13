@@ -6,6 +6,7 @@ use App\DTOs\ShiftSwapRequestDTO;
 use App\Models\Attendance;
 use App\Models\ShiftSwapAuditLog;
 use App\Models\ShiftSwapRequest;
+use App\Models\ShiftOverride;
 use App\Models\Worker;
 use App\Models\WorkerShift;
 use App\Notifications\ShiftSwapNotification;
@@ -40,8 +41,8 @@ class ShiftSwapService
             // Here we will not block if the effective_from is in the past, but you can refine later
         }
 
-        // All shift swaps require HR approval
-        $requiresManager = true;
+        // Determine if manager approval is required (only for cross-department swaps)
+        $requiresManager = false;
 
         // Validate swap dates
         $this->validateSwapDates($dto);
@@ -53,8 +54,10 @@ class ShiftSwapService
                 throw new \Exception('Target worker tidak ditemukan.');
             }
 
-            // Note: All shift swaps require HR approval regardless of department
-            // This ensures proper oversight and documentation of all shift changes
+            // Check if cross-department swap (requires manager/HR approval)
+            if ($requester->department_id !== $targetWorker->department_id) {
+                $requiresManager = true;
+            }
         }
 
         // If target shift specified, ensure it exists
@@ -73,8 +76,11 @@ class ShiftSwapService
         // 2. Rest Period Validation (12 hours between shifts)
         $this->validateRestPeriod($requester, $requesterShift, $targetWorker, $dto->target_shift_id);
 
-        // 3. Double Shift Validation (prevent same-day double shifts)
-        $this->validateDoubleShift($requester, $requesterShift);
+        // 3. Double Shift Validation (prevent same-day double shifts) - use swap dates, not effective_from
+        $this->validateDoubleShift($requester, $requesterShift, $dto);
+
+        // 3b. Prevent duplicate swap on same date (worker cannot swap again on a date that already has active swap)
+        $this->validateNoDuplicateSwapDate($requester, $dto);
 
         // 4. Minimum Staffing Validation
         $this->validateMinimumStaffing($requesterShift);
@@ -134,10 +140,53 @@ class ShiftSwapService
 
     public function listForWorker(string $workerId)
     {
-        return ShiftSwapRequest::where(function ($q) use ($workerId) {
+        $items = ShiftSwapRequest::where(function ($q) use ($workerId) {
             $q->where('requester_id', $workerId)
               ->orWhere('target_worker_id', $workerId);
-        })->orderByDesc('created_at')->get();
+        })
+        ->orderByDesc('created_at')
+        ->with([
+            'requester.department',
+            'targetWorker.department',
+            'requesterShift.shift',
+            'targetShift.shift',
+        ])
+        ->get();
+
+        $this->enrichWithEffectiveShifts($items);
+
+        return $items;
+    }
+
+    /**
+     * Enrich swap requests with effective shifts (considering ShiftOverride)
+     */
+    public function enrichWithEffectiveShifts($items): void
+    {
+        $items->each(function ($item) {
+            $swapDate = $item->swap_date ?? $item->swap_start_date;
+            if (!$swapDate) return;
+
+            $dateStr = $swapDate->format('Y-m-d');
+
+            // Check requester's effective shift on swap date
+            if ($item->requester_id) {
+                $override = ShiftOverride::where('worker_id', $item->requester_id)
+                    ->where('override_date', $dateStr)
+                    ->with('shift')
+                    ->first();
+                $item->setAttribute('effective_requester_shift', $override?->shift ?? $item->requesterShift?->shift);
+            }
+
+            // Check target's effective shift on swap date
+            if ($item->target_worker_id) {
+                $override = ShiftOverride::where('worker_id', $item->target_worker_id)
+                    ->where('override_date', $dateStr)
+                    ->with('shift')
+                    ->first();
+                $item->setAttribute('effective_target_shift', $override?->shift ?? $item->targetShift?->shift);
+            }
+        });
     }
 
     /**
@@ -319,36 +368,50 @@ class ShiftSwapService
 
     /**
      * Prevent double shift (working twice in same day)
+     * Uses the actual swap dates from DTO, not the shift assignment's effective_from
      */
-    protected function validateDoubleShift(Worker $requester, WorkerShift $requesterShift): void
+    protected function validateDoubleShift(Worker $requester, WorkerShift $requesterShift, ShiftSwapRequestDTO $dto): void
     {
-        $shiftDate = $requesterShift->effective_from
-            ? Carbon::parse($requesterShift->effective_from)
-            : Carbon::now();
-
-        // Check if worker has another shift on the same date
-        $existingShifts = WorkerShift::where('worker_id', $requester->id)
-            ->where('id', '!=', $requesterShift->id)
-            ->where('effective_from', $shiftDate->format('Y-m-d'))
-            ->where('is_active', true)
-            ->count();
-
-        if ($existingShifts > 0) {
-            throw new \Exception(
-                'Tidak dapat menukar shift karena Anda sudah memiliki shift lain pada tanggal yang sama. ' .
-                'Double shift tidak diperbolehkan.'
-            );
+        // Get the actual dates being swapped
+        $swapDates = [];
+        switch ($dto->swap_type ?? 'single_date') {
+            case 'single_date':
+                if ($dto->swap_date) {
+                    $swapDates[] = Carbon::parse($dto->swap_date)->format('Y-m-d');
+                }
+                break;
+            case 'date_range':
+                if ($dto->swap_start_date && $dto->swap_end_date) {
+                    $start = Carbon::parse($dto->swap_start_date);
+                    $end = Carbon::parse($dto->swap_end_date);
+                    while ($start->lte($end)) {
+                        $swapDates[] = $start->format('Y-m-d');
+                        $start->addDay();
+                    }
+                }
+                break;
+            case 'recurring':
+                foreach (($dto->swap_dates ?? []) as $d) {
+                    if ($d) $swapDates[] = Carbon::parse($d)->format('Y-m-d');
+                }
+                break;
         }
 
-        // Also check attendance records for that date
-        $existingAttendance = Attendance::where('worker_id', $requester->id)
-            ->where('attendance_date', $shiftDate->format('Y-m-d'))
-            ->exists();
+        // If no swap dates resolved, skip validation (validateSwapDates handles required dates)
+        if (empty($swapDates)) return;
 
-        if ($existingAttendance) {
-            throw new \Exception(
-                'Tidak dapat menukar shift karena Anda sudah tercatat hadir pada tanggal tersebut.'
-            );
+        foreach ($swapDates as $dateStr) {
+            // Check attendance records for each swap date
+            $existingAttendance = Attendance::where('worker_id', $requester->id)
+                ->where('attendance_date', $dateStr)
+                ->exists();
+
+            if ($existingAttendance) {
+                $formattedDate = Carbon::parse($dateStr)->format('d M Y');
+                throw new \Exception(
+                    "Tidak dapat menukar shift untuk tanggal {$formattedDate} karena Anda sudah tercatat hadir pada tanggal tersebut."
+                );
+            }
         }
     }
 
@@ -611,6 +674,12 @@ class ShiftSwapService
             }
 
             DB::commit();
+
+            // Auto-execute if no manager approval required (same department)
+            if (!$swap->requires_manager_approval && $swap->status === 'accepted') {
+                return $this->executeSwap($swapId, auth()->id());
+            }
+
             return $swap;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -698,7 +767,7 @@ class ShiftSwapService
         }
 
         if (!$swap->requires_manager_approval) {
-            throw new \Exception('Swap request ini tidak memerlukan persetujuan manager.');
+            throw new \Exception('Swap request ini tidak memerlukan persetujuan manager/HR.');
         }
 
         DB::beginTransaction();
@@ -745,7 +814,9 @@ class ShiftSwapService
             }
 
             DB::commit();
-            return $swap;
+
+            // Auto-execute after approval - create ShiftOverride records immediately
+            return $this->executeSwap($swapId, $managerId);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to approve shift swap', ['swap_id' => $swapId, 'error' => $e->getMessage()]);
@@ -882,7 +953,7 @@ class ShiftSwapService
     }
 
     /**
-     * Execute swap (actually swap the shifts in worker_shifts table)
+     * Execute swap (create ShiftOverride records for specific dates instead of permanently swapping)
      */
     public function executeSwap(string $swapId, string $executedByUserId): ShiftSwapRequest
     {
@@ -903,13 +974,49 @@ class ShiftSwapService
             $requesterShift = $swap->requesterShift;
             $targetShift = $swap->targetShift;
 
-            // Swap the worker assignments
-            $tempShiftId = $requesterShift->shift_id;
-            $requesterShift->shift_id = $targetShift->shift_id;
-            $targetShift->shift_id = $tempShiftId;
+            // Get the list of dates for this swap
+            $dates = $this->getSwapDates($swap);
 
-            $requesterShift->save();
-            $targetShift->save();
+            if (empty($dates)) {
+                throw new \Exception('Tidak ada tanggal yang valid untuk tukar shift.');
+            }
+
+            // Create ShiftOverride records for each date (date-specific, not permanent)
+            foreach ($dates as $date) {
+                if (!$date) continue;
+
+                $dateStr = $date instanceof Carbon ? $date->toDateString() : $date;
+
+                // Override for requester: use target's shift on this date
+                ShiftOverride::updateOrCreate(
+                    [
+                        'worker_id' => $swap->requester_id,
+                        'override_date' => $dateStr,
+                    ],
+                    [
+                        'shift_id' => $targetShift->shift_id,
+                        'reason' => 'Tukar shift dengan ' . ($swap->targetWorker->full_name ?? 'pegawai lain') . ': ' . ($swap->reason ?? ''),
+                        'created_by' => $executedByUserId,
+                        'shift_swap_request_id' => $swap->id,
+                    ]
+                );
+
+                // Override for target: use requester's shift on this date
+                if ($swap->target_worker_id) {
+                    ShiftOverride::updateOrCreate(
+                        [
+                            'worker_id' => $swap->target_worker_id,
+                            'override_date' => $dateStr,
+                        ],
+                        [
+                            'shift_id' => $requesterShift->shift_id,
+                            'reason' => 'Tukar shift dengan ' . ($swap->requester->full_name ?? 'pegawai lain') . ': ' . ($swap->reason ?? ''),
+                            'created_by' => $executedByUserId,
+                            'shift_swap_request_id' => $swap->id,
+                        ]
+                    );
+                }
+            }
 
             // Update swap status
             $oldStatus = $swap->status;
@@ -925,7 +1032,7 @@ class ShiftSwapService
                 newStatus: 'executed',
                 userId: $executedByUserId,
                 oldStatus: $oldStatus,
-                notes: 'Shift swap executed successfully',
+                notes: 'Shift swap executed successfully (date-specific overrides created)',
                 metadata: [
                     'requester_id' => $swap->requester_id,
                     'requester_original_shift' => $requesterShift->shift_id,
@@ -933,6 +1040,7 @@ class ShiftSwapService
                     'target_id' => $swap->target_worker_id,
                     'target_original_shift' => $targetShift->shift_id,
                     'target_new_shift' => $requesterShift->shift_id,
+                    'swap_dates' => $dates,
                     'executed_by' => $executedByUserId,
                     'executed_at' => Carbon::now()->toDateTimeString(),
                 ]
@@ -953,6 +1061,7 @@ class ShiftSwapService
                 'requester_id' => $swap->requester_id,
                 'target_id' => $swap->target_worker_id,
                 'executed_by' => $executedByUserId,
+                'dates' => $dates,
             ]);
 
             return $swap;
@@ -962,6 +1071,108 @@ class ShiftSwapService
                 'swap_id' => $swapId,
                 'error' => $e->getMessage(),
             ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Get the list of dates for a swap request
+     */
+    private function getSwapDates(ShiftSwapRequest $swap): array
+    {
+        $dates = [];
+
+        switch ($swap->swap_type ?? 'single_date') {
+            case 'single_date':
+                if ($swap->swap_date) {
+                    $dates = [Carbon::parse($swap->swap_date)->toDateString()];
+                }
+                break;
+
+            case 'date_range':
+                if ($swap->swap_start_date && $swap->swap_end_date) {
+                    $start = Carbon::parse($swap->swap_start_date);
+                    $end = Carbon::parse($swap->swap_end_date);
+                    while ($start->lte($end)) {
+                        $dates[] = $start->toDateString();
+                        $start->addDay();
+                    }
+                }
+                break;
+
+            case 'recurring':
+                $dates = array_filter(array_map(function ($d) {
+                    return $d ? Carbon::parse($d)->toDateString() : null;
+                }, $swap->swap_dates ?? []));
+                break;
+        }
+
+        // Fallback: if no dates found but swap_date exists in metadata
+        if (empty($dates) && !empty($swap->metadata['swap_date'])) {
+            $dates = [Carbon::parse($swap->metadata['swap_date'])->toDateString()];
+        }
+
+        return $dates;
+    }
+
+    /**
+     * Revert an executed swap by deleting the ShiftOverride records created for it
+     */
+    public function revertSwap(string $swapId, string $revertedByUserId, string $reason = ''): ShiftSwapRequest
+    {
+        $swap = ShiftSwapRequest::with(['requester', 'targetWorker'])
+            ->findOrFail($swapId);
+
+        if ($swap->status !== 'executed') {
+            throw new \Exception('Hanya swap yang sudah dieksekusi yang dapat di-revert.');
+        }
+
+        DB::beginTransaction();
+        try {
+            // Delete all ShiftOverride records created by this swap
+            $deletedCount = ShiftOverride::where('shift_swap_request_id', $swap->id)->delete();
+
+            // Update swap status
+            $oldStatus = $swap->status;
+            $swap->status = 'reverted';
+            $swap->save();
+
+            // Audit log
+            ShiftSwapAuditLog::log(
+                shiftSwapRequestId: $swap->id,
+                action: 'reverted',
+                newStatus: 'reverted',
+                userId: $revertedByUserId,
+                oldStatus: $oldStatus,
+                notes: 'Shift swap reverted - ' . ($reason ?: 'overrides removed') . " ({$deletedCount} overrides deleted)",
+                metadata: [
+                    'reverted_by' => $revertedByUserId,
+                    'reverted_at' => Carbon::now()->toDateTimeString(),
+                    'overrides_deleted' => $deletedCount,
+                    'reason' => $reason,
+                ]
+            );
+
+            // Send notification to both workers
+            if ($swap->requester && $swap->requester->user) {
+                $swap->requester->user->notify(new ShiftSwapNotification($swap, 'reverted'));
+            }
+            if ($swap->targetWorker && $swap->targetWorker->user) {
+                $swap->targetWorker->user->notify(new ShiftSwapNotification($swap, 'reverted'));
+            }
+
+            DB::commit();
+
+            Log::info('Shift swap reverted successfully', [
+                'swap_id' => $swapId,
+                'reverted_by' => $revertedByUserId,
+                'overrides_deleted' => $deletedCount,
+            ]);
+
+            return $swap;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to revert shift swap', ['swap_id' => $swapId, 'error' => $e->getMessage()]);
             throw $e;
         }
     }
@@ -977,11 +1188,11 @@ class ShiftSwapService
 
         // Build base query
         $query = ShiftSwapRequest::with(['requester', 'targetWorker', 'requesterShift.shift', 'targetShift.shift']);
-        
+
         // For Manager (not Super Admin), filter by department
         // Super Admin can see all data
         $isSuperAdmin = $manager->hasRole('Super Admin');
-        
+
         if ($worker && !$isSuperAdmin) {
             $query->where(function($q) use ($worker) {
                 $q->whereHas('requester', function($query) use ($worker) {
@@ -1017,7 +1228,85 @@ class ShiftSwapService
         }
 
         $perPage = $filters['per_page'] ?? 15;
-        return $query->orderBy('requested_at', 'desc')->paginate($perPage);
+        $result = $query->orderBy('requested_at', 'desc')->paginate($perPage);
+
+        // Enrich paginated items with effective shifts
+        $this->enrichWithEffectiveShifts($result->getCollection());
+
+        return $result;
+    }
+
+    /**
+     * Validate that the worker does not already have an active (non-cancelled, non-rejected) swap
+     * on the same date(s). Prevents double-swapping on the same day.
+     */
+    protected function validateNoDuplicateSwapDate(Worker $worker, ShiftSwapRequestDTO $dto): void
+    {
+        // Collect all swap dates from the DTO
+        $swapDates = [];
+        switch ($dto->swap_type ?? 'single_date') {
+            case 'single_date':
+                if ($dto->swap_date) {
+                    $swapDates[] = Carbon::parse($dto->swap_date)->format('Y-m-d');
+                }
+                break;
+            case 'date_range':
+                if ($dto->swap_start_date && $dto->swap_end_date) {
+                    $start = Carbon::parse($dto->swap_start_date);
+                    $end = Carbon::parse($dto->swap_end_date);
+                    while ($start->lte($end)) {
+                        $swapDates[] = $start->format('Y-m-d');
+                        $start->addDay();
+                    }
+                }
+                break;
+            case 'recurring':
+                foreach (($dto->swap_dates ?? []) as $d) {
+                    if ($d) $swapDates[] = Carbon::parse($d)->format('Y-m-d');
+                }
+                break;
+        }
+
+        if (empty($swapDates)) return;
+
+        // Active statuses that count as "occupied" swap dates
+        $activeStatuses = ['pending', 'accepted', 'awaiting_approval', 'approved', 'executed'];
+
+        foreach ($swapDates as $dateStr) {
+            $formattedDate = Carbon::parse($dateStr)->format('d M Y');
+
+            // Check as requester
+            $existingAsRequester = ShiftSwapRequest::where('requester_id', $worker->id)
+                ->whereIn('status', $activeStatuses)
+                ->where(function ($q) use ($dateStr) {
+                    $q->where('swap_date', $dateStr)
+                      ->orWhere(function ($q2) use ($dateStr) {
+                          $q2->where('swap_start_date', '<=', $dateStr)
+                             ->where('swap_end_date', '>=', $dateStr);
+                      });
+                })
+                ->exists();
+
+            if ($existingAsRequester) {
+                throw new \Exception("Anda sudah memiliki tukar shift aktif pada tanggal {$formattedDate}. Batalkan terlebih dahulu jika ingin tukar ulang.");
+            }
+
+            // Check as target
+            $existingAsTarget = ShiftSwapRequest::where('target_worker_id', $worker->id)
+                ->whereIn('status', $activeStatuses)
+                ->where(function ($q) use ($dateStr) {
+                    $q->where('swap_date', $dateStr)
+                      ->orWhere(function ($q2) use ($dateStr) {
+                          $q2->where('swap_start_date', '<=', $dateStr)
+                             ->where('swap_end_date', '>=', $dateStr);
+                      });
+                })
+                ->exists();
+
+            if ($existingAsTarget) {
+                throw new \Exception("Anda sudah menjadi target tukar shift pada tanggal {$formattedDate}. Tidak dapat mengajukan tukar shift lagi pada tanggal tersebut.");
+            }
+        }
     }
 
     /**
@@ -1094,59 +1383,45 @@ class ShiftSwapService
     }
 
     /**
-     * Create shift overrides when swap is executed
+     * Create shift overrides when swap is executed (legacy method, now handled by executeSwap directly)
      */
     public function createShiftOverrides(ShiftSwapRequest $swap): void
     {
-        $dates = [];
-
-        switch ($swap->swap_type) {
-            case 'single_date':
-                $dates = [$swap->swap_date];
-                break;
-
-            case 'date_range':
-                $start = Carbon::parse($swap->swap_start_date);
-                $end = Carbon::parse($swap->swap_end_date);
-
-                while ($start->lte($end)) {
-                    $dates[] = $start->toDateString();
-                    $start->addDay();
-                }
-                break;
-
-            case 'recurring':
-                $dates = array_filter($swap->swap_dates ?? []);
-                break;
-        }
+        $dates = $this->getSwapDates($swap);
 
         foreach ($dates as $date) {
             if (!$date) continue;
 
-            // Create override for original worker (disable their shift on this date)
-            ShiftSwapOverride::create([
-                'shift_swap_request_id' => $swap->id,
-                'original_worker_id' => $swap->requester_id,
-                'replacement_worker_id' => $swap->target_worker_id,
-                'original_shift_id' => $swap->requester_shift_id,
-                'replacement_shift_id' => $swap->target_shift_id,
-                'override_date' => $date,
-                'status' => 'active',
-                'notes' => "Shift swap executed: {$swap->reason}",
-            ]);
+            $dateStr = $date instanceof Carbon ? $date->toDateString() : $date;
 
-            // Create reverse override if target worker and shift exist
-            if ($swap->target_worker_id && $swap->target_shift_id) {
-                ShiftSwapOverride::create([
+            // Override for requester: use target's shift on this date
+            ShiftOverride::updateOrCreate(
+                [
+                    'worker_id' => $swap->requester_id,
+                    'override_date' => $dateStr,
+                ],
+                [
+                    'shift_id' => $swap->target_shift_id,
+                    'reason' => "Tukar shift: {$swap->reason}",
+                    'created_by' => $swap->executed_by ?? $swap->requester_id,
                     'shift_swap_request_id' => $swap->id,
-                    'original_worker_id' => $swap->target_worker_id,
-                    'replacement_worker_id' => $swap->requester_id,
-                    'original_shift_id' => $swap->target_shift_id,
-                    'replacement_shift_id' => $swap->requester_shift_id,
-                    'override_date' => $date,
-                    'status' => 'active',
-                    'notes' => "Reverse shift swap executed: {$swap->reason}",
-                ]);
+                ]
+            );
+
+            // Reverse override for target worker
+            if ($swap->target_worker_id && $swap->requester_shift_id) {
+                ShiftOverride::updateOrCreate(
+                    [
+                        'worker_id' => $swap->target_worker_id,
+                        'override_date' => $dateStr,
+                    ],
+                    [
+                        'shift_id' => $swap->requester_shift_id,
+                        'reason' => "Tukar shift (reverse): {$swap->reason}",
+                        'created_by' => $swap->executed_by ?? $swap->requester_id,
+                        'shift_swap_request_id' => $swap->id,
+                    ]
+                );
             }
         }
     }

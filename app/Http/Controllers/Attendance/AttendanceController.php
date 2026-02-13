@@ -56,7 +56,15 @@ class AttendanceController extends Controller
         $locations = $this->locationService->getAllActive();
 
         // Load relationships yang diperlukan
-        $allWorkers->load(['shift', 'workerShifts.shift', 'department']);
+        $allWorkers->load([
+            'shift', 'workerShifts.shift', 'shiftOverrides.shift', 'department',
+            'shiftSwapRequestsAsRequester' => function ($q) {
+                $q->where('status', 'executed')->with('targetWorker');
+            },
+            'shiftSwapRequestsAsTarget' => function ($q) {
+                $q->where('status', 'executed')->with('requester');
+            },
+        ]);
 
         // Ambil tanggal yang dipilih untuk view "Absensi Hari Ini"
         $selectedDate = $request->attendance_date ?? now()->format('Y-m-d');
@@ -94,6 +102,29 @@ class AttendanceController extends Controller
             return $worker;
         });
 
+        // Apply filters to workersWithAttendance for "today" tab
+        if ($request->input('worker_id')) {
+            $workersWithAttendance = $workersWithAttendance->where('id', $request->input('worker_id'));
+        }
+        if ($request->input('search')) {
+            $searchTerm = strtolower($request->input('search'));
+            $workersWithAttendance = $workersWithAttendance->filter(function ($worker) use ($searchTerm) {
+                return str_contains(strtolower($worker->name ?? ''), $searchTerm)
+                    || str_contains(strtolower($worker->nip ?? ''), $searchTerm)
+                    || str_contains(strtolower($worker->email ?? ''), $searchTerm);
+            });
+        }
+        if ($request->input('status')) {
+            $statusFilter = $request->input('status');
+            $workersWithAttendance = $workersWithAttendance->filter(function ($worker) use ($statusFilter) {
+                if ($statusFilter === 'late') {
+                    return $worker->is_late;
+                }
+                return $worker->attendance_status === $statusFilter;
+            });
+        }
+        $workersWithAttendance = $workersWithAttendance->values();
+
         // Hitung statistik untuk tanggal yang dipilih
         $summary = [
             'total_workers' => $allWorkers->count(),
@@ -105,6 +136,11 @@ class AttendanceController extends Controller
                 ->where('is_early_leave', false)
                 ->count(),
             'absent' => $allWorkers->count() - $todayAttendances->whereIn('status', ['present', 'late'])->count(),
+            'on_leave' => \App\Models\LeaveRequest::whereIn('worker_id', $allWorkers->pluck('id'))
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $selectedDate)
+                ->whereDate('end_date', '>=', $selectedDate)
+                ->count(),
         ];
 
         // Tentukan periode untuk statistik riwayat
@@ -493,16 +529,18 @@ class AttendanceController extends Controller
                 $query->where('worker_id', $filters['worker_id']);
             }
             if ($filters['date_from']) {
-                $query->whereDate('date', '>=', $filters['date_from']);
+                $query->whereDate('attendance_date', '>=', $filters['date_from']);
             }
             if ($filters['date_to']) {
-                $query->whereDate('date', '<=', $filters['date_to']);
+                $query->whereDate('attendance_date', '<=', $filters['date_to']);
             }
-            if ($filters['status']) {
+            if ($filters['status'] === 'late') {
+                $query->where('is_late', true);
+            } elseif ($filters['status']) {
                 $query->where('status', $filters['status']);
             }
 
-            $attendances = $query->orderBy('date', 'desc')->get();
+            $attendances = $query->orderBy('attendance_date', 'desc')->get();
 
             // Get worker if single worker export
             $worker = null;
@@ -1070,7 +1108,7 @@ class AttendanceController extends Controller
             // Get all active workers with relationships
             $workers = $this->workerService->getAllActive();
             $workers->load(['shift', 'department', 'workerShifts.shift']);
-            
+
             // Get today's attendances dengan relationship - FIXED: gunakan attendance_date
             $attendances = \App\Models\Attendance::with(['worker.department', 'location'])
                 ->whereDate('attendance_date', $selectedDate)
@@ -1090,9 +1128,9 @@ class AttendanceController extends Controller
 
                 $worker->today_attendance = $todayAttendance;
                 $worker->leave_request = $leaveRequest;
-                $worker->check_in_time = $todayAttendance && $todayAttendance->check_in ? 
+                $worker->check_in_time = $todayAttendance && $todayAttendance->check_in ?
                     \Carbon\Carbon::parse($todayAttendance->check_in)->format('H:i:s') : null;
-                $worker->check_out_time = $todayAttendance && $todayAttendance->check_out ? 
+                $worker->check_out_time = $todayAttendance && $todayAttendance->check_out ?
                     \Carbon\Carbon::parse($todayAttendance->check_out)->format('H:i:s') : null;
                 $worker->is_late = $todayAttendance ? $todayAttendance->is_late : false;
                 $worker->late_minutes = $todayAttendance ? ($todayAttendance->late_minutes ?? 0) : 0;

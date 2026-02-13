@@ -69,7 +69,7 @@
         </div>
 
         @if(method_exists($workers, 'links'))
-            <div class="mt-4">{{ $workers->links() }}</div>
+            <div class="mt-4">{{ $workers->appends($filters ?? [])->links() }}</div>
         @endif
     </x-card>
 </div>

@@ -100,12 +100,17 @@ class WorkerController extends Controller
                 'order' => 'desc',
             ]);
 
+            // Shift history
+            $workerShiftService = app(\App\Services\WorkerShift\WorkerShiftService::class);
+            $shiftHistories = $workerShiftService->getShiftHistories($worker->id);
+
             return view('admin.workers.show', compact(
                 'worker',
                 'attendanceThisMonth',
                 'totalOvertime',
                 'leaveRequests',
-                'overtimeRequests'
+                'overtimeRequests',
+                'shiftHistories'
             ));
         } catch (\Exception $e) {
             return redirect()

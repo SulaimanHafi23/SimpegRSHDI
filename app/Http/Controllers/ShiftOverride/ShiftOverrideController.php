@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Services\ShiftOverride\ShiftOverrideService;
 use App\Services\Worker\WorkerService;
 use App\Services\Master\ShiftService;
+use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ShiftOverrideController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct(
         protected ShiftOverrideService $shiftOverrideService,
         protected WorkerService $workerService,
@@ -19,21 +22,29 @@ class ShiftOverrideController extends Controller
 
     public function index(Request $request)
     {
+        $departmentId = $this->getManagerDepartmentFilter();
+
         $filters = [
             'worker_id' => $request->worker_id,
             'override_date' => $request->override_date,
+            'department_id' => $departmentId,
             'per_page' => $request->per_page ?? 15,
         ];
 
         $shiftOverrides = $this->shiftOverrideService->getAll($filters);
-        $workers = $this->workerService->getAllActive();
+        $workers = $departmentId
+            ? $this->workerService->getByDepartment($departmentId)
+            : $this->workerService->getAllActive();
 
         return view('admin.shift-overrides.index', compact('shiftOverrides', 'workers'));
     }
 
     public function create()
     {
-        $workers = $this->workerService->getAllActive();
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = $departmentId
+            ? $this->workerService->getByDepartment($departmentId)
+            : $this->workerService->getAllActive();
         $shifts = $this->shiftService->getActive();
 
         return view('admin.shift-overrides.create', compact('workers', 'shifts'));

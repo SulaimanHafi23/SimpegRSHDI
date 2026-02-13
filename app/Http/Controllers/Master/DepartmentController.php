@@ -44,6 +44,7 @@ class DepartmentController extends Controller
             'code' => 'required|string|max:50|unique:departments,code',
             'description' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'requires_holiday_attendance' => 'nullable|boolean',
         ]);
 
         try {
@@ -88,7 +89,7 @@ class DepartmentController extends Controller
         try {
             $department = $this->departmentService->findById($id);
             $allDepartments = $this->departmentService->getAll(['is_active' => true]);
-            
+
             return view('admin.master.departments.edit', compact('department', 'allDepartments'));
         } catch (\Exception $e) {
             return redirect()
@@ -104,6 +105,7 @@ class DepartmentController extends Controller
             'code' => 'required|string|max:50|unique:departments,code,' . $id,
             'description' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'requires_holiday_attendance' => 'nullable|boolean',
         ]);
 
         try {

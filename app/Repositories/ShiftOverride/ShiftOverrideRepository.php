@@ -22,6 +22,12 @@ class ShiftOverrideRepository implements ShiftOverrideRepositoryInterface
             $query->where('worker_id', $filters['worker_id']);
         }
 
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
         if (!empty($filters['date_from'])) {
             $query->where('override_date', '>=', $filters['date_from']);
         }

@@ -208,9 +208,10 @@
                 <th style="width: 10%;">Waktu Mulai</th>
                 <th style="width: 10%;">Waktu Selesai</th>
                 <th style="width: 7%;">Total Jam</th>
-                <th style="width: 32%;">Deskripsi</th>
-                <th style="width: 15%;">Disetujui Oleh</th>
-                <th style="width: 10%;">Status</th>
+                <th style="width: 14%;">Shift</th>
+                <th style="width: 23%;">Deskripsi</th>
+                <th style="width: 12%;">Disetujui Oleh</th>
+                <th style="width: 8%;">Status</th>
             </tr>
         </thead>
         <tbody>
@@ -221,7 +222,16 @@
                 <td>{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }}</td>
                 <td>{{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</td>
                 <td style="text-align: center;">{{ number_format($overtime->total_hours, 1) }}</td>
-                <td style="font-size: 9px;">{{ \Illuminate\Support\Str::limit($overtime->description, 70) }}</td>
+                <td style="font-size: 9px;">
+                    @if($overtime->actual_shift)
+                        {{ $overtime->actual_shift->name }}
+                        ({{ \Carbon\Carbon::parse($overtime->actual_shift->start_time)->format('H:i') }}-
+                        {{ \Carbon\Carbon::parse($overtime->actual_shift->end_time)->format('H:i') }})
+                    @else
+                        -
+                    @endif
+                </td>
+                <td style="font-size: 9px;">{{ \Illuminate\Support\Str::limit($overtime->description, 60) }}</td>
                 <td style="font-size: 9px;">{{ $overtime->approver->name ?? '-' }}</td>
                 <td>
                     @if($overtime->status == 'pending')
@@ -235,7 +245,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="8" style="text-align: center; padding: 15px; color: #999;">
+                <td colspan="9" style="text-align: center; padding: 15px; color: #999;">
                     Tidak ada data permohonan lembur
                 </td>
             </tr>

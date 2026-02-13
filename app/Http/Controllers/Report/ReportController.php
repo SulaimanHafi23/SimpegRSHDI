@@ -7,6 +7,7 @@ use App\Services\Attendance\AttendanceService;
 use App\Services\Leave\LeaveRequestService;
 use App\Services\Overtime\OvertimeRequestService;
 use App\Services\WorkerDocument\WorkerDocumentService;
+use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use App\Models\Worker;
 use App\Models\Location;
@@ -20,6 +21,8 @@ use App\Exports\ReportWorkerDocumentsExport;
 
 class ReportController extends Controller
 {
+    use DepartmentFilterable;
+
     public function __construct(
         protected AttendanceService $attendanceService,
         protected LeaveRequestService $leaveService,
@@ -33,16 +36,38 @@ class ReportController extends Controller
 
     public function attendance(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
             'location_id' => $request->input('location_id'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $attendances = $this->attendanceService->getAll($filters);
 
-        $workers = Worker::select('id', 'name')->orderBy('name')->get();
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = Worker::select('id', 'name')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->orderBy('name')->get();
         $locations = Location::select('id', 'name')->orderBy('name')->get();
 
         if ($request->query('export') === 'csv') {
@@ -80,45 +105,117 @@ class ReportController extends Controller
 
     public function leaves(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
+            'leave_type_id' => $request->input('leave_type_id'),
             'status' => $request->input('status'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $leaves = $this->leaveService->getAll($filters);
 
-        return view('admin.reports.leaves', compact('leaves', 'filters'));
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = Worker::select('id', 'name')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->orderBy('name')->get();
+        $leaveTypes = \App\Models\LeaveType::select('id', 'name')->orderBy('name')->get();
+
+        return view('admin.reports.leaves', compact('leaves', 'filters', 'workers', 'leaveTypes'));
     }
 
     public function overtimes(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
             'status' => $request->input('status'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $overtimes = $this->overtimeService->getAll($filters);
 
-        return view('admin.reports.overtimes', compact('overtimes', 'filters'));
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = Worker::select('id', 'name')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->orderBy('name')->get();
+
+        return view('admin.reports.overtimes', compact('overtimes', 'filters', 'workers'));
     }
 
     public function workerDocuments(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('date_to', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
             'document_type_id' => $request->input('document_type_id'),
             'status' => $request->input('status'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $documents = $this->workerDocumentService->getAll($filters);
 
-        $workers = Worker::select('id', 'name')->orderBy('name')->get();
+        $departmentId = $this->getManagerDepartmentFilter();
+        $workers = Worker::select('id', 'name')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->orderBy('name')->get();
         $documentTypes = DocumentType::select('id', 'name')->orderBy('name')->get();
 
         if ($request->query('export') === 'csv') {
@@ -153,8 +250,10 @@ class ReportController extends Controller
 
     public function workers(Request $request)
     {
+        $departmentId = $this->getManagerDepartmentFilter();
+
         $filters = [
-            'department_id' => $request->input('department_id'),
+            'department_id' => $departmentId ?? $request->input('department_id'),
             'status' => $request->input('status'),
             'employment_status' => $request->input('employment_status'),
             'search' => $request->input('search'),
@@ -208,11 +307,30 @@ class ReportController extends Controller
      */
     public function exportAttendance(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
             'location_id' => $request->input('location_id'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $attendances = $this->attendanceService->getAll($filters);
@@ -239,11 +357,31 @@ class ReportController extends Controller
      */
     public function exportLeaves(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
+            'leave_type_id' => $request->input('leave_type_id'),
             'status' => $request->input('status'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $leaves = $this->leaveService->getAll($filters);
@@ -270,11 +408,30 @@ class ReportController extends Controller
      */
     public function exportOvertimes(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('start_date', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('end_date', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
             'status' => $request->input('status'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $overtimes = $this->overtimeService->getAll($filters);
@@ -301,12 +458,31 @@ class ReportController extends Controller
      */
     public function exportWorkerDocuments(Request $request)
     {
+        $month = $request->input('month');
+        $year = $request->input('year');
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+            if ($month) {
+                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+        } else {
+            $startDate = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input('date_to', now()->endOfMonth()->format('Y-m-d'));
+        }
+
         $filters = [
-            'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
-            'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+            'date_from' => $startDate,
+            'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
             'document_type_id' => $request->input('document_type_id'),
             'status' => $request->input('status'),
+            'department_id' => $this->getManagerDepartmentFilter(),
+            'month' => $month,
+            'year' => $year,
         ];
 
         $documents = $this->workerDocumentService->getAll($filters);

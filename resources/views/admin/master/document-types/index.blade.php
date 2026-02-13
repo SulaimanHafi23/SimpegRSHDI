@@ -9,7 +9,7 @@
             <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Data Tipe Dokumen</h1>
             <p class="text-sm sm:text-base text-gray-600 mt-1">Kelola tipe dokumen pegawai</p>
         </div>
-        <a href="{{ route('admin.master.document-types.create') }}" 
+        <a href="{{ route('admin.master.document-types.create') }}"
            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow">
             <i class="fas fa-plus mr-2"></i>Tambah Tipe Dokumen
         </a>
@@ -17,13 +17,13 @@
 
     <div class="bg-white rounded-lg shadow p-4">
         <form method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <input type="text" name="search" value="{{ $keyword ?? '' }}" placeholder="Cari tipe dokumen..." 
+                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari tipe dokumen..."
                    class="md:col-span-2 lg:col-span-3 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
                     <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Cari</span>
                 </button>
-                @if($keyword ?? false)
+                @if(request('search'))
                 <a href="{{ route('admin.master.document-types.index') }}" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm text-center">
                     <i class="fas fa-redo mr-1"></i><span class="hidden sm:inline">Reset</span>
                 </a>

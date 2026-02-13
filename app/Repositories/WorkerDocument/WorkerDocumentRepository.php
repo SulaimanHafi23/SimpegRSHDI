@@ -24,7 +24,12 @@ class WorkerDocumentRepository implements WorkerDocumentRepositoryInterface
         }
 
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            $status = $filters['status'];
+            if (is_array($status)) {
+                $query->whereIn('status', $status);
+            } else {
+                $query->where('status', $status);
+            }
         }
 
         if (!empty($filters['document_type_id'])) {

@@ -157,27 +157,38 @@
                                 <i class="fas fa-clock text-blue-600 mr-2"></i>
                                 Shift Pemohon
                             </h3>
-                            @if($swap->requesterShift && $swap->requesterShift->shift)
+                            @php
+                                $reqShift = $swap->requesterShift?->shift;
+                            @endphp
+                            @if($reqShift)
                                 <div class="space-y-3">
                                     <div class="bg-white rounded-lg p-3">
                                         <p class="text-xs text-gray-600 mb-1">Nama Shift</p>
-                                        <p class="text-lg font-bold text-blue-700">{{ $swap->requesterShift->shift->name }}</p>
+                                        <p class="text-lg font-bold text-blue-700">{{ $reqShift->name }}</p>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div class="bg-white rounded-lg p-2">
                                             <p class="text-xs text-gray-600">Mulai</p>
-                                            <p class="font-bold text-gray-800">{{ $swap->requesterShift->shift->start_time->format('H:i') }}</p>
+                                            <p class="font-bold text-gray-800">{{ $reqShift->start_time instanceof \Carbon\Carbon ? $reqShift->start_time->format('H:i') : $reqShift->start_time }}</p>
                                         </div>
                                         <div class="bg-white rounded-lg p-2">
                                             <p class="text-xs text-gray-600">Selesai</p>
-                                            <p class="font-bold text-gray-800">{{ $swap->requesterShift->shift->end_time->format('H:i') }}</p>
+                                            <p class="font-bold text-gray-800">{{ $reqShift->end_time instanceof \Carbon\Carbon ? $reqShift->end_time->format('H:i') : $reqShift->end_time }}</p>
                                         </div>
                                     </div>
                                     <div class="bg-white rounded-lg p-2">
-                                        <p class="text-xs text-gray-600">Tanggal Efektif</p>
+                                        <p class="text-xs text-gray-600">Tanggal Tukar</p>
                                         <p class="font-bold text-gray-800">
                                             <i class="fas fa-calendar text-blue-600 mr-1"></i>
-                                            {{ $swap->requesterShift->effective_from?->format('d M Y') ?? 'N/A' }}
+                                            @if($swap->swap_type === 'single_date' && $swap->swap_date)
+                                                {{ $swap->swap_date->format('d M Y') }}
+                                            @elseif($swap->swap_type === 'date_range' && $swap->swap_start_date && $swap->swap_end_date)
+                                                {{ $swap->swap_start_date->format('d M Y') }} s/d {{ $swap->swap_end_date->format('d M Y') }}
+                                            @elseif($swap->swap_type === 'recurring' && $swap->swap_dates)
+                                                {{ collect($swap->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M Y'))->join(', ') }}
+                                            @else
+                                                N/A
+                                            @endif
                                         </p>
                                     </div>
                                 </div>
@@ -192,27 +203,38 @@
                                 <i class="fas fa-clock text-indigo-600 mr-2"></i>
                                 Shift Target
                             </h3>
-                            @if($swap->targetShift && $swap->targetShift->shift)
+                            @php
+                                $tgtShift = $swap->targetShift?->shift;
+                            @endphp
+                            @if($tgtShift)
                                 <div class="space-y-3">
                                     <div class="bg-white rounded-lg p-3">
                                         <p class="text-xs text-gray-600 mb-1">Nama Shift</p>
-                                        <p class="text-lg font-bold text-indigo-700">{{ $swap->targetShift->shift->name }}</p>
+                                        <p class="text-lg font-bold text-indigo-700">{{ $tgtShift->name }}</p>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div class="bg-white rounded-lg p-2">
                                             <p class="text-xs text-gray-600">Mulai</p>
-                                            <p class="font-bold text-gray-800">{{ $swap->targetShift->shift->start_time->format('H:i') }}</p>
+                                            <p class="font-bold text-gray-800">{{ $tgtShift->start_time instanceof \Carbon\Carbon ? $tgtShift->start_time->format('H:i') : $tgtShift->start_time }}</p>
                                         </div>
                                         <div class="bg-white rounded-lg p-2">
                                             <p class="text-xs text-gray-600">Selesai</p>
-                                            <p class="font-bold text-gray-800">{{ $swap->targetShift->shift->end_time->format('H:i') }}</p>
+                                            <p class="font-bold text-gray-800">{{ $tgtShift->end_time instanceof \Carbon\Carbon ? $tgtShift->end_time->format('H:i') : $tgtShift->end_time }}</p>
                                         </div>
                                     </div>
                                     <div class="bg-white rounded-lg p-2">
-                                        <p class="text-xs text-gray-600">Tanggal Efektif</p>
+                                        <p class="text-xs text-gray-600">Tanggal Tukar</p>
                                         <p class="font-bold text-gray-800">
                                             <i class="fas fa-calendar text-indigo-600 mr-1"></i>
-                                            {{ $swap->targetShift->effective_from?->format('d M Y') ?? 'N/A' }}
+                                            @if($swap->swap_type === 'single_date' && $swap->swap_date)
+                                                {{ $swap->swap_date->format('d M Y') }}
+                                            @elseif($swap->swap_type === 'date_range' && $swap->swap_start_date && $swap->swap_end_date)
+                                                {{ $swap->swap_start_date->format('d M Y') }} s/d {{ $swap->swap_end_date->format('d M Y') }}
+                                            @elseif($swap->swap_type === 'recurring' && $swap->swap_dates)
+                                                {{ collect($swap->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M Y'))->join(', ') }}
+                                            @else
+                                                N/A
+                                            @endif
                                         </p>
                                     </div>
                                 </div>
@@ -265,7 +287,7 @@
                             </span>
                         @endif
                     </div>
-                    
+
                     @if($swap->manager_id)
                         <div class="flex items-center justify-between py-3 border-b border-gray-200">
                             <span class="text-gray-700 font-medium flex items-center">
@@ -284,7 +306,7 @@
                             </div>
                         @endif
                     @endif
-                    
+
                     @if($swap->executed_at)
                         <div class="flex items-center justify-between py-3 border-b border-gray-200">
                             <span class="text-gray-700 font-medium flex items-center">
@@ -351,7 +373,7 @@
                     @if($swap->auditLogs && $swap->auditLogs->count() > 0)
                         <div class="space-y-4">
                             @foreach($swap->auditLogs->sortByDesc('created_at') as $log)
-                                <div class="border-l-4 
+                                <div class="border-l-4
                                     @if($log->action === 'approved') border-green-500 bg-green-50
                                     @elseif($log->action === 'rejected') border-red-500 bg-red-50
                                     @elseif($log->action === 'executed') border-purple-500 bg-purple-50
@@ -422,14 +444,14 @@
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
+
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Catatan (opsional)
                 </label>
                 <textarea name="notes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
             </div>
-            
+
             <div class="flex gap-3 justify-end">
                 <button type="button" @click="open = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
                     Batal
@@ -457,7 +479,7 @@
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
+
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     Alasan Penolakan <span class="text-red-500">*</span>
@@ -465,7 +487,7 @@
                 <textarea name="reason" rows="4" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500" placeholder="Masukkan alasan penolakan..."></textarea>
                 <p class="text-xs text-gray-500 mt-1">Alasan penolakan wajib diisi</p>
             </div>
-            
+
             <div class="flex gap-3 justify-end">
                 <button type="button" @click="open = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
                     Batal
@@ -493,7 +515,7 @@
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
-            
+
             <div class="mb-6">
                 <div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded-r-lg">
                     <p class="text-gray-700 leading-relaxed">
@@ -502,7 +524,7 @@
                     </p>
                 </div>
             </div>
-            
+
             <div class="flex gap-3 justify-end">
                 <button type="button" @click="open = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
                     Batal

@@ -75,6 +75,11 @@ class Worker extends Model
         return $this->hasMany(ShiftOverride::class);
     }
 
+    public function shiftHistories(): HasMany
+    {
+        return $this->hasMany(WorkerShiftHistory::class);
+    }
+
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
@@ -93,6 +98,16 @@ class Worker extends Model
     public function overtimeRequests(): HasMany
     {
         return $this->hasMany(OvertimeRequest::class);
+    }
+
+    public function shiftSwapRequestsAsRequester(): HasMany
+    {
+        return $this->hasMany(ShiftSwapRequest::class, 'requester_id');
+    }
+
+    public function shiftSwapRequestsAsTarget(): HasMany
+    {
+        return $this->hasMany(ShiftSwapRequest::class, 'target_worker_id');
     }
 
     /**
@@ -143,7 +158,7 @@ class Worker extends Model
     public function getCurrentShift(): ?Shift
     {
         $today = now();
-        
+
         // Check override first
         $override = $this->shiftOverrides()
             ->where('override_date', $today->format('Y-m-d'))

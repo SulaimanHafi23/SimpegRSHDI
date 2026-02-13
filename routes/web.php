@@ -236,6 +236,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::post('/{id}/approve', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'reject'])->name('reject');
             Route::post('/{id}/execute', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'execute'])->name('execute');
+            Route::post('/{id}/revert', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'revert'])->name('revert');
         });
     });
 

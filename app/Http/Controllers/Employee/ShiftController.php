@@ -33,7 +33,7 @@ class ShiftController extends Controller
         // Get month and year from request or use current
         $month = $request->month ?? now()->month;
         $year = $request->year ?? now()->year;
-        
+
         $date = Carbon::create($year, $month, 1);
         $startOfMonth = $date->copy()->startOfMonth();
         $endOfMonth = $date->copy()->endOfMonth();
@@ -69,7 +69,8 @@ class ShiftController extends Controller
         }
 
         // Build calendar data
-        $calendar = $this->buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays);
+        $requiresHolidayAttendance = $worker->department && $worker->department->requires_holiday_attendance;
+        $calendar = $this->buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance);
 
         // Urutkan shift dari yang terbaru (effective_from descending) untuk penentuan info header
         $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
@@ -82,9 +83,13 @@ class ShiftController extends Controller
             $workerShift = $sortedShifts->first();
         }
 
+        // Get shift history for this worker
+        $shiftHistories = $this->workerShiftService->getShiftHistories($worker->id);
+
         return view('employee.shifts.index', compact(
             'calendar',
             'workerShift',
+            'shiftHistories',
             'date',
             'month',
             'year'
@@ -145,7 +150,7 @@ class ShiftController extends Controller
     /**
      * Build calendar array with shift information
      */
-    private function buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays)
+    private function buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance = false)
     {
         $calendar = [];
         $current = $startOfMonth->copy();
@@ -160,7 +165,7 @@ class ShiftController extends Controller
         // Build 6 weeks (42 days) to ensure full calendar
         for ($week = 0; $week < 6; $week++) {
             $calendar[$week] = [];
-            
+
             for ($day = 0; $day < 7; $day++) {
                 $dayData = [
                     'date' => $current->copy(),
@@ -177,10 +182,14 @@ class ShiftController extends Controller
                 if (isset($holidays[$dateKey])) {
                     $dayData['isHoliday'] = true;
                     $dayData['holidayName'] = $holidays[$dateKey]->name;
-                    // On holidays, no shift assignment
-                    $calendar[$week][] = $dayData;
-                    $current->addDay();
-                    continue;
+
+                    // Jika departemen TIDAK standby, skip shift assignment pada hari libur
+                    if (!$requiresHolidayAttendance) {
+                        $calendar[$week][] = $dayData;
+                        $current->addDay();
+                        continue;
+                    }
+                    // Jika departemen standby, tetap tampilkan shift di bawah
                 }
 
                 // Check if there's an override for this date

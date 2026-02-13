@@ -3,6 +3,8 @@
 namespace App\Services\WorkerShift;
 
 use App\DTOs\WorkerShiftDTO;
+use App\Models\WorkerShift;
+use App\Models\WorkerShiftHistory;
 use App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -38,9 +40,10 @@ class WorkerShiftService
         try {
             $skipDeactivate = (bool) ($data['skip_deactivate'] ?? false);
 
-            // Deactivate old shifts if setting new active shift
+            // Log old shifts to history before deleting them
             if (($data['is_active'] ?? true) && !$skipDeactivate) {
-                $this->workerShiftRepository->deactivateOldShifts($data['worker_id']);
+                $this->logShiftsToHistory($data['worker_id'], null, 'shift_replaced');
+                $this->workerShiftRepository->deleteOldShifts($data['worker_id']);
             }
 
             // Remove empty values to prevent overwriting with empty strings
@@ -66,13 +69,15 @@ class WorkerShiftService
     {
         DB::beginTransaction();
         try {
-            // Deactivate old shifts if activating this shift
-            if ($data['is_active'] ?? false) {
-                $workerShift = $this->workerShiftRepository->getById($id);
-                $this->workerShiftRepository->deactivateOldShifts($workerShift->worker_id);
-            }
+            $workerShift = $this->workerShiftRepository->getById($id);
 
-            // Remove empty values to prevent overwriting with empty strings
+            // Log all OTHER shifts to history before deleting them
+            $this->logShiftsToHistory($workerShift->worker_id, $id, 'shift_replaced');
+
+            // Delete all OTHER shifts for this worker (keep only the one being edited)
+            $this->workerShiftRepository->deleteOldShifts($workerShift->worker_id, $id);
+
+            // Remove empty values but keep boolean false (e.g., is_active = false)
             $data = array_filter($data, function($value) {
                 return $value !== '' && $value !== null && $value !== [];
             });
@@ -91,12 +96,29 @@ class WorkerShiftService
 
     public function delete(string $id): bool
     {
+        // Log this shift to history before deleting
+        $workerShift = $this->workerShiftRepository->getById($id);
+        if ($workerShift) {
+            WorkerShiftHistory::logChange(
+                $workerShift->worker_id,
+                $workerShift->shift_id,
+                $workerShift->effective_from,
+                $workerShift->effective_until,
+                'shift_deleted'
+            );
+        }
+
         return $this->workerShiftRepository->delete($id);
     }
 
     public function deactivateOldShifts(string $workerId): void
     {
         $this->workerShiftRepository->deactivateOldShifts($workerId);
+    }
+
+    public function deleteOldShifts(string $workerId, ?string $excludeId = null): int
+    {
+        return $this->workerShiftRepository->deleteOldShifts($workerId, $excludeId);
     }
 
     public function assignShiftToWorker(string $workerId, string $shiftId, array $options = [])
@@ -109,5 +131,42 @@ class WorkerShiftService
             'is_active' => true,
             'notes' => $options['notes'] ?? null,
         ]);
+    }
+
+    /**
+     * Log existing shifts to history before they are deleted.
+     * Optionally exclude one shift (the one being edited).
+     */
+    private function logShiftsToHistory(string $workerId, ?string $excludeId = null, string $reason = 'shift_replaced'): void
+    {
+        $query = WorkerShift::where('worker_id', $workerId);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $existingShifts = $query->get();
+
+        foreach ($existingShifts as $shift) {
+            WorkerShiftHistory::logChange(
+                $shift->worker_id,
+                $shift->shift_id,
+                $shift->effective_from,
+                $shift->effective_until,
+                $reason
+            );
+        }
+    }
+
+    /**
+     * Get shift histories for a worker.
+     */
+    public function getShiftHistories(string $workerId)
+    {
+        return WorkerShiftHistory::where('worker_id', $workerId)
+            ->with('shift', 'changedByUser')
+            ->orderByDesc('changed_at')
+            ->orderByDesc('created_at')
+            ->get();
     }
 }

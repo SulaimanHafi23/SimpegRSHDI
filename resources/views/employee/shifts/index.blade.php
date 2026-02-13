@@ -30,7 +30,7 @@
                 <i class="fas fa-info-circle"></i>
                 Jadwal Regular Anda:
             </h3>
-            
+
             <div class="text-sm">
                 <p class="text-gray-700">Pola: <span class="font-medium text-blue-700">Tetap</span></p>
                 <p class="text-gray-700 mt-1">Shift: <span class="font-medium text-green-700">{{ $workerShift->shift->name ?? '-' }}</span></p>
@@ -58,7 +58,7 @@
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <!-- Calendar Navigation -->
         <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 flex items-center justify-between">
-            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->subMonth()->month, 'year' => $date->copy()->subMonth()->year]) }}" 
+            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->subMonth()->month, 'year' => $date->copy()->subMonth()->year]) }}"
                class="p-2 hover:bg-green-500 rounded-lg transition">
                 <i class="fas fa-chevron-left"></i>
             </a>
@@ -66,7 +66,7 @@
                 <i class="far fa-calendar-alt"></i>
                 {{ $date->translatedFormat('F Y') }}
             </h2>
-            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->addMonth()->month, 'year' => $date->copy()->addMonth()->year]) }}" 
+            <a href="{{ route('employee.shifts.index', ['month' => $date->copy()->addMonth()->month, 'year' => $date->copy()->addMonth()->year]) }}"
                class="p-2 hover:bg-green-500 rounded-lg transition">
                 <i class="fas fa-chevron-right"></i>
             </a>
@@ -97,7 +97,7 @@
                             @endphp
                             <div
                                 class="min-h-24 border rounded-lg p-2 relative cursor-pointer transition
-                                       {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300')) }}
+                                       {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday && $hasShift ? 'bg-orange-50 border-orange-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300'))) }}
                                        {{ $isToday ? 'ring-2 ring-green-500' : '' }}"
                                 data-date-label="{{ $day['date']->translatedFormat('l, d F Y') }}"
                                 data-has-shift="{{ $hasShift ? 1 : 0 }}"
@@ -124,7 +124,13 @@
                                 </div>
 
                                 <!-- Visual indicator only (no text, just colors/icons) -->
-                                @if($isHoliday)
+                                @if($isHoliday && $hasShift)
+                                    {{-- Hari libur tapi departemen standby, tetap kerja --}}
+                                    <div class="mt-2 flex items-center justify-center gap-1">
+                                        <i class="fas fa-flag text-red-600 text-xs"></i>
+                                        <i class="fas fa-briefcase text-blue-600 text-xs"></i>
+                                    </div>
+                                @elseif($isHoliday)
                                     <div class="mt-4 flex items-center justify-center">
                                         <i class="fas fa-flag text-red-600 text-lg"></i>
                                     </div>
@@ -151,7 +157,7 @@
             <i class="fas fa-info-circle text-purple-600"></i>
             Keterangan:
         </h3>
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 bg-blue-50 border-2 border-blue-300 rounded"></div>
                 <span class="text-gray-700">Hari Kerja</span>
@@ -169,6 +175,12 @@
                 <span class="text-gray-700">Libur Nasional</span>
             </div>
             <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-orange-50 border-2 border-orange-400 rounded flex items-center justify-center">
+                    <i class="fas fa-briefcase text-blue-600 text-[8px]"></i>
+                </div>
+                <span class="text-gray-700">Libur - Tetap Bertugas</span>
+            </div>
+            <div class="flex items-center gap-2">
                 <div class="w-6 h-6 bg-gray-50 border-2 border-gray-300 rounded"></div>
                 <span class="text-gray-700">Bulan Lain</span>
             </div>
@@ -181,8 +193,119 @@
         </div>
     </div>
 
+    <!-- Riwayat Perubahan Shift -->
+    @if(isset($shiftHistories) && $shiftHistories->count() > 0)
+    <div class="mt-6 bg-white rounded-xl shadow-md overflow-hidden">
+        <div class="border-b border-gray-200 bg-gray-50 px-5 py-4">
+            <div class="flex items-center gap-2">
+                <i class="fas fa-history text-gray-600"></i>
+                <h3 class="text-lg font-semibold text-gray-800">Riwayat Perubahan Shift</h3>
+                <span class="bg-gray-200 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {{ $shiftHistories->count() }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mt-1">Daftar shift sebelumnya yang pernah berlaku untuk Anda</p>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden md:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Berlaku</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Diganti</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($shiftHistories->take(10) as $history)
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="bg-orange-100 rounded-lg p-2 mr-3">
+                                    <i class="fas fa-clock text-orange-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</p>
+                                    @if($history->shift)
+                                        <p class="text-xs text-gray-500">
+                                            {{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} -
+                                            {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }}
+                            <span class="text-gray-400 mx-1">—</span>
+                            @if($history->effective_until)
+                                {{ \Carbon\Carbon::parse($history->effective_until)->format('d M Y') }}
+                            @else
+                                <span class="text-gray-400 italic">Tanpa batas</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @php
+                                $reasonLabels = [
+                                    'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
+                                    'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
+                                    'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
+                                ];
+                                $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
+                                {{ $label[0] }}
+                            </span>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @foreach($shiftHistories->take(10) as $history)
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="flex items-center gap-2">
+                        <div class="bg-orange-100 rounded-lg p-1.5">
+                            <i class="fas fa-clock text-orange-600 text-xs"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</span>
+                    </div>
+                    @php
+                        $reasonLabels = [
+                            'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
+                            'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
+                            'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
+                        ];
+                        $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
+                    @endphp
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
+                        {{ $label[0] }}
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500 space-y-1">
+                    @if($history->shift)
+                        <p><i class="fas fa-clock mr-1"></i>{{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}</p>
+                    @endif
+                    <p><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }} — {{ $history->effective_until ? \Carbon\Carbon::parse($history->effective_until)->format('d M Y') : 'Tanpa batas' }}</p>
+                    <p><i class="fas fa-exchange-alt mr-1"></i>Diganti: {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}</p>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     <!-- Modal for Shift Detail -->
-    <div x-show="showModal" 
+    <div x-show="showModal"
          x-cloak
          @click="showModal = false"
          x-transition
@@ -231,7 +354,15 @@ function shiftCalendar() {
             const hasShift = el.dataset.hasShift === '1';
             this.modalDate = el.dataset.dateLabel || '';
 
-            if (isHoliday) {
+            if (isHoliday && hasShift) {
+                // Hari libur tapi departemen standby - tetap kerja
+                this.modalTitle = '🏥 Libur Nasional - Tetap Bertugas';
+                const start = el.dataset.start || '';
+                const end = el.dataset.end || '';
+                this.modalShiftTime = start && end ? `${start} - ${end}` : '';
+                const shiftName = el.dataset.shiftName || 'Shift';
+                this.modalNote = (el.dataset.holidayName || 'Libur Nasional') + '. Departemen Anda tetap bertugas pada hari libur. Jadwal: ' + shiftName + '.';
+            } else if (isHoliday) {
                 this.modalTitle = '🇮🇩 Libur Nasional';
                 this.modalShiftTime = '';
                 this.modalNote = (el.dataset.holidayName || 'Libur Nasional') + '. Anda tidak perlu melakukan absensi pada hari ini.';

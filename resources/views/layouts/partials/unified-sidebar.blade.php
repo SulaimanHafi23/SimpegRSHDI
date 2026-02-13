@@ -15,7 +15,7 @@
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-xs text-yellow-400 font-semibold mb-0.5">SIMPEGRS HDI</p>
-                    <h1 class="text-sm text-white font-medium truncate">{{ auth()->user()->worker->name ?? auth()->user()->name }}</h1>
+                    <h1 class="text-sm text-white font-medium break-words leading-tight">{{ auth()->user()->worker->name ?? auth()->user()->name }}</h1>
                 </div>
             </div>
             <!-- Close Button for Mobile -->

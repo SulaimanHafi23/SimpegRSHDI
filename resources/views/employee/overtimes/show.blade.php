@@ -6,7 +6,7 @@
 <div class="container mx-auto px-4 py-6 max-w-4xl">
     <!-- Header -->
     <div class="mb-6 flex items-center">
-        <a href="{{ route('employee.overtimes.index') }}" 
+        <a href="{{ route('employee.overtimes.index') }}"
            class="mr-4 text-gray-600 hover:text-gray-800">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -47,7 +47,7 @@
     <!-- Overtime Details -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">Informasi Lembur</h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="text-sm text-gray-600">Tanggal</label>
@@ -80,6 +80,21 @@
                 <p class="text-lg font-medium text-gray-800">
                     {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
                 </p>
+            </div>
+
+            <div>
+                <label class="text-sm text-gray-600">Shift (sesuai tukar)</label>
+                @if($overtime->actual_shift)
+                    <p class="text-lg font-medium text-gray-800">
+                        {{ $overtime->actual_shift->name }}
+                    </p>
+                    <p class="text-sm text-gray-600">
+                        {{ \Carbon\Carbon::parse($overtime->actual_shift->start_time)->format('H:i') }} -
+                        {{ \Carbon\Carbon::parse($overtime->actual_shift->end_time)->format('H:i') }}
+                    </p>
+                @else
+                    <p class="text-lg font-medium text-gray-400">-</p>
+                @endif
             </div>
         </div>
     </div>
@@ -121,7 +136,7 @@
             <form action="{{ route('employee.overtimes.cancel', $overtime->id) }}" method="POST">
                 @csrf
                 @method('DELETE')
-                <button type="submit" 
+                <button type="submit"
                         class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-150"
                         onclick="return confirm('Yakin ingin membatalkan permohonan lembur ini?')">
                     <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

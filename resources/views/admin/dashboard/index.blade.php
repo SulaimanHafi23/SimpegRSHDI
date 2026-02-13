@@ -5,40 +5,82 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Dashboard Admin" 
+    <x-page-header
+        title="Dashboard Admin"
         description="Selamat datang di SIMPEGRS RSUD Haji Darjlan Ismail"
         icon="fas fa-tachometer-alt" />
 
+    {{-- Pending Checkouts Alert --}}
+    @if(isset($pendingCheckouts) && $pendingCheckouts->count() > 0)
+    <x-card class="border-yellow-200 bg-yellow-50">
+        <div class="flex items-start gap-3 text-yellow-800">
+            <div class="mt-1"><i class="fas fa-bell text-lg"></i></div>
+            <div class="flex-1">
+                <h3 class="font-semibold text-lg mb-1">Peringatan: {{ $pendingCheckouts->count() }} pegawai belum check-out</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="text-left text-xs uppercase text-yellow-700">
+                            <tr>
+                                <th class="py-2 pr-4">Pegawai</th>
+                                <th class="py-2 pr-4">Shift</th>
+                                <th class="py-2 pr-4">Tanggal</th>
+                                <th class="py-2 pr-4">Berakhir</th>
+                                <th class="py-2">Terlambat</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-yellow-100">
+                            @foreach($pendingCheckouts->take(10) as $item)
+                            <tr>
+                                <td class="py-2 pr-4">
+                                    <div class="font-semibold">{{ $item['worker_name'] }}</div>
+                                    <div class="text-xs text-yellow-700">{{ $item['position'] }}</div>
+                                </td>
+                                <td class="py-2 pr-4">{{ $item['shift_name'] }}</td>
+                                <td class="py-2 pr-4">{{ \Carbon\Carbon::parse($item['attendance_date'])->format('d M Y') }}</td>
+                                <td class="py-2 pr-4">{{ \Carbon\Carbon::parse($item['shift_end_time'])->format('d M Y H:i') }}</td>
+                                <td class="py-2 text-red-600 font-semibold">{{ $item['formatted_late'] }}</td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if($pendingCheckouts->count() > 10)
+                    <p class="text-xs text-yellow-700 mt-2">Menampilkan 10 teratas dari {{ $pendingCheckouts->count() }} pending checkout.</p>
+                @endif
+            </div>
+        </div>
+    </x-card>
+    @endif
+
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <x-stats-card 
-            title="Total Pegawai" 
-            :value="$statistics['total_workers'] ?? 0" 
-            icon="fas fa-users" 
+        <x-stats-card
+            title="Total Pegawai"
+            :value="$statistics['total_workers'] ?? 0"
+            icon="fas fa-users"
             color="blue"
             :trend="($statistics['active_workers'] ?? 0) . ' Aktif'"
             trendUp />
-        
-        <x-stats-card 
-            title="Hadir Hari Ini" 
-            :value="$statistics['present_today'] ?? 0" 
-            icon="fas fa-clipboard-check" 
+
+        <x-stats-card
+            title="Hadir Hari Ini"
+            :value="$statistics['present_today'] ?? 0"
+            icon="fas fa-clipboard-check"
             color="green"
             :trend="($statistics['attendance_rate'] ?? 0) . '% Kehadiran'"
             trendUp />
-        
-        <x-stats-card 
-            title="Permohonan Cuti" 
-            :value="$statistics['pending_leaves'] ?? 0" 
-            icon="fas fa-calendar-times" 
+
+        <x-stats-card
+            title="Permohonan Cuti"
+            :value="$statistics['pending_leaves'] ?? 0"
+            icon="fas fa-calendar-times"
             color="yellow"
             trend="Menunggu Approval" />
-        
-        <x-stats-card 
-            title="Permohonan Lembur" 
-            :value="$statistics['pending_overtimes'] ?? 0" 
-            icon="fas fa-business-time" 
+
+        <x-stats-card
+            title="Permohonan Lembur"
+            :value="$statistics['pending_overtimes'] ?? 0"
+            icon="fas fa-business-time"
             color="purple"
             trend="Menunggu Approval" />
     </div>
@@ -58,7 +100,7 @@
                     <option>Tahun Ini</option>
                 </select>
             </x-slot:header>
-            
+
             <div class="flex items-center justify-center h-64">
                 <canvas id="attendanceChart"></canvas>
             </div>
@@ -70,7 +112,7 @@
                 <i class="mr-2 text-green-600 fas fa-chart-pie"></i>
                 Distribusi Pegawai per Departemen
             </h3>
-            
+
             @if(isset($positionDistribution) && count($positionDistribution) > 0)
                 <div class="space-y-4">
                     @foreach($positionDistribution as $position)
@@ -88,7 +130,7 @@
                     @endforeach
                 </div>
             @else
-                <x-empty-state 
+                <x-empty-state
                     icon="fas fa-inbox"
                     title="Belum ada data"
                     description="Data distribusi pegawai per departemen akan ditampilkan di sini" />
@@ -109,14 +151,14 @@
                     Lihat Semua <i class="ml-1 fas fa-arrow-right"></i>
                 </a>
             </div>
-            
+
             @if(isset($recentLeaves) && count($recentLeaves) > 0)
                 <div class="space-y-3">
                     @foreach($recentLeaves as $leave)
                         <div class="flex items-center justify-between p-4 transition duration-200 rounded-lg bg-gray-50 hover:bg-gray-100">
                             <div class="flex items-center space-x-3">
                                 @if($leave->worker->photo_url ?? false)
-                                    <img src="{{ Storage::url($leave->worker->photo_url) }}" 
+                                    <img src="{{ Storage::url($leave->worker->photo_url) }}"
                                          alt="{{ $leave->worker->name }}"
                                          class="w-10 h-10 rounded-full object-cover">
                                 @else
@@ -150,7 +192,7 @@
                     @endforeach
                 </div>
             @else
-                <x-empty-state 
+                <x-empty-state
                     icon="fas fa-calendar-alt"
                     title="Belum ada pengajuan cuti"
                     description="Pengajuan cuti terbaru akan ditampilkan di sini" />
@@ -168,14 +210,14 @@
                     Lihat Semua <i class="ml-1 fas fa-arrow-right"></i>
                 </a>
             </div>
-            
+
             @if(isset($recentOvertimes) && count($recentOvertimes) > 0)
                 <div class="space-y-3">
                     @foreach($recentOvertimes as $overtime)
                         <div class="flex items-center justify-between p-4 transition duration-200 rounded-lg bg-gray-50 hover:bg-gray-100">
                             <div class="flex items-center space-x-3">
                                 @if($overtime->worker->photo_url ?? false)
-                                    <img src="{{ Storage::url($overtime->worker->photo_url) }}" 
+                                    <img src="{{ Storage::url($overtime->worker->photo_url) }}"
                                          alt="{{ $overtime->worker->name }}"
                                          class="w-10 h-10 rounded-full object-cover">
                                 @else
@@ -206,7 +248,7 @@
                     @endforeach
                 </div>
             @else
-                <x-empty-state 
+                <x-empty-state
                     icon="fas fa-clock"
                     title="Belum ada pengajuan lembur"
                     description="Pengajuan lembur terbaru akan ditampilkan di sini" />
@@ -218,38 +260,38 @@
     <x-card title="Aksi Cepat">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
-                <x-button 
-                    variant="primary" 
+                <x-button
+                    variant="primary"
                     icon="fas fa-user-plus"
                     onclick="window.location.href='{{ route('admin.workers.create') }}'"
                     class="w-full justify-center">
                     Tambah Pegawai
                 </x-button>
             @endif
-            
+
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('attendance.manage'))
-                <x-button 
-                    variant="success" 
+                <x-button
+                    variant="success"
                     icon="fas fa-clipboard-check"
                     onclick="window.location.href='{{ route('admin.attendance.create') }}'"
                     class="w-full justify-center">
                     Input Absensi
                 </x-button>
             @endif
-            
+
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('report.view'))
-                <x-button 
-                    variant="warning" 
+                <x-button
+                    variant="warning"
                     icon="fas fa-chart-bar"
                     onclick="window.location.href='{{ route('admin.attendance.report.monthly') }}'"
                     class="w-full justify-center">
                     Laporan Absensi
                 </x-button>
             @endif
-            
+
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
-                <x-button 
-                    variant="secondary" 
+                <x-button
+                    variant="secondary"
                     icon="fas fa-tasks"
                     onclick="window.location.href='{{ route('admin.leave.index') }}'"
                     class="w-full justify-center">

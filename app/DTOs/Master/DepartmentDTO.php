@@ -11,6 +11,7 @@ class DepartmentDTO
         public readonly string $code,
         public readonly ?string $description,
         public readonly bool $is_active,
+        public readonly bool $requires_holiday_attendance = false,
     ) {}
 
     public static function fromRequest(array $data): self
@@ -21,6 +22,7 @@ class DepartmentDTO
             code: $data['code'],
             description: $data['description'] ?? null,
             is_active: $data['is_active'] ?? true,
+            requires_holiday_attendance: $data['requires_holiday_attendance'] ?? false,
         );
     }
 
@@ -32,6 +34,7 @@ class DepartmentDTO
             'code' => $this->code,
             'description' => $this->description,
             'is_active' => $this->is_active,
+            'requires_holiday_attendance' => $this->requires_holiday_attendance,
         ], fn($value) => $value !== null);
     }
 }

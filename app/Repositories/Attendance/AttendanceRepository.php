@@ -38,7 +38,11 @@ class AttendanceRepository implements AttendanceRepositoryInterface
         }
 
         if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
+            if ($filters['status'] === 'late') {
+                $query->where('is_late', true);
+            } else {
+                $query->where('status', $filters['status']);
+            }
         }
 
         if (!empty($filters['is_late'])) {
@@ -54,14 +58,19 @@ class AttendanceRepository implements AttendanceRepositoryInterface
 
         // Advanced search functionality
         if (!empty($filters['search'])) {
-            $search = $filters['search'];
+            $search = strtolower($filters['search']);
             $query->where(function($q) use ($search) {
-                $q->where('attendance_date', 'like', "%{$search}%")
-                  ->orWhere('status', 'like', "%{$search}%")
-                  ->orWhere('check_in', 'like', "%{$search}%")
-                  ->orWhere('check_out', 'like', "%{$search}%")
+                $q->whereRaw('LOWER(attendance_date) LIKE ?', ['%' . $search . '%'])
+                  ->orWhereRaw('LOWER(status) LIKE ?', ['%' . $search . '%'])
+                  ->orWhereRaw('LOWER(check_in) LIKE ?', ['%' . $search . '%'])
+                  ->orWhereRaw('LOWER(check_out) LIKE ?', ['%' . $search . '%'])
                   ->orWhereHas('location', function($q) use ($search) {
-                      $q->where('name', 'like', "%{$search}%");
+                      $q->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%']);
+                  })
+                  ->orWhereHas('worker', function($q) use ($search) {
+                      $q->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%'])
+                        ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $search . '%'])
+                        ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $search . '%']);
                   });
             });
         }

@@ -66,19 +66,19 @@
     <div x-data="{ showFilters: false }" class="mb-6">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             {{-- Filter Header --}}
-            <button @click="showFilters = !showFilters" 
+            <button @click="showFilters = !showFilters"
                     class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-filter text-indigo-600"></i>
                     <span class="font-semibold text-gray-900">Filter & Pencarian</span>
                 </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
+                <i class="fas fa-chevron-down transform transition-transform"
                    :class="{ 'rotate-180': showFilters }"></i>
             </button>
 
             {{-- Filter Form --}}
-            <div x-show="showFilters" 
-                 x-collapse 
+            <div x-show="showFilters"
+                 x-collapse
                  class="border-t border-gray-200">
                 <form method="GET" action="{{ route('admin.worker-shifts.index') }}" class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -120,7 +120,7 @@
                                 <i class="fas fa-search mr-2"></i>
                                 Filter
                             </button>
-                            <a href="{{ route('admin.worker-shifts.index') }}" 
+                            <a href="{{ route('admin.worker-shifts.index') }}"
                                class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg shadow-md transition duration-150 flex items-center">
                                 <i class="fas fa-redo mr-2"></i>
                                 Reset
@@ -168,12 +168,12 @@
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     @if(($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url))
-                                        <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ Storage::url($worker->photo_url) }}" 
+                                        <img class="h-10 w-10 rounded-full object-cover"
+                                             src="{{ Storage::url($worker->photo_url) }}"
                                              alt="{{ $worker->name }}">
                                     @elseif(($worker->photo ?? false) && Storage::disk('public')->exists($worker->photo))
-                                        <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ Storage::url($worker->photo) }}" 
+                                        <img class="h-10 w-10 rounded-full object-cover"
+                                             src="{{ Storage::url($worker->photo) }}"
                                              alt="{{ $worker->name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
@@ -198,7 +198,7 @@
                         <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                             @if($worker->latestShift)
                                 <div class="text-sm text-gray-900">
-                                    {{ $worker->latestShift->shift->start_time }} - {{ $worker->latestShift->shift->end_time }}
+                                    {{ \Carbon\Carbon::parse($worker->latestShift->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($worker->latestShift->shift->end_time)->format('H:i') }}
                                 </div>
                             @else
                                 <div class="text-sm text-gray-400 italic">-</div>
@@ -246,21 +246,21 @@
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             @if($worker->latestShift)
                                 <div class="flex justify-end space-x-2">
-                                    <a href="{{ route('admin.worker-shifts.show', $worker->latestShift->id) }}" 
+                                    <a href="{{ route('admin.worker-shifts.show', $worker->latestShift->id) }}"
                                        class="text-blue-600 hover:text-blue-900" title="View">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                         </svg>
                                     </a>
-                                    <a href="{{ route('admin.worker-shifts.edit', $worker->latestShift->id) }}" 
+                                    <a href="{{ route('admin.worker-shifts.edit', $worker->latestShift->id) }}"
                                        class="text-indigo-600 hover:text-indigo-900" title="Edit">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
                                     </a>
-                                    <form action="{{ route('admin.worker-shifts.destroy', $worker->latestShift->id) }}" 
-                                          method="POST" 
+                                    <form action="{{ route('admin.worker-shifts.destroy', $worker->latestShift->id) }}"
+                                          method="POST"
                                           class="inline-block"
                                           onsubmit="return confirm('Apakah Anda yakin ingin menghapus jadwal shift ini?');">
                                         @csrf
@@ -273,7 +273,7 @@
                                     </form>
                                 </div>
                             @else
-                                <a href="{{ route('admin.worker-shifts.create', ['worker_id' => $worker->id]) }}" 
+                                <a href="{{ route('admin.worker-shifts.create', ['worker_id' => $worker->id]) }}"
                                    class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150"
                                    title="Tambah Shift">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,7 +300,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination -->
         <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
             {{ $workersWithShifts->links() }}

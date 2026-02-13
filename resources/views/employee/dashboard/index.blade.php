@@ -19,9 +19,9 @@
 @endpush
 
 @section('content')
-<div class="space-y-4 pb-6" x-data="{ 
+<div class="space-y-4 pb-6" x-data="{
     period: 'month',
-    showStats: true 
+    showStats: true
 }"
     <!-- Welcome Card dengan Info Pegawai -->
     <div class="bg-gradient-to-br from-green-600 via-green-700 to-green-800 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
@@ -30,7 +30,7 @@
             <div class="absolute top-0 right-0 w-32 h-32 bg-yellow-300 rounded-full -mr-16 -mt-16"></div>
             <div class="absolute bottom-0 left-0 w-24 h-24 bg-yellow-400 rounded-full -ml-12 -mb-12"></div>
         </div>
-        
+
         <div class="flex items-center space-x-4 relative z-10">
             <img src="{{ $worker->photo_url ? Storage::url($worker->photo_url) : 'https://ui-avatars.com/api/?name=' . urlencode($worker->name) . '&background=random' }}"
                  alt="Profile"
@@ -56,6 +56,61 @@
         </div>
     </div>
 
+    <!-- Pending Checkout Alert -->
+    @if($pendingCheckout)
+    <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl shadow-lg p-6 text-white">
+        <div class="flex items-start space-x-4">
+            <div class="flex-shrink-0">
+                <div class="bg-white/20 p-3 rounded-full">
+                    <i class="fas fa-exclamation-triangle text-2xl"></i>
+                </div>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-lg font-bold mb-2">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Belum Checkout!
+                </h3>
+                <p class="text-white/90 mb-3">
+                    Anda belum melakukan checkout untuk shift <strong>{{ $pendingCheckout['shift_name'] }}</strong>
+                    pada tanggal <strong>{{ \Carbon\Carbon::parse($pendingCheckout['attendance_date'])->format('d M Y') }}</strong>.
+                </p>
+                <div class="flex items-center space-x-4 text-sm mb-4">
+                    <span class="bg-white/20 px-3 py-1 rounded-full">
+                        <i class="fas fa-clock mr-1"></i>Check-in: {{ $pendingCheckout['check_in_time'] }}
+                    </span>
+                    <span class="bg-white/20 px-3 py-1 rounded-full">
+                        <i class="fas fa-hourglass-end mr-1"></i>Shift berakhir: {{ \Carbon\Carbon::parse($pendingCheckout['shift_end_time'])->format('H:i') }}
+                    </span>
+                    <span class="bg-white/20 px-3 py-1 rounded-full font-semibold">
+                        <i class="fas fa-calendar-times mr-1"></i>{{ $pendingCheckout['formatted_late'] }}
+                    </span>
+                </div>
+                <a href="{{ route('employee.attendance.index') }}"
+                   class="inline-flex items-center px-5 py-2 bg-white text-red-600 font-semibold rounded-lg shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Checkout Sekarang
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    @if(!empty($pendingCheckout))
+    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 flex items-start gap-3 shadow">
+        <div class="mt-1 text-yellow-500">
+            <i class="fas fa-bell text-lg"></i>
+        </div>
+        <div class="flex-1">
+            <p class="font-semibold">Anda belum check-out untuk shift {{ $pendingCheckout['shift_name'] }} ({{ \Carbon\Carbon::parse($pendingCheckout['attendance_date'])->format('d M Y') }})</p>
+            <p class="text-sm mt-1">Shift berakhir pada {{ \Carbon\Carbon::parse($pendingCheckout['shift_end_time'])->format('d M Y H:i') }} ({{ $pendingCheckout['formatted_late'] }}). Silakan selesaikan check-out sekarang.</p>
+            <div class="mt-3 flex gap-2">
+                <a href="{{ route('employee.attendance.index') }}" class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded-lg hover:bg-yellow-700">
+                    <i class="fas fa-sign-out-alt mr-2"></i> Ke halaman absensi
+                </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
     <!-- Quick Action - Check In Button -->
     <div class="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl shadow-lg p-6 text-white">
         <div class="flex items-center justify-between">
@@ -64,7 +119,7 @@
                     <i class="fas fa-clock mr-2"></i>Absensi Hari Ini
                 </h3>
                 <p class="text-blue-100 text-sm mb-4">{{ now()->format('l, d F Y') }}</p>
-                <a href="{{ route('employee.attendance.check-in-form') }}" 
+                <a href="{{ route('employee.attendance.check-in-form') }}"
                    class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg shadow hover:shadow-lg transition duration-300 transform hover:scale-105">
                     <i class="fas fa-user-check mr-2"></i>
                     Check In Sekarang
@@ -86,7 +141,7 @@
                     <p class="text-gray-500 text-xs mt-2">Bulan ini</p>
                     <div class="mt-2">
                         <span class="text-xs text-green-600 font-medium">
-                            <i class="fas fa-arrow-up"></i> 
+                            <i class="fas fa-arrow-up"></i>
                             {{ number_format($attendanceSummary['percentage'] ?? 0, 1) }}%
                         </span>
                     </div>
@@ -167,7 +222,7 @@
                 Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
             </a>
         </div>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             @forelse($leaveBalances as $balance)
                 @php
@@ -184,7 +239,7 @@
                             <i class="fas fa-umbrella-beach text-{{ $balance['color'] }}-700"></i>
                         </div>
                     </div>
-                    
+
                     <div class="space-y-2">
                         <div class="flex justify-between items-end">
                             <div>
@@ -196,13 +251,13 @@
                                 <p class="text-xs text-{{ $balance['color'] }}-600">terpakai</p>
                             </div>
                         </div>
-                        
+
                         <!-- Progress Bar -->
                         <div class="w-full bg-{{ $balance['color'] }}-200 rounded-full h-2 overflow-hidden">
-                            <div class="bg-{{ $balance['color'] }}-600 h-full rounded-full transition-all duration-300" 
+                            <div class="bg-{{ $balance['color'] }}-600 h-full rounded-full transition-all duration-300"
                                  style="width: {{ $percentage }}%"></div>
                         </div>
-                        
+
                         <p class="text-xs text-{{ $balance['color'] }}-700 text-center">
                             {{ number_format($percentage, 0) }}% tersisa
                         </p>
@@ -385,7 +440,7 @@
                             </p>
                             <p class="text-xs text-gray-600">
                                 <i class="far fa-calendar mr-1"></i>
-                                {{ \Carbon\Carbon::parse($leave->start_date)->format('d M') }} - 
+                                {{ \Carbon\Carbon::parse($leave->start_date)->format('d M') }} -
                                 {{ \Carbon\Carbon::parse($leave->end_date)->format('d M Y') }}
                             </p>
                             <p class="text-xs text-gray-500 mt-1">
@@ -420,7 +475,7 @@
                     Pengumuman Penting
                 </h4>
                 <p class="text-sm text-gray-700 leading-relaxed">
-                    Reminder: Pastikan untuk melakukan absensi tepat waktu setiap hari. 
+                    Reminder: Pastikan untuk melakukan absensi tepat waktu setiap hari.
                     Jika ada kendala, segera hubungi bagian HRD RSUD Haji Darlan Ismail.
                 </p>
                 <p class="text-xs text-gray-600 mt-2">
@@ -440,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const attendanceCtx = document.getElementById('attendanceChart');
     if (attendanceCtx) {
         const attendanceData = @json($attendanceChart);
-        
+
         new Chart(attendanceCtx, {
             type: 'line',
             data: {
@@ -516,7 +571,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const leaveCtx = document.getElementById('leaveChart');
     if (leaveCtx) {
         const leaveSummary = @json($leaveSummary);
-        
+
         new Chart(leaveCtx, {
             type: 'doughnut',
             data: {

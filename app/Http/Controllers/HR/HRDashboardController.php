@@ -8,16 +8,20 @@ use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
 use App\Models\WorkerDocument;
+use App\Services\Attendance\AttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class HRDashboardController extends Controller
 {
-    public function __construct()
+    protected AttendanceService $attendanceService;
+
+    public function __construct(AttendanceService $attendanceService)
     {
         $this->middleware('auth');
         $this->middleware('role:HR');
+        $this->attendanceService = $attendanceService;
     }
 
     public function index()
@@ -100,17 +104,17 @@ class HRDashboardController extends Controller
             $date = now()->subDays($i);
             $dateStr = $date->format('Y-m-d');
             $dayName = $date->format('D');
-            
+
             $present = Attendance::whereDate('attendance_date', $dateStr)
                 ->where('status', 'present')
                 ->count();
-            
+
             $late = Attendance::whereDate('attendance_date', $dateStr)
                 ->where('is_late', true)
                 ->count();
-            
+
             $absent = $activeWorkers - Attendance::whereDate('attendance_date', $dateStr)->count();
-            
+
             $attendanceChart[] = [
                 'date' => $dayName,
                 'present' => $present,
@@ -160,6 +164,9 @@ class HRDashboardController extends Controller
             ->take(5)
             ->values();
 
+        // ========== PENDING CHECKOUTS ==========
+        $pendingCheckouts = $this->attendanceService->getPendingCheckouts();
+
         return view('hr.dashboard.index', compact(
             'totalWorkers',
             'activeWorkers',
@@ -183,7 +190,8 @@ class HRDashboardController extends Controller
             'pendingDocuments',
             'verifiedDocumentsThisMonth',
             'attendanceChart',
-            'recentActivities'
+            'recentActivities',
+            'pendingCheckouts'
         ));
     }
 }

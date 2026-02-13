@@ -10,7 +10,7 @@
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dokumen Saya</h1>
             <p class="mt-2 text-sm text-gray-600">Kelola dokumen pribadi dan dokumen kenaikan pangkat</p>
         </div>
-        <button onclick="document.getElementById('uploadModal').classList.remove('hidden')" 
+        <button onclick="document.getElementById('uploadModal').classList.remove('hidden')"
                 class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center justify-center">
             <i class="fas fa-plus mr-2"></i>Upload Dokumen
         </button>
@@ -123,11 +123,11 @@
                             @endif
                         </td>
                         <td class="px-4 sm:px-6 py-4 whitespace-nowrap">
-                            @if($document->status == 'Approved')
+                            @if($document->status == 'verified')
                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
                                 <i class="fas fa-check-circle mr-1"></i>Disetujui
                             </span>
-                            @elseif($document->status == 'Rejected')
+                            @elseif($document->status == 'rejected')
                             <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
                                 <i class="fas fa-times-circle mr-1"></i>Ditolak
                             </span>
@@ -139,18 +139,18 @@
                         </td>
                         <td class="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex items-center space-x-2">
-                                <a href="{{ route('workers.documents.show', $document->id) }}" 
+                                <a href="{{ route('workers.documents.show', $document->id) }}"
                                    class="text-blue-600 hover:text-blue-900" title="Lihat">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route('workers.documents.download', $document->id) }}" 
+                                <a href="{{ route('workers.documents.download', $document->id) }}"
                                    class="text-green-600 hover:text-green-900" title="Download">
                                     <i class="fas fa-download"></i>
                                 </a>
-                                @if($document->status != 'Approved')
-                                <form action="{{ route('workers.documents.destroy', $document->id) }}" 
-                                      method="POST" 
-                                      onsubmit="return confirm('Yakin ingin menghapus dokumen ini?')" 
+                                @if($document->status != 'verified')
+                                <form action="{{ route('workers.documents.destroy', $document->id) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Yakin ingin menghapus dokumen ini?')"
                                       class="inline">
                                     @csrf
                                     @method('DELETE')
@@ -176,7 +176,7 @@
         <div class="p-4 sm:p-6">
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg sm:text-xl font-bold text-gray-900">Upload Dokumen Baru</h3>
-                <button onclick="document.getElementById('uploadModal').classList.add('hidden')" 
+                <button onclick="document.getElementById('uploadModal').classList.add('hidden')"
                         class="text-gray-400 hover:text-gray-600">
                     <i class="fas fa-times text-xl"></i>
                 </button>
@@ -189,7 +189,7 @@
                     <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                         Jenis Dokumen <span class="text-red-500">*</span>
                     </label>
-                    <select name="file_requirement_id" required 
+                    <select name="file_requirement_id" required
                             class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                         <option value="">Pilih Jenis Dokumen</option>
                         @foreach($fileRequirements as $requirement)
@@ -202,7 +202,7 @@
                     <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                         Tanggal Expired (Jika Ada)
                     </label>
-                    <input type="date" name="expired_date" 
+                    <input type="date" name="expired_date"
                            class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
 
@@ -225,12 +225,12 @@
                 </div>
 
                 <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
-                    <button type="button" 
+                    <button type="button"
                             onclick="document.getElementById('uploadModal').classList.add('hidden')"
                             class="w-full sm:w-auto px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                         Batal
                     </button>
-                    <button type="submit" 
+                    <button type="submit"
                             class="w-full sm:w-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                         <i class="fas fa-upload mr-2"></i>Upload
                     </button>
