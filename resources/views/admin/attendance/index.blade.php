@@ -3,7 +3,31 @@
 @section('title', 'Manajemen Absensi')
 
 @section('content')
-<div x-data="{ showFilters: false }">
+<div x-data="{
+    showFilters: false,
+    activeTab: '{{ request('tab', 'today') }}',
+    todaySummary: {
+        label: '{{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->translatedFormat('d F Y') : now()->translatedFormat('d F Y') }}',
+        total: {{ $summary['total_workers'] }},
+        present: {{ $summary['present'] }},
+        perfect: {{ $summary['perfect'] }},
+        late: {{ $summary['late'] }},
+        early_leave: {{ $summary['early_leave'] }},
+        on_leave: {{ $summary['on_leave'] ?? 0 }},
+        absent: {{ $summary['absent'] }}
+    },
+    historySummary: {
+        label: '{{ $historySummary['period_label'] }}',
+        total: {{ $historySummary['total_records'] }},
+        present: {{ $historySummary['present'] }},
+        perfect: {{ $historySummary['perfect'] }},
+        late: {{ $historySummary['late'] }},
+        early_leave: {{ $historySummary['early_leave'] }},
+        on_leave: {{ $historySummary['on_leave'] }},
+        absent: {{ $historySummary['absent'] }}
+    },
+    get currentSummary() { return this.activeTab === 'history' ? this.historySummary : this.todaySummary; }
+}">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
@@ -52,17 +76,21 @@ phpinfo() di browser
         </div>
     </div>
 
-    <!-- Summary Statistics - Absensi Hari Ini -->
+    <!-- Summary Statistics - Dynamic berdasarkan tab aktif -->
     <div class="bg-white rounded-lg shadow-md mb-6 p-3">
         <div class="flex items-center gap-2 mb-2">
             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-700">
                 <i class="fas fa-chart-pie text-xs"></i>
             </span>
             <div>
-                <p class="text-xs text-gray-800 font-semibold">
-                    {{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->translatedFormat('d F Y') : now()->translatedFormat('d F Y') }}
-                </p>
+                <p class="text-xs text-gray-800 font-semibold" x-text="activeTab === 'history' ? 'Periode: ' + currentSummary.label : currentSummary.label"></p>
             </div>
+            <span x-show="activeTab === 'history'" class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                <i class="fas fa-history mr-1 text-xs"></i> Keseluruhan
+            </span>
+            <span x-show="activeTab !== 'history'" class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                <i class="fas fa-calendar-day mr-1 text-xs"></i> Hari Ini
+            </span>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
             <div class="bg-gray-50 rounded p-2 border border-gray-100">
@@ -71,8 +99,8 @@ phpinfo() di browser
                         <i class="fas fa-users text-gray-600 text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-xs text-gray-500 truncate">Total</p>
-                        <p class="text-base font-bold text-gray-900">{{ $summary['total_workers'] }}</p>
+                        <p class="text-xs text-gray-500 truncate" x-text="activeTab === 'history' ? 'Total Record' : 'Total'"></p>
+                        <p class="text-base font-bold text-gray-900" x-text="currentSummary.total"></p>
                     </div>
                 </div>
             </div>
@@ -83,7 +111,7 @@ phpinfo() di browser
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs text-green-700 truncate">Masuk</p>
-                        <p class="text-base font-bold text-green-600">{{ $summary['present'] }}</p>
+                        <p class="text-base font-bold text-green-600" x-text="currentSummary.present"></p>
                     </div>
                 </div>
             </div>
@@ -94,7 +122,7 @@ phpinfo() di browser
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs text-emerald-700 truncate">Sempurna</p>
-                        <p class="text-base font-bold text-emerald-600">{{ $summary['perfect'] }}</p>
+                        <p class="text-base font-bold text-emerald-600" x-text="currentSummary.perfect"></p>
                     </div>
                 </div>
             </div>
@@ -105,7 +133,7 @@ phpinfo() di browser
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs text-yellow-700 truncate">Terlambat</p>
-                        <p class="text-base font-bold text-yellow-600">{{ $summary['late'] }}</p>
+                        <p class="text-base font-bold text-yellow-600" x-text="currentSummary.late"></p>
                     </div>
                 </div>
             </div>
@@ -115,8 +143,8 @@ phpinfo() di browser
                         <i class="fas fa-running text-orange-600 text-sm"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="text-xs text-orange-700 truncate">Pulang</p>
-                        <p class="text-base font-bold text-orange-600">{{ $summary['early_leave'] }}</p>
+                        <p class="text-xs text-orange-700 truncate">Pulang Awal</p>
+                        <p class="text-base font-bold text-orange-600" x-text="currentSummary.early_leave"></p>
                     </div>
                 </div>
             </div>
@@ -127,7 +155,7 @@ phpinfo() di browser
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs text-purple-700 truncate">Cuti</p>
-                        <p class="text-base font-bold text-purple-600">{{ $summary['on_leave'] ?? 0 }}</p>
+                        <p class="text-base font-bold text-purple-600" x-text="currentSummary.on_leave"></p>
                     </div>
                 </div>
             </div>
@@ -138,7 +166,7 @@ phpinfo() di browser
                     </div>
                     <div class="min-w-0">
                         <p class="text-xs text-red-700 truncate">Absent</p>
-                        <p class="text-base font-bold text-red-600">{{ $summary['absent'] }}</p>
+                        <p class="text-base font-bold text-red-600" x-text="currentSummary.absent"></p>
                     </div>
                 </div>
             </div>
@@ -235,10 +263,14 @@ phpinfo() di browser
         <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Tampilan Data</h3>
             <div class="flex space-x-2">
-                <button id="btn-history-view" class="px-4 py-2 rounded-lg transition duration-200 @if(request('tab') == 'history') bg-blue-600 text-white hover:bg-blue-700 @else bg-gray-200 text-gray-700 hover:bg-gray-300 @endif">
+                <button id="btn-history-view" @click="activeTab = 'history'"
+                    class="px-4 py-2 rounded-lg transition duration-200"
+                    :class="activeTab === 'history' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'">
                     Riwayat Absensi
                 </button>
-                <button id="btn-today-view" class="px-4 py-2 rounded-lg transition duration-200 @if(request('tab') == 'history') bg-gray-200 text-gray-700 hover:bg-gray-300 @else bg-blue-600 text-white hover:bg-blue-700 @endif">
+                <button id="btn-today-view" @click="activeTab = 'today'"
+                    class="px-4 py-2 rounded-lg transition duration-200"
+                    :class="activeTab !== 'history' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'">
                     Absensi Hari Ini
                 </button>
             </div>
@@ -892,12 +924,6 @@ phpinfo() di browser
             historyView.classList.remove('hidden');
             todayView.classList.add('hidden');
 
-            // Update button styles
-            btnHistoryView.classList.remove('bg-gray-200', 'text-gray-700');
-            btnHistoryView.classList.add('bg-blue-600', 'text-white');
-            btnTodayView.classList.remove('bg-blue-600', 'text-white');
-            btnTodayView.classList.add('bg-gray-200', 'text-gray-700');
-
             // Update URL and hidden inputs
             updateUrlParameter('tab', 'history');
             if (tabInput) tabInput.value = 'history';
@@ -909,12 +935,6 @@ phpinfo() di browser
             // Show today view (detail)
             todayView.classList.remove('hidden');
             historyView.classList.add('hidden');
-
-            // Update button styles
-            btnTodayView.classList.remove('bg-gray-200', 'text-gray-700');
-            btnTodayView.classList.add('bg-blue-600', 'text-white');
-            btnHistoryView.classList.remove('bg-blue-600', 'text-white');
-            btnHistoryView.classList.add('bg-gray-200', 'text-gray-700');
 
             // Update URL and hidden inputs
             updateUrlParameter('tab', 'today');

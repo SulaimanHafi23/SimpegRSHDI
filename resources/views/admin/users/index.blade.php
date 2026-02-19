@@ -5,14 +5,14 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Manajemen User" 
+    <x-page-header
+        title="Manajemen User"
         description="Kelola akun pengguna sistem"
         icon="fas fa-users-cog">
         <x-slot:actions>
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
-                <x-button 
-                    variant="success" 
+                <x-button
+                    variant="success"
                     icon="fas fa-plus"
                     onclick="window.location.href='{{ route('admin.users.create') }}'">
                     Tambah User
@@ -23,14 +23,14 @@
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('admin.users.index') }}">
-        <x-form.input 
-            name="search" 
-            label="Pencarian" 
+        <x-form.input
+            name="search"
+            label="Pencarian"
             placeholder="Cari nama, email, username..."
             :value="$filters['search'] ?? ''" />
 
-        <x-form.select 
-            name="role" 
+        <x-form.select
+            name="role"
             label="Role"
             :selected="$filters['role'] ?? ''"
             placeholder="Semua Role">
@@ -39,8 +39,8 @@
             @endforeach
         </x-form.select>
 
-        <x-form.select 
-            name="is_active" 
+        <x-form.select
+            name="is_active"
             label="Status"
             :options="[
                 '1' => 'Aktif',
@@ -53,7 +53,7 @@
     {{-- Data Table --}}
     <x-card>
         @if($users->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-users"
                 title="Tidak ada data user"
                 description="Silakan tambahkan user baru"
@@ -78,8 +78,8 @@
                             <div class="flex items-center">
                                 <a href="{{ route('admin.users.show', $user->id) }}" class="flex items-center hover:opacity-90" title="Lihat profil {{ $user->name }}">
                     @if($user->worker && ($user->worker->photo_url ?? false) && Storage::disk('public')->exists($user->worker->photo_url))
-                        <img class="h-10 w-10 rounded-full object-cover" 
-                             src="{{ Storage::url($user->worker->photo_url) }}" 
+                        <img class="h-10 w-10 rounded-full object-cover"
+                             src="{{ Storage::url($user->worker->photo_url) }}"
                              alt="Foto {{ $user->name }}">
                         @else
                                         <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -92,7 +92,7 @@
                                     <div class="ml-4">
                                         <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
                                         @if($user->worker)
-                                            <div class="text-sm text-gray-500">{{ $user->worker->position->name ?? '-' }}</div>
+                                            <div class="text-sm text-gray-500">{{ $user->worker->department->name ?? '-' }}</div>
                                         @endif
                                     </div>
                                 </a>
@@ -125,8 +125,8 @@
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
                                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
-                                    <a href="{{ route('admin.users.show', $user->id) }}" 
-                                       class="text-blue-600 hover:text-blue-900" 
+                                    <a href="{{ route('admin.users.show', $user->id) }}"
+                                       class="text-blue-600 hover:text-blue-900"
                                        title="Detail">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -136,8 +136,8 @@
                                 @endif
 
                                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" 
-                                       class="text-green-600 hover:text-green-900" 
+                                    <a href="{{ route('admin.users.edit', $user->id) }}"
+                                       class="text-green-600 hover:text-green-900"
                                        title="Edit">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -150,8 +150,8 @@
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" 
-                                                    class="text-red-600 hover:text-red-900" 
+                                            <button type="submit"
+                                                    class="text-red-600 hover:text-red-900"
                                                     title="Hapus"
                                                     onclick="return confirm('Yakin ingin menghapus user ini?')">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

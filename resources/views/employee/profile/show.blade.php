@@ -15,15 +15,15 @@
         <div class="lg:col-span-1">
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="text-center">
-                    <img src="{{ $worker->photo_url ? Storage::url($worker->photo_url) : 'https://ui-avatars.com/api/?name=' . urlencode($worker->name) }}" 
+                    <img src="{{ $worker->photo_url ? Storage::url($worker->photo_url) : 'https://ui-avatars.com/api/?name=' . urlencode($worker->name) }}"
                          alt="{{ $worker->name }}"
                          class="w-32 h-32 rounded-full mx-auto object-cover border-4 border-green-100 mb-4">
-                    
+
                     <h2 class="text-xl font-bold text-gray-800">{{ $worker->name }}</h2>
                     <p class="text-gray-600 text-sm">{{ $worker->nip ?? '-' }}</p>
-                    
+
                     <div class="mt-4 pt-4 border-t border-gray-200">
-                        <a href="{{ route('employee.profile.edit') }}" 
+                        <a href="{{ route('employee.profile.edit') }}"
                            class="block w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition">
                             <i class="fas fa-edit mr-2"></i>Edit Profile
                         </a>
@@ -135,8 +135,8 @@
                         <p class="text-base font-medium text-gray-800">{{ $worker->department->name ?? '-' }}</p>
                     </div>
                     <div>
-                        <label class="text-sm text-gray-600">Posisi</label>
-                        <p class="text-base font-medium text-gray-800">{{ $worker->position ?? '-' }}</p>
+                        <label class="text-sm text-gray-600">Departemen</label>
+                        <p class="text-base font-medium text-gray-800">{{ $worker->department->name ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Lokasi Kerja</label>
@@ -153,7 +153,7 @@
                         <p class="font-medium text-gray-800">Password</p>
                         <p class="text-sm text-gray-600">Terakhir diubah: {{ $user->updated_at->diffForHumans() }}</p>
                     </div>
-                    <button onclick="togglePasswordModal()" 
+                    <button onclick="togglePasswordModal()"
                             class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition">
                         Ubah Password
                     </button>
@@ -182,9 +182,9 @@
                     <label for="current_password" class="block text-sm font-medium text-gray-700 mb-2">
                         Password Lama <span class="text-red-500">*</span>
                     </label>
-                    <input type="password" 
-                           name="current_password" 
-                           id="current_password" 
+                    <input type="password"
+                           name="current_password"
+                           id="current_password"
                            required
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
                 </div>
@@ -193,9 +193,9 @@
                     <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
                         Password Baru <span class="text-red-500">*</span>
                     </label>
-                    <input type="password" 
-                           name="password" 
-                           id="password" 
+                    <input type="password"
+                           name="password"
+                           id="password"
                            required
                            minlength="8"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
@@ -206,20 +206,20 @@
                     <label for="password_confirmation" class="block text-sm font-medium text-gray-700 mb-2">
                         Konfirmasi Password Baru <span class="text-red-500">*</span>
                     </label>
-                    <input type="password" 
-                           name="password_confirmation" 
-                           id="password_confirmation" 
+                    <input type="password"
+                           name="password_confirmation"
+                           id="password_confirmation"
                            required
                            minlength="8"
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500">
                 </div>
 
                 <div class="flex gap-3">
-                    <button type="submit" 
+                    <button type="submit"
                             class="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition">
                         Simpan
                     </button>
-                    <button type="button" 
+                    <button type="button"
                             onclick="togglePasswordModal()"
                             class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold rounded-lg transition">
                         Batal

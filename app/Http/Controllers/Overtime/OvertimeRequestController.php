@@ -94,7 +94,7 @@ class OvertimeRequestController extends Controller
             'worker_id' => 'required|uuid|exists:workers,id',
             'overtime_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'end_time' => 'required|date_format:H:i',
             'reason' => 'required|string',
         ]);
 
@@ -131,7 +131,7 @@ class OvertimeRequestController extends Controller
         $validated = $request->validate([
             'overtime_date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'end_time' => 'required|date_format:H:i',
             'reason' => 'required|string',
         ]);
 

@@ -17,7 +17,7 @@
                 <div class="text-center">
                     <div class="relative inline-block">
                         @if(auth()->user()->photo)
-                            <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}" 
+                            <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}"
                                  class="w-32 h-32 rounded-full object-cover border-4 border-green-500">
                         @else
                             <div class="w-32 h-32 rounded-full bg-green-500 flex items-center justify-center text-white text-4xl font-bold border-4 border-green-600">
@@ -27,7 +27,7 @@
                     </div>
                     <h2 class="mt-4 text-xl font-bold text-gray-800">{{ auth()->user()->name }}</h2>
                     <p class="text-gray-600">{{ auth()->user()->email }}</p>
-                    
+
                     @if(auth()->user()->worker)
                     <div class="mt-4">
                         <span class="inline-block px-3 py-1 text-sm font-semibold rounded-full bg-green-100 text-green-800">
@@ -59,7 +59,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Jabatan:</span>
-                            <span class="font-medium">{{ auth()->user()->worker->position->name ?? '-' }}</span>
+                            <span class="font-medium">{{ auth()->user()->worker->department->name ?? '-' }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Lokasi:</span>
@@ -128,7 +128,7 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-user-edit text-green-600 mr-2"></i>Update Profile
                 </h2>
-                
+
                 <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
@@ -204,7 +204,7 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-lock text-yellow-600 mr-2"></i>Ubah Password
                 </h2>
-                
+
                 <form action="{{ route('profile.update-password') }}" method="POST">
                     @csrf
                     @method('PUT')

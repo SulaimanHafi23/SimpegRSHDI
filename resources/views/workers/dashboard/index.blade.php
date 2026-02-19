@@ -12,7 +12,7 @@
             <div class="absolute top-0 right-0 w-32 h-32 -mt-16 -mr-16 bg-yellow-300 rounded-full"></div>
             <div class="absolute bottom-0 left-0 w-24 h-24 -mb-12 -ml-12 bg-yellow-400 rounded-full"></div>
         </div>
-        
+
         <div class="relative z-10 flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
             <img src="{{ auth()->user()->worker->photo_url ?? 'https://ui-avatars.com/api/?name=' . urlencode(auth()->user()->worker->name ?? auth()->user()->name) }}"
                  alt="Profile"
@@ -21,7 +21,7 @@
                 <h2 class="mb-1 text-xl sm:text-2xl lg:text-3xl font-bold">{{ auth()->user()->worker->name ?? auth()->user()->name }}</h2>
                 <p class="mb-3 text-sm sm:text-base text-yellow-100">
                     <i class="mr-1 fas fa-briefcase"></i>
-                    {{ auth()->user()->worker->position->name ?? 'Pegawai' }}
+                    {{ auth()->user()->worker->department->name ?? 'Pegawai' }}
                 </p>
                 <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-xs sm:text-sm">
                     <span class="px-3 py-1 rounded-full bg-white/20">
@@ -284,7 +284,7 @@
                         {{ $request->type === 'overtime' ? 'bg-purple-100 text-purple-600' : '' }}
                         {{ $request->type === 'business_trip' ? 'bg-green-100 text-green-600' : '' }}
                         p-3 rounded-full">
-                        <i class="fas 
+                        <i class="fas
                             {{ $request->type === 'leave' ? 'fa-calendar-times' : '' }}
                             {{ $request->type === 'overtime' ? 'fa-clock' : '' }}
                             {{ $request->type === 'business_trip' ? 'fa-plane' : '' }}
@@ -323,7 +323,7 @@
                     Pengumuman Penting
                 </h4>
                 <p class="text-sm sm:text-base leading-relaxed text-gray-700">
-                    Reminder: Pastikan untuk melakukan absensi tepat waktu setiap hari. 
+                    Reminder: Pastikan untuk melakukan absensi tepat waktu setiap hari.
                     Jika ada kendala, segera hubungi bagian HRD RSUD Haji Darlan Ismail.
                 </p>
                 <p class="mt-2 text-xs sm:text-sm text-gray-600">

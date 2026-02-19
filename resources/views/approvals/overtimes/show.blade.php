@@ -33,7 +33,7 @@
 
         @if($overtime->status === 'pending')
         <div class="flex gap-2">
-            <button @click="showApproveModal = true" 
+            <button @click="showApproveModal = true"
                     class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center">
                 <i class="fas fa-check mr-2"></i>Approve
             </button>
@@ -94,7 +94,7 @@
                             <div class="mt-2 space-y-2">
                                 <div class="flex items-center text-sm text-gray-600"><i class="fas fa-id-badge w-5 text-gray-400"></i><span class="ml-2"><strong>NIP:</strong> {{ $overtime->worker->nip }}</span></div>
                                 <div class="flex items-center text-sm text-gray-600"><i class="fas fa-building w-5 text-gray-400"></i><span class="ml-2"><strong>Departemen:</strong> {{ $overtime->worker->department->name ?? '-' }}</span></div>
-                                <div class="flex items-center text-sm text-gray-600"><i class="fas fa-briefcase w-5 text-gray-400"></i><span class="ml-2"><strong>Posisi:</strong> {{ $overtime->worker->position->name ?? '-' }}</span></div>
+                                <div class="flex items-center text-sm text-gray-600"><i class="fas fa-briefcase w-5 text-gray-400"></i><span class="ml-2"><strong>Posisi:</strong> {{ $overtime->worker->department->name ?? '-' }}</span></div>
                                 <div class="flex items-center text-sm text-gray-600"><i class="fas fa-envelope w-5 text-gray-400"></i><span class="ml-2">{{ $overtime->worker->email }}</span></div>
                             </div>
                         </div>

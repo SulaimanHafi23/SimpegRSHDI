@@ -58,6 +58,13 @@ class WorkerRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'birth_date.before' => 'Tanggal Lahir harus sebelum hari ini.',
+        ];
+    }
+
     public function attributes(): array
     {
         return [

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Database\Eloquent\Model;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -105,6 +106,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Log lazy loading violations instead of throwing exceptions
+        // This helps detect N+1 queries without crashing the app
+        Model::handleLazyLoadingViolationUsing(function ($model, $relation) {
+            \Log::warning("Lazy loading [{$relation}] on model [" . get_class($model) . "]");
+        });
+
         // Permission Blade Directives
         Blade::if('can', function ($permission) {
             return auth()->check() && auth()->user()->can($permission);

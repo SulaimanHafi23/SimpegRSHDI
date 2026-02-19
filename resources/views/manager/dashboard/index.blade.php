@@ -205,7 +205,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">{{ $leave->worker->name }}</div>
-                            <div class="text-sm text-gray-500">{{ $leave->worker->position->name ?? '-' }}</div>
+                            <div class="text-sm text-gray-500">{{ $leave->worker->department->name ?? '-' }}</div>
                         </td>
                         <td class="px-6 py-4 text-sm">{{ $leave->leaveType->name }}</td>
                         <td class="px-6 py-4 text-sm text-gray-600">
@@ -260,7 +260,7 @@
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">{{ $overtime->worker->name }}</div>
-                            <div class="text-sm text-gray-500">{{ $overtime->worker->position->name ?? '-' }}</div>
+                            <div class="text-sm text-gray-500">{{ $overtime->worker->department->name ?? '-' }}</div>
                         </td>
                         <td class="px-6 py-4 text-sm">
                             {{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}

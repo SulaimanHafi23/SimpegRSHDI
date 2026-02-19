@@ -28,7 +28,7 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700">Departemen <span class="text-red-500">*</span></label>
-                <select name="department_id" class="w-full mt-1 rounded border px-3 py-2">
+                    <select name="department_id" class="w-full mt-1 rounded border px-3 py-2">
                     <option value="">Pilih departemen</option>
                     <option value="universal" {{ $selectedDepartment == 'universal' ? 'selected' : '' }}>Universal (Semua Departemen)</option>
                     @foreach($departments as $d)
@@ -47,7 +47,7 @@
                             $checked = in_array($dt->id, old('document_type_ids', []));
                         @endphp
                         <label class="flex items-start space-x-2 rounded-lg border border-gray-200 p-2 hover:bg-gray-50">
-                            <input type="checkbox" name="document_type_ids[]" value="{{ $dt->id }}" data-description="{{ htmlentities($dt->description ?? '') }}" {{ $checked ? 'checked' : '' }} {{ $dt->is_universal ? 'disabled' : '' }} class="mt-1">
+                            <input type="checkbox" name="document_type_ids[]" value="{{ $dt->id }}" data-description="{{ htmlentities($dt->description ?? '') }}" data-is-universal="{{ $dt->is_universal ? '1' : '0' }}" {{ $checked ? 'checked' : '' }} class="mt-1">
                             <div>
                                 <div class="font-medium">
                                     {{ $dt->name }}
@@ -80,8 +80,29 @@
 @push('scripts')
     <script>
         (function(){
+            const departmentSelect = document.querySelector('select[name="department_id"]');
             const checkboxes = Array.from(document.querySelectorAll('input[name="document_type_ids[]"]'));
             const desc = document.getElementById('document-description');
+
+            function syncUniversalState() {
+                const isUniversalDept = departmentSelect?.value === 'universal';
+
+                checkboxes.forEach(cb => {
+                    const isUniversalType = cb.dataset.isUniversal === '1';
+
+                    if (isUniversalDept) {
+                        cb.disabled = false;
+                        return;
+                    }
+
+                    if (isUniversalType) {
+                        cb.checked = false;
+                        cb.disabled = true;
+                    } else {
+                        cb.disabled = false;
+                    }
+                });
+            }
 
             function updateDesc() {
                 const checked = checkboxes.filter(cb => cb.checked);
@@ -101,8 +122,15 @@
             }
 
             checkboxes.forEach(cb => cb.addEventListener('change', updateDesc));
+            if (departmentSelect) {
+                departmentSelect.addEventListener('change', function () {
+                    syncUniversalState();
+                    updateDesc();
+                });
+            }
 
             // initialize (in case of old values)
+            syncUniversalState();
             updateDesc();
         })();
     </script>

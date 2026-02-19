@@ -37,10 +37,10 @@ class WorkerShiftScheduleSeeder extends Seeder
 
         $this->command->info('🔄 Creating default recurring schedules...');
 
-        // Filter workers by position
-        $perawatList = $workers->filter(fn($w) => stripos($w->position->name ?? '', 'perawat') !== false);
-        $dokterList = $workers->filter(fn($w) => stripos($w->position->name ?? '', 'dokter') !== false);
-        $bidanList = $workers->filter(fn($w) => stripos($w->position->name ?? '', 'bidan') !== false);
+        // Filter workers by department
+        $perawatList = $workers->filter(fn($w) => stripos($w->department->name ?? '', 'perawat') !== false);
+        $dokterList = $workers->filter(fn($w) => stripos($w->department->name ?? '', 'dokter') !== false);
+        $bidanList = $workers->filter(fn($w) => stripos($w->department->name ?? '', 'bidan') !== false);
 
         // Perawat: Shift Pagi, Senin-Jumat
         foreach ($perawatList->take(2) as $perawat) {

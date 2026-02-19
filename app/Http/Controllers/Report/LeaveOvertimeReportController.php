@@ -21,7 +21,7 @@ class LeaveOvertimeReportController extends Controller
     public function leaveIndex(Request $request)
     {
         $user = auth()->user();
-        
+
         // Default date range: current year
         $startDate = $request->input('start_date', now()->startOfYear()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfYear()->format('Y-m-d'));
@@ -53,32 +53,26 @@ class LeaveOvertimeReportController extends Controller
 
         $leaves = $query->orderBy('start_date', 'desc')->paginate(50);
 
-        // Statistics
+        // Statistics (1 query instead of 5)
+        $statsQuery = LeaveRequest::whereBetween('start_date', [$startDate, $endDate])
+            ->when($departmentId, function($q) use ($departmentId) {
+                $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
+            })
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = 'approved' THEN total_days ELSE 0 END) as total_days
+            ")
+            ->first();
+
         $statistics = [
-            'total' => LeaveRequest::whereBetween('start_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'approved' => LeaveRequest::where('status', 'approved')
-                ->whereBetween('start_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'pending' => LeaveRequest::where('status', 'pending')
-                ->whereBetween('start_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'rejected' => LeaveRequest::where('status', 'rejected')
-                ->whereBetween('start_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'total_days' => LeaveRequest::where('status', 'approved')
-                ->whereBetween('start_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->sum('total_days'),
+            'total' => $statsQuery->total ?? 0,
+            'approved' => $statsQuery->approved ?? 0,
+            'pending' => $statsQuery->pending ?? 0,
+            'rejected' => $statsQuery->rejected ?? 0,
+            'total_days' => $statsQuery->total_days ?? 0,
         ];
 
         $departments = Department::orderBy('name')->get();
@@ -100,7 +94,7 @@ class LeaveOvertimeReportController extends Controller
     public function overtimeIndex(Request $request)
     {
         $user = auth()->user();
-        
+
         $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
         $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
         $departmentId = $request->input('department_id');
@@ -126,32 +120,26 @@ class LeaveOvertimeReportController extends Controller
 
         $overtimes = $query->orderBy('overtime_date', 'desc')->paginate(50);
 
-        // Statistics
+        // Statistics (1 query instead of 5)
+        $statsQuery = OvertimeRequest::whereBetween('overtime_date', [$startDate, $endDate])
+            ->when($departmentId, function($q) use ($departmentId) {
+                $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
+            })
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = 'approved' THEN total_hours ELSE 0 END) as total_hours
+            ")
+            ->first();
+
         $statistics = [
-            'total' => OvertimeRequest::whereBetween('overtime_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'approved' => OvertimeRequest::where('status', 'approved')
-                ->whereBetween('overtime_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'pending' => OvertimeRequest::where('status', 'pending')
-                ->whereBetween('overtime_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'rejected' => OvertimeRequest::where('status', 'rejected')
-                ->whereBetween('overtime_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->count(),
-            'total_hours' => OvertimeRequest::where('status', 'approved')
-                ->whereBetween('overtime_date', [$startDate, $endDate])
-                ->when($departmentId, function($q) use ($departmentId) {
-                    $q->whereHas('worker', fn($sq) => $sq->where('department_id', $departmentId));
-                })->sum('total_hours'),
+            'total' => $statsQuery->total ?? 0,
+            'approved' => $statsQuery->approved ?? 0,
+            'pending' => $statsQuery->pending ?? 0,
+            'rejected' => $statsQuery->rejected ?? 0,
+            'total_hours' => $statsQuery->total_hours ?? 0,
         ];
 
         $departments = Department::orderBy('name')->get();

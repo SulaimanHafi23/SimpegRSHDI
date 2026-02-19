@@ -41,7 +41,7 @@
                 <div class="hidden lg:block relative" x-data="{ open: false }">
                     <button @click="open = !open" class="flex items-center space-x-2 p-2 hover:bg-green-500 rounded-lg transition duration-200">
                         @if(auth()->user()->photo)
-                            <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}" 
+                            <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}"
                                  class="w-8 h-8 rounded-full object-cover border-2 border-yellow-300">
                         @else
                             <div class="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-green-700 text-sm font-bold">
@@ -102,7 +102,7 @@
         <div class="p-4 border-b border-gray-200">
             <div class="flex items-center space-x-3">
                 @if(auth()->user()->photo)
-                    <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}" 
+                    <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}"
                          class="w-12 h-12 rounded-full object-cover border-2 border-green-500">
                 @else
                     <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white text-lg font-bold">
@@ -111,44 +111,44 @@
                 @endif
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-gray-500 truncate">{{ auth()->user()->worker->position->name ?? 'Pegawai' }}</p>
+                    <p class="text-xs text-gray-500 truncate">{{ auth()->user()->worker->department->name ?? 'Pegawai' }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Navigation Menu -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-1">
-            <a href="{{ route('workers.dashboard') }}" 
+            <a href="{{ route('workers.dashboard') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.dashboard') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-home w-5 text-center"></i>
                 <span>Dashboard</span>
             </a>
 
-            <a href="{{ route('workers.attendance.index') }}" 
+            <a href="{{ route('workers.attendance.index') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.attendance*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-camera w-5 text-center"></i>
                 <span>Absensi</span>
             </a>
 
-            <a href="{{ route('workers.schedule') }}" 
+            <a href="{{ route('workers.schedule') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.schedule') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-calendar-alt w-5 text-center"></i>
                 <span>Jadwal Shift</span>
             </a>
 
-            <a href="{{ route('workers.leaves.index') }}" 
+            <a href="{{ route('workers.leaves.index') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.leaves*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-calendar-plus w-5 text-center"></i>
                 <span>Cuti</span>
             </a>
 
-            <a href="{{ route('workers.overtimes.index') }}" 
+            <a href="{{ route('workers.overtimes.index') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.overtimes*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-clock w-5 text-center"></i>
                 <span>Lembur</span>
             </a>
 
-            <a href="{{ route('workers.documents') }}" 
+            <a href="{{ route('workers.documents') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.documents') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-file-alt w-5 text-center"></i>
                 <span>Dokumen</span>
@@ -156,7 +156,7 @@
 
             <div class="border-t border-gray-200 my-2"></div>
 
-            <a href="{{ route('workers.profile') }}" 
+            <a href="{{ route('workers.profile') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.profile') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-user w-5 text-center"></i>
                 <span>Profile</span>

@@ -5,13 +5,13 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Form Pengajuan Cuti" 
+    <x-page-header
+        title="Form Pengajuan Cuti"
         description="Lengkapi form di bawah untuk mengajukan cuti"
         icon="fas fa-calendar-plus">
         <x-slot:actions>
-            <x-button 
-                variant="secondary" 
+            <x-button
+                variant="secondary"
                 icon="fas fa-arrow-left"
                 onclick="window.location.href='{{ route('admin.leave.index') }}'">
                 Kembali
@@ -39,22 +39,22 @@
             <x-card title="Informasi Pengajuan Cuti">
                 <div class="space-y-5">
                     {{-- Pegawai --}}
-                    <x-form.select 
-                        name="worker_id" 
+                    <x-form.select
+                        name="worker_id"
                         label="Pegawai"
                         required
                         placeholder="Pilih Pegawai"
                         :selected="old('worker_id')">
                         @foreach($workers as $worker)
                             <option value="{{ $worker->id }}">
-                                {{ $worker->name }} - {{ $worker->position->name ?? '' }}
+                                {{ $worker->name }} - {{ $worker->department->name ?? '' }}
                             </option>
                         @endforeach
                     </x-form.select>
 
                     {{-- Jenis Cuti --}}
-                    <x-form.select 
-                        name="leave_type_id" 
+                    <x-form.select
+                        name="leave_type_id"
                         label="Jenis Cuti"
                         required
                         placeholder="Pilih Jenis Cuti"
@@ -66,18 +66,18 @@
 
                     {{-- Tanggal --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <x-form.input 
-                            name="start_date" 
-                            label="Tanggal Mulai" 
+                        <x-form.input
+                            name="start_date"
+                            label="Tanggal Mulai"
                             type="date"
                             x-model="startDate"
                             @change="calculateDays"
                             :value="old('start_date')"
                             required />
 
-                        <x-form.input 
-                            name="end_date" 
-                            label="Tanggal Selesai" 
+                        <x-form.input
+                            name="end_date"
+                            label="Tanggal Selesai"
                             type="date"
                             x-model="endDate"
                             @change="calculateDays"
@@ -86,9 +86,9 @@
                     </div>
 
                     {{-- Total Hari (Auto Calculate) --}}
-                    <x-form.input 
-                        name="total_days" 
-                        label="Total Hari" 
+                    <x-form.input
+                        name="total_days"
+                        label="Total Hari"
                         type="number"
                         x-model="totalDays"
                         readonly
@@ -96,18 +96,18 @@
                         help="Akan dihitung otomatis berdasarkan tanggal mulai dan selesai" />
 
                     {{-- Alasan --}}
-                    <x-form.textarea 
-                        name="reason" 
-                        label="Alasan Cuti" 
+                    <x-form.textarea
+                        name="reason"
+                        label="Alasan Cuti"
                         rows="4"
                         placeholder="Jelaskan alasan pengajuan cuti..."
                         :value="old('reason')"
                         required />
 
                     {{-- Lampiran --}}
-                    <x-form.file 
-                        name="attachment" 
-                        label="Lampiran (Opsional)" 
+                    <x-form.file
+                        name="attachment"
+                        label="Lampiran (Opsional)"
                         accept=".pdf,.jpg,.jpeg,.png"
                         help="PDF, JPG, PNG hingga 2MB"
                         preview />
@@ -117,25 +117,25 @@
             {{-- Action Buttons --}}
             <x-card class="mt-6">
                 <div class="flex items-center justify-between">
-                    <x-button 
+                    <x-button
                         type="button"
-                        variant="outline" 
+                        variant="outline"
                         icon="fas fa-times"
                         onclick="window.location.href='{{ route('admin.leave.index') }}'">
                         Batal
                     </x-button>
 
                     <div class="flex gap-3">
-                        <x-button 
+                        <x-button
                             type="reset"
-                            variant="secondary" 
+                            variant="secondary"
                             icon="fas fa-redo">
                             Reset
                         </x-button>
-                        
-                        <x-button 
+
+                        <x-button
                             type="submit"
-                            variant="success" 
+                            variant="success"
                             icon="fas fa-paper-plane">
                             Ajukan Cuti
                         </x-button>
@@ -153,7 +153,7 @@ function leaveForm() {
         startDate: '',
         endDate: '',
         totalDays: 0,
-        
+
         calculateDays() {
             if (this.startDate && this.endDate) {
                 const start = new Date(this.startDate);

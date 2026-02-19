@@ -47,7 +47,7 @@
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $worker->name }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $worker->nip }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $worker->position->name ?? '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $worker->department->name ?? '-' }}</td>
                         <td class="px-6 py-4 text-center text-sm text-green-700 font-bold">{{ $hadir }}</td>
                         <td class="px-6 py-4 text-center text-sm text-yellow-700 font-bold">{{ $terlambat }}</td>
                         <td class="px-6 py-4 text-center text-sm text-red-700 font-bold">{{ $tidakHadir }}</td>

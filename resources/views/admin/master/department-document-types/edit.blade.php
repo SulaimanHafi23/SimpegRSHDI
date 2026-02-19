@@ -14,7 +14,7 @@
             <div class="mb-4 text-red-600">{{ session('error') }}</div>
         @endif
 
-        <form action="{{ route('admin.master.department-document-types.update', $department->id) }}" method="POST" class="space-y-4">
+        <form action="{{ route('admin.master.department-document-types.update', ['department_document_type' => $department->id ?? 'universal']) }}" method="POST" class="space-y-4">
             @csrf
             @method('PUT')
 
@@ -22,6 +22,7 @@
                 <label class="block text-sm font-medium text-gray-700">Departemen <span class="text-red-500">*</span></label>
                 <select name="department_id" class="w-full mt-1 rounded border px-3 py-2">
                     <option value="">Pilih departemen</option>
+                    <option value="universal" {{ (old('department_id') ?? $department->id) == 'universal' ? 'selected' : '' }}>Universal (Semua Departemen)</option>
                     @foreach($departments as $d)
                         <option value="{{ $d->id }}" {{ (old('department_id') ?? $department->id) == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
                     @endforeach
@@ -37,7 +38,7 @@
                             $checked = in_array($dt->id, old('document_type_ids', $selected ?? []));
                         @endphp
                         <label class="flex items-start space-x-2">
-                            <input type="checkbox" name="document_type_ids[]" value="{{ $dt->id }}" data-description="{{ htmlentities($dt->description ?? '') }}" {{ $checked ? 'checked' : '' }} class="mt-1">
+                            <input type="checkbox" name="document_type_ids[]" value="{{ $dt->id }}" data-description="{{ htmlentities($dt->description ?? '') }}" data-is-universal="{{ $dt->is_universal ? '1' : '0' }}" {{ $checked ? 'checked' : '' }} class="mt-1">
                             <div>
                                 <div class="font-medium">{{ $dt->name }}</div>
                                 <div class="text-xs text-gray-500">{{ \Illuminate\Support\Str::limit($dt->description ?? '-', 80) }}</div>
@@ -64,8 +65,29 @@
 @push('scripts')
     <script>
         (function(){
+            const departmentSelect = document.querySelector('select[name="department_id"]');
             const checkboxes = Array.from(document.querySelectorAll('input[name="document_type_ids[]"]'));
             const desc = document.getElementById('document-description');
+
+            function syncUniversalState() {
+                const isUniversalDept = departmentSelect?.value === 'universal';
+
+                checkboxes.forEach(cb => {
+                    const isUniversalType = cb.dataset.isUniversal === '1';
+
+                    if (isUniversalDept) {
+                        cb.disabled = false;
+                        return;
+                    }
+
+                    if (isUniversalType) {
+                        cb.checked = false;
+                        cb.disabled = true;
+                    } else {
+                        cb.disabled = false;
+                    }
+                });
+            }
 
             function updateDesc() {
                 const checked = checkboxes.filter(cb => cb.checked);
@@ -85,6 +107,13 @@
             }
 
             checkboxes.forEach(cb => cb.addEventListener('change', updateDesc));
+            if (departmentSelect) {
+                departmentSelect.addEventListener('change', function () {
+                    syncUniversalState();
+                    updateDesc();
+                });
+            }
+            syncUniversalState();
             updateDesc();
         })();
     </script>

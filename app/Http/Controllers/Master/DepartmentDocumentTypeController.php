@@ -70,6 +70,8 @@ class DepartmentDocumentTypeController extends Controller
                 'department_id' => $departmentId,
                 'document_type_id' => $docTypeId,
             ]);
+
+            DocumentType::whereKey($docTypeId)->update(['is_universal' => false]);
         }
 
         return redirect()->route('admin.master.department-document-types.index')->with('success', 'Relasi berhasil ditambahkan');
@@ -77,6 +79,19 @@ class DepartmentDocumentTypeController extends Controller
 
     public function edit(string $id)
     {
+        if ($id === 'universal') {
+            $department = new Department([
+                'id' => 'universal',
+                'name' => 'Universal (Semua Departemen)',
+            ]);
+
+            $departments = Department::orderBy('name')->get();
+            $documentTypes = DocumentType::orderBy('name')->get();
+            $selected = DocumentType::where('is_universal', true)->pluck('id')->toArray();
+
+            return view('admin.master.department-document-types.edit', compact('department', 'departments', 'documentTypes', 'selected'));
+        }
+
         // here $id is treated as department id
         $department = Department::findOrFail($id);
         $departments = Department::orderBy('name')->get();
@@ -90,17 +105,45 @@ class DepartmentDocumentTypeController extends Controller
     public function update(Request $request, string $id)
     {
         $data = $request->validate([
+            'department_id' => 'nullable',
             'document_type_ids' => 'nullable|array',
             'document_type_ids.*' => 'required|uuid|exists:document_types,id',
         ]);
 
-        $department = Department::findOrFail($id);
-        $new = $data['document_type_ids'] ?? [];
+        $targetDepartmentId = $data['department_id'] ?? $id;
+        $selected = $data['document_type_ids'] ?? [];
+
+        if ($targetDepartmentId === 'universal' || $id === 'universal') {
+            if (! empty($selected)) {
+                DocumentType::whereIn('id', $selected)->update(['is_universal' => true]);
+                DepartmentDocumentType::whereIn('document_type_id', $selected)->delete();
+            }
+
+            // Only un-set is_universal for types that are currently universal,
+            // NOT in the new selection, AND not already mapped to a specific department.
+            // Types mapped to departments are handled by their own department mapping.
+            DocumentType::where('is_universal', true)
+                ->whereNotIn('id', $selected)
+                ->whereDoesntHave('departments')
+                ->update(['is_universal' => false]);
+
+            return redirect()
+                ->route('admin.master.department-document-types.index')
+                ->with('success', 'Relasi universal berhasil diperbarui');
+        }
+
+        $department = Department::findOrFail($targetDepartmentId);
 
         // sync using Eloquent many-to-many
-        $department->documentTypes()->sync($new);
+        $department->documentTypes()->sync($selected);
 
-        return redirect()->route('admin.master.department-document-types.index')->with('success', 'Relasi berhasil diperbarui');
+        if (! empty($selected)) {
+            DocumentType::whereIn('id', $selected)->update(['is_universal' => false]);
+        }
+
+        return redirect()
+            ->route('admin.master.department-document-types.index')
+            ->with('success', 'Relasi berhasil diperbarui');
     }
 
     public function show(string $id)

@@ -26,7 +26,7 @@ class OvertimeRequest extends FormRequest
             'worker_id' => ['required', Rule::exists('workers', 'id')],
             'date' => 'required|date',
             'start_time' => 'required|date_format:Y-m-d H:i:s',
-            'end_time' => 'required|date_format:Y-m-d H:i:s|after:start_time',
+            'end_time' => 'required|date_format:Y-m-d H:i:s',
             'reason' => 'required|string|max:1000',
             'notes' => 'nullable|string|max:500',
         ];

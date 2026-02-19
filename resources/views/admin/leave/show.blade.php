@@ -5,21 +5,21 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Detail Pengajuan Cuti" 
+    <x-page-header
+        title="Detail Pengajuan Cuti"
         description="Informasi lengkap pengajuan cuti pegawai"
         icon="fas fa-calendar-check">
         <x-slot:actions>
-            <x-button 
-                variant="secondary" 
+            <x-button
+                variant="secondary"
                 icon="fas fa-arrow-left"
                 onclick="window.location.href='{{ route('admin.leave.index') }}'">
                 Kembali
             </x-button>
             @if($leaveRequest->status == 'Pending')
                 @can('edit-leave')
-                    <x-button 
-                        variant="primary" 
+                    <x-button
+                        variant="primary"
                         icon="fas fa-edit"
                         onclick="window.location.href='{{ route('admin.leave.edit', $leaveRequest->id) }}'">
                         Edit
@@ -55,7 +55,7 @@
                     ];
                     $config = $statusConfig[$leaveRequest->status] ?? ['variant' => 'secondary', 'icon' => 'fas fa-info-circle', 'label' => $leaveRequest->status];
                 @endphp
-                
+
                 <div>
                     <p class="text-sm text-gray-600 mb-2">Status Pengajuan</p>
                     <x-badge :variant="$config['variant']" :icon="$config['icon']" size="lg">
@@ -70,9 +70,9 @@
                     <div class="flex gap-3">
                         <form action="{{ route('admin.leave.approve', $leaveRequest->id) }}" method="POST" class="inline">
                             @csrf
-                            <x-button 
+                            <x-button
                                 type="submit"
-                                variant="success" 
+                                variant="success"
                                 icon="fas fa-check"
                                 onclick="return confirm('Setujui pengajuan cuti ini?')">
                                 Setujui
@@ -80,9 +80,9 @@
                         </form>
                         <form action="{{ route('admin.leave.reject', $leaveRequest->id) }}" method="POST" class="inline">
                             @csrf
-                            <x-button 
+                            <x-button
                                 type="submit"
-                                variant="danger" 
+                                variant="danger"
                                 icon="fas fa-times"
                                 onclick="return confirm('Tolak pengajuan cuti ini?')">
                                 Tolak
@@ -101,8 +101,8 @@
             <x-card title="Informasi Pegawai">
                 <div class="flex items-start space-x-4">
                     @if($leaveRequest->worker->photo)
-                        <img class="h-20 w-20 rounded-lg object-cover" 
-                             src="{{ asset('storage/' . $leaveRequest->worker->photo) }}" 
+                        <img class="h-20 w-20 rounded-lg object-cover"
+                             src="{{ asset('storage/' . $leaveRequest->worker->photo) }}"
                              alt="{{ $leaveRequest->worker->name }}">
                     @else
                         <div class="h-20 w-20 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -113,7 +113,7 @@
                     @endif
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold text-gray-900">{{ $leaveRequest->worker->name }}</h3>
-                        <p class="text-gray-600">{{ $leaveRequest->worker->position->name ?? '-' }}</p>
+                        <p class="text-gray-600">{{ $leaveRequest->worker->department->name ?? '-' }}</p>
                         <p class="text-sm text-gray-500 mt-1">NIP: {{ $leaveRequest->worker->nip ?? '-' }}</p>
                     </div>
                 </div>
@@ -152,7 +152,7 @@
                     @if($leaveRequest->attachment)
                         <div class="pt-3 border-t border-gray-200">
                             <label class="text-sm font-medium text-gray-500 mb-2 block">Lampiran</label>
-                            <a href="{{ asset('storage/' . $leaveRequest->attachment) }}" 
+                            <a href="{{ asset('storage/' . $leaveRequest->attachment) }}"
                                target="_blank"
                                class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">
                                 <i class="fas fa-paperclip mr-2"></i>
@@ -237,8 +237,8 @@
                 <div class="space-y-2">
                     @if($leaveRequest->status == 'Pending')
                         @can('edit-leave')
-                            <x-button 
-                                variant="outline" 
+                            <x-button
+                                variant="outline"
                                 icon="fas fa-edit"
                                 class="w-full justify-start"
                                 onclick="window.location.href='{{ route('admin.leave.edit', $leaveRequest->id) }}'">
@@ -247,8 +247,8 @@
                         @endcan
 
                         @can('delete-leave')
-                            <x-button 
-                                variant="outline" 
+                            <x-button
+                                variant="outline"
                                 icon="fas fa-trash"
                                 class="w-full justify-start text-red-600 hover:bg-red-50"
                                 onclick="if(confirm('Yakin ingin menghapus pengajuan ini?')) { document.getElementById('delete-form').submit(); }">
@@ -262,8 +262,8 @@
                         @endcan
                     @endif
 
-                    <x-button 
-                        variant="outline" 
+                    <x-button
+                        variant="outline"
                         icon="fas fa-print"
                         class="w-full justify-start"
                         onclick="window.print()">

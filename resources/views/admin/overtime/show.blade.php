@@ -108,7 +108,7 @@
                     @endif
                     <div class="flex-1">
                         <h3 class="text-lg font-semibold text-gray-900">{{ $overtime->worker->name }}</h3>
-                        <p class="text-gray-600">{{ $overtime->worker->position->name ?? '-' }}</p>
+                        <p class="text-gray-600">{{ $overtime->worker->department->name ?? '-' }}</p>
                         <p class="text-sm text-gray-500 mt-1">NIP: {{ $overtime->worker->nip ?? '-' }}</p>
                     </div>
                 </div>

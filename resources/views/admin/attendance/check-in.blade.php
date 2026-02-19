@@ -72,9 +72,9 @@
 
                 <div class="border-t border-gray-200 pt-4 grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-xs font-medium text-gray-500 uppercase">Jabatan</label>
+                        <label class="text-xs font-medium text-gray-500 uppercase">Departemen</label>
                         <p class="text-sm font-semibold text-gray-900 mt-1">
-                            {{ $worker->position ?? '-' }}
+                            {{ $worker->department->name ?? '-' }}
                         </p>
                     </div>
                     <div>

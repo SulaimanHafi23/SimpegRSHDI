@@ -33,6 +33,9 @@ class DashboardController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan. Silakan hubungi administrator.');
         }
 
+        // Eager load department to avoid lazy loading in view
+        $worker->load('department');
+
         // Get attendance summary
         $attendanceSummary = $this->dashboardService->getAttendanceSummary($worker->id, 'month');
 

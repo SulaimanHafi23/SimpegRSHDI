@@ -44,7 +44,7 @@
                 <h3 class="text-green-800 font-semibold">Permohonan Disetujui</h3>
                 @if($trip->approvedBy)
                 <p class="text-green-700 text-sm mt-1">
-                    Disetujui oleh <strong>{{ $trip->approvedBy->name }}</strong> 
+                    Disetujui oleh <strong>{{ $trip->approvedBy->name }}</strong>
                     pada {{ $trip->approved_at->format('d M Y H:i') }}
                 </p>
                 @endif
@@ -59,7 +59,7 @@
                 <h3 class="text-red-800 font-semibold">Permohonan Ditolak</h3>
                 @if($trip->approvedBy)
                 <p class="text-red-700 text-sm mt-1">
-                    Ditolak oleh <strong>{{ $trip->approvedBy->name }}</strong> 
+                    Ditolak oleh <strong>{{ $trip->approvedBy->name }}</strong>
                     pada {{ $trip->approved_at->format('d M Y H:i') }}
                 </p>
                 @endif
@@ -99,7 +99,7 @@
                         <div class="flex-1">
                             <h4 class="text-lg font-semibold text-gray-900">{{ $trip->worker->name }}</h4>
                             <p class="text-sm text-gray-600">{{ $trip->worker->department->name ?? 'N/A' }}</p>
-                            <p class="text-sm text-gray-500">{{ $trip->worker->position ?? 'N/A' }}</p>
+                            <p class="text-sm text-gray-600">{{ $trip->worker->department->name ?? 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
@@ -284,15 +284,15 @@
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
-                        <textarea x-model="approvalNotes" name="approval_notes" rows="3" 
+                        <textarea x-model="approvalNotes" name="approval_notes" rows="3"
                                   class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button type="button" @click="showApproveModal = false" 
+                        <button type="button" @click="showApproveModal = false"
                                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                             Batal
                         </button>
-                        <button type="submit" 
+                        <button type="submit"
                                 class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                             <i class="fas fa-check mr-2"></i>Approve
                         </button>
@@ -314,15 +314,15 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Alasan Penolakan <span class="text-red-500">*</span>
                         </label>
-                        <textarea x-model="rejectionReason" name="rejection_reason" rows="4" required 
+                        <textarea x-model="rejectionReason" name="rejection_reason" rows="4" required
                                   class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
                     </div>
                     <div class="flex justify-end gap-2">
-                        <button type="button" @click="showRejectModal = false" 
+                        <button type="button" @click="showRejectModal = false"
                                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
                             Batal
                         </button>
-                        <button type="submit" 
+                        <button type="submit"
                                 class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                             <i class="fas fa-times mr-2"></i>Reject
                         </button>

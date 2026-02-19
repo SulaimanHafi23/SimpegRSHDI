@@ -61,14 +61,42 @@ class OvertimeRequest extends Model
 
     /**
      * Get the actual shift for this overtime date, considering ShiftOverride (swap).
-     * Returns null if no shift found.
+     * Returns the Shift model, or null if not found.
      */
-    public function getActualShiftAttribute()
+    public function getActualShiftAttribute(): ?Shift
     {
         if (!$this->worker || !$this->overtime_date) {
             return null;
         }
 
-        return $this->worker->getShiftForDate($this->overtime_date);
+        $date = $this->overtime_date;
+
+        // 1. Check ShiftOverride for this date
+        $override = $this->worker->shiftOverrides()
+            ->with('shift')
+            ->where('override_date', $date->format('Y-m-d'))
+            ->first();
+
+        if ($override && $override->shift) {
+            return $override->shift;
+        }
+
+        // 2. Check active WorkerShift for this date
+        $workerShift = $this->worker->workerShifts()
+            ->with('shift')
+            ->where('is_active', true)
+            ->where('effective_from', '<=', $date->format('Y-m-d'))
+            ->where(function ($query) use ($date) {
+                $query->whereNull('effective_until')
+                      ->orWhere('effective_until', '>=', $date->format('Y-m-d'));
+            })
+            ->first();
+
+        if ($workerShift && $workerShift->shift) {
+            return $workerShift->shift;
+        }
+
+        // 3. Fallback to default shift
+        return $this->worker->shift;
     }
 }

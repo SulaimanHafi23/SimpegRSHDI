@@ -16,7 +16,7 @@
                 <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Dokumen Pegawai</h1>
                 <p class="text-gray-600 mt-1">Detail dan kelengkapan dokumen {{ $worker->name }}</p>
             </div>
-            <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id]) }}" 
+            <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id]) }}"
                class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -43,12 +43,12 @@
         <div class="flex items-center gap-6">
             <div class="flex-shrink-0">
                 @if(($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url))
-                    <img class="h-24 w-24 rounded-full object-cover border-4 border-gray-200" 
-                         src="{{ Storage::url($worker->photo_url) }}" 
+                    <img class="h-24 w-24 rounded-full object-cover border-4 border-gray-200"
+                         src="{{ Storage::url($worker->photo_url) }}"
                          alt="{{ $worker->name }}">
                 @elseif(($worker->photo ?? false) && Storage::disk('public')->exists($worker->photo))
-                    <img class="h-24 w-24 rounded-full object-cover border-4 border-gray-200" 
-                         src="{{ Storage::url($worker->photo) }}" 
+                    <img class="h-24 w-24 rounded-full object-cover border-4 border-gray-200"
+                         src="{{ Storage::url($worker->photo) }}"
                          alt="{{ $worker->name }}">
                 @else
                     <div class="h-24 w-24 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-3xl border-4 border-gray-200">
@@ -69,7 +69,7 @@
                     </div>
                     <div class="flex items-center text-gray-600">
                         <i class="fas fa-briefcase mr-2 text-indigo-600"></i>
-                        <span><strong>Posisi:</strong> {{ $worker->position ?? '-' }}</span>
+                        <span><strong>Departemen:</strong> {{ $worker->department->name ?? '-' }}</span>
                     </div>
                 </div>
             </div>
@@ -118,7 +118,7 @@
             </span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-4">
-            <div class="bg-gradient-to-r {{ $completionPercentage >= 100 ? 'from-green-500 to-green-600' : ($completionPercentage >= 50 ? 'from-yellow-500 to-yellow-600' : 'from-red-500 to-red-600') }} h-4 rounded-full transition-all duration-500" 
+            <div class="bg-gradient-to-r {{ $completionPercentage >= 100 ? 'from-green-500 to-green-600' : ($completionPercentage >= 50 ? 'from-yellow-500 to-yellow-600' : 'from-red-500 to-red-600') }} h-4 rounded-full transition-all duration-500"
                  style="width: {{ min($completionPercentage, 100) }}%"></div>
         </div>
         <p class="text-sm text-gray-600 mt-2">
@@ -197,14 +197,14 @@
                         </div>
                         <div class="flex items-center gap-2">
                             @if($item['is_uploaded'])
-                                <a href="{{ route('admin.worker-documents.show', $item['latest_document']->id) }}" 
+                                <a href="{{ route('admin.worker-documents.show', $item['latest_document']->id) }}"
                                    class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
                                    title="Lihat Detail">
                                     <i class="fas fa-eye mr-1"></i>
                                     Detail
                                 </a>
                             @endif
-                            <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id, 'document_type_id' => $item['document_type']->id]) }}" 
+                            <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id, 'document_type_id' => $item['document_type']->id]) }}"
                                class="inline-flex items-center px-3 py-1 {{ $item['is_uploaded'] ? 'bg-gray-600 hover:bg-gray-700' : 'bg-green-600 hover:bg-green-700' }} text-white text-xs font-semibold rounded-lg transition"
                                title="{{ $item['is_uploaded'] ? 'Upload Ulang' : 'Upload Dokumen' }}">
                                 <i class="fas fa-upload mr-1"></i>

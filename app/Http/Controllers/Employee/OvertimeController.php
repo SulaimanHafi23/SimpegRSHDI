@@ -44,14 +44,25 @@ class OvertimeController extends Controller
 
         $overtimeRequests = $this->overtimeService->getAll($filters);
 
-        // Calculate summary for current year
-        $summaryFilters = ['worker_id' => $worker->id, 'year' => $filters['year']];
+        // Calculate summary for current year (1 query instead of 5)
+        $year = $filters['year'];
+        $summaryData = \App\Models\OvertimeRequest::where('worker_id', $worker->id)
+            ->whereYear('overtime_date', $year)
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = 'approved' THEN total_hours ELSE 0 END) as total_hours
+            ")
+            ->first();
+
         $summary = [
-            'total' => $this->overtimeService->getAll($summaryFilters)->total(),
-            'pending' => $this->overtimeService->getAll(array_merge($summaryFilters, ['status' => 'pending']))->total(),
-            'approved' => $this->overtimeService->getAll(array_merge($summaryFilters, ['status' => 'approved']))->total(),
-            'rejected' => $this->overtimeService->getAll(array_merge($summaryFilters, ['status' => 'rejected']))->total(),
-            'total_hours' => $this->overtimeService->getAll(array_merge($summaryFilters, ['status' => 'approved']))->sum('total_hours'),
+            'total' => $summaryData->total ?? 0,
+            'pending' => $summaryData->pending ?? 0,
+            'approved' => $summaryData->approved ?? 0,
+            'rejected' => $summaryData->rejected ?? 0,
+            'total_hours' => $summaryData->total_hours ?? 0,
         ];
 
         return view('employee.overtimes.index', compact('overtimeRequests', 'filters', 'summary', 'worker'));
@@ -70,7 +81,7 @@ class OvertimeController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        return view('employee.overtimes.create');
+        return view('employee.overtimes.create', compact('worker'));
     }
 
     /**
@@ -89,14 +100,17 @@ class OvertimeController extends Controller
         $validated = $request->validate([
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i|after:start_time',
+            'end_time' => 'required|date_format:H:i',
             'reason' => 'required|string|max:1000',
         ]);
 
         try {
-            // Calculate total hours
+            // Calculate total hours (handle overnight: if end < start, add 1 day to end)
             $start = \Carbon\Carbon::parse($validated['date'] . ' ' . $validated['start_time']);
             $end = \Carbon\Carbon::parse($validated['date'] . ' ' . $validated['end_time']);
+            if ($end->lessThan($start)) {
+                $end->addDay();
+            }
             $totalHours = $start->diffInHours($end);
 
             $dto = OvertimeRequestDTO::fromRequest([

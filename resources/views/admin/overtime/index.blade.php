@@ -225,7 +225,8 @@
         if (confirm('Apakah Anda yakin ingin menyetujui pengajuan lembur ini?')) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `/admin/overtimes/${id}/approve`;
+            const approveUrlTemplate = @json(route('admin.overtime.approve', ['id' => '___ID___']));
+            form.action = approveUrlTemplate.replace('___ID___', id);
 
             const csrfToken = document.createElement('input');
             csrfToken.type = 'hidden';
@@ -243,7 +244,8 @@
         if (reason && reason.trim() !== '') {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `/admin/overtimes/${id}/reject`;
+            const rejectUrlTemplate = @json(route('admin.overtime.reject', ['id' => '___ID___']));
+            form.action = rejectUrlTemplate.replace('___ID___', id);
 
             const csrfToken = document.createElement('input');
             csrfToken.type = 'hidden';

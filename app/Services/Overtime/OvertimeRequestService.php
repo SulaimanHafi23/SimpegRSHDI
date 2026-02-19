@@ -35,10 +35,14 @@ class OvertimeRequestService
 
     public function create(array $data)
     {
-        // Calculate total hours
-        $startTime = \Carbon\Carbon::parse($data['start_time']);
-        $endTime = \Carbon\Carbon::parse($data['end_time']);
-        $data['total_hours'] = $endTime->diffInHours($startTime);
+        // Calculate total hours — handle overnight (e.g. 22:00 → 02:00 next day)
+        $date = $data['overtime_date'] ?? $data['date'] ?? now()->format('Y-m-d');
+        $startTime = \Carbon\Carbon::parse($date . ' ' . $data['start_time']);
+        $endTime   = \Carbon\Carbon::parse($date . ' ' . $data['end_time']);
+        if ($endTime->lessThanOrEqualTo($startTime)) {
+            $endTime->addDay();  // overnight lembur
+        }
+        $data['total_hours'] = $startTime->diffInHours($endTime);
 
         // Set default status to pending if not provided
         if (!isset($data['status']) || empty($data['status'])) {
@@ -57,11 +61,15 @@ class OvertimeRequestService
             throw new \Exception('Hanya permohonan lembur yang berstatus pending yang dapat diubah.');
         }
 
-        // Recalculate total hours if times changed
+        // Recalculate total hours if times changed — handle overnight
         if (isset($data['start_time']) || isset($data['end_time'])) {
-            $startTime = \Carbon\Carbon::parse($data['start_time'] ?? $overtimeRequest->start_time);
-            $endTime = \Carbon\Carbon::parse($data['end_time'] ?? $overtimeRequest->end_time);
-            $data['total_hours'] = $endTime->diffInHours($startTime);
+            $date = $data['overtime_date'] ?? $data['date'] ?? ($overtimeRequest->overtime_date ? $overtimeRequest->overtime_date->format('Y-m-d') : now()->format('Y-m-d'));
+            $startTime = \Carbon\Carbon::parse($date . ' ' . ($data['start_time'] ?? \Carbon\Carbon::parse($overtimeRequest->start_time)->format('H:i')));
+            $endTime   = \Carbon\Carbon::parse($date . ' ' . ($data['end_time']   ?? \Carbon\Carbon::parse($overtimeRequest->end_time)->format('H:i')));
+            if ($endTime->lessThanOrEqualTo($startTime)) {
+                $endTime->addDay();  // overnight lembur
+            }
+            $data['total_hours'] = $startTime->diffInHours($endTime);
         }
 
         // Remove empty values to prevent overwriting with empty strings
@@ -132,7 +140,7 @@ class OvertimeRequestService
     public function bulkApprove(array $ids, string $approvedBy)
     {
         $results = [];
-        
+
         foreach ($ids as $id) {
             try {
                 $results[] = $this->approve($id, $approvedBy);

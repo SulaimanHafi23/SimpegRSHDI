@@ -35,7 +35,7 @@
         <!-- Action Buttons -->
         @if($leave->status === 'pending')
         <div class="flex gap-2">
-            <button @click="showApproveModal = true" 
+            <button @click="showApproveModal = true"
                     class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center">
                 <i class="fas fa-check mr-2"></i>Approve
             </button>
@@ -55,7 +55,7 @@
             <div class="flex-1">
                 <h3 class="text-green-800 font-semibold">Cuti Telah Disetujui</h3>
                 <p class="text-green-700 text-sm mt-1">
-                    Disetujui oleh <strong>{{ $leave->approvedBy->name }}</strong> 
+                    Disetujui oleh <strong>{{ $leave->approvedBy->name }}</strong>
                     pada {{ $leave->approved_at->format('d M Y H:i') }}
                 </p>
                 @if($leave->approval_notes)
@@ -73,7 +73,7 @@
             <div class="flex-1">
                 <h3 class="text-red-800 font-semibold">Cuti Ditolak</h3>
                 <p class="text-red-700 text-sm mt-1">
-                    Ditolak oleh <strong>{{ $leave->approvedBy->name }}</strong> 
+                    Ditolak oleh <strong>{{ $leave->approvedBy->name }}</strong>
                     pada {{ $leave->approved_at->format('d M Y H:i') }}
                 </p>
                 @if($leave->rejection_reason)
@@ -116,7 +116,7 @@
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600">
                                     <i class="fas fa-briefcase w-5 text-gray-400"></i>
-                                    <span class="ml-2"><strong>Posisi:</strong> {{ $leave->worker->position->name ?? '-' }}</span>
+                                    <span class="ml-2"><strong>Posisi:</strong> {{ $leave->worker->department->name ?? '-' }}</span>
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600">
                                     <i class="fas fa-envelope w-5 text-gray-400"></i>
@@ -311,36 +311,36 @@
     </div>
 
     <!-- Approve Modal -->
-    <div x-show="showApproveModal" 
+    <div x-show="showApproveModal"
          x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto" 
+         class="fixed inset-0 z-50 overflow-y-auto"
          style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showApproveModal = false"></div>
-            
+
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Approve Pengajuan Cuti</h3>
-                
+
                 <form method="POST" action="{{ route('approvals.leaves.approve', $leave->id) }}">
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Catatan Approval (Opsional)
                         </label>
-                        <textarea x-model="approvalNotes" 
-                                  name="approval_notes" 
-                                  rows="3" 
+                        <textarea x-model="approvalNotes"
+                                  name="approval_notes"
+                                  rows="3"
                                   class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200"
                                   placeholder="Tambahkan catatan jika diperlukan..."></textarea>
                     </div>
 
                     <div class="flex justify-end gap-2">
-                        <button type="button" 
+                        <button type="button"
                                 @click="showApproveModal = false"
                                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
                             Batal
                         </button>
-                        <button type="submit" 
+                        <button type="submit"
                                 class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
                             <i class="fas fa-check mr-2"></i>Approve
                         </button>
@@ -351,25 +351,25 @@
     </div>
 
     <!-- Reject Modal -->
-    <div x-show="showRejectModal" 
+    <div x-show="showRejectModal"
          x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto" 
+         class="fixed inset-0 z-50 overflow-y-auto"
          style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showRejectModal = false"></div>
-            
+
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Reject Pengajuan Cuti</h3>
-                
+
                 <form method="POST" action="{{ route('approvals.leaves.reject', $leave->id) }}">
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Alasan Penolakan <span class="text-red-500">*</span>
                         </label>
-                        <textarea x-model="rejectionReason" 
-                                  name="rejection_reason" 
-                                  rows="4" 
+                        <textarea x-model="rejectionReason"
+                                  name="rejection_reason"
+                                  rows="4"
                                   required
                                   class="w-full rounded-lg border-gray-300 focus:border-red-500 focus:ring focus:ring-red-200"
                                   placeholder="Jelaskan alasan penolakan..."></textarea>
@@ -377,12 +377,12 @@
                     </div>
 
                     <div class="flex justify-end gap-2">
-                        <button type="button" 
+                        <button type="button"
                                 @click="showRejectModal = false"
                                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
                             Batal
                         </button>
-                        <button type="submit" 
+                        <button type="submit"
                                 class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
                             <i class="fas fa-times mr-2"></i>Reject
                         </button>

@@ -27,16 +27,25 @@ class HRDashboardController extends Controller
     public function index()
     {
         // ========== WORKER STATISTICS ==========
-        $totalWorkers = Worker::count();
-        $activeWorkers = Worker::where('status', 'active')->count();
-        $inactiveWorkers = Worker::where('status', 'inactive')->count();
-        $resignedWorkers = Worker::where('status', 'resigned')->count();
+        $workerStats = Worker::selectRaw("
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active,
+            SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive,
+            SUM(CASE WHEN status = 'resigned' THEN 1 ELSE 0 END) as resigned,
+            SUM(CASE WHEN employment_status = 'permanent' THEN 1 ELSE 0 END) as permanent,
+            SUM(CASE WHEN employment_status = 'contract' THEN 1 ELSE 0 END) as contract,
+            SUM(CASE WHEN employment_status = 'probation' THEN 1 ELSE 0 END) as probation,
+            SUM(CASE WHEN employment_status = 'intern' THEN 1 ELSE 0 END) as intern
+        ")->first();
 
-        // Workers by Employment Status
-        $permanentWorkers = Worker::where('employment_status', 'permanent')->count();
-        $contractWorkers = Worker::where('employment_status', 'contract')->count();
-        $probationWorkers = Worker::where('employment_status', 'probation')->count();
-        $internWorkers = Worker::where('employment_status', 'intern')->count();
+        $totalWorkers = $workerStats->total;
+        $activeWorkers = $workerStats->active;
+        $inactiveWorkers = $workerStats->inactive;
+        $resignedWorkers = $workerStats->resigned;
+        $permanentWorkers = $workerStats->permanent;
+        $contractWorkers = $workerStats->contract;
+        $probationWorkers = $workerStats->probation;
+        $internWorkers = $workerStats->intern;
 
         // Workers by Department
         $workersByDepartment = Worker::select('department_id', DB::raw('count(*) as total'))
@@ -99,27 +108,34 @@ class HRDashboardController extends Controller
             ->count();
 
         // ========== ATTENDANCE CHART (Last 7 Days) ==========
+        $startDate = now()->subDays(6)->format('Y-m-d');
+        $endDate = now()->format('Y-m-d');
+
+        $chartData = Attendance::selectRaw("
+            attendance_date,
+            SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_count,
+            SUM(CASE WHEN is_late = 1 THEN 1 ELSE 0 END) as late_count,
+            COUNT(*) as total_count
+        ")
+            ->whereBetween('attendance_date', [$startDate, $endDate])
+            ->groupBy('attendance_date')
+            ->get()
+            ->keyBy(function ($item) {
+                return Carbon::parse($item->attendance_date)->format('Y-m-d');
+            });
+
         $attendanceChart = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $dateStr = $date->format('Y-m-d');
             $dayName = $date->format('D');
-
-            $present = Attendance::whereDate('attendance_date', $dateStr)
-                ->where('status', 'present')
-                ->count();
-
-            $late = Attendance::whereDate('attendance_date', $dateStr)
-                ->where('is_late', true)
-                ->count();
-
-            $absent = $activeWorkers - Attendance::whereDate('attendance_date', $dateStr)->count();
+            $dayData = $chartData->get($dateStr);
 
             $attendanceChart[] = [
                 'date' => $dayName,
-                'present' => $present,
-                'late' => $late,
-                'absent' => $absent,
+                'present' => $dayData->present_count ?? 0,
+                'late' => $dayData->late_count ?? 0,
+                'absent' => $activeWorkers - ($dayData->total_count ?? 0),
             ];
         }
 
@@ -137,7 +153,7 @@ class HRDashboardController extends Controller
                     'icon' => 'user-plus',
                     'color' => 'blue',
                     'title' => 'Pegawai Baru',
-                    'description' => $worker->name . ' bergabung sebagai ' . ($worker->position->name ?? 'Pegawai'),
+                    'description' => $worker->name . ' bergabung sebagai ' . ($worker->employment_status ?? 'Pegawai'),
                     'time' => $worker->hire_date?->diffForHumans() ?? '-',
                 ];
             });

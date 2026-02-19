@@ -49,13 +49,23 @@ class LeaveController extends Controller
         $leaveRequests = $this->leaveService->getAll($filters);
         $leaveTypes = $this->leaveTypeService->getActive();
 
-        // Calculate leave summary using count method for accuracy
+        // Calculate leave summary (1 query instead of 4)
         $year = $filters['year'];
+        $summaryData = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+            ->whereYear('start_date', $year)
+            ->selectRaw("
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+            ")
+            ->first();
+
         $summary = [
-            'total' => $this->leaveService->countByStatus($worker->id, $year, null),
-            'pending' => $this->leaveService->countByStatus($worker->id, $year, 'pending'),
-            'approved' => $this->leaveService->countByStatus($worker->id, $year, 'approved'),
-            'rejected' => $this->leaveService->countByStatus($worker->id, $year, 'rejected'),
+            'total' => $summaryData->total ?? 0,
+            'pending' => $summaryData->pending ?? 0,
+            'approved' => $summaryData->approved ?? 0,
+            'rejected' => $summaryData->rejected ?? 0,
         ];
 
         return view('employee.leaves.index', compact('leaveRequests', 'leaveTypes', 'filters', 'summary', 'worker'));

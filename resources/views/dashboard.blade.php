@@ -84,7 +84,7 @@
                                     </li>
                                     <li class="flex justify-between">
                                         <span class="font-medium">Posisi:</span>
-                                        <span>{{ Auth::user()->worker->position->name ?? '-' }}</span>
+                                        <span>{{ Auth::user()->worker->department->name ?? '-' }}</span>
                                     </li>
                                 @endif
                             </ul>

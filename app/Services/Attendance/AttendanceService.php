@@ -536,11 +536,14 @@ class AttendanceService
 
             if (!$shift) continue;
 
+            // Get properly formatted schedule for the date
+            $schedule = $shift->getScheduleForDate($attendanceDate);
+
             // Calculate shift end time
-            $shiftEndTime = \Carbon\Carbon::parse($attendanceDate->format('Y-m-d') . ' ' . $shift->end_time);
+            $shiftEndTime = \Carbon\Carbon::parse($attendanceDate->format('Y-m-d') . ' ' . $schedule['end_time']);
 
             // Handle overnight shifts
-            if ($shift->is_overnight && $shiftEndTime->format('H:i') < $shift->start_time) {
+            if ($schedule['is_overnight']) {
                 $shiftEndTime->addDay();
             }
 
@@ -555,7 +558,7 @@ class AttendanceService
                     'attendance_id' => $attendance->id,
                     'worker_id' => $worker->id,
                     'worker_name' => $worker->full_name,
-                    'position' => $worker->position->name ?? '-',
+                    'position' => $worker->department->name ?? '-',
                     'attendance_date' => $attendanceDate->format('Y-m-d'),
                     'check_in_time' => \Carbon\Carbon::parse($attendance->check_in)->format('H:i'),
                     'shift_name' => $shift->name,

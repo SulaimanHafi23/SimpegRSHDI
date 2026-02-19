@@ -109,7 +109,7 @@ class DocumentApprovalController extends Controller
 
     public function show(string $id)
     {
-        $document = WorkerDocument::with(['worker.department', 'worker.position', 'documentType'])
+        $document = WorkerDocument::with(['worker.department', 'documentType', 'verifier'])
             ->findOrFail($id);
 
         // Check if manager can view this document

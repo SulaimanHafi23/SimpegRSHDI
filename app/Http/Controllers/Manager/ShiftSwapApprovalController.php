@@ -78,7 +78,10 @@ class ShiftSwapApprovalController extends Controller
             'targetWorker.user',
             'targetWorker.department',
             'requesterShift.shift',
-            'targetShift.shift'
+            'targetShift.shift',
+            'manager',
+            'executedBy',
+            'auditLogs.user',
         ])->findOrFail($id);
 
         // Check department access for Manager

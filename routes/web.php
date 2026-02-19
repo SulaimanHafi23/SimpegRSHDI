@@ -404,12 +404,12 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/export', [OvertimeRequestController::class, 'export'])->name('export');
         Route::get('/create', [OvertimeRequestController::class, 'create'])->name('create');
         Route::post('/', [OvertimeRequestController::class, 'store'])->name('store');
-        Route::get('/{id}', [OvertimeRequestController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [OvertimeRequestController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [OvertimeRequestController::class, 'update'])->name('update');
-        Route::delete('/{id}', [OvertimeRequestController::class, 'destroy'])->name('destroy');
-        Route::post('/{id}/approve', [OvertimeRequestController::class, 'approve'])->name('approve');
-        Route::post('/{id}/reject', [OvertimeRequestController::class, 'reject'])->name('reject');
+        Route::get('/{id}', [OvertimeRequestController::class, 'show'])->name('show')->whereUuid('id');
+        Route::get('/{id}/edit', [OvertimeRequestController::class, 'edit'])->name('edit')->whereUuid('id');
+        Route::put('/{id}', [OvertimeRequestController::class, 'update'])->name('update')->whereUuid('id');
+        Route::delete('/{id}', [OvertimeRequestController::class, 'destroy'])->name('destroy')->whereUuid('id');
+        Route::post('/{id}/approve', [OvertimeRequestController::class, 'approve'])->name('approve')->whereUuid('id');
+        Route::post('/{id}/reject', [OvertimeRequestController::class, 'reject'])->name('reject')->whereUuid('id');
         Route::post('/bulk-approve', [OvertimeRequestController::class, 'bulkApprove'])->name('bulk-approve');
     });
 
@@ -418,6 +418,11 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [WorkerDocumentController::class, 'index'])->name('index');
         Route::get('/create', [WorkerDocumentController::class, 'create'])->name('create');
         Route::post('/', [WorkerDocumentController::class, 'store'])->name('store');
+        // AJAX: get allowed document types for a given worker (must be before /{id})
+        Route::get('/document-types-for-worker', [WorkerDocumentController::class, 'documentTypesForWorker'])->name('document-types-for-worker');
+        Route::get('/expired', [WorkerDocumentController::class, 'expired'])->name('expired');
+        Route::get('/expiring', [WorkerDocumentController::class, 'expiring'])->name('expiring');
+        Route::get('/worker/{workerId}', [WorkerDocumentController::class, 'workerDocuments'])->name('worker-documents');
         Route::get('/{id}', [WorkerDocumentController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [WorkerDocumentController::class, 'edit'])->name('edit');
         Route::put('/{id}', [WorkerDocumentController::class, 'update'])->name('update');
@@ -425,11 +430,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/{id}/verify', [WorkerDocumentController::class, 'verify'])->name('verify');
         Route::post('/{id}/reject', [WorkerDocumentController::class, 'reject'])->name('reject');
         Route::get('/{id}/download', [WorkerDocumentController::class, 'download'])->name('download');
-        Route::get('/worker/{workerId}', [WorkerDocumentController::class, 'workerDocuments'])->name('worker-documents');
-        Route::get('/expired', [WorkerDocumentController::class, 'expired'])->name('expired');
-        Route::get('/expiring', [WorkerDocumentController::class, 'expiring'])->name('expiring');
-        // AJAX: get allowed document types for a given worker
-        Route::get('/document-types-for-worker', [WorkerDocumentController::class, 'documentTypesForWorker'])->name('document-types-for-worker');
     });
 
     // ========== MASTER DATA MANAGEMENT ==========
@@ -477,6 +477,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
 // ========== API ROUTES ==========
 Route::prefix('api')->middleware(['auth'])->group(function () {
     Route::get('/workers/{workerId}/future-shifts', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getFutureShifts']);
+    // Returns shift start/end time for a worker on a given date — used by overtime forms
+    Route::get('/workers/{workerId}/shift-time', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getShiftTime']);
 });
 
 // ========== FALLBACK ROUTE ==========

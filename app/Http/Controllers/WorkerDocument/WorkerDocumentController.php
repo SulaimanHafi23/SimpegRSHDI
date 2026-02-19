@@ -110,7 +110,27 @@ class WorkerDocumentController extends Controller
         $workers = $departmentId
             ? $this->workerService->getByDepartment($departmentId)
             : $this->workerService->getAllActive();
-        $documentTypes = $this->documentTypeService->getAllActive();
+        $selectedWorkerId = request('worker_id') ?: auth()->user()?->worker?->id;
+        $documentTypes = collect();
+
+        if ($selectedWorkerId) {
+            $worker = $this->workerService->getById($selectedWorkerId);
+
+            if ($worker) {
+                $documentTypes = \App\Models\DocumentType::where('is_active', true)
+                    ->where(function ($builder) use ($worker) {
+                        $builder->where('is_universal', true);
+
+                        if ($worker->department_id) {
+                            $builder->orWhereHas('departments', function ($inner) use ($worker) {
+                                $inner->where('departments.id', $worker->department_id);
+                            });
+                        }
+                    })
+                    ->orderBy('name')
+                    ->get();
+            }
+        }
 
         return view('admin.workers.documents.create', compact('workers', 'documentTypes'));
     }
@@ -202,28 +222,19 @@ class WorkerDocumentController extends Controller
             return response()->json(['data' => []]);
         }
 
-        // Get all active document types and filter by department mapping if present
-        $all = $this->documentTypeService->getAllActive();
+        $query = \App\Models\DocumentType::where('is_active', true)
+            ->where(function ($builder) use ($worker) {
+                $builder->where('is_universal', true);
 
-        $filtered = $all->filter(function ($dt) use ($worker) {
-            // load departments relationship if not loaded
-            if ($dt->relationLoaded('departments') === false) {
-                $dt->load('departments');
-            }
+                if ($worker->department_id) {
+                    $builder->orWhereHas('departments', function ($inner) use ($worker) {
+                        $inner->where('departments.id', $worker->department_id);
+                    });
+                }
+            })
+            ->orderBy('name');
 
-            if ($dt->is_universal) {
-                return true;
-            }
-
-            // If the document type has no departments assigned, treat it as global/allowed
-            if ($dt->departments->isEmpty()) {
-                return true;
-            }
-
-            return $dt->departments->contains('id', $worker->department_id);
-        })->values();
-
-        return response()->json(['data' => $filtered]);
+        return response()->json(['data' => $query->get()]);
     }
 
     public function show(string $id)

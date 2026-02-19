@@ -38,6 +38,7 @@
                     </div>
                     <div class="space-x-2">
                         <a href="{{ route('admin.master.department-document-types.create', ['department_id' => 'universal']) }}" class="px-3 py-1 bg-green-600 text-white rounded">Tambah</a>
+                        <a href="{{ route('admin.master.department-document-types.edit', 'universal') }}" class="px-3 py-1 bg-gray-200 text-gray-700 rounded">Edit</a>
                     </div>
                 </div>
 

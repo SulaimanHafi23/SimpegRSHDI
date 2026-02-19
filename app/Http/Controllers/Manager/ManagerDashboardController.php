@@ -27,6 +27,7 @@ class ManagerDashboardController extends Controller
     public function index()
     {
         $user = auth()->user();
+        $user->load('worker.department');
         $manager = $user->worker;
 
         if (!$manager || !$manager->department_id) {
@@ -126,39 +127,40 @@ class ManagerDashboardController extends Controller
             ->get();
 
         // ========== ATTENDANCE CHART (Last 7 Days) ==========
+        $startDate = now()->subDays(6)->format('Y-m-d');
+        $endDate = now()->format('Y-m-d');
+
+        // Get department worker IDs for subquery
+        $departmentWorkerIds = Worker::where('department_id', $departmentId)
+            ->where('status', 'active')
+            ->pluck('id');
+
+        $chartData = Attendance::selectRaw("
+            attendance_date,
+            SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present_count,
+            SUM(CASE WHEN is_late = 1 THEN 1 ELSE 0 END) as late_count,
+            COUNT(*) as total_count
+        ")
+            ->whereIn('worker_id', $departmentWorkerIds)
+            ->whereBetween('attendance_date', [$startDate, $endDate])
+            ->groupBy('attendance_date')
+            ->get()
+            ->keyBy(function ($item) {
+                return Carbon::parse($item->attendance_date)->format('Y-m-d');
+            });
+
         $attendanceChart = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $dateStr = $date->format('Y-m-d');
             $dayName = $date->format('D');
-
-            $present = Attendance::whereDate('attendance_date', $dateStr)
-                ->where('status', 'present')
-                ->whereHas('worker', function ($query) use ($departmentId) {
-                    $query->where('department_id', $departmentId);
-                })
-                ->count();
-
-            $late = Attendance::whereDate('attendance_date', $dateStr)
-                ->where('is_late', true)
-                ->whereHas('worker', function ($query) use ($departmentId) {
-                    $query->where('department_id', $departmentId);
-                })
-                ->count();
-
-            $totalAttendance = Attendance::whereDate('attendance_date', $dateStr)
-                ->whereHas('worker', function ($query) use ($departmentId) {
-                    $query->where('department_id', $departmentId);
-                })
-                ->count();
-
-            $absent = $departmentWorkersActive - $totalAttendance;
+            $dayData = $chartData->get($dateStr);
 
             $attendanceChart[] = [
                 'date' => $dayName,
-                'present' => $present,
-                'late' => $late,
-                'absent' => $absent,
+                'present' => $dayData->present_count ?? 0,
+                'late' => $dayData->late_count ?? 0,
+                'absent' => $departmentWorkersActive - ($dayData->total_count ?? 0),
             ];
         }
 
@@ -186,9 +188,8 @@ class ManagerDashboardController extends Controller
         // ========== PENDING CHECKOUTS ==========
         // Get workers in this department who need to checkout
         $allPendingCheckouts = $this->attendanceService->getPendingCheckouts();
-        $pendingCheckouts = $allPendingCheckouts->filter(function($checkout) use ($departmentId) {
-            $worker = \App\Models\Worker::find($checkout['worker_id']);
-            return $worker && $worker->department_id === $departmentId;
+        $pendingCheckouts = $allPendingCheckouts->filter(function($checkout) use ($departmentWorkerIds) {
+            return $departmentWorkerIds->contains($checkout['worker_id']);
         });
 
         return view('manager.dashboard.index', compact(

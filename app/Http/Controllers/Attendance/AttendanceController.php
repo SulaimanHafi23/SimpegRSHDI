@@ -77,17 +77,21 @@ class AttendanceController extends Controller
             'per_page' => 1000, // Ambil semua data untuk tanggal tersebut
         ]);
 
+        // Pre-load semua leave requests untuk tanggal ini (1 query, bukan N query)
+        $leaveRequestsByWorker = \App\Models\LeaveRequest::whereIn('worker_id', $allWorkers->pluck('id'))
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $selectedDate)
+            ->whereDate('end_date', '>=', $selectedDate)
+            ->with('leaveType')
+            ->get()
+            ->keyBy('worker_id');
+
         // Buat array workers dengan status absensi untuk tanggal yang dipilih
-        $workersWithAttendance = $allWorkers->map(function ($worker) use ($todayAttendances, $selectedDate) {
+        $workersWithAttendance = $allWorkers->map(function ($worker) use ($todayAttendances, $selectedDate, $leaveRequestsByWorker) {
             $todayAttendance = $todayAttendances->firstWhere('worker_id', $worker->id);
 
-            // Cek apakah pegawai sedang cuti/sakit/izin pada tanggal ini
-            $leaveRequest = \App\Models\LeaveRequest::where('worker_id', $worker->id)
-                ->where('status', 'approved')
-                ->whereDate('start_date', '<=', $selectedDate)
-                ->whereDate('end_date', '>=', $selectedDate)
-                ->with('leaveType')
-                ->first();
+            // Ambil leave request dari pre-loaded collection (tanpa query tambahan)
+            $leaveRequest = $leaveRequestsByWorker->get($worker->id);
 
             $worker->today_attendance = $todayAttendance;
             $worker->leave_request = $leaveRequest;
@@ -163,21 +167,19 @@ class AttendanceController extends Controller
             $statsEndDate = \Carbon\Carbon::create($statsYear, $statsMonth, 1)->endOfMonth()->format('Y-m-d');
         }
 
-        // Hitung statistik per pegawai untuk periode yang dipilih
+        // Hitung statistik per pegawai untuk periode yang dipilih (1 query, bukan N query)
+        $allPeriodAttendances = \App\Models\Attendance::whereIn('worker_id', $allWorkers->pluck('id'))
+            ->whereDate('attendance_date', '>=', $statsStartDate)
+            ->whereDate('attendance_date', '<=', $statsEndDate)
+            ->when($departmentId, function ($q) use ($departmentId) {
+                $q->whereHas('worker', fn($wq) => $wq->where('department_id', $departmentId));
+            })
+            ->get()
+            ->groupBy('worker_id');
+
         $workerStats = [];
         foreach ($allWorkers as $worker) {
-            $periodAttendances = $this->attendanceService->getAll([
-                'worker_id' => $worker->id,
-                'date_from' => $statsStartDate,
-                'date_to' => $statsEndDate,
-                'department_id' => $departmentId,
-                'per_page' => 1000,
-            ]);
-
-            // Ambil items dari paginator jika ada
-            $attendanceItems = $periodAttendances instanceof \Illuminate\Pagination\LengthAwarePaginator
-                ? collect($periodAttendances->items())
-                : $periodAttendances;
+            $attendanceItems = $allPeriodAttendances->get($worker->id, collect());
 
             // Hitung detail statistik
             $lateItems = $attendanceItems->where('is_late', true);
@@ -217,8 +219,28 @@ class AttendanceController extends Controller
             'end_date' => $statsEndDate,
         ];
 
+        // Hitung statistik keseluruhan untuk tab Riwayat (dari allPeriodAttendances yang sudah di-query)
+        $allPeriodFlat = $allPeriodAttendances->flatten();
+        $historySummary = [
+            'total_records' => $allPeriodFlat->count(),
+            'present' => $allPeriodFlat->whereIn('status', ['present', 'late'])->count(),
+            'late' => $allPeriodFlat->where('is_late', true)->count(),
+            'early_leave' => $allPeriodFlat->where('is_early_leave', true)->count(),
+            'perfect' => $allPeriodFlat->whereIn('status', ['present'])
+                ->where('is_late', false)
+                ->where('is_early_leave', false)
+                ->count(),
+            'absent' => $allPeriodFlat->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count(),
+            'on_leave' => $allPeriodFlat->where('status', 'leave')->count(),
+            'period_label' => $statsPeriod === 'year'
+                ? 'Tahun ' . $statsYear
+                : ($statsPeriod === 'custom'
+                    ? \Carbon\Carbon::parse($statsStartDate)->format('d M Y') . ' - ' . \Carbon\Carbon::parse($statsEndDate)->format('d M Y')
+                    : \Carbon\Carbon::create($statsYear, $statsMonth, 1)->translatedFormat('F Y')),
+        ];
+
         // Gunakan historyFilters untuk filter form (bukan yang sudah dimodifikasi)
-        return view('admin.attendance.index', compact('attendances', 'workers', 'historyFilters', 'workersWithAttendance', 'locations', 'summary', 'workerStats', 'statsFilters'));
+        return view('admin.attendance.index', compact('attendances', 'workers', 'historyFilters', 'workersWithAttendance', 'locations', 'summary', 'historySummary', 'workerStats', 'statsFilters'));
     }
 
     public function create()
@@ -1114,17 +1136,21 @@ class AttendanceController extends Controller
                 ->whereDate('attendance_date', $selectedDate)
                 ->get();
 
+            // Pre-load semua leave requests (1 query, bukan N query)
+            $leaveRequestsByWorker = \App\Models\LeaveRequest::whereIn('worker_id', $workers->pluck('id'))
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $selectedDate)
+                ->whereDate('end_date', '>=', $selectedDate)
+                ->with('leaveType')
+                ->get()
+                ->keyBy('worker_id');
+
             // Map attendance data to workers
-            $workersWithAttendance = $workers->map(function ($worker) use ($attendances, $selectedDate) {
+            $workersWithAttendance = $workers->map(function ($worker) use ($attendances, $selectedDate, $leaveRequestsByWorker) {
                 $todayAttendance = $attendances->where('worker_id', $worker->id)->first();
 
-                // Cek apakah pegawai sedang cuti/sakit/izin pada tanggal ini
-                $leaveRequest = \App\Models\LeaveRequest::where('worker_id', $worker->id)
-                    ->where('status', 'approved')
-                    ->whereDate('start_date', '<=', $selectedDate)
-                    ->whereDate('end_date', '>=', $selectedDate)
-                    ->with('leaveType')
-                    ->first();
+                // Ambil leave request dari pre-loaded collection (tanpa query tambahan)
+                $leaveRequest = $leaveRequestsByWorker->get($worker->id);
 
                 $worker->today_attendance = $todayAttendance;
                 $worker->leave_request = $leaveRequest;
