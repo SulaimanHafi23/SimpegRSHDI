@@ -206,9 +206,15 @@
                         </td>
                         <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                             @if($worker->latestShift)
-                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Tetap
-                                </span>
+                                @if($worker->hasRotation ?? false)
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                        Rotasi
+                                    </span>
+                                @else
+                                    <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                        Tetap
+                                    </span>
+                                @endif
                             @else
                                 <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-400 italic">
                                     -

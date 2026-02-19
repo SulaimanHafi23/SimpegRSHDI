@@ -8,7 +8,6 @@ use App\Services\Worker\WorkerService;
 use App\Services\Master\ShiftService;
 use App\Services\Master\DepartmentService;
 use App\Traits\DepartmentFilterable;
-use App\Http\Requests\Schedule\WorkerShiftScheduleRequest;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -39,19 +38,46 @@ class WorkerShiftController extends Controller
             : $this->workerService->getAllActive();
 
         // Get all workers with their latest active shift
-        $workersWithShifts = $workers->map(function($worker) use ($filters) {
-            // Get latest shift for this worker (prioritize active ones)
-            $latestShift = $worker->workerShifts()
-                ->with(['shift'])
-                ->when(isset($filters['shift_id']) && $filters['shift_id'] !== '', function($q) use ($filters) {
-                    return $q->where('shift_id', $filters['shift_id']);
-                })
-                ->when(isset($filters['is_active']) && $filters['is_active'] !== '', function($q) use ($filters) {
-                    return $q->where('is_active', $filters['is_active']);
-                })
-                ->orderByDesc('is_active')
-                ->orderByDesc('effective_from')
-                ->first();
+            $today = Carbon::today();
+
+            $workersWithShifts = $workers->map(function($worker) use ($filters, $today) {
+                $baseQuery = $worker->workerShifts()
+                    ->with(['shift'])
+                    ->when(isset($filters['shift_id']), function($q) use ($filters) {
+                        return $q->where('shift_id', $filters['shift_id']);
+                    })
+                    ->when(isset($filters['is_active']), function($q) use ($filters) {
+                        return $q->where('is_active', $filters['is_active']);
+                    });
+
+                // 1) Prefer shift active today
+                $latestShift = (clone $baseQuery)
+                    ->where('effective_from', '<=', $today)
+                    ->where(function($q) use ($today) {
+                        $q->whereNull('effective_until')
+                          ->orWhere('effective_until', '>=', $today);
+                    })
+                    ->orderBy('effective_from', 'desc')
+                    ->first();
+
+                // 2) Fallback to latest past shift
+                if (!$latestShift) {
+                    $latestShift = (clone $baseQuery)
+                        ->where('effective_from', '<=', $today)
+                        ->orderBy('effective_from', 'desc')
+                        ->first();
+                }
+
+                // 3) Final fallback to latest overall
+                if (!$latestShift) {
+                    $latestShift = (clone $baseQuery)
+                        ->orderBy('effective_from', 'desc')
+                        ->first();
+                }
+
+            $allWorkerShifts = $worker->workerShifts()->select('shift_id')->get();
+            $worker->hasRotation = $allWorkerShifts->count() > 1
+                && $allWorkerShifts->pluck('shift_id')->unique()->count() > 1;
 
             $worker->latestShift = $latestShift;
             return $worker;
@@ -210,8 +236,111 @@ class WorkerShiftController extends Controller
 
     public function store(Request $request)
     {
-        // Validasi manual untuk menghindari konflik 'required_without'
-        // yang menyebabkan error "Pegawai field is required when Pegawai is not present"
+        $isRotationMode = $request->boolean('generate_rotation');
+
+        if ($isRotationMode) {
+            $data = $request->validate([
+                'worker_id' => 'nullable|exists:workers,id',
+                'worker_ids' => 'nullable|array',
+                'worker_ids.*' => 'exists:workers,id',
+                'rotation_type' => 'required|in:weekly,monthly',
+                'shift_sequence' => 'required|array|min:1',
+                'shift_sequence.*' => 'required|exists:shifts,id',
+                'start_date' => 'required|date',
+                'end_date' => 'nullable|date|after_or_equal:start_date',
+                'notes' => 'nullable|string',
+                'deactivate_existing' => 'nullable|boolean',
+            ], [
+                'rotation_type.required' => 'Tipe rotasi wajib dipilih.',
+                'rotation_type.in' => 'Tipe rotasi harus weekly atau monthly.',
+                'shift_sequence.required' => 'Urutan shift wajib diisi minimal satu.',
+                'shift_sequence.*.required' => 'Setiap urutan shift wajib diisi.',
+                'shift_sequence.*.exists' => 'Salah satu shift pada urutan tidak valid.',
+                'start_date.required' => 'Tanggal mulai wajib diisi.',
+                'start_date.date' => 'Format tanggal mulai tidak valid.',
+                'end_date.date' => 'Format tanggal selesai tidak valid.',
+                'end_date.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+            ]);
+
+            if (empty($data['worker_id']) && empty($data['worker_ids'])) {
+                return back()->withInput()->withErrors(['worker_id' => 'Harap pilih minimal satu pegawai.']);
+            }
+
+            $workerIds = $data['worker_ids'] ?? null;
+            if (empty($workerIds) && !empty($data['worker_id'])) {
+                $workerIds = [$data['worker_id']];
+            }
+
+            if (empty($workerIds) || !is_array($workerIds)) {
+                return back()->withInput()->withErrors(['worker_id' => 'Tidak ada pegawai yang dipilih.']);
+            }
+
+            $sequence = array_values(array_filter($data['shift_sequence']));
+            if (empty($sequence)) {
+                return back()->withInput()->withErrors(['shift_sequence' => 'Urutan shift wajib diisi minimal satu.']);
+            }
+
+            $start = Carbon::parse($data['start_date'])->startOfDay();
+            $end = !empty($data['end_date']) ? Carbon::parse($data['end_date'])->startOfDay() : null;
+            $maxPeriods = 12;
+
+            $deactivateExisting = $request->boolean('deactivate_existing');
+            if ($deactivateExisting) {
+                foreach ($workerIds as $workerId) {
+                    $this->workerShiftService->deleteOldShifts($workerId);
+                }
+            }
+
+            $created = 0;
+            $periods = 0;
+            $currentStart = $start->copy();
+            $sequenceIndex = 0;
+
+            while (true) {
+                if ($end && $currentStart->gt($end)) {
+                    break;
+                }
+
+                if (!$end && $periods >= $maxPeriods) {
+                    break;
+                }
+
+                if ($data['rotation_type'] === 'weekly') {
+                    $periodEnd = $currentStart->copy()->addDays(6);
+                } else {
+                    $periodEnd = $currentStart->copy()->endOfMonth();
+                }
+
+                if ($end && $periodEnd->gt($end)) {
+                    $periodEnd = $end->copy();
+                }
+
+                $shiftId = $sequence[$sequenceIndex % count($sequence)];
+
+                foreach ($workerIds as $workerId) {
+                    $this->workerShiftService->create([
+                        'worker_id' => $workerId,
+                        'shift_id' => $shiftId,
+                        'start_date' => $currentStart->toDateString(),
+                        'end_date' => $periodEnd->toDateString(),
+                        'is_active' => true,
+                        'notes' => $data['notes'] ?? 'Rotasi otomatis',
+                        'skip_deactivate' => true,
+                    ]);
+                    $created++;
+                }
+
+                $periods++;
+                $currentStart = $periodEnd->copy()->addDay();
+                $sequenceIndex++;
+            }
+
+            return redirect()
+                ->route('admin.worker-shifts.index')
+                ->with('success', "Rotasi berhasil dibuat: {$created} jadwal ({$periods} periode) untuk " . count($workerIds) . " pegawai.");
+        }
+
+        // Validasi manual untuk mode jadwal tetap
         $data = $request->validate([
             'shift_id' => 'required|exists:shifts,id',
             'start_date' => 'required|date',
@@ -276,8 +405,14 @@ class WorkerShiftController extends Controller
     {
         $workerShift = $this->workerShiftService->getById($id);
         $shiftHistories = $this->workerShiftService->getShiftHistories($workerShift->worker_id);
+        $rotationShifts = $this->workerShiftService->getByWorkerId($workerShift->worker_id)
+            ->sortBy('effective_from')
+            ->values();
 
-        return view('admin.schedules.show', compact('workerShift', 'shiftHistories'));
+        $isRotating = $rotationShifts->count() > 1
+            && $rotationShifts->pluck('shift_id')->unique()->count() > 1;
+
+        return view('admin.schedules.show', compact('workerShift', 'shiftHistories', 'rotationShifts', 'isRotating'));
     }
 
     public function edit(string $id)
@@ -291,14 +426,107 @@ class WorkerShiftController extends Controller
 
     public function update(Request $request, string $id)
     {
+        $isRotationMode = $request->boolean('generate_rotation');
+
+        if ($isRotationMode) {
+            $data = $request->validate([
+                'worker_id' => 'required|exists:workers,id',
+                'rotation_type' => 'required|in:weekly,monthly',
+                'shift_sequence' => 'required|array|min:1',
+                'shift_sequence.*' => 'required|exists:shifts,id',
+                'start_date' => 'required|date',
+                'end_date' => 'nullable|date|after_or_equal:start_date',
+                'notes' => 'nullable|string',
+                'deactivate_existing' => 'nullable|boolean',
+            ], [
+                'worker_id.required' => 'Pegawai wajib dipilih.',
+                'worker_id.exists' => 'Pegawai yang dipilih tidak valid.',
+                'rotation_type.required' => 'Tipe rotasi wajib dipilih.',
+                'rotation_type.in' => 'Tipe rotasi harus weekly atau monthly.',
+                'shift_sequence.required' => 'Urutan shift wajib diisi minimal satu.',
+                'shift_sequence.*.required' => 'Setiap urutan shift wajib diisi.',
+                'shift_sequence.*.exists' => 'Salah satu shift pada urutan tidak valid.',
+                'start_date.required' => 'Tanggal mulai wajib diisi.',
+                'start_date.date' => 'Format tanggal mulai tidak valid.',
+                'end_date.date' => 'Format tanggal selesai tidak valid.',
+                'end_date.after_or_equal' => 'Tanggal selesai harus sama atau setelah tanggal mulai.',
+            ]);
+
+            $sequence = array_values(array_filter($data['shift_sequence']));
+            if (empty($sequence)) {
+                return back()->withInput()->withErrors(['shift_sequence' => 'Urutan shift wajib diisi minimal satu.']);
+            }
+
+            $start = Carbon::parse($data['start_date'])->startOfDay();
+            $end = !empty($data['end_date']) ? Carbon::parse($data['end_date'])->startOfDay() : null;
+            $maxPeriods = 12;
+            $workerId = $data['worker_id'];
+
+            $deactivateExisting = $request->boolean('deactivate_existing');
+            if ($deactivateExisting) {
+                $this->workerShiftService->deleteOldShifts($workerId);
+            } else {
+                $this->workerShiftService->delete($id);
+            }
+
+            $created = 0;
+            $periods = 0;
+            $currentStart = $start->copy();
+            $sequenceIndex = 0;
+
+            while (true) {
+                if ($end && $currentStart->gt($end)) {
+                    break;
+                }
+
+                if (!$end && $periods >= $maxPeriods) {
+                    break;
+                }
+
+                if ($data['rotation_type'] === 'weekly') {
+                    $periodEnd = $currentStart->copy()->addDays(6);
+                } else {
+                    $periodEnd = $currentStart->copy()->endOfMonth();
+                }
+
+                if ($end && $periodEnd->gt($end)) {
+                    $periodEnd = $end->copy();
+                }
+
+                $shiftId = $sequence[$sequenceIndex % count($sequence)];
+
+                $this->workerShiftService->create([
+                    'worker_id' => $workerId,
+                    'shift_id' => $shiftId,
+                    'start_date' => $currentStart->toDateString(),
+                    'end_date' => $periodEnd->toDateString(),
+                    'is_active' => true,
+                    'notes' => $data['notes'] ?? 'Rotasi otomatis (dari edit)',
+                    'skip_deactivate' => true,
+                ]);
+                $created++;
+
+                $periods++;
+                $currentStart = $periodEnd->copy()->addDay();
+                $sequenceIndex++;
+            }
+
+            return redirect()
+                ->route('admin.worker-shifts.index')
+                ->with('success', "Rotasi berhasil diperbarui: {$created} jadwal ({$periods} periode) untuk 1 pegawai.");
+        }
+
         // Validasi manual untuk update (bypass WorkerShiftScheduleRequest)
         $data = $request->validate([
+            'worker_id' => 'required|exists:workers,id',
             'shift_id' => 'required|exists:shifts,id',
             'start_date' => 'required|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'description' => 'nullable|string',
             'is_active' => 'nullable|boolean',
         ], [
+            'worker_id.required' => 'Pegawai wajib dipilih.',
+            'worker_id.exists' => 'Pegawai yang dipilih tidak valid.',
             'shift_id.required' => 'Shift wajib dipilih.',
             'shift_id.exists' => 'Shift yang dipilih tidak valid.',
             'start_date.required' => 'Tanggal mulai wajib diisi.',

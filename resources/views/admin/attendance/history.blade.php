@@ -206,7 +206,7 @@
         <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-bold text-gray-800 flex items-center">
                 <i class="fas fa-calendar-alt text-green-600 mr-2"></i>
-                Kalender Presensi - {{ \Carbon\Carbon::create()->month($month)->translatedFormat('F') }} {{ $year }}
+                Kalender Presensi - {{ \Carbon\Carbon::createFromDate((int) $year, (int) $month, 1)->translatedFormat('F') }} {{ $year }}
             </h3>
         </div>
 

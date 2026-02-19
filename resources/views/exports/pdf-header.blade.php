@@ -5,7 +5,7 @@
     <title>{{ $title ?? 'Laporan' }}</title>
     <style>
         @page {
-            margin: 0;
+            margin: 25px 35px 35px 35px;
         }
         * {
             margin: 0;
@@ -18,7 +18,7 @@
             line-height: 1.4;
         }
         .page {
-            padding: 30px 35px 35px 35px;
+            padding: 0;
         }
         .header {
             text-align: center;

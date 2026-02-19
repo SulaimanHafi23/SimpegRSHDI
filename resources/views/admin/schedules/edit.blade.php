@@ -45,6 +45,16 @@
             @csrf
             @method('PUT')
 
+            <div class="mb-6">
+                <label class="flex items-center">
+                    <input type="checkbox" name="generate_rotation" id="generate_rotation" value="1"
+                           {{ old('generate_rotation') ? 'checked' : '' }}
+                           class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                    <span class="ml-2 text-sm font-medium text-gray-700">Generate Rotasi dari Edit</span>
+                </label>
+                <p class="text-gray-500 text-xs mt-1 ml-6">Aktifkan jika ingin mengganti jadwal ini menjadi rotasi mingguan/bulanan</p>
+            </div>
+
             <!-- Pegawai -->
             <div class="mb-6">
                 <label for="worker_id" class="block text-sm font-medium text-gray-700 mb-2">
@@ -65,8 +75,8 @@
                 @enderror
             </div>
 
-            <!-- Shift -->
-            <div class="mb-6">
+            <!-- Shift (Mode Tetap) -->
+            <div class="mb-6" id="single-shift-section">
                 <label for="shift_id" class="block text-sm font-medium text-gray-700 mb-2">
                     Shift <span class="text-red-500">*</span>
                 </label>
@@ -83,6 +93,65 @@
                 @error('shift_id')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
                 @enderror
+            </div>
+
+            <!-- Rotation (Mode Rotasi) -->
+            <div id="rotation-section" class="hidden mb-6 border border-indigo-200 rounded-lg p-4 bg-indigo-50/40">
+                <h3 class="text-sm font-semibold text-indigo-900 mb-4">Pengaturan Rotasi</h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Tipe Rotasi</label>
+                        <select name="rotation_type" id="rotation_type"
+                                class="w-full px-4 py-2 border @error('rotation_type') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <option value="">-- Pilih --</option>
+                            <option value="weekly" {{ old('rotation_type') == 'weekly' ? 'selected' : '' }}>Per Minggu</option>
+                            <option value="monthly" {{ old('rotation_type') == 'monthly' ? 'selected' : '' }}>Per Bulan</option>
+                        </select>
+                        @error('rotation_type')
+                            <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nonaktifkan Jadwal Lama</label>
+                        <label class="inline-flex items-center">
+                            <input type="checkbox" name="deactivate_existing" value="1" {{ old('deactivate_existing', true) ? 'checked' : '' }} class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                            <span class="ml-2 text-sm text-gray-700">Nonaktifkan sebelum generate</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Urutan Shift</label>
+                    <div id="sequence-list" class="space-y-2">
+                        @php $sequence = old('shift_sequence', ['']); @endphp
+                        @foreach($sequence as $value)
+                            <div class="sequence-row flex items-center gap-2">
+                                <select name="shift_sequence[]" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                    <option value="">-- Pilih Shift --</option>
+                                    @foreach($shifts as $shift)
+                                        <option value="{{ $shift->id }}" {{ $value == $shift->id ? 'selected' : '' }}>
+                                            {{ $shift->name }} ({{ $shift->start_time }} - {{ $shift->end_time }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="remove-sequence px-3 py-2 text-red-600 hover:text-red-700" title="Hapus">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                    <button type="button" id="add-sequence" class="mt-2 text-sm text-indigo-600 hover:text-indigo-700">+ Tambah Urutan</button>
+                    @error('shift_sequence')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Catatan Rotasi (Opsional)</label>
+                    <textarea name="notes" rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">{{ old('notes') }}</textarea>
+                </div>
             </div>
 
 
@@ -148,11 +217,33 @@
     </div>
 </div>
 
+<template id="sequence-template">
+    <div class="sequence-row flex items-center gap-2">
+        <select name="shift_sequence[]" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+            <option value="">-- Pilih Shift --</option>
+            @foreach($shifts as $shift)
+                <option value="{{ $shift->id }}">{{ $shift->name }} ({{ $shift->start_time }} - {{ $shift->end_time }})</option>
+            @endforeach
+        </select>
+        <button type="button" class="remove-sequence px-3 py-2 text-red-600 hover:text-red-700" title="Hapus">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</template>
+
 <script>
 // Update end date minimum when start date changes
 document.addEventListener('DOMContentLoaded', function() {
     const startDateInput = document.getElementById('start_date');
     const endDateInput = document.getElementById('end_date');
+    const generateRotationCheckbox = document.getElementById('generate_rotation');
+    const singleShiftSection = document.getElementById('single-shift-section');
+    const rotationSection = document.getElementById('rotation-section');
+    const shiftSelect = document.getElementById('shift_id');
+    const rotationTypeSelect = document.getElementById('rotation_type');
+    const sequenceList = document.getElementById('sequence-list');
+    const addSequenceBtn = document.getElementById('add-sequence');
+    const sequenceTemplate = document.getElementById('sequence-template');
     
     startDateInput.addEventListener('change', function() {
         endDateInput.setAttribute('min', this.value);
@@ -165,6 +256,73 @@ document.addEventListener('DOMContentLoaded', function() {
     if (startDateInput.value) {
         endDateInput.setAttribute('min', startDateInput.value);
     }
+
+    function syncRemoveButtons() {
+        if (!sequenceList) return;
+        const rows = sequenceList.querySelectorAll('.sequence-row');
+        rows.forEach(function(row) {
+            const removeBtn = row.querySelector('.remove-sequence');
+            if (removeBtn) {
+                removeBtn.disabled = rows.length <= 1;
+            }
+        });
+    }
+
+    addSequenceBtn?.addEventListener('click', function() {
+        const clone = document.importNode(sequenceTemplate.content, true);
+        sequenceList.appendChild(clone);
+        syncRemoveButtons();
+    });
+
+    sequenceList?.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-sequence')) {
+            const row = e.target.closest('.sequence-row');
+            if (sequenceList.querySelectorAll('.sequence-row').length > 1) {
+                row?.remove();
+            }
+            syncRemoveButtons();
+        }
+    });
+
+    function toggleMode() {
+        const rotationOn = generateRotationCheckbox?.checked;
+
+        if (rotationOn) {
+            singleShiftSection?.classList.add('hidden');
+            rotationSection?.classList.remove('hidden');
+
+            if (shiftSelect) {
+                shiftSelect.required = false;
+                shiftSelect.disabled = true;
+            }
+
+            if (rotationTypeSelect) {
+                rotationTypeSelect.required = true;
+            }
+
+            const sequenceSelects = sequenceList?.querySelectorAll('select[name="shift_sequence[]"]') || [];
+            sequenceSelects.forEach(select => select.required = true);
+        } else {
+            singleShiftSection?.classList.remove('hidden');
+            rotationSection?.classList.add('hidden');
+
+            if (shiftSelect) {
+                shiftSelect.disabled = false;
+                shiftSelect.required = true;
+            }
+
+            if (rotationTypeSelect) {
+                rotationTypeSelect.required = false;
+            }
+
+            const sequenceSelects = sequenceList?.querySelectorAll('select[name="shift_sequence[]"]') || [];
+            sequenceSelects.forEach(select => select.required = false);
+        }
+    }
+
+    generateRotationCheckbox?.addEventListener('change', toggleMode);
+    syncRemoveButtons();
+    toggleMode();
 
 });
 </script>

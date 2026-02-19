@@ -33,12 +33,34 @@
             <main class="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8 lg:ml-64">
                 <div class="max-w-7xl mx-auto">
                     @php
-                        $currentRoute = Route::currentRouteName();
+                        $currentRoute = \Illuminate\Support\Facades\Route::currentRouteName();
                         $isCreateOrEditPage = str_contains($currentRoute, '.create') ||
                                              str_contains($currentRoute, '.edit') ||
                                              str_contains($currentRoute, 'create') ||
                                              str_contains($currentRoute, 'edit');
+
+                        $isCreateEditShowPage = $isCreateOrEditPage ||
+                                                str_contains($currentRoute, '.show') ||
+                                                str_contains($currentRoute, 'show') ||
+                                                str_contains($currentRoute, 'detail') ||
+                                                str_contains($currentRoute, 'generate') ||
+                                                request()->is('*create*', '*edit*', '*show*', '*detail*', '*generate*');
+
+                        $routeParts = explode('.', $currentRoute ?? '');
+                        $parentRoute = count($routeParts) > 1
+                            ? implode('.', array_slice($routeParts, 0, -1))
+                            : null;
+
+                        $backHref = ($parentRoute && \Illuminate\Support\Facades\Route::has($parentRoute . '.index'))
+                            ? route($parentRoute . '.index')
+                            : url()->previous();
                     @endphp
+
+                    @if($isCreateEditShowPage)
+                        <div class="mb-4">
+                            <x-ui.back-button :href="$backHref" />
+                        </div>
+                    @endif
 
                     @if($isCreateOrEditPage)
                         {{-- Keep traditional alerts for create/edit pages --}}

@@ -190,6 +190,90 @@
         </div>
     </div>
 
+    @if(isset($rotationShifts) && $rotationShifts->count() > 0)
+    <div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
+        <div class="border-b border-gray-200 bg-gray-50 px-6 py-4">
+            <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6M5 19a9 9 0 0114-7M19 5a9 9 0 00-14 7"/>
+                </svg>
+                <h2 class="text-lg font-semibold text-gray-800">Informasi Rotasi Shift</h2>
+                <span class="text-xs font-medium px-2 py-0.5 rounded-full {{ ($isRotating ?? false) ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800' }}">
+                    {{ ($isRotating ?? false) ? 'Rotasi' : 'Tetap' }}
+                </span>
+            </div>
+            <p class="text-sm text-gray-500 mt-1">Timeline jadwal shift pegawai ini berdasarkan periode yang tersimpan</p>
+        </div>
+
+        <div class="p-6 border-b border-gray-100">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3">
+                    <p class="text-indigo-700 text-xs font-medium">Total Periode</p>
+                    <p class="text-indigo-900 text-xl font-bold">{{ $rotationShifts->count() }}</p>
+                </div>
+                <div class="bg-purple-50 border border-purple-100 rounded-lg p-3">
+                    <p class="text-purple-700 text-xs font-medium">Jenis Shift Berbeda</p>
+                    <p class="text-purple-900 text-xl font-bold">{{ $rotationShifts->pluck('shift_id')->unique()->count() }}</p>
+                </div>
+                <div class="bg-green-50 border border-green-100 rounded-lg p-3">
+                    <p class="text-green-700 text-xs font-medium">Status Pola</p>
+                    <p class="text-green-900 text-xl font-bold">{{ ($isRotating ?? false) ? 'Rotasi' : 'Tetap' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Berlaku</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    @foreach($rotationShifts as $index => $rotation)
+                    <tr class="hover:bg-gray-50 {{ $rotation->id === $workerShift->id ? 'bg-indigo-50/50' : '' }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ $index + 1 }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ $rotation->shift->name ?? '-' }}</div>
+                            <div class="text-xs text-gray-500">{{ $rotation->shift->code ?? '-' }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            @if($rotation->shift)
+                                {{ \Carbon\Carbon::parse($rotation->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($rotation->shift->end_time)->format('H:i') }}
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {{ \Carbon\Carbon::parse($rotation->effective_from)->format('d M Y') }}
+                            <span class="text-gray-400 mx-1">—</span>
+                            @if($rotation->effective_until)
+                                {{ \Carbon\Carbon::parse($rotation->effective_until)->format('d M Y') }}
+                            @else
+                                <span class="text-gray-400 italic">Tanpa batas</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            @if($rotation->id === $workerShift->id)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">Sedang Dilihat</span>
+                            @elseif($rotation->is_active)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Tidak Aktif</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
     <!-- Shift History -->
     @if(isset($shiftHistories) && $shiftHistories->count() > 0)
     <div class="bg-white rounded-lg shadow-md overflow-hidden mt-6">
