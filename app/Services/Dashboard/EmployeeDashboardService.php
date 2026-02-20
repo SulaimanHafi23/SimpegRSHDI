@@ -82,12 +82,18 @@ class EmployeeDashboardService
      */
     public function getLeaveSummary(string $workerId)
     {
+        $currentYear = now()->year;
+        $query = LeaveRequest::where('worker_id', $workerId)
+            ->whereYear('start_date', $currentYear);
+
+        $usedDays = (clone $query)->where('status', 'approved')->sum('total_days');
+
         return [
-            'total' => LeaveRequest::where('worker_id', $workerId)->count(),
-            'pending' => LeaveRequest::where('worker_id', $workerId)->where('status', 'pending')->count(),
-            'approved' => LeaveRequest::where('worker_id', $workerId)->where('status', 'approved')->count(),
-            'rejected' => LeaveRequest::where('worker_id', $workerId)->where('status', 'rejected')->count(),
-            'remaining_days' => 12, // Default annual leave, should be calculated from leave type
+            'total' => (clone $query)->count(),
+            'pending' => (clone $query)->where('status', 'pending')->count(),
+            'approved' => (clone $query)->where('status', 'approved')->count(),
+            'rejected' => (clone $query)->where('status', 'rejected')->count(),
+            'remaining_days' => max(0, 12 - $usedDays),
         ];
     }
 
@@ -109,10 +115,10 @@ class EmployeeDashboardService
         }
 
         return [
-            'total_requests' => $query->count(),
-            'approved' => $query->where('status', 'approved')->count(),
-            'pending' => $query->where('status', 'pending')->count(),
-            'total_hours' => $query->where('status', 'approved')->sum('total_hours'),
+            'total_requests' => (clone $query)->count(),
+            'approved' => (clone $query)->where('status', 'approved')->count(),
+            'pending' => (clone $query)->where('status', 'pending')->count(),
+            'total_hours' => (clone $query)->where('status', 'approved')->sum('total_hours'),
         ];
     }
 
@@ -230,10 +236,7 @@ class EmployeeDashboardService
                 ->where('leave_type_id', $leaveType->id)
                 ->where('status', 'approved')
                 ->whereYear('start_date', $currentYear)
-                ->get()
-                ->sum(function ($leave) {
-                    return $leave->start_date->diffInDays($leave->end_date) + 1;
-                });
+                ->sum('total_days');
 
             // Default quota (you can customize this based on your business rules)
             $quota = $leaveType->max_days ?? 12; // Default 12 days if not set

@@ -255,13 +255,8 @@
                         <p class="font-medium">{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</p>
                     </div>
                     <div>
-                        @php
-                            $start = \Carbon\Carbon::parse($overtime->start_time);
-                            $end = \Carbon\Carbon::parse($overtime->end_time);
-                            $diff = $start->diff($end);
-                        @endphp
                         <p class="text-xs text-gray-500">Durasi</p>
-                        <p class="font-medium">{{ $diff->h }} jam {{ $diff->i }} menit</p>
+                        <p class="font-medium">{{ $overtime->total_hours }} jam</p>
                     </div>
                 </div>
 
@@ -362,12 +357,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                @php
-                                    $start = \Carbon\Carbon::parse($overtime->start_time);
-                                    $end = \Carbon\Carbon::parse($overtime->end_time);
-                                    $diff = $start->diff($end);
-                                @endphp
-                                {{ $diff->h }} jam {{ $diff->i }} menit
+                                {{ $overtime->total_hours }} jam
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-900 max-w-xs truncate">
                                 {{ $overtime->reason }}

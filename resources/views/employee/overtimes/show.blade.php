@@ -1,151 +1,151 @@
-@extends('layouts.employee')
+﻿@extends('layouts.employee')
 
 @section('title', 'Detail Lembur')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-4xl">
-    <!-- Header -->
-    <div class="mb-6 flex items-center">
-        <a href="{{ route('employee.overtimes.index') }}"
-           class="mr-4 text-gray-600 hover:text-gray-800">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-        </a>
-        <div>
-            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Detail Permohonan Lembur</h1>
-            <p class="text-gray-600 mt-1">{{ \Carbon\Carbon::parse($overtime->overtime_date)->format('d F Y') }}</p>
-        </div>
-    </div>
-
-    <!-- Status Badge -->
-    <div class="mb-6">
-        @if($overtime->status === 'pending')
-            <span class="inline-block px-4 py-2 text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<div class="max-w-2xl mx-auto">
+    {{-- Page Header --}}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3 sm:gap-4 min-w-0">
+            <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+                <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Menunggu Persetujuan
+            </div>
+            <div class="min-w-0">
+                <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Detail Permohonan Lembur</h1>
+                <p class="text-gray-500 text-xs sm:text-sm mt-0.5">{{ \Carbon\Carbon::parse($overtime->overtime_date)->format('d F Y') }}</p>
+            </div>
+        </div>
+        {{-- Status Badge --}}
+        @if($overtime->status === 'pending')
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800 self-start sm:self-auto shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Menunggu
             </span>
         @elseif($overtime->status === 'approved')
-            <span class="inline-block px-4 py-2 text-sm font-semibold rounded-full bg-green-100 text-green-800">
-                <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                </svg>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-green-100 text-green-800 self-start sm:self-auto shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 Disetujui
             </span>
         @else
-            <span class="inline-block px-4 py-2 text-sm font-semibold rounded-full bg-red-100 text-red-800">
-                <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-red-100 text-red-800 self-start sm:self-auto shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 Ditolak
             </span>
         @endif
     </div>
 
-    <!-- Overtime Details -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">Informasi Lembur</h2>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <label class="text-sm text-gray-600">Tanggal</label>
-                <p class="text-lg font-medium text-gray-800">
-                    {{ \Carbon\Carbon::parse($overtime->overtime_date)->format('d F Y') }}
-                </p>
+    <div class="space-y-4 sm:space-y-5">
+        {{-- Card 1: Informasi Lembur --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div class="flex items-center gap-2.5 mb-4">
+                <div class="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h2 class="text-sm sm:text-base font-semibold text-gray-800">Informasi Lembur</h2>
             </div>
-
-            <div>
-                <label class="text-sm text-gray-600">Durasi</label>
-                <p class="text-lg font-medium text-gray-800">
-                    @php
-                        $start = \Carbon\Carbon::parse($overtime->start_time);
-                        $end = \Carbon\Carbon::parse($overtime->end_time);
-                        $diff = $start->diff($end);
-                    @endphp
-                    {{ $diff->h }} jam {{ $diff->i }} menit
-                </p>
-            </div>
-
-            <div>
-                <label class="text-sm text-gray-600">Waktu Mulai</label>
-                <p class="text-lg font-medium text-gray-800">
-                    {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }}
-                </p>
-            </div>
-
-            <div>
-                <label class="text-sm text-gray-600">Waktu Selesai</label>
-                <p class="text-lg font-medium text-gray-800">
-                    {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
-                </p>
-            </div>
-
-            <div>
-                <label class="text-sm text-gray-600">Shift (sesuai tukar)</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Tanggal</p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">
+                        {{ \Carbon\Carbon::parse($overtime->overtime_date)->format('d F Y') }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Total Durasi</p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">{{ $overtime->total_hours }} jam</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Waktu Mulai</p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">
+                        {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }}
+                    </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Waktu Selesai</p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">
+                        {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
+                    </p>
+                </div>
                 @if($overtime->actual_shift)
-                    <p class="text-lg font-medium text-gray-800">
-                        {{ $overtime->actual_shift->name }}
-                    </p>
-                    <p class="text-sm text-gray-600">
-                        {{ \Carbon\Carbon::parse($overtime->actual_shift->start_time)->format('H:i') }} -
-                        {{ \Carbon\Carbon::parse($overtime->actual_shift->end_time)->format('H:i') }}
-                    </p>
-                @else
-                    <p class="text-lg font-medium text-gray-400">-</p>
+                    <div class="sm:col-span-2">
+                        <p class="text-xs text-gray-500 mb-1">Shift</p>
+                        <p class="text-sm sm:text-base font-medium text-gray-800">
+                            {{ $overtime->actual_shift->name }}
+                            <span class="text-gray-500 font-normal">
+                                ({{ \Carbon\Carbon::parse($overtime->actual_shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($overtime->actual_shift->end_time)->format('H:i') }})
+                            </span>
+                        </p>
+                    </div>
                 @endif
             </div>
         </div>
-    </div>
 
-    <!-- Reason -->
-    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 class="text-lg font-semibold text-gray-800 mb-3">Alasan</h2>
-        <p class="text-gray-700 whitespace-pre-line">{{ $overtime->reason }}</p>
-    </div>
-
-    <!-- Approval Info -->
-    @if($overtime->status !== 'pending')
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-lg font-semibold text-gray-800 mb-4">Informasi Persetujuan</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="text-sm text-gray-600">Diproses Oleh</label>
-                    <p class="text-lg font-medium text-gray-800">{{ $overtime->approvedBy->name ?? '-' }}</p>
-                </div>
-                <div>
-                    <label class="text-sm text-gray-600">Tanggal Diproses</label>
-                    <p class="text-lg font-medium text-gray-800">
-                        {{ $overtime->approved_at ? \Carbon\Carbon::parse($overtime->approved_at)->format('d F Y H:i') : '-' }}
-                    </p>
-                </div>
-            </div>
-            @if($overtime->notes)
-                <div class="mt-4">
-                    <label class="text-sm text-gray-600">Catatan</label>
-                    <p class="text-gray-700 mt-1">{{ $overtime->notes }}</p>
-                </div>
-            @endif
-        </div>
-    @endif
-
-    <!-- Cancel Button -->
-    @if($overtime->status === 'pending')
-        <div class="flex justify-end">
-            <form action="{{ route('employee.overtimes.cancel', $overtime->id) }}" method="POST">
-                @csrf
-                @method('DELETE')
-                <button type="submit"
-                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-150"
-                        onclick="return confirm('Yakin ingin membatalkan permohonan lembur ini?')">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        {{-- Card 2: Alasan --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div class="flex items-center gap-2.5 mb-4">
+                <div class="w-8 h-8 bg-rose-100 rounded-lg flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                     </svg>
-                    Batalkan Permohonan
-                </button>
-            </form>
+                </div>
+                <h2 class="text-sm sm:text-base font-semibold text-gray-800">Alasan</h2>
+            </div>
+            <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ $overtime->reason }}</p>
         </div>
-    @endif
+
+        {{-- Card 3: Informasi Persetujuan --}}
+        @if($overtime->status !== 'pending')
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                <div class="flex items-center gap-2.5 mb-4">
+                    <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-sm sm:text-base font-semibold text-gray-800">Informasi Persetujuan</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Diproses Oleh</p>
+                        <p class="text-sm sm:text-base font-medium text-gray-800">{{ $overtime->approvedBy->name ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 mb-1">Tanggal Diproses</p>
+                        <p class="text-sm sm:text-base font-medium text-gray-800">
+                            {{ $overtime->approved_at ? \Carbon\Carbon::parse($overtime->approved_at)->format('d F Y H:i') : '-' }}
+                        </p>
+                    </div>
+                </div>
+                @if($overtime->notes)
+                    <div class="mt-4 px-3 sm:px-4 py-3 bg-gray-50 rounded-xl border border-gray-200">
+                        <p class="text-xs text-gray-500 mb-1">Catatan</p>
+                        <p class="text-sm text-gray-700">{{ $overtime->notes }}</p>
+                    </div>
+                @endif
+            </div>
+        @endif
+
+        {{-- Cancel Button --}}
+        @if($overtime->status === 'pending')
+            <div class="flex justify-end pt-1">
+                <form action="{{ route('employee.overtimes.cancel', $overtime->id) }}" method="POST">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit"
+                            class="inline-flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+                            onclick="return confirm('Yakin ingin membatalkan permohonan lembur ini?')">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        Batalkan Permohonan
+                    </button>
+                </form>
+            </div>
+        @endif
+    </div>
 </div>
 @endsection
