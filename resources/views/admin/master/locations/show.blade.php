@@ -95,6 +95,15 @@
         </div>
     </x-card>
 
+    {{-- Location Map --}}
+    <x-card title="Peta Lokasi">
+        <div class="space-y-3">
+            <div id="location-map" class="w-full h-96 rounded-lg border border-gray-200"></div>
+            <p class="text-sm text-gray-600">
+                Titik lokasi dan preview radius geofence {{ $location->radius }} meter.
+            </p>
+        </div>
+    </x-card>
     {{-- GPS Coordinates --}}
     <x-card title="Koordinat GPS">
         <div class="space-y-4">
@@ -186,4 +195,36 @@
         </div>
     </x-card>
 </div>
+
+@push('scripts')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const latitude = Number(@json($location->latitude));
+        const longitude = Number(@json($location->longitude));
+        const radius = Number(@json($location->radius));
+
+        const map = L.map('location-map').setView([latitude, longitude], 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        const marker = L.marker([latitude, longitude]).addTo(map);
+        marker.bindPopup('<strong>{{ addslashes($location->name) }}</strong><br>{{ $location->latitude }}, {{ $location->longitude }}').openPopup();
+
+        if (Number.isFinite(radius) && radius > 0) {
+            L.circle([latitude, longitude], {
+                radius: radius,
+                color: '#3B82F6',
+                fillColor: '#93C5FD',
+                fillOpacity: 0.25,
+                weight: 2
+            }).addTo(map);
+        }
+    });
+</script>
+@endpush
 @endsection

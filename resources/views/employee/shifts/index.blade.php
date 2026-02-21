@@ -94,18 +94,20 @@
                                 $isCurrentMonth = $day['isCurrentMonth'];
                                 $hasShift = !empty($day['shift']);
                                 $isHoliday = $day['isHoliday'] ?? false;
+                                $isOffDay = $day['isOffDay'] ?? false;
                             @endphp
                             <div
                                 class="min-h-24 border rounded-lg p-2 relative cursor-pointer transition
-                                       {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday && $hasShift ? 'bg-orange-50 border-orange-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300'))) }}
+                                       {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday && $hasShift ? 'bg-orange-50 border-orange-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($isOffDay ? 'bg-rose-50 border-rose-300' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300')))) }}
                                        {{ $isToday ? 'ring-2 ring-green-500' : '' }}"
                                 data-date-label="{{ $day['date']->translatedFormat('l, d F Y') }}"
                                 data-has-shift="{{ $hasShift ? 1 : 0 }}"
                                 data-shift-name="{{ $hasShift ? $day['shift']->name : '' }}"
-                                data-start="{{ $hasShift ? \Carbon\Carbon::parse($day['shift']->start_time)->format('H:i') : '' }}"
-                                data-end="{{ $hasShift ? \Carbon\Carbon::parse($day['shift']->end_time)->format('H:i') : '' }}"
+                                data-start="{{ $hasShift && !empty($day['schedule']['start_time']) ? \Carbon\Carbon::parse($day['schedule']['start_time'])->format('H:i') : '' }}"
+                                data-end="{{ $hasShift && !empty($day['schedule']['end_time']) ? \Carbon\Carbon::parse($day['schedule']['end_time'])->format('H:i') : '' }}"
                                 data-is-current="{{ $isCurrentMonth ? 1 : 0 }}"
                                 data-is-override="{{ $day['isOverride'] ? 1 : 0 }}"
+                                data-is-offday="{{ $isOffDay ? 1 : 0 }}"
                                 data-is-holiday="{{ $isHoliday ? 1 : 0 }}"
                                 data-holiday-name="{{ $isHoliday ? ($day['holidayName'] ?? 'Libur Nasional') : '' }}"
                                 @click="openDay($event.currentTarget)"
@@ -129,6 +131,10 @@
                                     <div class="mt-2 flex items-center justify-center gap-1">
                                         <i class="fas fa-flag text-red-600 text-xs"></i>
                                         <i class="fas fa-briefcase text-blue-600 text-xs"></i>
+                                    </div>
+                                @elseif($isOffDay)
+                                    <div class="mt-4 flex items-center justify-center">
+                                        <i class="fas fa-calendar-times text-rose-600 text-lg"></i>
                                     </div>
                                 @elseif($isHoliday)
                                     <div class="mt-4 flex items-center justify-center">
@@ -157,7 +163,7 @@
             <i class="fas fa-info-circle text-purple-600"></i>
             Keterangan:
         </h3>
-        <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-sm">
+        <div class="grid grid-cols-2 md:grid-cols-7 gap-4 text-sm">
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 bg-blue-50 border-2 border-blue-300 rounded"></div>
                 <span class="text-gray-700">Hari Kerja</span>
@@ -167,6 +173,12 @@
                     <span class="inline-block w-2 h-2 rounded-full bg-red-500"></span>
                 </div>
                 <span class="text-gray-700">Libur</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-rose-50 border-2 border-rose-300 rounded flex items-center justify-center">
+                    <i class="fas fa-calendar-times text-rose-600 text-xs"></i>
+                </div>
+                <span class="text-gray-700">Libur Kerja (Off-day)</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 bg-red-100 border-2 border-red-400 rounded flex items-center justify-center">
@@ -351,6 +363,7 @@ function shiftCalendar() {
             if (!isCurrent) return;
 
             const isHoliday = el.dataset.isHoliday === '1';
+            const isOffDay = el.dataset.isOffday === '1';
             const hasShift = el.dataset.hasShift === '1';
             this.modalDate = el.dataset.dateLabel || '';
 
@@ -366,6 +379,10 @@ function shiftCalendar() {
                 this.modalTitle = '🇮🇩 Libur Nasional';
                 this.modalShiftTime = '';
                 this.modalNote = (el.dataset.holidayName || 'Libur Nasional') + '. Anda tidak perlu melakukan absensi pada hari ini.';
+            } else if (isOffDay) {
+                this.modalTitle = '🏖️ Libur Kerja (Off-day)';
+                this.modalShiftTime = '';
+                this.modalNote = 'Hari ini ditandai sebagai libur kerja pribadi Anda berdasarkan pengaturan jadwal.';
             } else if (hasShift) {
                 this.modalTitle = el.dataset.shiftName || 'Jadwal Kerja';
                 const start = el.dataset.start || '';

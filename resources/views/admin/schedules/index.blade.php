@@ -252,6 +252,12 @@
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             @if($worker->latestShift)
                                 <div class="flex justify-end space-x-2">
+                                    <a href="{{ route('admin.worker-shifts.show', $worker->latestShift->id) }}#off-day-management"
+                                       class="text-amber-600 hover:text-amber-900" title="Kelola Libur">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </a>
                                     <a href="{{ route('admin.worker-shifts.show', $worker->latestShift->id) }}"
                                        class="text-blue-600 hover:text-blue-900" title="View">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

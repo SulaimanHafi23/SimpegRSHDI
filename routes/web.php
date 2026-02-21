@@ -318,6 +318,17 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::put('/{id}', [WorkerController::class, 'update'])->name('update');
         Route::delete('/{id}', [WorkerController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/resign', [WorkerController::class, 'resign'])->name('resign');
+
+        // Off-day management routes
+        Route::prefix('{workerId}/off-days')->name('off-days.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'index'])->name('index');
+            Route::post('/exceptions', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'storeException'])->name('store-exception');
+            Route::post('/patterns', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'storePattern'])->name('store-pattern');
+            Route::delete('/exceptions/{exceptionId}', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'destroyException'])->name('destroy-exception');
+            Route::delete('/patterns/{patternId}', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'destroyPattern'])->name('destroy-pattern');
+            Route::post('/check-date', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'checkDate'])->name('check-date');
+            Route::post('/range', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'getRange'])->name('range');
+        });
     });
 
     // ========== ATTENDANCE MANAGEMENT ==========

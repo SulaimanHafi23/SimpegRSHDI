@@ -108,17 +108,23 @@
                         0 => 'Minggu',
                     ];
                     $dayTimesByKey = $shift->dayTimes?->keyBy('day_of_week') ?? collect();
+                    $hasPerDaySchedule = $dayTimesByKey->isNotEmpty();
                 @endphp
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                     @foreach($days as $dayKey => $dayLabel)
                         @php
                             $dayTime = $dayTimesByKey->get($dayKey);
+                            $isDayActive = !$hasPerDaySchedule || (bool) $dayTime;
                             $start = $dayTime?->start_time ? \Carbon\Carbon::parse($dayTime->start_time)->format('H:i') : \Carbon\Carbon::parse($shift->start_time)->format('H:i');
                             $end = $dayTime?->end_time ? \Carbon\Carbon::parse($dayTime->end_time)->format('H:i') : \Carbon\Carbon::parse($shift->end_time)->format('H:i');
                         @endphp
                         <div class="rounded-lg border border-gray-200 p-3">
                             <div class="text-sm font-semibold text-gray-700">{{ $dayLabel }}</div>
-                            <div class="text-xs text-gray-500 mt-1">{{ $start }} - {{ $end }}</div>
+                            @if($isDayActive)
+                                <div class="text-xs text-gray-500 mt-1">{{ $start }} - {{ $end }}</div>
+                            @else
+                                <div class="text-xs text-red-500 mt-1">Libur / Tidak Aktif</div>
+                            @endif
                         </div>
                     @endforeach
                 </div>
