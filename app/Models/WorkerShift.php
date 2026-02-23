@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Carbon\Carbon;
 
 class WorkerShift extends Model
 {
@@ -57,7 +58,27 @@ class WorkerShift extends Model
      */
     public function getShiftForDate(\DateTime $date): ?string
     {
-        return $this->shift_id;
+        if (!$this->shift_id) {
+            return null;
+        }
+
+        $shift = $this->relationLoaded('shift')
+            ? $this->shift
+            : $this->shift()->with('dayTimes')->first();
+
+        if (!$shift) {
+            return null;
+        }
+
+        $hasPerDaySchedule = $shift->dayTimes()->exists();
+        if (!$hasPerDaySchedule) {
+            return $this->shift_id;
+        }
+
+        $dayOfWeek = Carbon::instance($date)->dayOfWeek;
+        $isActiveOnDay = $shift->dayTimes()->where('day_of_week', $dayOfWeek)->exists();
+
+        return $isActiveOnDay ? $this->shift_id : null;
     }
 
     /**

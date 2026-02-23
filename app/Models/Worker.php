@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 
 class Worker extends Model
 {
@@ -110,6 +111,16 @@ class Worker extends Model
         return $this->hasMany(ShiftSwapRequest::class, 'target_worker_id');
     }
 
+    public function offDayExceptions(): HasMany
+    {
+        return $this->hasMany(WorkerOffDayException::class);
+    }
+
+    public function offDays(): HasMany
+    {
+        return $this->hasMany(WorkerOffDay::class);
+    }
+
     /**
      * Get active worker shift
      */
@@ -127,9 +138,18 @@ class Worker extends Model
 
     /**
      * Get shift for specific date
+     * Note: Consider off-days (exceptions + patterns) before returning shift
+     * For overnight shifts: off-day check only affects CHECK-IN date,
+     * allowing check-out on off-day if shift started previous day
      */
     public function getShiftForDate(\DateTime $date): ?string
     {
+        // Check if this date is an off-day
+        // For check-in: reject if off-day
+        if ($this->isOffDay($date)) {
+            return null;
+        }
+
         // Check override first
         $override = $this->shiftOverrides()
             ->where('override_date', $date->format('Y-m-d'))
@@ -150,6 +170,38 @@ class Worker extends Model
             ->first();
 
         return $workerShift?->getShiftForDate($date);
+    }
+
+    /**
+     * Check if date is an off-day (exception or pattern-based)
+     */
+    public function isOffDay(\DateTime $date): bool
+    {
+        // Check exceptions first (single or recurring)
+        if (WorkerOffDayException::isOffDay($this->id, $date)) {
+            return true;
+        }
+
+        // Check pattern-based off-days
+        if (WorkerOffDay::isOffDayByPattern($this->id, $date)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if worker can check-out on date (allow if shift started previous day)
+     * Used for overnight shift handling
+     */
+    public function canCheckOutOnDate(\DateTime $checkOutDate, \DateTime $checkInDate): bool
+    {
+        // If check-out date is off-day but check-in was on previous day, allow
+        if ($this->isOffDay($checkOutDate) && $checkInDate->format('Y-m-d') !== $checkOutDate->format('Y-m-d')) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

@@ -130,7 +130,7 @@
                                 $dayTime = $dayTimesByKey->get($dayKey);
                                 $defaultStart = $dayTime?->start_time ? \Carbon\Carbon::parse($dayTime->start_time)->format('H:i') : '';
                                 $defaultEnd = $dayTime?->end_time ? \Carbon\Carbon::parse($dayTime->end_time)->format('H:i') : '';
-                                $dayActive = old('day_active.' . $dayKey, 1);
+                                $dayActive = old('day_active.' . $dayKey, $dayTime ? 1 : 0);
                             @endphp
                             <div class="rounded-lg border border-gray-200 p-3">
                                 <div class="flex items-center justify-between mb-2">

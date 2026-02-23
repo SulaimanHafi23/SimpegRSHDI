@@ -17,6 +17,13 @@
                 <p class="text-gray-600 mt-1">Informasi lengkap jadwal shift pegawai</p>
             </div>
             <div class="flex gap-2">
+                <a href="#off-day-management"
+                   class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg shadow-md transition duration-150">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    Kelola Libur
+                </a>
                 <a href="{{ route('admin.worker-shifts.edit', $workerShift->id) }}"
                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,6 +195,10 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <div id="off-day-management" class="mt-6">
+        @include('admin.workers.partials.off-days-manager', ['worker' => $workerShift->worker])
     </div>
 
     @if(isset($rotationShifts) && $rotationShifts->count() > 0)

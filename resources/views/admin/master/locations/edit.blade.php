@@ -92,6 +92,13 @@
                         placeholder="Contoh: 106.816666" />
                 </div>
 
+                <div>
+                    <div id="location-map" class="w-full h-96 rounded-lg border border-gray-200"></div>
+                    <p class="text-xs text-gray-500 mt-2" id="map-location-status">
+                        Klik pada peta untuk menentukan titik lokasi.
+                    </p>
+                </div>
+
                 <button type="button" id="get-location-btn" class="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2">
                     <i class="fas fa-location-arrow"></i>
                     <span>Dapatkan Lokasi Saya</span>
@@ -174,16 +181,155 @@
 </div>
 
 @push('scripts')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-    // Get GPS Location
     document.addEventListener('DOMContentLoaded', function() {
+        const latInput = document.querySelector('#location-coordinates input[name="latitude"]');
+        const lngInput = document.querySelector('#location-coordinates input[name="longitude"]');
+        const radiusInput = document.querySelector('input[name="radius"]');
         const getLocationBtn = document.getElementById('get-location-btn');
-        
+        const mapStatus = document.getElementById('map-location-status');
+        let map;
+        let marker;
+        let radiusCircle;
+
+        function getCoordinateValue(inputElement) {
+            if (!inputElement) return null;
+            const parsed = parseFloat(inputElement.value);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function getRadiusValue() {
+            if (!radiusInput) return 0;
+            const parsed = parseFloat(radiusInput.value);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                return 0;
+            }
+            return parsed;
+        }
+
+        function updateStatus(message, isSuccess = true) {
+            if (!mapStatus) return;
+            mapStatus.textContent = message;
+            mapStatus.className = isSuccess
+                ? 'text-xs text-green-600 mt-2'
+                : 'text-xs text-gray-500 mt-2';
+        }
+
+        function updateRadiusPreview(latitude, longitude) {
+            if (!map || !Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                return;
+            }
+
+            const radius = getRadiusValue();
+
+            if (radiusCircle) {
+                radiusCircle.remove();
+                radiusCircle = null;
+            }
+
+            if (radius > 0) {
+                radiusCircle = L.circle([latitude, longitude], {
+                    radius: radius,
+                    color: '#3B82F6',
+                    fillColor: '#93C5FD',
+                    fillOpacity: 0.25,
+                    weight: 2
+                }).addTo(map);
+            }
+        }
+
+        function setMarkerAndInputs(latitude, longitude, shouldPan = true) {
+            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+                return;
+            }
+
+            latInput.value = latitude;
+            lngInput.value = longitude;
+
+            if (!marker) {
+                marker = L.marker([latitude, longitude], { draggable: true }).addTo(map);
+                marker.on('dragend', function(event) {
+                    const newPosition = event.target.getLatLng();
+                    setMarkerAndInputs(newPosition.lat, newPosition.lng, false);
+                    updateStatus('Titik diperbarui dari marker (drag).');
+                });
+            } else {
+                marker.setLatLng([latitude, longitude]);
+            }
+
+            if (shouldPan) {
+                map.setView([latitude, longitude], 16);
+            }
+
+            updateRadiusPreview(latitude, longitude);
+        }
+
+        function initializeMap() {
+            const defaultCenter = [-2.5489, 118.0149];
+            map = L.map('location-map').setView(defaultCenter, 5);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            const initialLat = getCoordinateValue(latInput);
+            const initialLng = getCoordinateValue(lngInput);
+
+            if (initialLat !== null && initialLng !== null && !(initialLat === 0 && initialLng === 0)) {
+                setMarkerAndInputs(initialLat, initialLng, true);
+                updateStatus('Titik awal diambil dari nilai koordinat form.');
+            }
+
+            map.on('click', function(event) {
+                setMarkerAndInputs(event.latlng.lat, event.latlng.lng, false);
+                updateStatus('Titik lokasi dipilih dari peta.');
+            });
+        }
+
+        if (latInput && lngInput) {
+            latInput.addEventListener('change', function() {
+                const latitude = getCoordinateValue(latInput);
+                const longitude = getCoordinateValue(lngInput);
+
+                if (latitude !== null && longitude !== null) {
+                    setMarkerAndInputs(latitude, longitude, true);
+                    updateStatus('Titik diperbarui dari input koordinat.');
+                }
+            });
+
+            lngInput.addEventListener('change', function() {
+                const latitude = getCoordinateValue(latInput);
+                const longitude = getCoordinateValue(lngInput);
+
+                if (latitude !== null && longitude !== null) {
+                    setMarkerAndInputs(latitude, longitude, true);
+                    updateStatus('Titik diperbarui dari input koordinat.');
+                }
+            });
+        }
+
+        if (radiusInput) {
+            const onRadiusChange = function() {
+                const latitude = getCoordinateValue(latInput);
+                const longitude = getCoordinateValue(lngInput);
+
+                if (latitude !== null && longitude !== null) {
+                    updateRadiusPreview(latitude, longitude);
+                    updateStatus('Preview radius geofence diperbarui.');
+                }
+            };
+
+            radiusInput.addEventListener('input', onRadiusChange);
+            radiusInput.addEventListener('change', onRadiusChange);
+        }
+
+        initializeMap();
+
         if (getLocationBtn && navigator.geolocation) {
             getLocationBtn.addEventListener('click', function() {
-                const latInput = document.querySelector('#location-coordinates input[name="latitude"]');
-                const lngInput = document.querySelector('#location-coordinates input[name="longitude"]');
-                
                 // Disable button and show loading
                 getLocationBtn.disabled = true;
                 getLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="ml-2">Mencari lokasi...</span>';
@@ -191,8 +337,8 @@
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
                         // Success - set coordinates
-                        latInput.value = position.coords.latitude;
-                        lngInput.value = position.coords.longitude;
+                        setMarkerAndInputs(position.coords.latitude, position.coords.longitude, true);
+                        updateStatus('Lokasi saat ini berhasil didapatkan.');
                         
                         // Update button to success state
                         getLocationBtn.disabled = false;

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Master\LocationService;
 use App\Services\Export\PdfExportService;
+use App\Services\WorkerOffDay\WorkerOffDayService;
 use App\DTOs\AttendanceDTO;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,8 @@ class AttendanceController extends Controller
     public function __construct(
         protected AttendanceService $attendanceService,
         protected LocationService $locationService,
-        protected PdfExportService $pdfExportService
+        protected PdfExportService $pdfExportService,
+        protected WorkerOffDayService $offDayService
     ) {
         $this->middleware('auth');
     }
@@ -225,6 +227,17 @@ class AttendanceController extends Controller
         ]);
 
         try {
+            // Check if worker has off-day for today
+            $offDayCheck = $this->offDayService->canPerformAttendance(
+                $worker,
+                now()->format('Y-m-d'),
+                'check_in'
+            );
+            
+            if (!$offDayCheck['can_perform']) {
+                return back()->withInput()->with('error', 'Maaf, hari ini Anda libur. Alasan: ' . ($offDayCheck['message'] ?? 'Hari libur terjadwal'));
+            }
+
             // Server-side check for accuracy (only enforce for present)
             $maxAcc = config('attendance.max_accuracy', 300);
             $accuracy = $validated['accuracy'] ?? ($request->input('accuracy') ?? null);
@@ -299,11 +312,40 @@ class AttendanceController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        // Prevent check-out for non-present statuses
         $attendance = $this->attendanceService->getById($id);
+        if (!$attendance) {
+            return redirect()->route('employee.attendance.index')
+                ->with('error', 'Data absensi tidak ditemukan.');
+        }
+        
+        // Verify this attendance belongs to the logged-in worker
+        if ($attendance->worker_id !== $worker->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        // Prevent check-out for non-present statuses
         if ($attendance && $attendance->status !== 'present') {
             return redirect()->route('employee.attendance.index')
                 ->with('error', 'Absensi dengan status selain hadir tidak memerlukan check-out.');
+        }
+
+        // Check if attendance is already completed
+        if ($attendance->check_out) {
+            return redirect()->route('employee.attendance.index')
+                ->with('warning', 'Anda sudah melakukan check-out untuk hari ini.');
+        }
+
+        // Smart off-day check for check-out with overnight shift support
+        $checkOutDate = now()->format('Y-m-d');
+        $offDayCheck = $this->offDayService->canPerformAttendance(
+            $worker,
+            $checkOutDate,
+            'check_out',
+            $attendance->date->format('Y-m-d')  // pass check-in date for overnight logic
+        );
+        
+        if (!$offDayCheck['can_perform']) {
+            return back()->withInput()->with('error', 'Tidak dapat check-out hari ini. Alasan: ' . ($offDayCheck['message'] ?? 'Status hari libur'));
         }
 
         $validated = $request->validate([
@@ -316,19 +358,6 @@ class AttendanceController extends Controller
         ]);
 
         try {
-            $attendance = $this->attendanceService->getById($id);
-
-            // Verify this attendance belongs to the logged-in worker
-            if ($attendance->worker_id !== $worker->id) {
-                abort(403, 'Unauthorized');
-            }
-
-            // Check if attendance is already completed
-            if ($attendance->check_out) {
-                return redirect()->route('employee.attendance.index')
-                    ->with('warning', 'Anda sudah melakukan check-out untuk hari ini.');
-            }
-
             // Server-side check for accuracy
             $maxAcc = config('attendance.max_accuracy', 300);
             $accuracy = $validated['accuracy'] ?? ($request->input('accuracy') ?? null);

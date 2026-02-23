@@ -9,6 +9,7 @@ use App\Repositories\Contracts\Attendance\AttendancePhotoRepositoryInterface;
 use App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface;
 use App\Repositories\Contracts\Master\LocationRepositoryInterface;
 use App\Repositories\Contracts\Master\ShiftRepositoryInterface;
+use App\Services\WorkerOffDay\WorkerOffDayService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,7 @@ class AttendanceService
         protected WorkerShiftRepositoryInterface $workerShiftRepository,
         protected LocationRepositoryInterface $locationRepository,
         protected ShiftRepositoryInterface $shiftRepository,
+        protected WorkerOffDayService $offDayService,
     ) {}
 
     public function getAll(array $filters = [])
@@ -55,6 +57,20 @@ class AttendanceService
         try {
             $workerId = $data['worker_id'];
             $today = now()->format('Y-m-d');
+
+            $worker = \App\Models\Worker::find($workerId);
+            if (!$worker) {
+                throw new \Exception('Data pekerja tidak ditemukan.');
+            }
+
+            $offDayCheck = $this->offDayService->canPerformAttendance(
+                $worker,
+                $today,
+                'check_in'
+            );
+            if (!$offDayCheck['can_perform']) {
+                throw new \Exception($offDayCheck['message'] ?? 'Hari ini termasuk hari libur Anda.');
+            }
 
             // Check if already checked in today
             $existing = $this->attendanceRepository->getByWorkerAndDate($workerId, $today);
@@ -101,7 +117,6 @@ class AttendanceService
             $status = $data['status'] ?? 'present';
 
             // Get worker's shift for today (check ShiftOverride first, then active shift)
-            $worker = \App\Models\Worker::find($workerId);
             $shiftOverride = $worker ? $worker->shiftOverrides()
                 ->where('override_date', $today)
                 ->with('shift')
@@ -279,6 +294,21 @@ class AttendanceService
 
             if (!$attendance) {
                 throw new \Exception('Data absensi tidak ditemukan.');
+            }
+
+            $worker = \App\Models\Worker::find($attendance->worker_id);
+            if (!$worker) {
+                throw new \Exception('Data pekerja tidak ditemukan.');
+            }
+
+            $offDayCheck = $this->offDayService->canPerformAttendance(
+                $worker,
+                now()->format('Y-m-d'),
+                'check_out',
+                $attendance->attendance_date?->format('Y-m-d')
+            );
+            if (!$offDayCheck['can_perform']) {
+                throw new \Exception($offDayCheck['message'] ?? 'Tidak dapat check-out di hari libur.');
             }
 
             if ($attendance->check_out) {

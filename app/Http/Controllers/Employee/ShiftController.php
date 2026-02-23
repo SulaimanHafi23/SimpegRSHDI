@@ -43,7 +43,7 @@ class ShiftController extends Controller
             ->whereBetween('date', [$startOfMonth, $endOfMonth])
             ->get()
             ->keyBy(function($holiday) {
-                return $holiday->date->format('Y-m-d');
+                return Carbon::parse($holiday->date)->format('Y-m-d');
             });
 
         // Get all worker shifts to handle date ranges correctly
@@ -70,7 +70,7 @@ class ShiftController extends Controller
 
         // Build calendar data
         $requiresHolidayAttendance = $worker->department && $worker->department->requires_holiday_attendance;
-        $calendar = $this->buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance);
+        $calendar = $this->buildCalendar($worker, $startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance);
 
         // Urutkan shift dari yang terbaru (effective_from descending) untuk penentuan info header
         $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
@@ -150,7 +150,7 @@ class ShiftController extends Controller
     /**
      * Build calendar array with shift information
      */
-    private function buildCalendar($startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance = false)
+    private function buildCalendar($worker, $startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance = false)
     {
         $calendar = [];
         $current = $startOfMonth->copy();
@@ -172,10 +172,20 @@ class ShiftController extends Controller
                     'isCurrentMonth' => $current->month == $startOfMonth->month,
                     'isToday' => $current->isToday(),
                     'shift' => null,
+                    'schedule' => null,
                     'isOverride' => false,
+                    'isOffDay' => false,
                     'isHoliday' => false,
                     'holidayName' => null,
                 ];
+
+                // Check worker personal off-day first (exception/pattern)
+                if ($worker && method_exists($worker, 'isOffDay') && $worker->isOffDay($current->toDateTime())) {
+                    $dayData['isOffDay'] = true;
+                    $calendar[$week][] = $dayData;
+                    $current->addDay();
+                    continue;
+                }
 
                 // Check if this is a national holiday
                 $dateKey = $current->format('Y-m-d');
@@ -200,6 +210,9 @@ class ShiftController extends Controller
                 if ($override) {
                     $dayData['shift'] = $override->shift;
                     $dayData['isOverride'] = true;
+                    if ($override->shift) {
+                        $dayData['schedule'] = $override->shift->getScheduleForDate($current->toDateTime());
+                    }
                 } else {
                     // Find applicable shift from list using model helper
                     $applicableShift = $sortedShifts->first(function ($shift) use ($current) {
@@ -211,6 +224,9 @@ class ShiftController extends Controller
                         $shiftId = $applicableShift->getShiftForDate($current->toDateTime());
                         if ($shiftId) {
                             $dayData['shift'] = \App\Models\Shift::find($shiftId);
+                            if ($dayData['shift']) {
+                                $dayData['schedule'] = $dayData['shift']->getScheduleForDate($current->toDateTime());
+                            }
                         }
                     }
                 }
