@@ -86,7 +86,15 @@ class LeaveController extends Controller
 
         $leaveTypes = $this->leaveTypeService->getActive();
 
-        return view('employee.leaves.create', compact('leaveTypes'));
+        // Calculate days used per leave type this year (approved + pending)
+        $usedDays = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+            ->whereYear('start_date', now()->year)
+            ->whereIn('status', ['approved', 'pending'])
+            ->groupBy('leave_type_id')
+            ->selectRaw('leave_type_id, COALESCE(SUM(total_days), 0) as used_days')
+            ->pluck('used_days', 'leave_type_id');
+
+        return view('employee.leaves.create', compact('leaveTypes', 'usedDays'));
     }
 
     /**

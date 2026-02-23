@@ -32,7 +32,8 @@
         @csrf
 
         {{-- Card 1: Jenis Cuti --}}
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6"
+             x-data="leaveTypeSelector()" x-init="init()">
             <div class="flex items-center gap-2.5 mb-4">
                 <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-emerald-600" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,17 +46,62 @@
                 Pilih Jenis Cuti <span class="text-red-500">*</span>
             </label>
             <select name="leave_type_id" id="leave_type_id" required
+                    x-model="selected" @change="onChange()"
                     class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm sm:text-base @error('leave_type_id') border-red-400 bg-red-50 @enderror">
                 <option value="">-- Pilih Jenis Cuti --</option>
                 @foreach($leaveTypes as $type)
-                    <option value="{{ $type->id }}" {{ old('leave_type_id') == $type->id ? 'selected' : '' }}>
-                        {{ $type->name }} (maks. {{ $type->max_days }} hari)
+                    @php
+                        $maxDays   = $type->max_days_per_year ?? 0;
+                        $usedCount = $usedDays[$type->id] ?? 0;
+                        $remaining = max(0, $maxDays - $usedCount);
+                    @endphp
+                    <option value="{{ $type->id }}"
+                            data-max="{{ $maxDays }}"
+                            data-used="{{ $usedCount }}"
+                            data-remaining="{{ $remaining }}"
+                            {{ old('leave_type_id') == $type->id ? 'selected' : '' }}>
+                        {{ $type->name }}
+                        @if($maxDays > 0)
+                            — sisa {{ $remaining }}/{{ $maxDays }} hari
+                        @endif
                     </option>
                 @endforeach
             </select>
             @error('leave_type_id')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
             @enderror
+
+            {{-- Quota info bar (shown once user picks a type) --}}
+            <div x-show="selected" x-cloak x-transition class="mt-3">
+                {{-- Progress bar --}}
+                <div class="flex items-center justify-between mb-1.5">
+                    <span class="text-xs text-gray-500">Kuota tahun {{ now()->year }}</span>
+                    <span class="text-xs font-semibold"
+                          :class="remaining === 0 ? 'text-red-600' : (remaining <= 3 ? 'text-amber-600' : 'text-emerald-600')"
+                          x-text="remaining + ' hari tersisa dari ' + maxDays + ' hari'"></span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+                    <div class="h-2 rounded-full transition-all duration-500"
+                         :class="remaining === 0 ? 'bg-red-400' : (remaining <= 3 ? 'bg-amber-400' : 'bg-emerald-500')"
+                         :style="'width:' + (maxDays > 0 ? Math.round((remaining / maxDays) * 100) : 0) + '%'"></div>
+                </div>
+                {{-- Warning if exhausted --}}
+                <div x-show="remaining === 0" x-cloak
+                     class="mt-2 flex items-center gap-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <svg class="w-3.5 h-3.5 shrink-0" width="14" height="14" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    Kuota cuti jenis ini sudah habis untuk tahun {{ now()->year }}
+                </div>
+                {{-- Warning if almost exhausted --}}
+                <div x-show="remaining > 0 && remaining <= 3" x-cloak
+                     class="mt-2 flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                    <svg class="w-3.5 h-3.5 shrink-0" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Sisa kuota hampir habis, gunakan dengan bijak
+                </div>
+            </div>
         </div>
 
         {{-- Card 2: Periode Cuti --}}
@@ -231,5 +277,32 @@ document.addEventListener('DOMContentLoaded', function () {
     if (reason.value) document.getElementById('reasonCount').textContent = reason.value.length + ' karakter';
     updateCounter();
 });
+
+function leaveTypeSelector() {
+    return {
+        selected: '{{ old('leave_type_id', '') }}',
+        maxDays: 0,
+        used: 0,
+        remaining: 0,
+
+        init() {
+            if (this.selected) this.readOption(this.selected);
+        },
+
+        onChange() {
+            this.readOption(this.selected);
+        },
+
+        readOption(val) {
+            if (!val) { this.maxDays = 0; this.used = 0; this.remaining = 0; return; }
+            const opt = document.querySelector('#leave_type_id option[value="' + val + '"]');
+            if (opt) {
+                this.maxDays   = parseInt(opt.dataset.max   || 0);
+                this.used      = parseInt(opt.dataset.used  || 0);
+                this.remaining = parseInt(opt.dataset.remaining || 0);
+            }
+        }
+    };
+}
 </script>
 @endsection

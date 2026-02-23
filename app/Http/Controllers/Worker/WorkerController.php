@@ -42,12 +42,15 @@ class WorkerController extends Controller
     {
         $this->authorizePermission('worker.manage');
 
+        $managerDeptId = $this->getManagerDepartmentFilter();
+
         $filters = [
             'search' => $request->input('search'),
             'location_id' => $request->input('location_id'),
             'status' => $request->input('status'),
             'employment_status' => $request->input('employment_status'),
-            'department_id' => $request->input('department_id') ?? $this->getManagerDepartmentFilter(),
+            // Manager's department is always forced — cannot be overridden via request
+            'department_id' => $managerDeptId ?? $request->input('department_id'),
             'per_page' => $request->input('per_page', 15),
         ];
 
