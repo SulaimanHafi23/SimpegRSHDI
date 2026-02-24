@@ -74,7 +74,7 @@ Route::get('/', function () {
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])
@@ -82,7 +82,7 @@ Route::post('/logout', [LoginController::class, 'logout'])
     ->name('logout');
 
 // ========== WORLD TIME API ==========
-Route::get('/api/world-time', function () {
+Route::middleware('auth')->get('/api/world-time', function () {
     try {
         // Try World Time API first
         $response = \Illuminate\Support\Facades\Http::timeout(3)->get('https://worldtimeapi.org/api/timezone/Asia/Makassar');
@@ -283,18 +283,18 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== REPORT ROUTES ==========
-    // ========== REPORT ROUTES ==========
-    // Report pages (some were scaffolded but commented previously). Add specific routes as needed.
-    Route::get('/reports/attendance', [ReportController::class, 'attendance'])->name('reports.attendance');
-    Route::get('/reports/leaves', [ReportController::class, 'leaves'])->name('reports.leaves');
-    Route::get('/reports/overtimes', [ReportController::class, 'overtimes'])->name('reports.overtimes');
-    Route::get('/reports/worker-documents', [ReportController::class, 'workerDocuments'])->name('reports.worker-documents');
+    Route::middleware('role:Super Admin|HR|Manager')->prefix('reports')->name('reports.')->group(function () {
+        Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
+        Route::get('/leaves', [ReportController::class, 'leaves'])->name('leaves');
+        Route::get('/overtimes', [ReportController::class, 'overtimes'])->name('overtimes');
+        Route::get('/worker-documents', [ReportController::class, 'workerDocuments'])->name('worker-documents');
 
-    // Export routes with format support (pdf, excel, csv)
-    Route::get('/reports/attendance/export', [ReportController::class, 'exportAttendance'])->name('reports.attendance.export');
-    Route::get('/reports/leaves/export', [ReportController::class, 'exportLeaves'])->name('reports.leaves.export');
-    Route::get('/reports/overtimes/export', [ReportController::class, 'exportOvertimes'])->name('reports.overtimes.export');
-    Route::get('/reports/worker-documents/export', [ReportController::class, 'exportWorkerDocuments'])->name('reports.worker-documents.export');
+        // Export routes with format support (pdf, excel, csv)
+        Route::get('/attendance/export', [ReportController::class, 'exportAttendance'])->name('attendance.export');
+        Route::get('/leaves/export', [ReportController::class, 'exportLeaves'])->name('leaves.export');
+        Route::get('/overtimes/export', [ReportController::class, 'exportOvertimes'])->name('overtimes.export');
+        Route::get('/worker-documents/export', [ReportController::class, 'exportWorkerDocuments'])->name('worker-documents.export');
+    });
 
     // ========== ROLE MANAGEMENT ==========
     Route::middleware(['permission:role.manage'])->group(function () {
@@ -302,7 +302,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== USER MANAGEMENT ==========
-    Route::resource('users', UserController::class)->names('admin.users');
+    Route::middleware('role:Super Admin|HR')->resource('users', UserController::class)->names('admin.users');
 
     // ========== WORKER MANAGEMENT ==========
     Route::prefix('workers')->name('admin.workers.')->group(function () {
@@ -346,7 +346,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/stats/{worker}/export-excel', [AttendanceController::class, 'exportStatsExcel'])->name('stats.export-excel');
         // Export absensi pegawai (PDF/Excel)
         Route::get('/history/{worker}/export', [AttendanceController::class, 'exportWorkerAttendance'])->name('history.export');
-            Route::get('/history/{worker_id}', [AttendanceController::class, 'history'])->name('history');
         // Export Absensi Hari Ini
         Route::get('/today/export', [AttendanceController::class, 'exportTodayAttendance'])->name('today.export');
         // Index default tetap bisa untuk legacy
@@ -444,7 +443,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== MASTER DATA MANAGEMENT ==========
-    Route::prefix('master')->name('admin.master.')->middleware(['auth'])->group(function () {
+    Route::prefix('master')->name('admin.master.')->middleware(['role:Super Admin|HR'])->group(function () {
 
         // Departments (Pengganti Positions)
         Route::resource('departments', DepartmentController::class);

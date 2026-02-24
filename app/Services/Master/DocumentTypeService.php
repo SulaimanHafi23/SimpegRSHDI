@@ -4,6 +4,7 @@ namespace App\Services\Master;
 
 use App\DTOs\Master\DocumentTypeDTO;
 use App\Repositories\Contracts\Master\DocumentTypeRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -34,7 +35,9 @@ class DocumentTypeService
      */
     public function getAllActive()
     {
-        return $this->repository->active();
+        return Cache::remember('master_document_types_active', 3600, function () {
+            return $this->repository->active();
+        });
     }
 
     /**
@@ -99,6 +102,7 @@ class DocumentTypeService
             $documentType = $this->repository->create($dto);
 
             DB::commit();
+            Cache::forget('master_document_types_active');
 
             return [
                 'success' => true,
@@ -137,6 +141,7 @@ class DocumentTypeService
             $documentType = $this->repository->update($id, $dto);
 
             DB::commit();
+            Cache::forget('master_document_types_active');
 
             return [
                 'success' => true,
@@ -172,6 +177,7 @@ class DocumentTypeService
             $this->repository->delete($id);
 
             DB::commit();
+            Cache::forget('master_document_types_active');
 
             return [
                 'success' => true,
@@ -199,6 +205,7 @@ class DocumentTypeService
             $documentType = $this->repository->toggleStatus($id);
 
             DB::commit();
+            Cache::forget('master_document_types_active');
 
             return [
                 'success' => true,

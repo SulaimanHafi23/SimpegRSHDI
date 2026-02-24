@@ -79,7 +79,7 @@ class WorkerService
                     'worker_id' => $worker->id,
                     'email' => $worker->email,
                     'username' => $data['username'] ?? $worker->nip,
-                    'password' => $data['password'] ?? 'password123',
+                    'password' => $data['password'] ?? \Illuminate\Support\Str::random(16),
                     'is_active' => true,
                 ]);
 
@@ -92,7 +92,7 @@ class WorkerService
                     }
                 } else {
                         // Hash password before creating user since we're bypassing UserService here
-                        $passwordPlain = $userDTO->password ?? 'password123';
+                        $passwordPlain = $userDTO->password ?? \Illuminate\Support\Str::random(16);
                         $userDTOHashed = UserDTO::fromRequest([
                             'worker_id' => $userDTO->worker_id,
                             'email' => $userDTO->email,

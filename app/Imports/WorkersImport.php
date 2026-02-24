@@ -40,7 +40,7 @@ class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
             $user = User::create([
                 'name' => $row['nama_lengkap'],
                 'email' => $row['email'],
-                'password' => Hash::make($row['password'] ?? 'password123'),
+                'password' => Hash::make($row['password'] ?? \Illuminate\Support\Str::random(16)),
             ]);
 
             // Assign Employee role

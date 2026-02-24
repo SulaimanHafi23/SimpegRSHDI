@@ -199,11 +199,6 @@
                                 class="flex-1 sm:flex-none text-xs px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition shadow-sm">
                             <i class="fas fa-crosshairs mr-1"></i>Dapatkan Lokasi
                         </button>
-                        <button type="button"
-                                onclick="openPickOnMap()"
-                                class="flex-1 sm:flex-none text-xs px-3 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-sm">
-                            <i class="fas fa-map-pin mr-1"></i>Pilih di Peta
-                        </button>
                     </div>
                 </div>
                 <div id="locationStatus" class="text-xs sm:text-sm text-gray-600 mb-1">
@@ -490,23 +485,6 @@ function updateOfficeCircle(lat, lng, radius) {
     } else {
         map.setView([lat, lng], 16);
     }
-}
-
-// Open map for manual location picking
-function openPickOnMap() {
-    if (!map) initMap();
-    alert('Klik pada peta untuk memilih lokasi. Klik sekali untuk memilih.');
-    map.once('click', function(e) {
-        const lat = e.latlng.lat;
-        const lng = e.latlng.lng;
-        document.getElementById('latitude').value = lat;
-        document.getElementById('longitude').value = lng;
-        // mark as manual pick with accuracy = 0 (admin can review if needed)
-        document.getElementById('accuracy').value = 0;
-        document.getElementById('accuracyInfo').textContent = 'Akurasi: manual';
-        document.getElementById('locationStatus').innerHTML = `<i class="fas fa-check-circle text-green-500 mr-1"></i>Lokasi dipilih pada peta: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-        updateUserMarker(lat, lng, 0);
-    });
 }
 
 // Initialize when page loads

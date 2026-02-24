@@ -58,7 +58,7 @@ class AttendanceService
             $workerId = $data['worker_id'];
             $today = now()->format('Y-m-d');
 
-            $worker = \App\Models\Worker::find($workerId);
+            $worker = \App\Models\Worker::with('department')->find($workerId);
             if (!$worker) {
                 throw new \Exception('Data pekerja tidak ditemukan.');
             }
@@ -84,8 +84,7 @@ class AttendanceService
                 ->first();
             if ($holiday) {
                 // Cek apakah departemen pegawai ini tetap wajib hadir saat libur nasional
-                $worker = \App\Models\Worker::with('department')->find($workerId);
-                $deptRequiresAttendance = $worker && $worker->department && $worker->department->requires_holiday_attendance;
+                $deptRequiresAttendance = $worker->department && $worker->department->requires_holiday_attendance;
 
                 if (!$deptRequiresAttendance) {
                     throw new \Exception('Hari ini adalah libur nasional (' . $holiday->name . '). Anda tidak perlu melakukan absensi.');
@@ -487,21 +486,21 @@ class AttendanceService
             if (class_exists('\\Intervention\\Image\\ImageManagerStatic')) {
                 $img = Image::make($photo->getRealPath());
                 $img->orientate();
-                if ($img->width() > 1200) {
-                    $img->resize(1200, null, function ($constraint) {
+                if ($img->width() > 800) {
+                    $img->resize(800, null, function ($constraint) {
                         $constraint->aspectRatio();
                         $constraint->upsize();
                     });
                 }
 
-                $encoded = (string) $img->encode($ext, 75);
+                $encoded = (string) $img->encode($ext, 70);
                 $path = 'attendance-photos/' . $filename;
                 Storage::disk('public')->put($path, $encoded);
 
                 return $path;
             }
         } catch (\Throwable $e) {
-            // swallow and fallback to storing original
+            \Log::warning('Image processing failed, storing original: ' . $e->getMessage());
         }
 
         // Fallback: store original uploaded file
@@ -544,11 +543,13 @@ class AttendanceService
             $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
 
             // Find the shift for this attendance date (same logic as checkout)
-            // Check ShiftOverride first
-            $shiftOverride = $worker->shiftOverrides()
-                ->where('override_date', $attendanceDate->format('Y-m-d'))
-                ->with('shift')
-                ->first();
+            // Check ShiftOverride first — filter from already-loaded relation
+            $shiftOverride = $worker->shiftOverrides->first(function ($o) use ($attendanceDate) {
+                $overrideDate = $o->override_date instanceof \Carbon\Carbon
+                    ? $o->override_date->format('Y-m-d')
+                    : $o->override_date;
+                return $overrideDate === $attendanceDate->format('Y-m-d');
+            });
 
             $shift = null;
             if ($shiftOverride && $shiftOverride->shift) {
@@ -587,7 +588,7 @@ class AttendanceService
                 $pendingCheckouts->push([
                     'attendance_id' => $attendance->id,
                     'worker_id' => $worker->id,
-                    'worker_name' => $worker->full_name,
+                    'worker_name' => $worker->name,
                     'position' => $worker->department->name ?? '-',
                     'attendance_date' => $attendanceDate->format('Y-m-d'),
                     'check_in_time' => \Carbon\Carbon::parse($attendance->check_in)->format('H:i'),

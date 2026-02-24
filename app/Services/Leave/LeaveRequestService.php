@@ -7,6 +7,7 @@ use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
 use App\Repositories\Contracts\Master\LeaveTypeRepositoryInterface;
 use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class LeaveRequestService
 {
@@ -46,6 +47,7 @@ class LeaveRequestService
 
     public function create(array $data)
     {
+        return DB::transaction(function () use ($data) {
         $leaveType = $this->leaveTypeRepository->getById($data['leave_type_id']);
 
         // Calculate total days if not provided
@@ -83,6 +85,23 @@ class LeaveRequestService
             throw new \Exception("Tidak dapat mengajukan cuti untuk tanggal yang sudah lewat.");
         }
 
+        // D3: Check for overlapping leave requests (pending or approved)
+        $overlapping = \App\Models\LeaveRequest::where('worker_id', $data['worker_id'])
+            ->whereIn('status', ['pending', 'approved'])
+            ->where(function ($q) use ($data) {
+                $q->whereBetween('start_date', [$data['start_date'], $data['end_date']])
+                  ->orWhereBetween('end_date', [$data['start_date'], $data['end_date']])
+                  ->orWhere(function ($q2) use ($data) {
+                      $q2->where('start_date', '<=', $data['start_date'])
+                         ->where('end_date', '>=', $data['end_date']);
+                  });
+            })
+            ->exists();
+
+        if ($overlapping) {
+            throw new \Exception('Sudah ada permohonan cuti yang tumpang tindih pada tanggal tersebut.');
+        }
+
         // Handle attachment
         if (isset($data['attachment']) && $leaveType->requires_attachment) {
             $data['attachment_path'] = $this->saveAttachment($data['attachment'], $data['worker_id']);
@@ -95,6 +114,7 @@ class LeaveRequestService
 
         $dto = LeaveRequestDTO::fromRequest($data);
         return $this->leaveRequestRepository->create($dto);
+        });
     }
 
     public function update(string $id, array $data)

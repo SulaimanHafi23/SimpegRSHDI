@@ -4,6 +4,7 @@ namespace App\Services\Master;
 
 use App\DTOs\Master\DepartmentDTO;
 use App\Repositories\Contracts\Master\DepartmentRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -34,7 +35,9 @@ class DepartmentService
      */
     public function getAllActive()
     {
-        return $this->repository->active();
+        return Cache::remember('master_departments_active', 3600, function () {
+            return $this->repository->active();
+        });
     }
 
     /**
@@ -93,6 +96,7 @@ class DepartmentService
             $department = $this->repository->create($dto);
 
             DB::commit();
+            Cache::forget('master_departments_active');
 
             return [
                 'success' => true,
@@ -145,6 +149,7 @@ class DepartmentService
             $department = $this->repository->update($id, $dto);
 
             DB::commit();
+            Cache::forget('master_departments_active');
 
             return [
                 'success' => true,
@@ -185,6 +190,7 @@ class DepartmentService
             $this->repository->delete($id);
 
             DB::commit();
+            Cache::forget('master_departments_active');
 
             return [
                 'success' => true,
@@ -212,6 +218,7 @@ class DepartmentService
             $department = $this->repository->toggleStatus($id);
 
             DB::commit();
+            Cache::forget('master_departments_active');
 
             return [
                 'success' => true,

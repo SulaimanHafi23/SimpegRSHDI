@@ -2,19 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BusinessTrip extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'business_trips';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 'worker_id', 'destination', 'purpose', 'start_date', 'end_date', 'estimated_cost', 'status', 'approved_by', 'approved_at', 'rejection_reason', 'itinerary'
+        'worker_id', 'destination', 'purpose', 'start_date', 'end_date', 'estimated_cost', 'status', 'approved_by', 'approved_at', 'rejection_reason', 'itinerary'
     ];
 
     protected $casts = [

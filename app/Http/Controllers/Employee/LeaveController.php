@@ -112,7 +112,7 @@ class LeaveController extends Controller
 
         $validated = $request->validate([
             'leave_type_id' => 'required|uuid|exists:leave_types,id',
-            'start_date' => 'required|date',
+            'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string|max:1000',
             'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',

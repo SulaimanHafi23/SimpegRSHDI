@@ -75,7 +75,7 @@ class AttendanceController extends Controller
             'date_to' => $selectedDate,
             'department_id' => $departmentId,
             'per_page' => 1000, // Ambil semua data untuk tanggal tersebut
-        ]);
+        ])->getCollection();
 
         // Pre-load semua leave requests untuk tanggal ini (1 query, bukan N query)
         $leaveRequestsByWorker = \App\Models\LeaveRequest::whereIn('worker_id', $allWorkers->pluck('id'))

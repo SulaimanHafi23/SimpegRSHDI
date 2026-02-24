@@ -52,23 +52,24 @@ class EmployeeDashboardService
      */
     public function getAttendanceChart(string $workerId, int $days = 7)
     {
+        $startDate = now()->subDays($days - 1)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        // Single query for all days
+        $attendances = Attendance::where('worker_id', $workerId)
+            ->whereBetween('attendance_date', [$startDate, $endDate])
+            ->get()
+            ->keyBy(fn($a) => $a->attendance_date->format('Y-m-d'));
+
         $labels = [];
         $data = [];
 
         for ($i = $days - 1; $i >= 0; $i--) {
             $date = now()->subDays($i);
-            $attendance = Attendance::where('worker_id', $workerId)
-                ->whereDate('attendance_date', $date)
-                ->first();
-
             $labels[] = $date->format('d M');
 
-            // Count presence for the day (present or late counted as hadir)
-            if ($attendance && in_array($attendance->status, ['present', 'late'])) {
-                $data[] = 1;
-            } else {
-                $data[] = 0;
-            }
+            $attendance = $attendances->get($date->format('Y-m-d'));
+            $data[] = ($attendance && in_array($attendance->status, ['present', 'late'])) ? 1 : 0;
         }
 
         return [
@@ -168,6 +169,7 @@ class EmployeeDashboardService
 
         // Recent leaves
         $leaves = LeaveRequest::where('worker_id', $workerId)
+            ->with('leaveType')
             ->latest('created_at')
             ->limit($limit)
             ->get()
@@ -229,17 +231,18 @@ class EmployeeDashboardService
         // Get all leave types
         $leaveTypes = \App\Models\LeaveType::where('is_active', true)->get();
 
+        // Single grouped query for all leave types
+        $usedByType = LeaveRequest::where('worker_id', $workerId)
+            ->where('status', 'approved')
+            ->whereYear('start_date', $currentYear)
+            ->groupBy('leave_type_id')
+            ->selectRaw('leave_type_id, SUM(total_days) as total')
+            ->pluck('total', 'leave_type_id');
+
         $balances = [];
         foreach ($leaveTypes as $leaveType) {
-            // Count used days this year
-            $usedDays = LeaveRequest::where('worker_id', $workerId)
-                ->where('leave_type_id', $leaveType->id)
-                ->where('status', 'approved')
-                ->whereYear('start_date', $currentYear)
-                ->sum('total_days');
-
-            // Default quota (you can customize this based on your business rules)
-            $quota = $leaveType->max_days ?? 12; // Default 12 days if not set
+            $usedDays = $usedByType->get($leaveType->id, 0);
+            $quota = $leaveType->max_days ?? 12;
 
             $balances[] = [
                 'leave_type' => $leaveType->name,

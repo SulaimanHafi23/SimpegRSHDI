@@ -4,6 +4,7 @@ namespace App\Services\Master;
 
 use App\DTOs\Master\LocationDTO;
 use App\Repositories\Contracts\Master\LocationRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -34,7 +35,9 @@ class LocationService
      */
     public function getAllActive()
     {
-        return $this->repository->active();
+        return Cache::remember('master_locations_active', 3600, function () {
+            return $this->repository->active();
+        });
     }
 
     /**
@@ -75,6 +78,7 @@ class LocationService
             $location = $this->repository->create($dto);
 
             DB::commit();
+            Cache::forget('master_locations_active');
 
             return [
                 'success' => true,
@@ -111,6 +115,7 @@ class LocationService
             $location = $this->repository->update($id, $dto);
 
             DB::commit();
+            Cache::forget('master_locations_active');
 
             return [
                 'success' => true,
@@ -146,6 +151,7 @@ class LocationService
             $this->repository->delete($id);
 
             DB::commit();
+            Cache::forget('master_locations_active');
 
             return [
                 'success' => true,
@@ -173,6 +179,7 @@ class LocationService
             $location = $this->repository->toggleStatus($id);
 
             DB::commit();
+            Cache::forget('master_locations_active');
 
             return [
                 'success' => true,

@@ -18,7 +18,9 @@
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <x-employee-export-dropdown route="employee.attendance.export" />
-            @if(isset($activeAttendance) && $activeAttendance && $activeAttendance->status === 'present')
+            @if(isset($todayOffInfo) && $todayOffInfo)
+                {{-- Hari libur — tidak perlu tombol check-in --}}
+            @elseif(isset($activeAttendance) && $activeAttendance && $activeAttendance->status === 'present')
                 <a href="{{ route('employee.attendance.check-out-form') }}"
                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-semibold rounded-lg shadow-sm transition duration-150">
                     <i class="fas fa-sign-out-alt mr-2 text-xs sm:text-sm"></i>
@@ -33,6 +35,45 @@
             @endif
         </div>
     </div>
+
+    {{-- Banner Hari Libur / Cuti / Tanggal Merah --}}
+    @if(isset($todayOffInfo) && $todayOffInfo)
+        @php
+            $offColors = [
+                'holiday'       => ['bg' => 'bg-red-50', 'border' => 'border-red-200', 'icon_bg' => 'bg-red-100', 'icon' => 'text-red-600', 'title' => 'text-red-800', 'text' => 'text-red-700'],
+                'leave'         => ['bg' => 'bg-blue-50', 'border' => 'border-blue-200', 'icon_bg' => 'bg-blue-100', 'icon' => 'text-blue-600', 'title' => 'text-blue-800', 'text' => 'text-blue-700'],
+                'business_trip' => ['bg' => 'bg-purple-50', 'border' => 'border-purple-200', 'icon_bg' => 'bg-purple-100', 'icon' => 'text-purple-600', 'title' => 'text-purple-800', 'text' => 'text-purple-700'],
+                'off_day'       => ['bg' => 'bg-amber-50', 'border' => 'border-amber-200', 'icon_bg' => 'bg-amber-100', 'icon' => 'text-amber-600', 'title' => 'text-amber-800', 'text' => 'text-amber-700'],
+            ];
+            $offIcons = [
+                'holiday'       => 'fas fa-flag',
+                'leave'         => 'fas fa-calendar-check',
+                'business_trip' => 'fas fa-plane',
+                'off_day'       => 'fas fa-bed',
+            ];
+            $c = $offColors[$todayOffInfo['type']] ?? $offColors['off_day'];
+            $icon = $offIcons[$todayOffInfo['type']] ?? 'fas fa-info-circle';
+        @endphp
+        <div class="{{ $c['bg'] }} {{ $c['border'] }} border rounded-xl p-4 sm:p-5">
+            <div class="flex items-start gap-3 sm:gap-4">
+                <div class="shrink-0 w-10 h-10 sm:w-12 sm:h-12 {{ $c['icon_bg'] }} rounded-xl flex items-center justify-center">
+                    <i class="{{ $icon }} {{ $c['icon'] }} text-lg sm:text-xl"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h3 class="font-semibold {{ $c['title'] }} text-sm sm:text-base">
+                        {{ $todayOffInfo['title'] }}
+                    </h3>
+                    <p class="{{ $c['text'] }} text-xs sm:text-sm mt-0.5">
+                        {{ $todayOffInfo['reason'] }}
+                    </p>
+                    <p class="{{ $c['text'] }} text-xs mt-2 opacity-75">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Anda tidak perlu melakukan absensi hari ini. Selamat beristirahat!
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Summary Cards - Statistik Bulan Ini -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">

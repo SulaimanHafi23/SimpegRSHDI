@@ -40,6 +40,7 @@ class ShiftRequest extends FormRequest
                 'date_format:H:i',
             ],
             'description' => ['nullable', 'string', 'max:500'],
+            'grace_period_minutes' => ['nullable', 'integer', 'min:0', 'max:60'],
             'is_active' => ['boolean'],
         ];
     }
