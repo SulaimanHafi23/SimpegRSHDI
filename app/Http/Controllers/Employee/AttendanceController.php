@@ -333,7 +333,7 @@ class AttendanceController extends Controller
                 now()->format('Y-m-d'),
                 'check_in'
             );
-            
+
             if (!$offDayCheck['can_perform']) {
                 return back()->withInput()->with('error', 'Maaf, hari ini Anda libur. Alasan: ' . ($offDayCheck['message'] ?? 'Hari libur terjadwal'));
             }
@@ -420,7 +420,7 @@ class AttendanceController extends Controller
             return redirect()->route('employee.attendance.index')
                 ->with('error', 'Data absensi tidak ditemukan.');
         }
-        
+
         // Verify this attendance belongs to the logged-in worker
         if ($attendance->worker_id !== $worker->id) {
             abort(403, 'Unauthorized');
@@ -446,7 +446,7 @@ class AttendanceController extends Controller
             'check_out',
             $attendance->attendance_date->format('Y-m-d')  // pass check-in date for overnight logic
         );
-        
+
         if (!$offDayCheck['can_perform']) {
             return back()->withInput()->with('error', 'Tidak dapat check-out hari ini. Alasan: ' . ($offDayCheck['message'] ?? 'Status hari libur'));
         }

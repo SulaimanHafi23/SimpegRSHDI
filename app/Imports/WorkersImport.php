@@ -93,7 +93,7 @@ class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
                 // Excel date number
                 return \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date);
             }
-            
+
             return \Carbon\Carbon::parse($date);
         } catch (\Exception $e) {
             return null;

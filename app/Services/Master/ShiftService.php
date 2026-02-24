@@ -268,7 +268,7 @@ class ShiftService
 
         if ($shift->is_overnight) {
             // For overnight shifts
-            return $checkTime->greaterThanOrEqualTo($startTime) || 
+            return $checkTime->greaterThanOrEqualTo($startTime) ||
                    $checkTime->lessThanOrEqualTo($endTime);
         }
 

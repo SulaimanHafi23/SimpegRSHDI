@@ -62,8 +62,8 @@ class ShiftRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'is_active' => $this->has('is_active') ? 
-                filter_var($this->is_active, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false : 
+            'is_active' => $this->has('is_active') ?
+                filter_var($this->is_active, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false :
                 false,
         ]);
     }
