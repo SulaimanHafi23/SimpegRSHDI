@@ -24,10 +24,13 @@ class WorkerShiftController extends Controller
 
     public function index(Request $request)
     {
+        $search = trim((string) $request->input('search', ''));
+
         $filters = [
             'worker_id' => $request->worker_id,
             'shift_id' => $request->shift_id,
             'is_active' => $request->is_active,
+            'search' => $search,
             'per_page' => $request->per_page ?? 15,
         ];
 
@@ -43,10 +46,10 @@ class WorkerShiftController extends Controller
             $workersWithShifts = $workers->map(function($worker) use ($filters, $today) {
                 $baseQuery = $worker->workerShifts()
                     ->with(['shift'])
-                    ->when(isset($filters['shift_id']), function($q) use ($filters) {
+                    ->when(!empty($filters['shift_id']), function($q) use ($filters) {
                         return $q->where('shift_id', $filters['shift_id']);
                     })
-                    ->when(isset($filters['is_active']), function($q) use ($filters) {
+                    ->when($filters['is_active'] !== null && $filters['is_active'] !== '', function($q) use ($filters) {
                         return $q->where('is_active', $filters['is_active']);
                     });
 
@@ -87,6 +90,18 @@ class WorkerShiftController extends Controller
         if (isset($filters['worker_id']) && $filters['worker_id']) {
             $workersWithShifts = $workersWithShifts->where('id', $filters['worker_id']);
         }
+
+        if (!empty($filters['search'])) {
+            $searchTerm = mb_strtolower($filters['search']);
+            $workersWithShifts = $workersWithShifts->filter(function ($worker) use ($searchTerm) {
+                $name = mb_strtolower((string) ($worker->name ?? ''));
+                $employeeNumber = mb_strtolower((string) ($worker->employee_number ?? ''));
+
+                return str_contains($name, $searchTerm) || str_contains($employeeNumber, $searchTerm);
+            });
+        }
+
+        $workersWithShifts = $workersWithShifts->values();
 
         // Paginate manually
         $perPage = $filters['per_page'];

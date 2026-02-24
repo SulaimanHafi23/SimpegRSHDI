@@ -180,7 +180,7 @@
                 @if(!empty($filters['status']))
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
                         {{ $filters['status'] == 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                        {{ $filters['status'] == 'approved' ? 'bg-green-100 text-green-800' : '' }}
+                        {{ $filters['status'] == 'verified' ? 'bg-green-100 text-green-800' : '' }}
                         {{ $filters['status'] == 'rejected' ? 'bg-red-100 text-red-800' : '' }}">
                         Status: {{ ucfirst($filters['status']) }}
                         <a href="{{ route('employee.documents.index', array_diff_key(request()->all(), ['status' => ''])) }}"
@@ -218,13 +218,19 @@
                         <p class="font-semibold text-gray-900">{{ $document->documentType->name ?? '-' }}</p>
                         <p class="text-sm text-gray-700 mt-1">{{ $document->file_name }}</p>
                     </div>
-                    @if($document->status === 'pending')
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                    @elseif($document->status === 'approved')
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
-                    @else
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
-                    @endif
+                    <div class="flex flex-col items-end gap-1">
+                        @if($document->status === 'pending')
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                        @elseif($document->status === 'verified')
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
+                        @else
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
+                        @endif
+
+                        @if($document->isExpired())
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Kadaluarsa</span>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3 text-sm text-gray-700">
@@ -299,13 +305,19 @@
                                 {{ $document->expired_date ? \Carbon\Carbon::parse($document->expired_date)->format('d M Y') : '-' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($document->status === 'pending')
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                                @elseif($document->status === 'approved')
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
-                                @else
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
-                                @endif
+                                <div class="flex flex-col items-start gap-1">
+                                    @if($document->status === 'pending')
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                    @elseif($document->status === 'verified')
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
+                                    @else
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
+                                    @endif
+
+                                    @if($document->isExpired())
+                                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Kadaluarsa</span>
+                                    @endif
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 <div class="flex space-x-2">

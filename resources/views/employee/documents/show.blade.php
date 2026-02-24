@@ -3,15 +3,15 @@
 @section('title', 'Detail Dokumen')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-4xl">
+<div class="mx-auto w-full max-w-7xl px-4 py-6">
     <!-- Header -->
     <div class="mb-6 flex items-center">
-        <a href="{{ route('employee.documents.index') }}" 
+        <!-- <a href="{{ route('employee.documents.index') }}" 
            class="mr-4 text-gray-600 hover:text-gray-800">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
             </svg>
-        </a>
+        </a> -->
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Detail Dokumen</h1>
             <p class="text-gray-600 mt-1">{{ $document->documentType->name ?? '-' }}</p>
@@ -27,7 +27,7 @@
                 </svg>
                 Menunggu Verifikasi
             </span>
-        @elseif($document->status === 'approved')
+        @elseif($document->status === 'verified')
             <span class="inline-block px-4 py-2 text-sm font-semibold rounded-full bg-green-100 text-green-800">
                 <svg class="w-5 h-5 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>

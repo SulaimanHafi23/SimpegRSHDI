@@ -376,19 +376,30 @@ phpinfo() di browser
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
-                            @php
-                                $shift = null;
-                                $activeWorkerShift = null;
-                                $selectedDate = \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')));
+                        @php
+                            $shift = null;
+                            $activeWorkerShift = null;
+                            $selectedDate = \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')));
 
-                                // Cek shift override untuk tanggal ini (filter pakai format agar Carbon vs Carbon cocok)
-                                $override = $worker->shiftOverrides->filter(fn($o) => $o->override_date->format('Y-m-d') === $selectedDate->format('Y-m-d'))->first();
+                            // Cek shift override untuk tanggal ini (filter pakai format agar Carbon vs Carbon cocok)
+                            $override = $worker->shiftOverrides->filter(fn($o) => $o->override_date->format('Y-m-d') === $selectedDate->format('Y-m-d'))->first();
 
-                                // Cek apakah ada tukar shift yang sudah dieksekusi untuk tanggal ini
-                                $swapInfo = null;
-                                $dateStr = $selectedDate->format('Y-m-d');
-                                $executedSwap = $worker->shiftSwapRequestsAsRequester
+                            // Cek apakah ada tukar shift yang sudah dieksekusi untuk tanggal ini
+                            $swapInfo = null;
+                            $dateStr = $selectedDate->format('Y-m-d');
+                            $executedSwap = $worker->shiftSwapRequestsAsRequester
+                                ->where('status', 'executed')
+                                ->filter(function($swap) use ($dateStr) {
+                                    return $swap->swap_type === 'single_date'
+                                        ? optional($swap->swap_date)->format('Y-m-d') === $dateStr
+                                        : ($swap->swap_type === 'date_range'
+                                            ? optional($swap->swap_start_date)->format('Y-m-d') <= $dateStr && optional($swap->swap_end_date)->format('Y-m-d') >= $dateStr
+                                            : ($swap->swap_type === 'recurring' && is_array($swap->swap_dates)
+                                                ? in_array($dateStr, array_map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'), $swap->swap_dates))
+                                                : false));
+                                })->first();
+                            if (!$executedSwap) {
+                                $executedSwap = $worker->shiftSwapRequestsAsTarget
                                     ->where('status', 'executed')
                                     ->filter(function($swap) use ($dateStr) {
                                         return $swap->swap_type === 'single_date'
@@ -399,51 +410,69 @@ phpinfo() di browser
                                                     ? in_array($dateStr, array_map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'), $swap->swap_dates))
                                                     : false));
                                     })->first();
-                                if (!$executedSwap) {
-                                    $executedSwap = $worker->shiftSwapRequestsAsTarget
-                                        ->where('status', 'executed')
-                                        ->filter(function($swap) use ($dateStr) {
-                                            return $swap->swap_type === 'single_date'
-                                                ? optional($swap->swap_date)->format('Y-m-d') === $dateStr
-                                                : ($swap->swap_type === 'date_range'
-                                                    ? optional($swap->swap_start_date)->format('Y-m-d') <= $dateStr && optional($swap->swap_end_date)->format('Y-m-d') >= $dateStr
-                                                    : ($swap->swap_type === 'recurring' && is_array($swap->swap_dates)
-                                                        ? in_array($dateStr, array_map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'), $swap->swap_dates))
-                                                        : false));
-                                        })->first();
-                                }
-                                if ($executedSwap) {
-                                    // Tentukan partner tukar shift
-                                    if ($executedSwap->requester_id === $worker->id) {
-                                        $swapInfo = $executedSwap->targetWorker;
-                                    } else {
-                                        $swapInfo = $executedSwap->requester;
-                                    }
-                                }
-
-                                if ($override && $override->shift) {
-                                    $shift = $override->shift;
+                            }
+                            if ($executedSwap) {
+                                // Tentukan partner tukar shift
+                                if ($executedSwap->requester_id === $worker->id) {
+                                    $swapInfo = $executedSwap->targetWorker;
                                 } else {
-                                    // Cari shift aktif dari workerShifts menggunakan isActiveOnDate
-                                    $activeWorkerShift = $worker->workerShifts
-                                        ->filter(function($ws) use ($selectedDate) {
-                                            return $ws->isActiveOnDate($selectedDate);
-                                        })
-                                        ->sortByDesc('effective_from')
-                                        ->first();
-
-                                    if ($activeWorkerShift && $activeWorkerShift->shift) {
-                                        $shift = $activeWorkerShift->shift;
-                                    } elseif ($worker->shift) {
-                                        // Fallback ke shift default worker
-                                        $shift = $worker->shift;
-                                    }
+                                    $swapInfo = $executedSwap->requester;
                                 }
+                            }
+
+                            if ($override && $override->shift) {
+                                $shift = $override->shift;
+                            } else {
+                                // Cari shift aktif dari workerShifts menggunakan isActiveOnDate
+                                $activeWorkerShift = $worker->workerShifts
+                                    ->filter(function($ws) use ($selectedDate) {
+                                        return $ws->isActiveOnDate($selectedDate);
+                                    })
+                                    ->sortByDesc('effective_from')
+                                    ->first();
+
+                                if ($activeWorkerShift && $activeWorkerShift->shift) {
+                                    $shift = $activeWorkerShift->shift;
+                                } elseif ($worker->shift) {
+                                    // Fallback ke shift default worker
+                                    $shift = $worker->shift;
+                                }
+                            }
+
+                            $schedule = $shift ? $shift->getScheduleForDate($selectedDate) : null;
+                        @endphp
+                        @if($worker->leave_request || ($worker->is_off_day ?? false))
+                            @php
+                                $statusText = $worker->is_off_day
+                                    ? 'Libur Kerja'
+                                    : ($worker->leave_request->leaveType->name ?? 'Cuti');
                             @endphp
-                            @if($shift)
-                                @php
-                                    $schedule = $shift->getScheduleForDate($selectedDate);
-                                @endphp
+                            <td class="px-6 py-4 text-center" colspan="5">
+                                <div class="text-sm font-semibold text-gray-800">
+                                    {{ $statusText }}
+                                </div>
+                                @if($worker->leave_request)
+                                    <div class="text-xs text-gray-600 mt-1">
+                                        {{ $worker->leave_request->start_date->format('d/m/Y') }} - {{ $worker->leave_request->end_date->format('d/m/Y') }}
+                                    </div>
+                                    @if($worker->leave_request->reason)
+                                        <div class="text-xs text-gray-500 mt-1">
+                                            {{ Str::limit($worker->leave_request->reason, 80) }}
+                                        </div>
+                                    @endif
+                                @endif
+                            </td>
+                        @elseif(!$shift)
+                            <td class="px-6 py-4 text-center" colspan="5">
+                                <div class="text-sm font-semibold text-gray-600">
+                                    Belum ada jadwal shift
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Perlu setting jadwal pegawai
+                                </div>
+                            </td>
+                        @else
+                            <td class="px-6 py-4">
                                 <div class="text-sm text-gray-900 font-medium">{{ $shift->name }}</div>
                                 <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
                                 @if($override)
@@ -464,133 +493,73 @@ phpinfo() di browser
                                         <i class="fas fa-clock mr-1"></i>Shift Default
                                     </div>
                                 @endif
-                            @else
-                                <div class="text-sm text-gray-400">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i>Belum ada jadwal shift
-                                </div>
-                                <div class="text-xs text-red-500">Perlu setting shift</div>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @if($worker->leave_request)
-                                <div class="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <div class="flex items-start space-x-2">
-                                        <i class="fas fa-info-circle text-blue-600 mt-0.5"></i>
-                                        <div>
-                                            <div class="text-sm font-semibold text-blue-900">
-                                                {{ $worker->leave_request->leaveType->name }}
-                                            </div>
-                                            <div class="text-xs text-blue-700 mt-1">
-                                                {{ $worker->leave_request->start_date->format('d M Y') }} - {{ $worker->leave_request->end_date->format('d M Y') }}
-                                            </div>
-                                            @if($worker->leave_request->reason)
-                                                <div class="text-xs text-blue-600 mt-1">
-                                                    {{ Str::limit($worker->leave_request->reason, 50) }}
-                                                </div>
-                                            @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($worker->check_in_time)
+                                    <div class="text-sm text-gray-900 font-medium">{{ $worker->check_in_time->format('H:i:s') }}</div>
+                                    @if($worker->is_late)
+                                        <div class="text-xs text-red-500">
+                                            <i class="fas fa-clock mr-1"></i>Terlambat {{ $worker->late_minutes }} menit
                                         </div>
-                                    </div>
-                                </div>
-                            @elseif($worker->check_in_time)
-                                <div class="text-sm text-gray-900 font-medium">{{ $worker->check_in_time->format('H:i:s') }}</div>
-                                @if($worker->is_late)
-                                    <div class="text-xs text-red-500">
-                                        <i class="fas fa-clock mr-1"></i>Terlambat {{ $worker->late_minutes }} menit
-                                    </div>
+                                    @else
+                                        <div class="text-xs text-green-500">
+                                            <i class="fas fa-check mr-1"></i>Tepat waktu
+                                        </div>
+                                    @endif
+                                    @if($shift)
+                                        <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }}</div>
+                                    @endif
                                 @else
-                                    <div class="text-xs text-green-500">
-                                        <i class="fas fa-check mr-1"></i>Tepat waktu
+                                    <div class="text-sm text-gray-400">Belum check-in</div>
+                                    @if($shift)
+                                        <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }}</div>
+                                    @endif
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($worker->check_out_time)
+                                    <div class="text-sm text-gray-900 font-medium">{{ $worker->check_out_time->format('H:i:s') }}</div>
+                                    @if($worker->is_early_leave && $worker->early_leave_minutes > 0)
+                                        <div class="text-xs text-orange-600">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>Pulang awal {{ $worker->early_leave_minutes }} menit
+                                        </div>
+                                    @elseif($shift)
+                                        <div class="text-xs text-green-500">
+                                            <i class="fas fa-check mr-1"></i>Sesuai jadwal
+                                        </div>
+                                    @endif
+                                    @if($shift)
+                                        <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
+                                    @endif
+                                @elseif($worker->check_in_time)
+                                    <div class="text-sm text-yellow-600">
+                                        <i class="fas fa-clock mr-1"></i>Belum check-out
                                     </div>
-                                @endif
-                                @if($shift)
-                                    <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }}</div>
-                                @endif
-                            @else
-                                <div class="text-sm text-gray-400">Belum check-in</div>
-                                @if($shift)
-                                    <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }}</div>
-                                @endif
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @if($worker->leave_request)
-                                <div class="text-sm text-blue-600 font-medium">
-                                    <i class="fas fa-calendar-check mr-1"></i>
-                                    Sedang {{ strtolower($worker->leave_request->leaveType->name) }}
-                                </div>
-                            @elseif($worker->check_out_time)
-                                <div class="text-sm text-gray-900 font-medium">{{ $worker->check_out_time->format('H:i:s') }}</div>
-                                @if($worker->is_early_leave && $worker->early_leave_minutes > 0)
-                                    <div class="text-xs text-orange-600">
-                                        <i class="fas fa-exclamation-triangle mr-1"></i>Pulang awal {{ $worker->early_leave_minutes }} menit
-                                    </div>
-                                @elseif($shift)
-                                    <div class="text-xs text-green-500">
-                                        <i class="fas fa-check mr-1"></i>Sesuai jadwal
-                                    </div>
-                                @endif
-                                @if($shift)
-                                    <div class="text-xs text-gray-400">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
-                                @endif
-                            @elseif($worker->check_in_time)
-                                <div class="text-sm text-yellow-600">
-                                    <i class="fas fa-clock mr-1"></i>Belum check-out
-                                </div>
-                                @if($shift)
-                                    <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
-                                @endif
-                            @else
-                                <div class="text-sm text-gray-400">-</div>
-                                @if($shift)
-                                    <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
-                                @endif
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @php
-                                $statusConfig = [
-                                    'present' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Hadir', 'icon' => 'fa-check'],
-                                    'late' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Terlambat', 'icon' => 'fa-clock'],
-                                    'absent' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Tidak Hadir', 'icon' => 'fa-times'],
-                                    'sick' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'label' => 'Sakit', 'icon' => 'fa-medkit'],
-                                    'permission' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Izin', 'icon' => 'fa-info-circle'],
-                                    'leave' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'label' => 'Cuti', 'icon' => 'fa-umbrella-beach'],
-                                    'not_checked_in' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Belum Absen', 'icon' => 'fa-clock'],
-                                ];
-                                $status = $statusConfig[$worker->attendance_status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Unknown', 'icon' => 'fa-question'];
-                            @endphp
-                            <div class="space-y-2">
-                                @if($worker->leave_request)
-                                    {{-- Tampilkan badge cuti/sakit/izin --}}
-                                    @php
-                                        $leaveTypeMap = [
-                                            'Cuti' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'icon' => 'fa-umbrella-beach'],
-                                            'Sakit' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'icon' => 'fa-medkit'],
-                                            'Izin' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'icon' => 'fa-info-circle'],
-                                        ];
-                                        $leaveTypeName = $worker->leave_request->leaveType->name;
-                                        $leaveStyle = ['bg' => 'bg-indigo-100', 'text' => 'text-indigo-800', 'icon' => 'fa-calendar-times'];
-
-                                        foreach ($leaveTypeMap as $key => $style) {
-                                            if (str_contains($leaveTypeName, $key)) {
-                                                $leaveStyle = $style;
-                                                break;
-                                            }
-                                        }
-                                    @endphp
-                                    <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $leaveStyle['bg'] }} {{ $leaveStyle['text'] }}">
-                                        <i class="fas {{ $leaveStyle['icon'] }} mr-1"></i>
-                                        {{ $leaveTypeName }}
-                                    </span>
-                                    <div class="text-xs text-gray-600 mt-1">
-                                        <i class="fas fa-calendar mr-1"></i>
-                                        {{ $worker->leave_request->start_date->format('d/m/Y') }} - {{ $worker->leave_request->end_date->format('d/m/Y') }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">
-                                        <i class="fas fa-clock mr-1"></i>
-                                        Total: {{ $worker->leave_request->total_days }} hari
-                                    </div>
+                                    @if($shift)
+                                        <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
+                                    @endif
                                 @else
+                                    <div class="text-sm text-gray-400">-</div>
+                                    @if($shift)
+                                        <div class="text-xs text-gray-500">Target: {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</div>
+                                    @endif
+                                @endif
+                            </td>
+                            <td class="px-6 py-4">
+                                @php
+                                    $statusConfig = [
+                                        'present' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Hadir', 'icon' => 'fa-check'],
+                                        'late' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Terlambat', 'icon' => 'fa-clock'],
+                                        'absent' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Tidak Hadir', 'icon' => 'fa-times'],
+                                        'off_day' => ['bg' => 'bg-rose-100', 'text' => 'text-rose-800', 'label' => 'Libur Kerja', 'icon' => 'fa-calendar-times'],
+                                        'sick' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'label' => 'Sakit', 'icon' => 'fa-medkit'],
+                                        'permission' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Izin', 'icon' => 'fa-info-circle'],
+                                        'leave' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'label' => 'Cuti', 'icon' => 'fa-umbrella-beach'],
+                                        'not_checked_in' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Belum Absen', 'icon' => 'fa-clock'],
+                                    ];
+                                    $status = $statusConfig[$worker->attendance_status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Unknown', 'icon' => 'fa-question'];
+                                @endphp
+                                <div class="space-y-2">
                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full {{ $status['bg'] }} {{ $status['text'] }}">
                                         <i class="fas {{ $status['icon'] }} mr-1"></i>
                                         {{ $status['label'] }}
@@ -623,36 +592,30 @@ phpinfo() di browser
                                             Belum melakukan absensi pada tanggal {{ \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')))->isoFormat('D MMMM Y') }}
                                         </div>
                                     @endif
-                                @endif
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 text-center">
-                            <div class="flex items-center justify-center space-x-1">
-                                @if($worker->leave_request)
-                                    {{-- Pegawai sedang cuti/sakit/izin, tampilkan info saja --}}
-                                    <div class="text-xs text-gray-500 italic">
-                                        <i class="fas fa-info-circle mr-1"></i>
-                                        Sedang {{ strtolower($worker->leave_request->leaveType->name) }}
-                                    </div>
-                                @elseif($worker->today_attendance)
-                                    <a href="{{ route('admin.attendance.show', $worker->today_attendance->id) }}"
-                                       class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Detail">
-                                        <i class="fas fa-eye w-4 h-4"></i>
-                                    </a>
-                                    @if(!$worker->check_out_time)
-                                        <button onclick="checkOutWorker('{{ $worker->today_attendance->id }}', '{{ $worker->name }}')"
-                                                class="p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-colors" title="Check Out">
-                                            <i class="fas fa-sign-out-alt w-4 h-4"></i>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                <div class="flex items-center justify-center space-x-1">
+                                    @if($worker->today_attendance)
+                                        <a href="{{ route('admin.attendance.show', $worker->today_attendance->id) }}"
+                                           class="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors" title="Lihat Detail">
+                                            <i class="fas fa-eye w-4 h-4"></i>
+                                        </a>
+                                        @if(!$worker->check_out_time)
+                                            <button onclick="checkOutWorker('{{ $worker->today_attendance->id }}', '{{ $worker->name }}')"
+                                                    class="p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-colors" title="Check Out">
+                                                <i class="fas fa-sign-out-alt w-4 h-4"></i>
+                                            </button>
+                                        @endif
+                                    @else
+                                        <button onclick="checkInWorker('{{ $worker->id }}', '{{ $worker->name }}')"
+                                                class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors" title="Check In">
+                                            <i class="fas fa-sign-in-alt w-4 h-4"></i>
                                         </button>
                                     @endif
-                                @else
-                                    <button onclick="checkInWorker('{{ $worker->id }}', '{{ $worker->name }}')"
-                                            class="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-lg transition-colors" title="Check In">
-                                        <i class="fas fa-sign-in-alt w-4 h-4"></i>
-                                    </button>
-                                @endif
-                            </div>
-                        </td>
+                                </div>
+                            </td>
+                        @endif
                     </tr>
                     @empty
                     <tr>

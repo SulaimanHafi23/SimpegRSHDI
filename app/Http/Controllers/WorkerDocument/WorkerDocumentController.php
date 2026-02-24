@@ -326,12 +326,19 @@ class WorkerDocumentController extends Controller
         $documentChecklist = $allRequiredDocTypes->map(function($docType) use ($documentsByType) {
             $docs = $documentsByType->get($docType->id, collect());
             $latestDoc = $docs->sortByDesc('created_at')->first();
+            $versions = $docs->sortBy('created_at')->values()->map(function ($document, $index) {
+                return [
+                    'version' => $index + 1,
+                    'document' => $document,
+                ];
+            });
 
             return [
                 'document_type' => $docType,
                 'is_uploaded' => $docs->isNotEmpty(),
                 'latest_document' => $latestDoc,
                 'total_uploads' => $docs->count(),
+                'versions' => $versions,
                 'status' => $latestDoc ? $latestDoc->status : 'missing',
                 'is_expired' => $latestDoc && $latestDoc->expired_date && \Carbon\Carbon::parse($latestDoc->expired_date)->isPast(),
             ];

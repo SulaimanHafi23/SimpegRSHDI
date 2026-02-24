@@ -42,13 +42,13 @@
     <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
         <div class="flex items-center gap-6">
             <div class="flex-shrink-0">
-                @if(($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url))
+                @if(($worker->photo_url ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url))
                     <img class="h-24 w-24 rounded-full object-cover border-4 border-gray-200"
-                         src="{{ Storage::url($worker->photo_url) }}"
+                         src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo_url) }}"
                          alt="{{ $worker->name }}">
-                @elseif(($worker->photo ?? false) && Storage::disk('public')->exists($worker->photo))
+                @elseif(($worker->photo ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo))
                     <img class="h-24 w-24 rounded-full object-cover border-4 border-gray-200"
-                         src="{{ Storage::url($worker->photo) }}"
+                         src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo) }}"
                          alt="{{ $worker->name }}">
                 @else
                     <div class="h-24 w-24 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold text-3xl border-4 border-gray-200">
@@ -183,9 +183,6 @@
                                                 Ditolak
                                             </span>
                                         @endif
-                                        @if($item['total_uploads'] > 1)
-                                            <span class="ml-2 text-gray-500">({{ $item['total_uploads'] }} versi)</span>
-                                        @endif
                                     @else
                                         <span class="text-gray-400">
                                             <i class="fas fa-upload mr-1"></i>
@@ -193,6 +190,17 @@
                                         </span>
                                     @endif
                                 </p>
+                                @if($item['is_uploaded'] && $item['versions']->isNotEmpty())
+                                    <div class="mt-2 flex flex-wrap gap-2">
+                                        @foreach($item['versions'] as $versionItem)
+                                            <a href="{{ route('admin.worker-documents.show', $versionItem['document']->id) }}"
+                                               class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition"
+                                               title="Lihat detail dokumen versi {{ $versionItem['version'] }}">
+                                                Versi {{ $versionItem['version'] }}
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </div>
                         </div>
                         <div class="flex items-center gap-2">

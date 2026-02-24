@@ -68,9 +68,17 @@ class ShiftController extends Controller
             $shiftOverrides = collect($shiftOverrides->items());
         }
 
+        // Get approved leave requests for this month
+        $leaveRequests = \App\Models\LeaveRequest::with('leaveType')
+            ->where('worker_id', $worker->id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $endOfMonth->format('Y-m-d'))
+            ->whereDate('end_date', '>=', $startOfMonth->format('Y-m-d'))
+            ->get();
+
         // Build calendar data
         $requiresHolidayAttendance = $worker->department && $worker->department->requires_holiday_attendance;
-        $calendar = $this->buildCalendar($worker, $startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance);
+        $calendar = $this->buildCalendar($worker, $startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $leaveRequests, $requiresHolidayAttendance);
 
         // Urutkan shift dari yang terbaru (effective_from descending) untuk penentuan info header
         $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
@@ -150,7 +158,7 @@ class ShiftController extends Controller
     /**
      * Build calendar array with shift information
      */
-    private function buildCalendar($worker, $startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $requiresHolidayAttendance = false)
+    private function buildCalendar($worker, $startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $leaveRequests, $requiresHolidayAttendance = false)
     {
         $calendar = [];
         $current = $startOfMonth->copy();
@@ -175,9 +183,27 @@ class ShiftController extends Controller
                     'schedule' => null,
                     'isOverride' => false,
                     'isOffDay' => false,
+                    'isLeave' => false,
+                    'leaveTypeName' => null,
                     'isHoliday' => false,
                     'holidayName' => null,
                 ];
+
+                // Check approved leave first
+                $leaveRequest = $leaveRequests->first(function ($leave) use ($current) {
+                    return $current->between(
+                        Carbon::parse($leave->start_date)->startOfDay(),
+                        Carbon::parse($leave->end_date)->endOfDay()
+                    );
+                });
+
+                if ($leaveRequest) {
+                    $dayData['isLeave'] = true;
+                    $dayData['leaveTypeName'] = $leaveRequest->leaveType->name ?? 'Cuti';
+                    $calendar[$week][] = $dayData;
+                    $current->addDay();
+                    continue;
+                }
 
                 // Check worker personal off-day first (exception/pattern)
                 if ($worker && method_exists($worker, 'isOffDay') && $worker->isOffDay($current->toDateTime())) {

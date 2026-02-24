@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Services\WorkerDocument\WorkerDocumentService;
 use App\Services\Master\DocumentTypeService;
-use App\DTOs\WorkerDocumentDTO;
 use App\Models\DocumentType;
+use App\Models\WorkerDocument;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
@@ -71,21 +70,41 @@ class DocumentController extends Controller
 
         $documentTypes = $this->getAllowedDocumentTypes($worker);
 
-        // Get already uploaded document types for this worker (to mark with checkmark)
-        $uploadedDocTypes = $this->documentService->getAll([
-            'worker_id' => $worker->id,
-            'status' => ['pending', 'verified']
-        ])->pluck('document_type_id')->toArray();
+        // Get active uploaded document types for this worker (pending or verified and not expired)
+        $uploadedDocTypes = WorkerDocument::query()
+            ->where('worker_id', $worker->id)
+            ->where(function ($query) {
+                $query->where('status', 'pending')
+                    ->orWhere(function ($verifiedQuery) {
+                        $verifiedQuery->where('status', 'verified')
+                            ->where(function ($expiryQuery) {
+                                $expiryQuery->whereNull('expired_date')
+                                    ->orWhereDate('expired_date', '>=', now()->toDateString());
+                            });
+                    });
+            })
+            ->pluck('document_type_id')
+            ->toArray();
 
         // Get document statistics for each type
         $documentStats = $this->documentService->getAll([
             'worker_id' => $worker->id
         ])->groupBy('document_type_id')->map(function($docs) {
+            $expiredDocs = $docs->filter(function ($doc) {
+                return $doc->expired_date && $doc->expired_date->isPast();
+            });
+
+            $latestExpiredDate = $expiredDocs
+                ->sortByDesc('expired_date')
+                ->first()?->expired_date;
+
             return [
                 'total' => $docs->count(),
                 'approved' => $docs->where('status', 'verified')->count(),
                 'pending' => $docs->where('status', 'pending')->count(),
                 'rejected' => $docs->where('status', 'rejected')->count(),
+                'expired' => $expiredDocs->count(),
+                'latest_expired_date' => $latestExpiredDate ? $latestExpiredDate->format('Y-m-d') : null,
                 'latest_status' => $docs->sortByDesc('created_at')->first()?->status,
                 'latest_date' => $docs->sortByDesc('created_at')->first()?->created_at,
             ];
@@ -126,18 +145,27 @@ class DocumentController extends Controller
         ]);
 
         try {
-            // Check for duplicate document type
-            $existingDocument = $this->documentService->getAll([
-                'worker_id' => $worker->id,
-                'document_type_id' => $validated['document_type_id'],
-                'status' => ['pending', 'verified'],
-            ]);
+            // Check for duplicate active document type
+            $hasActiveDocument = WorkerDocument::query()
+                ->where('worker_id', $worker->id)
+                ->where('document_type_id', $validated['document_type_id'])
+                ->where(function ($query) {
+                    $query->where('status', 'pending')
+                        ->orWhere(function ($verifiedQuery) {
+                            $verifiedQuery->where('status', 'verified')
+                                ->where(function ($expiryQuery) {
+                                    $expiryQuery->whereNull('expired_date')
+                                        ->orWhereDate('expired_date', '>=', now()->toDateString());
+                                });
+                        });
+                })
+                ->exists();
 
-            if ($existingDocument->isNotEmpty()) {
+            if ($hasActiveDocument) {
                 $documentType = \App\Models\DocumentType::find($validated['document_type_id']);
                 return back()
                     ->withInput()
-                    ->with('error', "Anda sudah memiliki dokumen {$documentType->name} yang aktif. Hapus atau perbarui dokumen yang ada terlebih dahulu.");
+                    ->with('error', "Anda sudah memiliki dokumen {$documentType->name} yang aktif. Upload ulang hanya bisa dilakukan jika dokumen sebelumnya sudah kadaluarsa atau ditolak.");
             }
 
             // Pass file and data to service (service will handle file upload)
@@ -223,11 +251,7 @@ class DocumentController extends Controller
             abort(403, 'Unauthorized');
         }
 
-        if (!Storage::disk('public')->exists($document->file_path)) {
-            return back()->with('error', 'File tidak ditemukan di server. Silakan hubungi administrator.');
-        }
-
-        return Storage::disk('public')->download($document->file_path, $document->file_name);
+        return $this->documentService->downloadDocument($id);
     }
 
     /**

@@ -180,9 +180,9 @@ class WorkerDocumentService
             if (!Storage::exists($document->file_path)) {
                 throw new \Exception('File not found.');
             }
-            return Storage::download($document->file_path, $document->file_name);
+            return response()->download(Storage::path($document->file_path), $document->file_name);
         }
 
-        return $disk->download($document->file_path, $document->file_name);
+        return response()->download($disk->path($document->file_path), $document->file_name);
     }
 }

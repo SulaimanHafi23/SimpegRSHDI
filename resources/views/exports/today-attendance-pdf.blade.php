@@ -166,6 +166,7 @@
         .status-leave { background-color: #d1ecf1; color: #0c5460; }
         .status-sick { background-color: #f8d7da; color: #721c24; }
         .status-permission { background-color: #cfe2ff; color: #084298; }
+        .status-off_day { background-color: #ffe4e6; color: #9f1239; }
         .status-not_checked_in { background-color: #e2e3e5; color: #383d41; }
 
         .footer {
@@ -231,19 +232,24 @@
         </table>
         <table style="border: none; margin-top: 6px;">
             <tr>
-                <td class="stats-item leave" style="width: 33%;">
+                <td class="stats-item leave" style="width: 24%;">
                     <div class="label">Cuti</div>
                     <div class="value">{{ $stats['leave'] }}</div>
                 </td>
                 <td style="width: 2%;"></td>
-                <td class="stats-item sick" style="width: 33%;">
+                <td class="stats-item sick" style="width: 24%;">
                     <div class="label">Sakit</div>
                     <div class="value">{{ $stats['sick'] }}</div>
                 </td>
                 <td style="width: 2%;"></td>
-                <td class="stats-item permission" style="width: 33%;">
+                <td class="stats-item permission" style="width: 24%;">
                     <div class="label">Izin</div>
                     <div class="value">{{ $stats['permission'] }}</div>
+                </td>
+                <td style="width: 2%;"></td>
+                <td class="stats-item" style="width: 24%; border-left: 3px solid #e11d48;">
+                    <div class="label">Libur Kerja</div>
+                    <div class="value">{{ $stats['off_day'] ?? 0 }}</div>
                 </td>
             </tr>
         </table>

@@ -170,7 +170,13 @@
                                         @if($stats2) <span class="csel-stats">({{ $stats2['approved'] ?? 0 }}/{{ $stats2['total'] ?? 0 }})</span>@endif
                                     </span>
                                     @if($type->description)
-                                        <span class="csel-item__sub">{{ Str::limit($type->description, 60) }}</span>
+                                        <span class="csel-item__sub">{{ \Illuminate\Support\Str::limit($type->description, 60) }}</span>
+                                    @endif
+                                    @if($stats2 && (($stats2['expired'] ?? 0) > 0))
+                                        <span class="csel-item__sub">
+                                            <span class="csel-badge csel-badge--exp">Kadaluarsa</span>
+                                            <span class="ml-1 text-red-600">{{ $stats2['expired'] }} dokumen</span>
+                                        </span>
                                     @endif
                                     <span class="csel-item__sub">
                                         @if($type->is_required)<span class="csel-badge csel-badge--req">Wajib</span>@else<span class="csel-badge csel-badge--opt">Opsional</span>@endif
@@ -376,6 +382,7 @@
     .csel-badge { font-size:.65rem; padding:.1rem .45rem; border-radius:999px; font-weight:600; display:inline-block; }
     .csel-badge--req { background:rgba(239,68,68,.12); color:#dc2626; }
     .csel-badge--opt { background:rgba(59,130,246,.1); color:#2563eb; }
+    .csel-badge--exp { background:rgba(239,68,68,.12); color:#dc2626; }
     .csel-no-result { padding:.85rem 1rem; text-align:center; font-size:.85rem; color:#94a3b8; }
     .csel-loading { padding:.85rem 1rem; text-align:center; font-size:.85rem; color:#64748b; list-style:none; }
 
@@ -452,7 +459,7 @@
             this.selectedVal = val;
             this.valueEl.textContent = label || val;
             this.valueEl.classList.remove('csel-value--placeholder');
-            if (this.native) { this.native.value = val; this.native.dispatchEvent(new Event('change', {bubbles:true})); }
+            if (this.native) { this.native.value = val; this.native.dispatchEvent(new window.Event('change', {bubbles:true})); }
             this._markSelected();
             this.close();
         }
@@ -515,8 +522,10 @@
                 if (stats.approved > 0) statusDetails.innerHTML += '<li class="text-green-700"> Terverifikasi: <strong>' + stats.approved + '</strong></li>';
                 if (stats.pending > 0) statusDetails.innerHTML += '<li class="text-yellow-700"> Menunggu verifikasi: <strong>' + stats.pending + '</strong></li>';
                 if (stats.rejected > 0) statusDetails.innerHTML += '<li class="text-red-700"> Ditolak: <strong>' + stats.rejected + '</strong></li>';
+                if (stats.expired > 0) statusDetails.innerHTML += '<li class="text-red-700"><span class="csel-badge csel-badge--exp">Kadaluarsa</span> Dokumen ini sudah kadaluarsa (<strong>' + stats.expired + '</strong>).</li>';
+                if (stats.latest_expired_date) statusDetails.innerHTML += '<li>Tanggal kadaluarsa terakhir: <strong>' + stats.latest_expired_date + '</strong></li>';
                 if (stats.latest_status) {
-                    const sm = {approved:' Terverifikasi', pending:' Menunggu', rejected:' Ditolak'};
+                    const sm = {verified:' Terverifikasi', approved:' Terverifikasi', pending:' Menunggu', rejected:' Ditolak'};
                     statusDetails.innerHTML += '<li>Status terakhir: <strong>' + (sm[stats.latest_status] || stats.latest_status) + '</strong></li>';
                 }
                 statusInfo.classList.remove('hidden');

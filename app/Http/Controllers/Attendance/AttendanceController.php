@@ -103,8 +103,20 @@ class AttendanceController extends Controller
             $worker->is_early_leave = $todayAttendance ? $todayAttendance->is_early_leave : false;
             $worker->early_leave_minutes = $todayAttendance ? $todayAttendance->early_leave_minutes : 0;
 
+            $isOffDay = method_exists($worker, 'isOffDay')
+                ? $worker->isOffDay(\Carbon\Carbon::parse($selectedDate))
+                : false;
+            $worker->is_off_day = $isOffDay;
+
+            if (!$todayAttendance && !$leaveRequest && $isOffDay) {
+                $worker->attendance_status = 'off_day';
+                $worker->status_label = 'Libur Kerja';
+            }
+
             return $worker;
         });
+
+        $allWorkersWithAttendance = $workersWithAttendance;
 
         // Apply filters to workersWithAttendance for "today" tab
         if ($request->input('worker_id')) {
@@ -132,19 +144,16 @@ class AttendanceController extends Controller
         // Hitung statistik untuk tanggal yang dipilih
         $summary = [
             'total_workers' => $allWorkers->count(),
-            'present' => $todayAttendances->whereIn('status', ['present', 'late'])->count(),
-            'late' => $todayAttendances->where('is_late', true)->count(),
-            'early_leave' => $todayAttendances->where('is_early_leave', true)->count(),
+            'present' => $allWorkersWithAttendance->whereIn('attendance_status', ['present', 'late'])->count(),
+            'late' => $allWorkersWithAttendance->where('is_late', true)->count(),
+            'early_leave' => $allWorkersWithAttendance->where('is_early_leave', true)->count(),
             'perfect' => $todayAttendances->whereIn('status', ['present'])
                 ->where('is_late', false)
                 ->where('is_early_leave', false)
                 ->count(),
-            'absent' => $allWorkers->count() - $todayAttendances->whereIn('status', ['present', 'late'])->count(),
-            'on_leave' => \App\Models\LeaveRequest::whereIn('worker_id', $allWorkers->pluck('id'))
-                ->where('status', 'approved')
-                ->whereDate('start_date', '<=', $selectedDate)
-                ->whereDate('end_date', '>=', $selectedDate)
-                ->count(),
+            'off_day' => $allWorkersWithAttendance->where('attendance_status', 'off_day')->count(),
+            'on_leave' => $allWorkersWithAttendance->whereIn('attendance_status', ['leave', 'sick', 'permission'])->count(),
+            'absent' => $allWorkersWithAttendance->where('attendance_status', 'not_checked_in')->count(),
         ];
 
         // Tentukan periode untuk statistik riwayat
@@ -1161,6 +1170,11 @@ class AttendanceController extends Controller
                 $worker->is_late = $todayAttendance ? $todayAttendance->is_late : false;
                 $worker->late_minutes = $todayAttendance ? ($todayAttendance->late_minutes ?? 0) : 0;
 
+                $isOffDay = method_exists($worker, 'isOffDay')
+                    ? $worker->isOffDay(\Carbon\Carbon::parse($selectedDate))
+                    : false;
+                $worker->is_off_day = $isOffDay;
+
                 // Determine attendance status - prioritaskan leave request
                 if ($leaveRequest) {
                     $leaveTypeName = $leaveRequest->leaveType->name;
@@ -1175,6 +1189,9 @@ class AttendanceController extends Controller
                         $worker->attendance_status = 'leave';
                         $worker->status_label = $leaveTypeName;
                     }
+                } elseif (!$todayAttendance && $isOffDay) {
+                    $worker->attendance_status = 'off_day';
+                    $worker->status_label = 'Libur Kerja';
                 } elseif (!$todayAttendance) {
                     $worker->attendance_status = 'not_checked_in';
                     $worker->status_label = 'Belum Absen';
@@ -1204,6 +1221,7 @@ class AttendanceController extends Controller
                 'present' => $workersWithAttendance->whereIn('attendance_status', ['present', 'late'])->count(),
                 'late' => $workersWithAttendance->where('attendance_status', 'late')->count(),
                 'not_checked_in' => $workersWithAttendance->where('attendance_status', 'not_checked_in')->count(),
+                'off_day' => $workersWithAttendance->where('attendance_status', 'off_day')->count(),
                 'leave' => $workersWithAttendance->where('attendance_status', 'leave')->count(),
                 'sick' => $workersWithAttendance->where('attendance_status', 'sick')->count(),
                 'permission' => $workersWithAttendance->where('attendance_status', 'permission')->count(),

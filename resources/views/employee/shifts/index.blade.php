@@ -95,10 +95,11 @@
                                 $hasShift = !empty($day['shift']);
                                 $isHoliday = $day['isHoliday'] ?? false;
                                 $isOffDay = $day['isOffDay'] ?? false;
+                                    $isLeave = $day['isLeave'] ?? false;
                             @endphp
                             <div
                                 class="min-h-24 border rounded-lg p-2 relative cursor-pointer transition
-                                       {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday && $hasShift ? 'bg-orange-50 border-orange-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($isOffDay ? 'bg-rose-50 border-rose-300' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300')))) }}
+                                        {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday && $hasShift ? 'bg-orange-50 border-orange-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($isLeave ? 'bg-purple-50 border-purple-300' : ($isOffDay ? 'bg-rose-50 border-rose-300' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300'))))) }}
                                        {{ $isToday ? 'ring-2 ring-green-500' : '' }}"
                                 data-date-label="{{ $day['date']->translatedFormat('l, d F Y') }}"
                                 data-has-shift="{{ $hasShift ? 1 : 0 }}"
@@ -108,6 +109,8 @@
                                 data-is-current="{{ $isCurrentMonth ? 1 : 0 }}"
                                 data-is-override="{{ $day['isOverride'] ? 1 : 0 }}"
                                 data-is-offday="{{ $isOffDay ? 1 : 0 }}"
+                                data-is-leave="{{ $isLeave ? 1 : 0 }}"
+                                data-leave-type="{{ $isLeave ? ($day['leaveTypeName'] ?? 'Cuti') : '' }}"
                                 data-is-holiday="{{ $isHoliday ? 1 : 0 }}"
                                 data-holiday-name="{{ $isHoliday ? ($day['holidayName'] ?? 'Libur Nasional') : '' }}"
                                 @click="openDay($event.currentTarget)"
@@ -131,6 +134,10 @@
                                     <div class="mt-2 flex items-center justify-center gap-1">
                                         <i class="fas fa-flag text-red-600 text-xs"></i>
                                         <i class="fas fa-briefcase text-blue-600 text-xs"></i>
+                                    </div>
+                                @elseif($isLeave)
+                                    <div class="mt-4 flex items-center justify-center">
+                                        <i class="fas fa-user-check text-purple-600 text-lg"></i>
                                     </div>
                                 @elseif($isOffDay)
                                     <div class="mt-4 flex items-center justify-center">
@@ -179,6 +186,12 @@
                     <i class="fas fa-calendar-times text-rose-600 text-xs"></i>
                 </div>
                 <span class="text-gray-700">Libur Kerja (Off-day)</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-6 h-6 bg-purple-50 border-2 border-purple-300 rounded flex items-center justify-center">
+                    <i class="fas fa-user-check text-purple-600 text-xs"></i>
+                </div>
+                <span class="text-gray-700">Cuti/Izin/Sakit</span>
             </div>
             <div class="flex items-center gap-2">
                 <div class="w-6 h-6 bg-red-100 border-2 border-red-400 rounded flex items-center justify-center">
@@ -364,6 +377,7 @@ function shiftCalendar() {
 
             const isHoliday = el.dataset.isHoliday === '1';
             const isOffDay = el.dataset.isOffday === '1';
+            const isLeave = el.dataset.isLeave === '1';
             const hasShift = el.dataset.hasShift === '1';
             this.modalDate = el.dataset.dateLabel || '';
 
@@ -383,6 +397,10 @@ function shiftCalendar() {
                 this.modalTitle = '🏖️ Libur Kerja (Off-day)';
                 this.modalShiftTime = '';
                 this.modalNote = 'Hari ini ditandai sebagai libur kerja pribadi Anda berdasarkan pengaturan jadwal.';
+            } else if (isLeave) {
+                this.modalTitle = '📝 Cuti/Izin/Sakit';
+                this.modalShiftTime = '';
+                this.modalNote = 'Status hari ini: ' + (el.dataset.leaveType || 'Cuti') + '.';
             } else if (hasShift) {
                 this.modalTitle = el.dataset.shiftName || 'Jadwal Kerja';
                 const start = el.dataset.start || '';
