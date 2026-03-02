@@ -164,11 +164,11 @@
                     <form method="POST" action="{{ route('login.post') }}" class="space-y-6">
                         @csrf
 
-                        <!-- NIP/Email Field -->
+                        <!-- Email/Username Field -->
                         <div>
                             <label for="login" class="block text-sm font-medium text-gray-700 mb-2">
                                 <i class="fas fa-id-card text-green-600 mr-1"></i>
-                                NIP / Email
+                                Email / Username
                             </label>
                             <div class="relative">
                                 <input
@@ -177,7 +177,7 @@
                                     id="login"
                                     value="{{ old('login') }}"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white/90 transition duration-200 @error('login') border-red-500 @enderror"
-                                    placeholder="Masukkan NIP atau Email"
+                                    placeholder="Masukkan Email atau Username"
                                     required
                                     autofocus
                                 >

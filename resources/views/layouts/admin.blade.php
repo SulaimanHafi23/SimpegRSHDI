@@ -23,23 +23,6 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <!-- Mobile Responsive Fix -->
-    <style>
-        @media (max-width: 768px) {
-            html, body {
-                overflow-x: hidden !important;
-                max-width: 100vw !important;
-                width: 100vw !important;
-            }
-            * {
-                max-width: 100vw !important;
-            }
-            .min-w-\[200px\], .min-w-\[300px\], .min-w-\[400px\] {
-                min-width: auto !important;
-            }
-        }
-    </style>
-
     @stack('styles')
 </head>
 <body class="font-sans antialiased bg-gray-50 overflow-x-hidden">

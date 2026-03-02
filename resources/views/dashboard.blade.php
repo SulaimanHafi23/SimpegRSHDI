@@ -25,14 +25,14 @@
                         </a>
                     </div>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-700 text-sm">
-                        <strong>{{ Auth::user()->worker->full_name ?? Auth::user()->username }}</strong>
-                        <span class="text-gray-500">({{ Auth::user()->roles->pluck('name')->implode(', ') }})</span>
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <span class="text-gray-700 text-xs sm:text-sm hidden sm:inline">
+                        <strong>{{ \Illuminate\Support\Facades\Auth::user()->worker->full_name ?? \Illuminate\Support\Facades\Auth::user()->username }}</strong>
+                        <span class="text-gray-500">({{ \Illuminate\Support\Facades\Auth::user()->roles->pluck('name')->implode(', ') }})</span>
                     </span>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-150">
+                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white font-bold py-1.5 sm:py-2 px-3 sm:px-4 rounded text-xs sm:text-sm transition duration-150">
                             Logout
                         </button>
                     </form>
@@ -55,7 +55,7 @@
                         Dashboard
                     </h2>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                         {{-- User Info Card --}}
                         <div class="bg-indigo-50 rounded-lg p-6 border border-indigo-200">
                             <h3 class="text-lg font-semibold text-indigo-800 mb-4 flex items-center">
@@ -64,27 +64,27 @@
                                 </svg>
                                 Informasi User
                             </h3>
-                            <ul class="space-y-2 text-gray-700">
+                            <ul class="space-y-2 text-sm text-gray-700">
                                 <li class="flex justify-between">
                                     <span class="font-medium">Username:</span>
-                                    <span>{{ Auth::user()->username }}</span>
+                                    <span class="truncate ml-2">{{ \Illuminate\Support\Facades\Auth::user()->username }}</span>
                                 </li>
                                 <li class="flex justify-between">
                                     <span class="font-medium">Email:</span>
-                                    <span>{{ Auth::user()->email }}</span>
+                                    <span class="truncate ml-2">{{ \Illuminate\Support\Facades\Auth::user()->email }}</span>
                                 </li>
                                 <li class="flex justify-between">
                                     <span class="font-medium">Role:</span>
-                                    <span class="text-indigo-600 font-semibold">{{ Auth::user()->roles->pluck('name')->implode(', ') }}</span>
+                                    <span class="text-indigo-600 font-semibold">{{ \Illuminate\Support\Facades\Auth::user()->roles->pluck('name')->implode(', ') }}</span>
                                 </li>
-                                @if(Auth::user()->worker)
+                                @if(\Illuminate\Support\Facades\Auth::user()->worker)
                                     <li class="flex justify-between">
                                         <span class="font-medium">NIP:</span>
-                                        <span>{{ Auth::user()->worker->nip }}</span>
+                                        <span>{{ \Illuminate\Support\Facades\Auth::user()->worker->nip }}</span>
                                     </li>
                                     <li class="flex justify-between">
                                         <span class="font-medium">Posisi:</span>
-                                        <span>{{ Auth::user()->worker->department->name ?? '-' }}</span>
+                                        <span>{{ \Illuminate\Support\Facades\Auth::user()->worker->department->name ?? '-' }}</span>
                                     </li>
                                 @endif
                             </ul>

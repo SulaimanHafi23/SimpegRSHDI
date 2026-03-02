@@ -16,14 +16,15 @@ class AuthService
     {
         try {
             $credentials = $dto->getCredentials();
+            $loginField = array_key_exists('email', $credentials) ? 'email' : 'username';
 
             // Check if user exists
-            $user = User::where('email', $credentials['email'])->first();
+            $user = User::where($loginField, $credentials[$loginField])->first();
 
             if (!$user) {
                 return [
                     'success' => false,
-                    'message' => 'Email atau NIP tidak ditemukan.',
+                    'message' => 'Email atau username tidak ditemukan.',
                 ];
             }
 

@@ -43,16 +43,16 @@
     <!-- Tabs -->
     <div class="mb-6">
         <div class="border-b border-gray-200">
-            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <nav class="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto" aria-label="Tabs">
                 <button @click="activeTab = 'list'; window.history.pushState({}, '', '?tab=list')"
                         :class="activeTab === 'list' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        class="whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors">
                     <i class="fas fa-list mr-2"></i>
                     Daftar Jadwal
                 </button>
                 <button @click="activeTab = 'calendar'; window.history.pushState({}, '', '?tab=calendar')"
                         :class="activeTab === 'calendar' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
-                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+                        class="whitespace-nowrap py-3 sm:py-4 px-1 border-b-2 font-medium text-xs sm:text-sm transition-colors">
                     <i class="fas fa-calendar-alt mr-2"></i>
                     Kalender Shift
                 </button>
@@ -155,9 +155,6 @@
                             Shift
                         </th>
                         <th scope="col" class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Jam Kerja
-                        </th>
-                        <th scope="col" class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Pola
                         </th>
                         <th scope="col" class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -177,13 +174,13 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
-                                    @if(($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url))
+                                    @if(($worker->photo_url ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url))
                                         <img class="h-10 w-10 rounded-full object-cover"
-                                             src="{{ Storage::url($worker->photo_url) }}"
+                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo_url) }}"
                                              alt="{{ $worker->name }}">
-                                    @elseif(($worker->photo ?? false) && Storage::disk('public')->exists($worker->photo))
+                                    @elseif(($worker->photo ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo))
                                         <img class="h-10 w-10 rounded-full object-cover"
-                                             src="{{ Storage::url($worker->photo) }}"
+                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo) }}"
                                              alt="{{ $worker->name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
@@ -193,25 +190,18 @@
                                 </div>
                                 <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ $worker->name }}</div>
-                                    <div class="text-sm text-gray-500">{{ $worker->employee_number ?? '-' }}</div>
+                                    <div class="text-sm text-gray-500">{{ $worker->nip ?? '-' }}</div>
                                 </div>
                             </div>
                         </td>
                         <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                             @if($worker->latestShift)
                                 <div class="text-sm font-medium text-gray-900">{{ $worker->latestShift->shift->name }}</div>
-                                <div class="text-sm text-gray-500">{{ $worker->latestShift->shift->code ?? '-' }}</div>
-                            @else
-                                <div class="text-sm font-medium text-gray-400 italic">Belum ada shift</div>
-                            @endif
-                        </td>
-                        <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
-                            @if($worker->latestShift)
                                 <div class="text-sm text-gray-900">
                                     {{ \Carbon\Carbon::parse($worker->latestShift->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($worker->latestShift->shift->end_time)->format('H:i') }}
                                 </div>
                             @else
-                                <div class="text-sm text-gray-400 italic">-</div>
+                                <div class="text-sm font-medium text-gray-400 italic">Belum ada shift</div>
                             @endif
                         </td>
                         <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
@@ -308,7 +298,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
                             <div class="flex flex-col items-center justify-center py-8">
                                 <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>

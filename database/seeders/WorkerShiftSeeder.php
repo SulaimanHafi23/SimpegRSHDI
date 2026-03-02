@@ -30,7 +30,12 @@ class WorkerShiftSeeder extends Seeder
 
         // Create fixed shift patterns for each worker
         foreach ($workers as $worker) {
-            $shift = $shifts->random();
+            $isSuperAdminWorker = str_contains(strtolower($worker->name ?? ''), 'super admin')
+                || in_array(strtoupper((string) $worker->nip), ['SA001', 'NIP-0001'], true);
+
+            $shift = $isSuperAdminWorker
+                ? ($shifts->firstWhere('name', 'Shift Pagi') ?? $shifts->first())
+                : $shifts->random();
 
             WorkerShift::create([
                 'worker_id' => $worker->id,
@@ -50,11 +55,23 @@ class WorkerShiftSeeder extends Seeder
 
     private function addShiftOverrides($workers, $shifts, $users): void
     {
+        $eligibleWorkers = $workers->filter(function ($worker) {
+            $nip = strtoupper((string) ($worker->nip ?? ''));
+            $name = strtolower((string) ($worker->name ?? ''));
+
+            return !in_array($nip, ['SA001', 'NIP-0001'], true)
+                && !str_contains($name, 'super admin');
+        })->values();
+
+        if ($eligibleWorkers->isEmpty()) {
+            return;
+        }
+
         // Add 20-30 random shift overrides
         $overrideCount = rand(20, 30);
 
         for ($i = 0; $i < $overrideCount; $i++) {
-            $worker = $workers->random();
+            $worker = $eligibleWorkers->random();
             $shift = $shifts->random();
             $user = $users->random();
             $date = Carbon::now()->addDays(rand(-10, 60))->format('Y-m-d');

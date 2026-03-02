@@ -3,7 +3,6 @@
 namespace App\Services\Export;
 
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Collection;
 
 class PdfExportService
 {
@@ -14,18 +13,69 @@ class PdfExportService
     {
         try {
             $collection = collect($attendances);
+            $rows = $collection
+                ->sortBy('attendance_date')
+                ->values()
+                ->map(function ($attendance) {
+                    $attendanceDate = $attendance->attendance_date;
+                    $shift = $attendance->shift;
+
+                    $shiftTime = '-';
+                    if ($shift && $attendanceDate) {
+                        $schedule = $shift->getScheduleForDate($attendanceDate);
+                        $shiftTime = sprintf(
+                            '%s - %s',
+                            \Carbon\Carbon::parse($schedule['start_time'])->format('H:i'),
+                            \Carbon\Carbon::parse($schedule['end_time'])->format('H:i')
+                        );
+                    }
+
+                    $status = match ($attendance->status) {
+                        'present' => $attendance->is_late ? 'Terlambat' : 'Hadir',
+                        'late' => 'Terlambat',
+                        'absent' => 'Tidak Hadir',
+                        'leave' => 'Cuti',
+                        'sick' => 'Sakit',
+                        'permission' => 'Izin',
+                        default => ucfirst($attendance->status ?? '-'),
+                    };
+
+                    return [
+                        'date' => $attendanceDate ? $attendanceDate->format('d/m/Y') : '-',
+                        'day_name' => $attendanceDate ? $attendanceDate->translatedFormat('l') : '-',
+                        'shift_name' => $shift?->name ?? '-',
+                        'shift_time' => $shiftTime,
+                        'check_in' => $attendance->check_in ? $attendance->check_in->format('H:i:s') : '-',
+                        'check_out' => $attendance->check_out ? $attendance->check_out->format('H:i:s') : '-',
+                        'status' => $status,
+                        'late' => ($attendance->is_late && (int) $attendance->late_minutes > 0)
+                            ? ((int) $attendance->late_minutes . ' menit')
+                            : '-',
+                        'early_leave' => ($attendance->is_early_leave && (int) $attendance->early_leave_minutes > 0)
+                            ? ((int) $attendance->early_leave_minutes . ' menit')
+                            : '-',
+                        'location' => $attendance->location->name ?? '-',
+                        'notes' => $attendance->notes ?: '-',
+                    ];
+                })
+                ->all();
 
             $data = [
                 'title' => 'Laporan Riwayat Absensi',
                 'worker' => $worker,
-                'attendances' => $attendances,
+                'rows' => $rows,
+                'startDate' => \Carbon\Carbon::parse($filters['date_from']),
+                'endDate' => \Carbon\Carbon::parse($filters['date_to']),
                 'filters' => $filters,
                 'generated_at' => now()->format('d F Y H:i'),
                 'summary' => [
                     'total' => $collection->count(),
                     'present' => $collection->where('status', 'present')->count(),
-                    'late' => $collection->where('status', 'late')->count(),
+                    'late' => $collection->where('is_late', true)->count(),
                     'absent' => $collection->where('status', 'absent')->count(),
+                    'leave' => $collection->where('status', 'leave')->count(),
+                    'sick' => $collection->where('status', 'sick')->count(),
+                    'permission' => $collection->where('status', 'permission')->count(),
                 ]
             ];
 

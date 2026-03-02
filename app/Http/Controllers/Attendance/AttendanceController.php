@@ -7,7 +7,6 @@ use App\Traits\DepartmentFilterable;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Worker\WorkerService;
 use App\Services\Master\LocationService;
-use App\DTOs\AttendanceDTO;
 use App\Http\Requests\Attendance\AttendanceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -915,10 +914,22 @@ class AttendanceController extends Controller
             ->whereDate('end_date', '>=', $startDate->format('Y-m-d'))
             ->get();
 
+        $holidays = \App\Models\Holiday::where('is_national', true)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get()
+            ->keyBy(function ($holiday) {
+                return \Carbon\Carbon::parse($holiday->date)->format('Y-m-d');
+            });
+
+        $requiresHolidayAttendance = (bool) ($worker->department?->requires_holiday_attendance ?? false);
+
         $rows = [];
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
             $dateKey = $date->format('Y-m-d');
             $attendance = $attendanceByDate->get($dateKey);
+            $holiday = $holidays->get($dateKey);
+            $isHoliday = !is_null($holiday);
+            $isOffDay = method_exists($worker, 'isOffDay') ? $worker->isOffDay($date->toDateTime()) : false;
 
             $leaveRequest = $leaveRequests->first(function ($leave) use ($date) {
                 return $date->between($leave->start_date, $leave->end_date);
@@ -963,6 +974,23 @@ class AttendanceController extends Controller
                     $statusLabel = 'Cuti';
                 }
                 $notes = $leaveName;
+            } else {
+                $isHolidayOff = $isHoliday && !$requiresHolidayAttendance;
+                $isWorkday = !empty($shift) && !$isOffDay && !$isHolidayOff;
+
+                if (!$isWorkday) {
+                    $statusLabel = 'Libur';
+
+                    if ($isOffDay) {
+                        $notes = 'Libur Off-day';
+                    } elseif ($isHolidayOff) {
+                        $notes = 'Libur Nasional: ' . ($holiday->name ?? '-');
+                    } elseif (empty($shift)) {
+                        $notes = 'Libur (Tidak ada jadwal shift)';
+                    }
+                } elseif ($isHoliday && $requiresHolidayAttendance) {
+                    $notes = 'Libur Nasional (Tetap bertugas): ' . ($holiday->name ?? '-');
+                }
             }
 
             $rows[] = [

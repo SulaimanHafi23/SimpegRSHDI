@@ -25,7 +25,7 @@ class LoginDTO
 
     /**
      * Get credentials for authentication
-     * Auto-detect if login is email or NIP
+     * Auto-detect if login is email or username
      */
     public function getCredentials(): array
     {
@@ -37,24 +37,9 @@ class LoginDTO
             ];
         }
 
-        // Check if login is NIP
-        $worker = \App\Models\Worker::where('nip', $this->login)->first();
-        
-        if ($worker) {
-            // Get email from worker's user account
-            $user = \App\Models\User::where('worker_id', $worker->id)->first();
-            
-            if ($user) {
-                return [
-                    'email' => $user->email,
-                    'password' => $this->password,
-                ];
-            }
-        }
-
-        // Fallback: treat as email (will fail if not valid)
+        // Otherwise treat as username
         return [
-            'email' => $this->login,
+            'username' => $this->login,
             'password' => $this->password,
         ];
     }

@@ -40,8 +40,56 @@
         </form>
     </div>
 
-    <!-- Table -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+        @forelse($shifts as $shift)
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $shift->name }}</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            <i class="fas fa-clock mr-1"></i>
+                            {{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-hourglass-half mr-1"></i>
+                            {{ number_format($shift->total_hours, 2) }} jam
+                        </p>
+                    </div>
+                    <div>
+                        @if($shift->is_active)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Tidak Aktif</span>
+                        @endif
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-end space-x-3 text-sm">
+                    <a href="{{ route('admin.master.shifts.show', $shift->id) }}" class="text-blue-600 hover:text-blue-900" title="Lihat Detail">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ route('admin.master.shifts.edit', $shift->id) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ route('admin.master.shifts.destroy', $shift->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus shift ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow px-6 py-8 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-2"></i>
+                <p>Tidak ada data shift</p>
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
         <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">

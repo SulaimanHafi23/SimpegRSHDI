@@ -2,7 +2,7 @@
 @props(['headers' => []])
 
 <div class="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-    <table class="min-w-full divide-y divide-gray-200">
+    <table class="min-w-[760px] md:min-w-full divide-y divide-gray-200">
         @if(!empty($headers))
             <thead class="bg-gray-50">
                 <tr>
