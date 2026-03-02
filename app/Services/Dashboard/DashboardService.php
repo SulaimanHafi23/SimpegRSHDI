@@ -53,11 +53,16 @@ class DashboardService
                 break;
         }
 
+        // Single grouped query instead of 4 separate cumulative queries
+        $counts = (clone $query)->selectRaw("status, COUNT(*) as cnt")
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
         return [
-            'total' => $query->count(),
-            'on_time' => $query->where('status', 'Hadir')->count(),
-            'late' => $query->where('status', 'Terlambat')->count(),
-            'absent' => $query->where('status', 'Tidak Hadir')->count(),
+            'total' => $counts->sum(),
+            'on_time' => $counts->get('present', 0),
+            'late' => $counts->get('late', 0),
+            'absent' => $counts->get('absent', 0),
         ];
     }
 
@@ -66,13 +71,21 @@ class DashboardService
      */
     public function getAttendanceChartData()
     {
+        $startDate = now()->subDays(6)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        // Single query for all 7 days
+        $counts = Attendance::whereBetween('attendance_date', [$startDate, $endDate])
+            ->selectRaw("DATE(attendance_date) as date, COUNT(*) as cnt")
+            ->groupBy('date')
+            ->pluck('cnt', 'date');
+
         $data = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
-            $count = Attendance::whereDate('attendance_date', $date)->count();
             $data[] = [
                 'date' => $date->format('d M'),
-                'count' => $count
+                'count' => $counts->get($date->format('Y-m-d'), 0),
             ];
         }
         return $data;
@@ -83,15 +96,21 @@ class DashboardService
      */
     public function getMonthlyAttendanceChart()
     {
+        $startDate = now()->subMonths(5)->startOfMonth();
+        $endDate = now()->endOfMonth();
+
+        // Single query for all 6 months
+        $counts = Attendance::whereBetween('attendance_date', [$startDate, $endDate])
+            ->selectRaw("DATE_FORMAT(attendance_date, '%Y-%m') as ym, COUNT(*) as cnt")
+            ->groupBy('ym')
+            ->pluck('cnt', 'ym');
+
         $data = [];
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
-            $count = Attendance::whereMonth('attendance_date', $date->month)
-                               ->whereYear('attendance_date', $date->year)
-                               ->count();
             $data[] = [
                 'month' => $date->format('M Y'),
-                'count' => $count
+                'count' => $counts->get($date->format('Y-m'), 0),
             ];
         }
         return $data;
@@ -120,11 +139,15 @@ class DashboardService
                 break;
         }
 
+        $counts = $query->selectRaw("status, COUNT(*) as cnt")
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
         return [
-            'total' => $query->count(),
-            'pending' => $query->where('status', 'pending')->count(),
-            'approved' => $query->where('status', 'approved')->count(),
-            'rejected' => $query->where('status', 'rejected')->count(),
+            'total' => $counts->sum(),
+            'pending' => $counts->get('pending', 0),
+            'approved' => $counts->get('approved', 0),
+            'rejected' => $counts->get('rejected', 0),
         ];
     }
 
@@ -151,12 +174,18 @@ class DashboardService
                 break;
         }
 
+        $counts = (clone $query)->selectRaw("status, COUNT(*) as cnt")
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
+        $totalHours = (clone $query)->where('status', 'approved')->sum('total_hours');
+
         return [
-            'total' => $query->count(),
-            'pending' => $query->where('status', 'pending')->count(),
-            'approved' => $query->where('status', 'approved')->count(),
-            'rejected' => $query->where('status', 'rejected')->count(),
-            'total_hours' => $query->where('status', 'approved')->sum('total_hours'),
+            'total' => $counts->sum(),
+            'pending' => $counts->get('pending', 0),
+            'approved' => $counts->get('approved', 0),
+            'rejected' => $counts->get('rejected', 0),
+            'total_hours' => $totalHours,
         ];
     }
 
@@ -179,16 +208,16 @@ class DashboardService
      */
     public function getAttendanceByStatusChart()
     {
+        $counts = Attendance::whereMonth('attendance_date', now()->month)
+            ->whereYear('attendance_date', now()->year)
+            ->selectRaw("status, COUNT(*) as cnt")
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+
         return [
-            'on_time' => Attendance::where('status', 'Hadir')
-                ->whereMonth('attendance_date', now()->month)
-                ->count(),
-            'late' => Attendance::where('status', 'Terlambat')
-                ->whereMonth('attendance_date', now()->month)
-                ->count(),
-            'absent' => Attendance::where('status', 'Tidak Hadir')
-                ->whereMonth('attendance_date', now()->month)
-                ->count(),
+            'on_time' => $counts->get('present', 0),
+            'late' => $counts->get('late', 0),
+            'absent' => $counts->get('absent', 0),
         ];
     }
 

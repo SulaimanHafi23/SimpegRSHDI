@@ -26,7 +26,7 @@
             (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*') ? 'management' :
             (request()->routeIs('admin.leave.*', 'admin.overtime.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' :
             (request()->routeIs('reports.*') ? 'reports' :
-            (request()->routeIs('admin.roles.*', 'admin.users.*', 'admin.holidays.*') ? 'settings' : ''))))
+            (request()->routeIs('admin.roles.*', 'admin.users.*', 'admin.holidays.*', 'admin.audit-logs.*') ? 'settings' : ''))))
         }}'
     }">
         <!-- Dashboard -->
@@ -255,6 +255,12 @@
                 <a href="{{ route('admin.users.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.users.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
                     <i class="fas fa-user-shield w-4"></i>
                     <span>Users</span>
+                </a>
+                @endif
+                @if(auth()->user()->hasRole('Super Admin'))
+                <a href="{{ route('admin.audit-logs.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.audit-logs.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-history w-4"></i>
+                    <span>Audit Log</span>
                 </a>
                 @endif
             </div>

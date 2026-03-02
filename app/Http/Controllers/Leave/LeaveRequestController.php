@@ -69,15 +69,20 @@ class LeaveRequestController extends Controller
 
         $leaveTypes = $this->leaveTypeService->getAllActive();
 
-        // Statistics - filter by department if Manager
-        $baseFilters = $departmentId ? ['department_id' => $departmentId, 'per_page' => 9999] : ['per_page' => 9999];
+        // Statistics - single grouped count query instead of 5 paginated queries
+        $statCounts = \App\Models\LeaveRequest::when($departmentId, function ($q) use ($departmentId) {
+                $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId));
+            })
+            ->selectRaw("status, COUNT(*) as cnt")
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
 
         $statistics = [
-            'total' => $this->leaveRequestService->getAll($baseFilters)->total(),
-            'pending' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'pending'])->total(),
-            'approved' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'approved'])->total(),
-            'rejected' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'rejected'])->total(),
-            'cancelled' => $this->leaveRequestService->getAll([...$baseFilters, 'status' => 'cancelled'])->total(),
+            'total' => $statCounts->sum(),
+            'pending' => $statCounts->get('pending', 0),
+            'approved' => $statCounts->get('approved', 0),
+            'rejected' => $statCounts->get('rejected', 0),
+            'cancelled' => $statCounts->get('cancelled', 0),
         ];
 
         // Rename for view compatibility

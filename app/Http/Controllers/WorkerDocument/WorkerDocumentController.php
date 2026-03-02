@@ -35,38 +35,42 @@ class WorkerDocumentController extends Controller
             ? $this->workerService->getByDepartment($departmentId)
             : $this->workerService->getAllActive();
 
-        $workersWithDocStats = $workers->map(function($worker) use ($filters) {
-            // Get required document types for this worker's department
-            // Required = document types that are linked to the department in department_document_type pivot table
-            $totalRequired = \App\Models\DocumentType::where('is_active', true)
-                ->where(function ($query) use ($worker) {
-                    $query->where('is_universal', true)
-                        ->orWhereHas('departments', function ($inner) use ($worker) {
-                            $inner->where('departments.id', $worker->department_id);
-                        });
-                })
-                ->count();
+        // Eager-load workerDocuments to avoid N+1
+        $workers->load('workerDocuments');
 
-            // Get uploaded documents count
-            $uploadedCount = $worker->workerDocuments()
-                ->when(!empty($filters['status']), function($q) use ($filters) {
-                    return $q->where('status', $filters['status']);
-                })
-                ->when(!empty($filters['document_type_id']), function($q) use ($filters) {
-                    return $q->where('document_type_id', $filters['document_type_id']);
-                })
-                ->count();
+        // Pre-fetch required document type counts per department (1 query)
+        $universalCount = \App\Models\DocumentType::where('is_active', true)
+            ->where('is_universal', true)
+            ->count();
 
-            // Get verified documents count
-            $verifiedCount = $worker->workerDocuments()
-                ->where('status', 'verified')
-                ->count();
+        // Get department-specific counts in a single query
+        $deptDocCounts = \Illuminate\Support\Facades\DB::table('department_document_type')
+            ->join('document_types', 'department_document_type.document_type_id', '=', 'document_types.id')
+            ->where('document_types.is_active', true)
+            ->where('document_types.is_universal', false)
+            ->selectRaw('department_document_type.department_id, COUNT(*) as cnt')
+            ->groupBy('department_document_type.department_id')
+            ->pluck('cnt', 'department_id');
 
-            // Get expired documents count
-            $expiredCount = $worker->workerDocuments()
-                ->where('status', 'verified')
-                ->whereNotNull('expired_date')
-                ->whereDate('expired_date', '<', now())
+        $workersWithDocStats = $workers->map(function($worker) use ($filters, $universalCount, $deptDocCounts) {
+            $totalRequired = $universalCount + ($deptDocCounts->get($worker->department_id, 0));
+
+            // Use the already-loaded relation instead of extra queries
+            $docs = $worker->workerDocuments;
+
+            $filteredDocs = $docs;
+            if (!empty($filters['status'])) {
+                $filteredDocs = $filteredDocs->where('status', $filters['status']);
+            }
+            if (!empty($filters['document_type_id'])) {
+                $filteredDocs = $filteredDocs->where('document_type_id', $filters['document_type_id']);
+            }
+            $uploadedCount = $filteredDocs->count();
+
+            $verifiedCount = $docs->where('status', 'verified')->count();
+
+            $expiredCount = $docs->where('status', 'verified')
+                ->filter(fn($d) => $d->expired_date && $d->expired_date < now())
                 ->count();
 
             // Calculate completion percentage

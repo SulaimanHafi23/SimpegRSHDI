@@ -4,6 +4,7 @@ namespace App\Services\Master;
 
 use App\DTOs\Master\ShiftDTO;
 use App\Repositories\Contracts\Master\ShiftRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
@@ -35,7 +36,9 @@ class ShiftService
      */
     public function getActive()
     {
-        return $this->repository->active();
+        return Cache::remember('master_shifts_active', 3600, function () {
+            return $this->repository->active();
+        });
     }
 
     /**
@@ -81,6 +84,7 @@ class ShiftService
             $shift = $this->repository->create($dto);
 
             DB::commit();
+            Cache::forget('master_shifts_active');
 
             return [
                 'success' => true,
@@ -122,6 +126,7 @@ class ShiftService
             $shift = $this->repository->update($id, $dto);
 
             DB::commit();
+            Cache::forget('master_shifts_active');
 
             return [
                 'success' => true,
@@ -157,6 +162,7 @@ class ShiftService
             $this->repository->delete($id);
 
             DB::commit();
+            Cache::forget('master_shifts_active');
 
             return [
                 'success' => true,
@@ -184,6 +190,7 @@ class ShiftService
             $shift = $this->repository->toggleStatus($id);
 
             DB::commit();
+            Cache::forget('master_shifts_active');
 
             return [
                 'success' => true,
@@ -261,7 +268,7 @@ class ShiftService
 
         if ($shift->is_overnight) {
             // For overnight shifts
-            return $checkTime->greaterThanOrEqualTo($startTime) || 
+            return $checkTime->greaterThanOrEqualTo($startTime) ||
                    $checkTime->lessThanOrEqualTo($endTime);
         }
 

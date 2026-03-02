@@ -61,14 +61,19 @@ class OvertimeRequestController extends Controller
             $workers = $this->workerService->getAllActive();
         }
 
-        // Statistics - filter by department if Manager
-        $baseFilters = $departmentId ? ['department_id' => $departmentId, 'per_page' => 9999] : ['per_page' => 9999];
+        // Statistics - single grouped count query instead of 4 paginated queries
+        $statCounts = \App\Models\OvertimeRequest::when($departmentId, function ($q) use ($departmentId) {
+                $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId));
+            })
+            ->selectRaw("status, COUNT(*) as cnt")
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
 
         $statistics = [
-            'total' => $this->overtimeRequestService->getAll($baseFilters)->total(),
-            'pending' => $this->overtimeRequestService->getAll([...$baseFilters, 'status' => 'pending'])->total(),
-            'approved' => $this->overtimeRequestService->getAll([...$baseFilters, 'status' => 'approved'])->total(),
-            'rejected' => $this->overtimeRequestService->getAll([...$baseFilters, 'status' => 'rejected'])->total(),
+            'total' => $statCounts->sum(),
+            'pending' => $statCounts->get('pending', 0),
+            'approved' => $statCounts->get('approved', 0),
+            'rejected' => $statCounts->get('rejected', 0),
             'total_hours' => \App\Models\OvertimeRequest::where('status', 'approved')
                 ->when($departmentId, function($q) use ($departmentId) {
                     $q->whereHas('worker', function($w) use ($departmentId) {

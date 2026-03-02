@@ -4,7 +4,6 @@ namespace App\Http\Requests\Attendance;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\Absent;
 
 class AttendanceRequest extends FormRequest
 {
@@ -14,6 +13,21 @@ class AttendanceRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    /**
+     * Get available attendance statuses
+     */
+    public static function getStatuses(): array
+    {
+        return [
+            'present' => 'Hadir',
+            'late' => 'Terlambat',
+            'absent' => 'Tidak Hadir',
+            'sick' => 'Sakit',
+            'permission' => 'Izin',
+            'leave' => 'Cuti',
+        ];
     }
 
     /**

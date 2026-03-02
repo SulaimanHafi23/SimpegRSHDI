@@ -40,6 +40,7 @@ class ShiftRequest extends FormRequest
                 'date_format:H:i',
             ],
             'description' => ['nullable', 'string', 'max:500'],
+            'grace_period_minutes' => ['nullable', 'integer', 'min:0', 'max:60'],
             'is_active' => ['boolean'],
         ];
     }
@@ -61,8 +62,8 @@ class ShiftRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         $this->merge([
-            'is_active' => $this->has('is_active') ? 
-                filter_var($this->is_active, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false : 
+            'is_active' => $this->has('is_active') ?
+                filter_var($this->is_active, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false :
                 false,
         ]);
     }

@@ -98,7 +98,7 @@ class OvertimeController extends Controller
         }
 
         $validated = $request->validate([
-            'date' => 'required|date',
+            'date' => 'required|date|after_or_equal:today',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i',
             'reason' => 'required|string|max:1000',
@@ -111,7 +111,7 @@ class OvertimeController extends Controller
             if ($end->lessThan($start)) {
                 $end->addDay();
             }
-            $totalHours = $start->diffInHours($end);
+            $totalHours = round($start->diffInMinutes($end) / 60, 2);
 
             $dto = OvertimeRequestDTO::fromRequest([
                 'worker_id' => $worker->id,

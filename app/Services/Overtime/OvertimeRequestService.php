@@ -5,6 +5,7 @@ namespace App\Services\Overtime;
 use App\DTOs\OvertimeRequestDTO;
 use App\Repositories\Contracts\Overtime\OvertimeRequestRepositoryInterface;
 use App\Services\Notification\NotificationService;
+use Illuminate\Support\Facades\DB;
 
 class OvertimeRequestService
 {
@@ -35,6 +36,7 @@ class OvertimeRequestService
 
     public function create(array $data)
     {
+        return DB::transaction(function () use ($data) {
         // Calculate total hours — handle overnight (e.g. 22:00 → 02:00 next day)
         $date = $data['overtime_date'] ?? $data['date'] ?? now()->format('Y-m-d');
         $startTime = \Carbon\Carbon::parse($date . ' ' . $data['start_time']);
@@ -42,7 +44,7 @@ class OvertimeRequestService
         if ($endTime->lessThanOrEqualTo($startTime)) {
             $endTime->addDay();  // overnight lembur
         }
-        $data['total_hours'] = $startTime->diffInHours($endTime);
+        $data['total_hours'] = round($startTime->diffInMinutes($endTime) / 60, 2);
 
         // Set default status to pending if not provided
         if (!isset($data['status']) || empty($data['status'])) {
@@ -51,6 +53,7 @@ class OvertimeRequestService
 
         $dto = OvertimeRequestDTO::fromRequest($data);
         return $this->overtimeRequestRepository->create($dto);
+        });
     }
 
     public function update(string $id, array $data)
@@ -69,7 +72,7 @@ class OvertimeRequestService
             if ($endTime->lessThanOrEqualTo($startTime)) {
                 $endTime->addDay();  // overnight lembur
             }
-            $data['total_hours'] = $startTime->diffInHours($endTime);
+            $data['total_hours'] = round($startTime->diffInMinutes($endTime) / 60, 2);
         }
 
         // Remove empty values to prevent overwriting with empty strings

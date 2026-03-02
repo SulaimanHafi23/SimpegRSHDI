@@ -56,31 +56,40 @@ class DashboardController extends Controller
 
         $departmentId = $this->getManagerDepartmentFilter();
 
-        // Workers Statistics
-        $totalWorkers = Worker::when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count();
-        $activeWorkers = Worker::where('status', 'active')->when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count();
-        $inactiveWorkers = Worker::where('status', 'inactive')->when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count();
-        $resignedWorkers = Worker::where('status', 'resigned')->when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count();
+        // Workers Statistics — single aggregate query instead of 7
+        $workerStats = Worker::when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->selectRaw("COUNT(*) as total")
+            ->selectRaw("SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) as active")
+            ->selectRaw("SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) as inactive")
+            ->selectRaw("SUM(CASE WHEN status = 'resigned' THEN 1 ELSE 0 END) as resigned")
+            ->selectRaw("SUM(CASE WHEN employment_status = 'permanent' THEN 1 ELSE 0 END) as permanent")
+            ->selectRaw("SUM(CASE WHEN employment_status = 'contract' THEN 1 ELSE 0 END) as contract")
+            ->selectRaw("SUM(CASE WHEN employment_status = 'internship' THEN 1 ELSE 0 END) as internship")
+            ->first();
 
-        // Workers by Employment Status
-        $permanentWorkers = Worker::where('employment_status', 'permanent')->when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count();
-        $contractWorkers = Worker::where('employment_status', 'contract')->when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count();
-        $internshipWorkers = Worker::where('employment_status', 'internship')->when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count();
+        $totalWorkers = $workerStats->total ?? 0;
+        $activeWorkers = $workerStats->active ?? 0;
+        $inactiveWorkers = $workerStats->inactive ?? 0;
+        $resignedWorkers = $workerStats->resigned ?? 0;
+        $permanentWorkers = $workerStats->permanent ?? 0;
+        $contractWorkers = $workerStats->contract ?? 0;
+        $internshipWorkers = $workerStats->internship ?? 0;
 
         // Scope helper for attendance queries
         $scopeAttendance = function($query) use ($departmentId) {
             return $departmentId ? $query->whereHas('worker', fn($q) => $q->where('department_id', $departmentId)) : $query;
         };
 
-        // Attendance Statistics (Today)
+        // Attendance Statistics (Today) — single grouped query
         $today = Carbon::today();
-        $todayAttendance = $scopeAttendance(Attendance::whereDate('created_at', $today))->count();
-        $todayPresent = $scopeAttendance(Attendance::whereDate('created_at', $today)
-            ->where('status', 'present'))->count();
-        $todayLate = $scopeAttendance(Attendance::whereDate('created_at', $today)
-            ->where('status', 'late'))->count();
-        $todayAbsent = $scopeAttendance(Attendance::whereDate('created_at', $today)
-            ->where('status', 'absent'))->count();
+        $todayCounts = $scopeAttendance(Attendance::whereDate('attendance_date', $today))
+            ->selectRaw("status, COUNT(*) as cnt")
+            ->groupBy('status')
+            ->pluck('cnt', 'status');
+        $todayAttendance = $todayCounts->sum();
+        $todayPresent = $todayCounts->get('present', 0);
+        $todayLate = $todayCounts->get('late', 0);
+        $todayAbsent = $todayCounts->get('absent', 0);
 
         // Scope helper for leave queries
         $scopeLeave = function($query) use ($departmentId) {
@@ -119,7 +128,7 @@ class DashboardController extends Controller
 
         // Today's Absences
         $todayAbsences = Attendance::with(['worker'])
-            ->whereDate('created_at', $today)
+            ->whereDate('attendance_date', $today)
             ->where('status', 'absent')
             ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
             ->get();
@@ -163,19 +172,22 @@ class DashboardController extends Controller
             'pending_overtimes' => $pendingOvertimes,
         ];
 
-        // Attendance chart for the last 7 days (labels in Indonesian short form)
+        // Attendance chart for the last 7 days — single batch query
         $labels = [];
         $data = [];
         $start = Carbon::today()->subDays(6);
         $dayNames = [0 => 'Min', 1 => 'Sen', 2 => 'Sel', 3 => 'Rab', 4 => 'Kam', 5 => 'Jum', 6 => 'Sab'];
+
+        $chartCounts = $scopeAttendance(Attendance::whereBetween('attendance_date', [$start, Carbon::today()])
+            ->where('status', 'present'))
+            ->selectRaw("DATE(attendance_date) as att_date, COUNT(*) as cnt")
+            ->groupBy('att_date')
+            ->pluck('cnt', 'att_date');
+
         for ($i = 0; $i < 7; $i++) {
             $date = $start->copy()->addDays($i);
             $labels[] = $dayNames[$date->dayOfWeek] ?? $date->format('D');
-            $count = Attendance::whereDate('created_at', $date)
-                ->where('status', 'present')
-                ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
-                ->count();
-            $data[] = $count;
+            $data[] = $chartCounts->get($date->format('Y-m-d'), 0);
         }
 
         $attendanceChart = [
@@ -248,34 +260,32 @@ class DashboardController extends Controller
      */
     private function getMonthlyAttendanceStats(?string $departmentId = null): array
     {
-        $stats = [];
+        $startDate = Carbon::now()->subMonths(5)->startOfMonth();
+        $endDate = Carbon::now()->endOfMonth();
 
+        // Single grouped query for all 6 months × all statuses
+        $query = Attendance::whereBetween('attendance_date', [$startDate, $endDate])
+            ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
+            ->selectRaw("DATE_FORMAT(attendance_date, '%Y-%m') as ym, status, COUNT(*) as cnt")
+            ->groupBy('ym', 'status')
+            ->get();
+
+        // Group by month then status
+        $grouped = $query->groupBy('ym')->map(function ($items) {
+            return $items->pluck('cnt', 'status');
+        });
+
+        $stats = [];
         for ($i = 5; $i >= 0; $i--) {
             $month = Carbon::now()->subMonths($i);
-
-            $present = Attendance::whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->where('status', 'present')
-                ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
-                ->count();
-
-            $late = Attendance::whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->where('status', 'late')
-                ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
-                ->count();
-
-            $absent = Attendance::whereYear('created_at', $month->year)
-                ->whereMonth('created_at', $month->month)
-                ->where('status', 'absent')
-                ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
-                ->count();
+            $ym = $month->format('Y-m');
+            $monthData = $grouped->get($ym, collect());
 
             $stats[] = [
                 'month' => $month->format('M Y'),
-                'present' => $present,
-                'late' => $late,
-                'absent' => $absent,
+                'present' => $monthData->get('present', 0),
+                'late' => $monthData->get('late', 0),
+                'absent' => $monthData->get('absent', 0),
             ];
         }
 
@@ -341,11 +351,11 @@ class DashboardController extends Controller
 
         $summary = [
             'total_workers' => Worker::where('status', 'active')->when($departmentId, fn($q) => $q->where('department_id', $departmentId))->count(),
-            'present' => Attendance::whereDate('created_at', $today)->where('status', 'present')
+            'present' => Attendance::whereDate('attendance_date', $today)->where('status', 'present')
                 ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))->count(),
-            'late' => Attendance::whereDate('created_at', $today)->where('status', 'late')
+            'late' => Attendance::whereDate('attendance_date', $today)->where('status', 'late')
                 ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))->count(),
-            'absent' => Attendance::whereDate('created_at', $today)->where('status', 'absent')
+            'absent' => Attendance::whereDate('attendance_date', $today)->where('status', 'absent')
                 ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))->count(),
             'on_leave' => LeaveRequest::where('status', 'approved')
                 ->whereDate('start_date', '<=', $today)

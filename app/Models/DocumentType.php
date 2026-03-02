@@ -16,7 +16,6 @@ class DocumentType extends Model
         'description',
         'file_format',
         'max_file_size',
-        'description',
         'is_required',
         'is_universal',
         'is_active',

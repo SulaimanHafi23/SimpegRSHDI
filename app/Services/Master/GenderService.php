@@ -4,6 +4,7 @@ namespace App\Services\Master;
 
 use App\DTOs\Master\GenderDTO;
 use App\Repositories\Contracts\Master\GenderRepositoryInterface;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -34,7 +35,9 @@ class GenderService
      */
     public function getAllActive()
     {
-        return $this->repository->active();
+        return Cache::remember('master_genders_active', 3600, function () {
+            return $this->repository->active();
+        });
     }
 
     /**
@@ -88,10 +91,9 @@ class GenderService
             $gender = $this->repository->create($dto);
 
             DB::commit();
+            Cache::forget('master_genders_active');
 
             return [
-                'success' => true,
-                'message' => 'Gender berhasil ditambahkan',
                 'data' => $gender,
             ];
         } catch (\Exception $e) {
@@ -130,10 +132,9 @@ class GenderService
             $gender = $this->repository->update($id, $dto);
 
             DB::commit();
+            Cache::forget('master_genders_active');
 
             return [
-                'success' => true,
-                'message' => 'Gender berhasil diperbarui',
                 'data' => $gender,
             ];
         } catch (\Exception $e) {
@@ -165,10 +166,9 @@ class GenderService
             $this->repository->delete($id);
 
             DB::commit();
+            Cache::forget('master_genders_active');
 
             return [
-                'success' => true,
-                'message' => 'Gender berhasil dihapus',
             ];
         } catch (\Exception $e) {
             DB::rollBack();
@@ -192,6 +192,7 @@ class GenderService
             $gender = $this->repository->toggleStatus($id);
 
             DB::commit();
+            Cache::forget('master_genders_active');
 
             return [
                 'success' => true,

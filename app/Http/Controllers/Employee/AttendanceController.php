@@ -109,7 +109,76 @@ class AttendanceController extends Controller
             }
         }
 
-        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance'));
+        // ── Cek apakah hari ini pegawai libur / cuti / tanggal merah ──
+        $todayOffInfo = null;
+        $worker->load('department');
+
+        // 1. Cek libur nasional (tanggal merah)
+        $holiday = \App\Models\Holiday::where('is_national', true)
+            ->whereDate('date', $today)
+            ->first();
+        if ($holiday) {
+            $deptRequiresAttendance = $worker->department && $worker->department->requires_holiday_attendance;
+            if (!$deptRequiresAttendance) {
+                $todayOffInfo = [
+                    'type' => 'holiday',
+                    'title' => 'Hari Libur Nasional',
+                    'reason' => $holiday->name . ($holiday->description ? ' — ' . $holiday->description : ''),
+                ];
+            }
+        }
+
+        // 2. Cek cuti yang disetujui
+        if (!$todayOffInfo) {
+            $approvedLeave = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->with('leaveType')
+                ->first();
+            if ($approvedLeave) {
+                $todayOffInfo = [
+                    'type' => 'leave',
+                    'title' => 'Sedang Cuti',
+                    'reason' => ($approvedLeave->leaveType->name ?? 'Cuti')
+                        . ' ('. \Carbon\Carbon::parse($approvedLeave->start_date)->format('d M')
+                        . ' - ' . \Carbon\Carbon::parse($approvedLeave->end_date)->format('d M Y') . ')',
+                ];
+            }
+        }
+
+        // 3. Cek perjalanan dinas
+        if (!$todayOffInfo) {
+            $businessTrip = \App\Models\BusinessTrip::where('worker_id', $worker->id)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->first();
+            if ($businessTrip) {
+                $todayOffInfo = [
+                    'type' => 'business_trip',
+                    'title' => 'Perjalanan Dinas',
+                    'reason' => 'Dinas ke ' . $businessTrip->destination
+                        . ' (' . \Carbon\Carbon::parse($businessTrip->start_date)->format('d M')
+                        . ' - ' . \Carbon\Carbon::parse($businessTrip->end_date)->format('d M Y') . ')',
+                ];
+            }
+        }
+
+        // 4. Cek hari libur pola (off-day pattern / exception milik pegawai)
+        if (!$todayOffInfo) {
+            $isWorkerOffDay = $this->offDayService->isOffDay($worker, $today);
+            if ($isWorkerOffDay) {
+                $offDayDetail = $this->offDayService->getOffDayInfo($worker, $today);
+                $todayOffInfo = [
+                    'type' => 'off_day',
+                    'title' => 'Hari Libur Anda',
+                    'reason' => $offDayDetail['reason'] ?? 'Hari libur sesuai jadwal kerja Anda',
+                ];
+            }
+        }
+
+        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance', 'todayOffInfo'));
     }
 
     /**
@@ -136,6 +205,37 @@ class AttendanceController extends Controller
         if ($existingAttendance && $existingAttendance->check_in) {
             return redirect()->route('employee.attendance.index')
                 ->with('error', 'Anda sudah melakukan check-in hari ini.');
+        }
+
+        // ── Cek hari libur sebelum menampilkan form check-in ──
+        $worker->load('department');
+
+        // Libur nasional (kecuali dept standby)
+        $holiday = \App\Models\Holiday::where('is_national', true)
+            ->whereDate('date', $today)->first();
+        if ($holiday) {
+            $deptRequires = $worker->department && $worker->department->requires_holiday_attendance;
+            if (!$deptRequires) {
+                return redirect()->route('employee.attendance.index')
+                    ->with('info', 'Hari ini adalah libur nasional (' . $holiday->name . '). Anda tidak perlu melakukan absensi.');
+            }
+        }
+
+        // Cuti yang disetujui
+        $approvedLeave = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $today)
+            ->whereDate('end_date', '>=', $today)
+            ->with('leaveType')->first();
+        if ($approvedLeave) {
+            return redirect()->route('employee.attendance.index')
+                ->with('info', 'Anda sedang cuti (' . ($approvedLeave->leaveType->name ?? 'Cuti') . '). Tidak perlu melakukan absensi.');
+        }
+
+        // Hari libur pola pegawai (off-day)
+        if ($this->offDayService->isOffDay($worker, $today)) {
+            return redirect()->route('employee.attendance.index')
+                ->with('info', 'Hari ini adalah hari libur Anda sesuai jadwal kerja. Tidak perlu melakukan absensi.');
         }
 
         // Check if on business trip today
@@ -220,7 +320,7 @@ class AttendanceController extends Controller
             'location_id' => 'required|uuid|exists:locations,id',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-            'accuracy' => 'nullable|numeric|min:0',
+            'accuracy' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:500',
             'photo' => 'nullable|string',
             'status' => 'required|in:present,sick,permission,leave',
@@ -233,16 +333,16 @@ class AttendanceController extends Controller
                 now()->format('Y-m-d'),
                 'check_in'
             );
-            
+
             if (!$offDayCheck['can_perform']) {
                 return back()->withInput()->with('error', 'Maaf, hari ini Anda libur. Alasan: ' . ($offDayCheck['message'] ?? 'Hari libur terjadwal'));
             }
 
-            // Server-side check for accuracy (only enforce for present)
+            // Server-side check for accuracy (always enforce for present status)
             $maxAcc = config('attendance.max_accuracy', 300);
-            $accuracy = $validated['accuracy'] ?? ($request->input('accuracy') ?? null);
-            if ($validated['status'] === 'present' && $accuracy !== null && is_numeric($accuracy) && $accuracy > $maxAcc) {
-                return back()->withInput()->with('error', "Lokasi tidak cukup akurat (±{$accuracy} m). Silakan gunakan ponsel atau pilih lokasi manual.");
+            $accuracy = $validated['accuracy'];
+            if ($validated['status'] === 'present' && $accuracy > $maxAcc) {
+                return back()->withInput()->with('error', "Lokasi tidak cukup akurat (±{$accuracy} m). Maksimal akurasi yang diizinkan adalah ±{$maxAcc} m. Coba pindah ke area terbuka atau aktifkan GPS.");
             }
 
             // Handle base64 photo
@@ -258,6 +358,9 @@ class AttendanceController extends Controller
                     $photoData = base64_decode($photoData);
                     if ($photoData === false) {
                         return back()->withInput()->with('error', 'Foto tidak valid.');
+                    }
+                    if (strlen($photoData) > 2 * 1024 * 1024) {
+                        return back()->withInput()->with('error', 'Ukuran foto terlalu besar. Maksimal 2MB.');
                     }
                     $tmpFile = tempnam(sys_get_temp_dir(), 'photo_');
                     file_put_contents($tmpFile, $photoData);
@@ -317,7 +420,7 @@ class AttendanceController extends Controller
             return redirect()->route('employee.attendance.index')
                 ->with('error', 'Data absensi tidak ditemukan.');
         }
-        
+
         // Verify this attendance belongs to the logged-in worker
         if ($attendance->worker_id !== $worker->id) {
             abort(403, 'Unauthorized');
@@ -341,9 +444,9 @@ class AttendanceController extends Controller
             $worker,
             $checkOutDate,
             'check_out',
-            $attendance->date->format('Y-m-d')  // pass check-in date for overnight logic
+            $attendance->attendance_date->format('Y-m-d')  // pass check-in date for overnight logic
         );
-        
+
         if (!$offDayCheck['can_perform']) {
             return back()->withInput()->with('error', 'Tidak dapat check-out hari ini. Alasan: ' . ($offDayCheck['message'] ?? 'Status hari libur'));
         }
@@ -352,7 +455,7 @@ class AttendanceController extends Controller
             'location_id' => 'required|uuid|exists:locations,id',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
-            'accuracy' => 'nullable|numeric|min:0',
+            'accuracy' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:500',
             'photo' => 'nullable|string',
         ]);
@@ -360,9 +463,9 @@ class AttendanceController extends Controller
         try {
             // Server-side check for accuracy
             $maxAcc = config('attendance.max_accuracy', 300);
-            $accuracy = $validated['accuracy'] ?? ($request->input('accuracy') ?? null);
-            if ($accuracy !== null && is_numeric($accuracy) && $accuracy > $maxAcc) {
-                return back()->withInput()->with('error', "Lokasi tidak cukup akurat (±{$accuracy} m). Silakan gunakan ponsel atau pilih lokasi manual.");
+            $accuracy = $validated['accuracy'];
+            if ($accuracy > $maxAcc) {
+                return back()->withInput()->with('error', "Lokasi tidak cukup akurat (±{$accuracy} m). Maksimal akurasi yang diizinkan adalah ±{$maxAcc} m. Coba pindah ke area terbuka atau aktifkan GPS.");
             }
 
             // Handle base64 photo
@@ -378,6 +481,9 @@ class AttendanceController extends Controller
                     $photoData = base64_decode($photoData);
                     if ($photoData === false) {
                         return back()->withInput()->with('error', 'Foto tidak valid.');
+                    }
+                    if (strlen($photoData) > 2 * 1024 * 1024) {
+                        return back()->withInput()->with('error', 'Ukuran foto terlalu besar. Maksimal 2MB.');
                     }
                     $tmpFile = tempnam(sys_get_temp_dir(), 'photo_');
                     file_put_contents($tmpFile, $photoData);
