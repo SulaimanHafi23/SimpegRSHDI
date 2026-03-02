@@ -72,6 +72,9 @@ class AttendanceController extends Controller
             $realAttendances
         );
 
+        // Capture count before optional status-filter might clear the collection
+        $periodVirtualAbsentCount = $virtualAbsents->count();
+
         // When filtering by a specific status other than absent, exclude virtual absent rows
         if (!empty($filters['status']) && $filters['status'] !== 'absent') {
             $virtualAbsents = collect();
@@ -89,45 +92,13 @@ class AttendanceController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        // Ringkasan absensi untuk bulan berjalan
+        // Ringkasan absensi untuk periode yang dipilih
+        $filterStart = \Carbon\Carbon::parse($filters['date_from']);
         $monthlySummary = $this->attendanceService->getMonthlyReport(
             $worker->id,
-            now()->month,
-            now()->year
+            $filterStart->month,
+            $filterStart->year
         );
-
-        // Compute virtual absent count for current month (for the summary cards)
-        $currentMonthStart = now()->startOfMonth();
-        $currentMonthEnd = now()->endOfMonth();
-        $filterStart = \Carbon\Carbon::parse($filters['date_from']);
-        $filterEnd = \Carbon\Carbon::parse($filters['date_to']);
-        $filterCoversCurrentMonth = $filterStart->lte($currentMonthEnd) && $filterEnd->gte($currentMonthStart);
-
-        if ($filterCoversCurrentMonth) {
-            // Reuse already-computed virtual absents, keeping only those in current month
-            $currentMonthVirtualAbsentCount = $this->computeVirtualAbsentDays(
-                $worker,
-                $filters['date_from'],
-                $filters['date_to'],
-                $realAttendances
-            )->filter(function ($day) {
-                $d = \Carbon\Carbon::parse($day->attendance_date);
-                return $d->month == now()->month && $d->year == now()->year;
-            })->count();
-        } else {
-            // Compute separately for current month
-            $currentMonthReal = $this->attendanceService->getCollectionByPeriod(
-                $worker->id,
-                $currentMonthStart->format('Y-m-d'),
-                $currentMonthEnd->format('Y-m-d')
-            );
-            $currentMonthVirtualAbsentCount = $this->computeVirtualAbsentDays(
-                $worker,
-                $currentMonthStart->format('Y-m-d'),
-                $currentMonthEnd->format('Y-m-d'),
-                $currentMonthReal
-            )->count();
-        }
 
         // Hitung jumlah yang terlambat (is_late = true)
         $lateCount = $monthlySummary->where('is_late', true)->count();
@@ -144,13 +115,13 @@ class AttendanceController extends Controller
 
         $summary = [
             // Total hari kerja = DB records + hari tidak hadir tanpa catatan
-            'total_days' => $monthlySummary->count() + $currentMonthVirtualAbsentCount,
+            'total_days' => $monthlySummary->count() + $periodVirtualAbsentCount,
             'present' => $monthlySummary->whereIn('status', ['present', 'late'])->count(),
             'late' => $lateCount,
             'early_leave' => $earlyLeaveCount,
             'perfect' => $perfectCount,
             // Tidak hadir = recorded absents (sakit/izin/cuti/absent) + hari tanpa catatan sama sekali
-            'absent' => $monthlySummary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count() + $currentMonthVirtualAbsentCount,
+            'absent' => $monthlySummary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count() + $periodVirtualAbsentCount,
         ];
 
         // Cek apakah ada sesi absensi yang aktif (Check In tapi belum Check Out)
@@ -245,7 +216,7 @@ class AttendanceController extends Controller
             }
         }
 
-        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance', 'todayOffInfo'));
+        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance', 'todayOffInfo', 'filterStart'));
     }
 
     /**

@@ -82,8 +82,8 @@
                 <i class="fas fa-chart-pie text-sm"></i>
             </span>
             <div>
-                <p class="text-xs text-gray-500">Riwayat Presensi Bulan Ini</p>
-                <p class="text-sm sm:text-base font-semibold text-gray-800">Statistik Kehadiran {{ now()->translatedFormat('F Y') }}</p>
+                <p class="text-xs text-gray-500">Riwayat Presensi</p>
+                <p class="text-sm sm:text-base font-semibold text-gray-800">Statistik Kehadiran {{ \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('F Y') }}</p>
             </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
