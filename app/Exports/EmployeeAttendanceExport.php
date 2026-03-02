@@ -14,6 +14,7 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
 {
     protected $attendances;
     protected $worker;
+    protected int $rowNumber = 0;
 
     public function __construct(Collection $attendances, $worker)
     {
@@ -31,10 +32,14 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
         return [
             'No',
             'Tanggal',
+            'Hari',
+            'Nama Shift',
+            'Jadwal Shift',
             'Check In',
             'Check Out',
-            'Jam Kerja',
             'Status',
+            'Terlambat',
+            'Pulang Cepat',
             'Lokasi',
             'Keterangan',
         ];
@@ -42,11 +47,23 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
 
     public function map($attendance): array
     {
-        static $no = 0;
-        $no++;
+        $this->rowNumber++;
+
+        $attendanceDate = $attendance->attendance_date;
+        $shift = $attendance->shift;
+
+        $shiftSchedule = '-';
+        if ($shift && $attendanceDate) {
+            $schedule = $shift->getScheduleForDate($attendanceDate);
+            $shiftSchedule = sprintf(
+                '%s - %s',
+                \Carbon\Carbon::parse($schedule['start_time'])->format('H:i'),
+                \Carbon\Carbon::parse($schedule['end_time'])->format('H:i')
+            );
+        }
 
         $status = match($attendance->status) {
-            'present' => 'Hadir',
+            'present' => $attendance->is_late ? 'Terlambat' : 'Hadir',
             'late' => 'Terlambat',
             'absent' => 'Tidak Hadir',
             'leave' => 'Cuti',
@@ -55,13 +72,25 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
             default => ucfirst($attendance->status ?? '-')
         };
 
+        $lateInfo = ($attendance->is_late && (int) $attendance->late_minutes > 0)
+            ? ((int) $attendance->late_minutes . ' menit')
+            : '-';
+
+        $earlyLeaveInfo = ($attendance->is_early_leave && (int) $attendance->early_leave_minutes > 0)
+            ? ((int) $attendance->early_leave_minutes . ' menit')
+            : '-';
+
         return [
-            $no,
-            $attendance->date?->format('d/m/Y') ?? '-',
+            $this->rowNumber,
+            $attendanceDate?->format('d/m/Y') ?? '-',
+            $attendanceDate?->translatedFormat('l') ?? '-',
+            $shift?->name ?? '-',
+            $shiftSchedule,
             $attendance->check_in?->format('H:i') ?? '-',
             $attendance->check_out?->format('H:i') ?? '-',
-            $attendance->work_hours ? number_format($attendance->work_hours, 1) . ' jam' : '-',
             $status,
+            $lateInfo,
+            $earlyLeaveInfo,
             $attendance->location->name ?? '-',
             $attendance->notes ?? '-',
         ];
@@ -70,7 +99,7 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
     public function styles(Worksheet $sheet)
     {
         // Set header style
-        $sheet->getStyle('A1:H1')->applyFromArray([
+        $sheet->getStyle('A1:L1')->applyFromArray([
             'font' => [
                 'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
@@ -87,7 +116,7 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
 
         // Set all cells border
         $lastRow = $this->attendances->count() + 1;
-        $sheet->getStyle('A1:H' . $lastRow)->applyFromArray([
+        $sheet->getStyle('A1:L' . $lastRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -98,7 +127,7 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
         // Zebra striping
         for ($row = 2; $row <= $lastRow; $row++) {
             if ($row % 2 == 0) {
-                $sheet->getStyle('A' . $row . ':H' . $row)->applyFromArray([
+                $sheet->getStyle('A' . $row . ':L' . $row)->applyFromArray([
                     'fill' => [
                         'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                         'startColor' => ['rgb' => 'F9FAFB'],
@@ -106,6 +135,8 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
                 ]);
             }
         }
+
+        $sheet->freezePane('A2');
 
         return [];
     }

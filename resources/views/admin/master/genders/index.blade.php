@@ -11,7 +11,30 @@
         </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="md:hidden space-y-3">
+        @forelse($genders as $gender)
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="h-9 w-9 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-venus-mars text-purple-600 text-sm"></i>
+                    </div>
+                    <div class="ml-3 min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $gender->name }}</p>
+                        <span class="inline-flex mt-1 items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            Data Master
+                        </span>
+                    </div>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow px-6 py-12 text-center">
+                <i class="fas fa-inbox text-gray-400 text-5xl mb-4"></i>
+                <p class="text-gray-500 text-lg">Tidak ada data</p>
+            </div>
+        @endforelse
+    </div>
+
+    <div class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -54,5 +77,11 @@
         <div class="bg-gray-50 px-6 py-4 border-t">{{ $genders->links() }}</div>
         @endif
     </div>
+
+    @if($genders->hasPages())
+    <div class="md:hidden bg-gray-50 px-4 py-3 rounded-lg border border-gray-200">
+        {{ $genders->links() }}
+    </div>
+    @endif
 </div>
 @endsection

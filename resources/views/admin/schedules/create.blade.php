@@ -59,18 +59,18 @@
                 <label for="worker_id" class="block text-sm font-medium text-gray-700 mb-2">
                     Pegawai <span class="text-red-500">*</span>
                 </label>
-                <div class="flex gap-2">
-                    <select id="worker_select" class="flex-1 px-4 py-2 border @if($errors->has('worker_id') || $errors->has('worker_ids')) border-red-500 @else border-gray-300 @endif rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <div class="flex gap-2 items-start">
+                    <select id="worker_select" class="min-w-0 flex-1 px-4 py-2 border @if($errors->has('worker_id') || $errors->has('worker_ids')) border-red-500 @else border-gray-300 @endif rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                         <option value="">-- Pilih Pegawai --</option>
                         @foreach($workers as $worker)
                             <option value="{{ $worker->id }}" 
                                     data-label="{{ $worker->nip }} - {{ $worker->name }}"
                                     {{ (request('worker_id') == $worker->id) ? 'selected' : '' }}>
-                                {{ $worker->nip }} - {{ $worker->name }}
+                                {{ $worker->nip }} - {{ \Illuminate\Support\Str::limit($worker->name, 28) }}
                             </option>
                         @endforeach
                     </select>
-                    <button type="button" id="add_worker_btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Tambah</button>
+                    <button type="button" id="add_worker_btn" class="shrink-0 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base">Tambah</button>
                 </div>
                 <div id="selected-workers" class="mt-3 flex flex-wrap gap-2">
                     {{-- chips for selected workers will be injected here --}}
@@ -160,16 +160,16 @@
                     <div id="sequence-list" class="space-y-2">
                         @php $sequence = old('shift_sequence', ['']); @endphp
                         @foreach($sequence as $value)
-                            <div class="sequence-row flex items-center gap-2">
-                                <select name="shift_sequence[]" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                            <div class="sequence-row flex flex-col sm:flex-row sm:items-center gap-2">
+                                <select name="shift_sequence[]" class="w-full min-w-0 sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
                                     <option value="">-- Pilih Shift --</option>
                                     @foreach($shifts as $shift)
                                         <option value="{{ $shift->id }}" {{ $value == $shift->id ? 'selected' : '' }}>
-                                            {{ $shift->name }} ({{ $shift->start_time }} - {{ $shift->end_time }})
+                                            {{ $shift->name }} ({{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }})
                                         </option>
                                     @endforeach
                                 </select>
-                                <button type="button" class="remove-sequence px-3 py-2 text-red-600 hover:text-red-700" title="Hapus">
+                                <button type="button" class="remove-sequence w-full sm:w-auto px-3 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg sm:border-0 sm:rounded-none" title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -273,14 +273,14 @@
 </div>
 
 <template id="sequence-template">
-    <div class="sequence-row flex items-center gap-2">
-        <select name="shift_sequence[]" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+    <div class="sequence-row flex flex-col sm:flex-row sm:items-center gap-2">
+        <select name="shift_sequence[]" class="w-full min-w-0 sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
             <option value="">-- Pilih Shift --</option>
             @foreach($shifts as $shift)
-                <option value="{{ $shift->id }}">{{ $shift->name }} ({{ $shift->start_time }} - {{ $shift->end_time }})</option>
+                <option value="{{ $shift->id }}">{{ $shift->name }} ({{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }})</option>
             @endforeach
         </select>
-        <button type="button" class="remove-sequence px-3 py-2 text-red-600 hover:text-red-700" title="Hapus">
+        <button type="button" class="remove-sequence w-full sm:w-auto px-3 py-2 text-red-600 hover:text-red-700 border border-red-200 rounded-lg sm:border-0 sm:rounded-none" title="Hapus">
             <i class="fas fa-trash"></i>
         </button>
     </div>

@@ -72,22 +72,22 @@
             </a>
         </div>
 
-        <div class="-mx-4 sm:mx-0 overflow-x-auto pb-2">
-            <div class="min-w-[980px] lg:min-w-full p-4">
+        <div class="overflow-x-auto pb-2">
+            <div class="w-full p-2 sm:p-4">
                 <!-- Day Headers -->
-                <div class="grid grid-cols-7 gap-2 mb-2">
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Min</div>
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Sen</div>
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Sel</div>
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Rab</div>
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Kam</div>
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Jum</div>
-                    <div class="text-center text-sm font-semibold text-gray-600 py-2">Sab</div>
+                <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
+                    <div class="text-center text-[11px] sm:text-sm font-semibold text-gray-600 py-1.5 sm:py-2">Min</div>
+                    <div class="text-center text-[11px] sm:text-sm font-semibold text-gray-600 py-1.5 sm:py-2">Sen</div>
+                    <div class="text-center text-[11px] sm:text-sm font-semibold text-gray-600 py-1.5 sm:py-2">Sel</div>
+                    <div class="text-center text-[11px] sm:text-sm font-semibold text-gray-600 py-1.5 sm:py-2">Rab</div>
+                    <div class="text-center text-[11px] sm:text-sm font-semibold text-gray-600 py-1.5 sm:py-2">Kam</div>
+                    <div class="text-center text-[11px] sm:text-sm font-semibold text-gray-600 py-1.5 sm:py-2">Jum</div>
+                    <div class="text-center text-[11px] sm:text-sm font-semibold text-gray-600 py-1.5 sm:py-2">Sab</div>
                 </div>
 
                 <!-- Calendar Days -->
                 @foreach($calendar as $week)
-                    <div class="grid grid-cols-7 gap-2 mb-2">
+                    <div class="grid grid-cols-7 gap-1 sm:gap-2 mb-2">
                         @foreach($week as $day)
                             @php
                                 $isToday = $day['isToday'];
@@ -98,7 +98,7 @@
                                     $isLeave = $day['isLeave'] ?? false;
                             @endphp
                             <div
-                                class="min-h-24 border rounded-lg p-2 relative cursor-pointer transition
+                                class="min-h-16 sm:min-h-24 border rounded-lg p-1.5 sm:p-2 relative cursor-pointer transition
                                         {{ !$isCurrentMonth ? 'bg-gray-50 text-gray-400' : ($isHoliday && $hasShift ? 'bg-orange-50 border-orange-400' : ($isHoliday ? 'bg-red-100 border-red-400' : ($isLeave ? 'bg-purple-50 border-purple-300' : ($isOffDay ? 'bg-rose-50 border-rose-300' : ($hasShift ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-300'))))) }}
                                        {{ $isToday ? 'ring-2 ring-green-500' : '' }}"
                                 data-date-label="{{ $day['date']->translatedFormat('l, d F Y') }}"
@@ -117,7 +117,7 @@
                             >
                                 <!-- Date Number -->
                                 <div class="flex justify-between items-start mb-1">
-                                    <span class="text-sm font-semibold
+                                    <span class="text-xs sm:text-sm font-semibold
                                                  {{ $isCurrentMonth ? 'text-gray-800' : 'text-gray-400' }}">
                                         {{ $day['date']->day }}
                                     </span>
@@ -148,7 +148,18 @@
                                         <i class="fas fa-flag text-red-600 text-lg"></i>
                                     </div>
                                 @elseif($hasShift)
-                                    {{-- Working day - blue background only, no text shown --}}
+                                    <div class="mt-1 space-y-0.5">
+                                        <p class="text-[10px] sm:text-[11px] font-semibold text-blue-700 leading-tight truncate">
+                                            {{ $day['shift']->name }}
+                                        </p>
+                                        <p class="text-[10px] text-gray-600 leading-tight">
+                                            @if(!empty($day['schedule']['start_time']) && !empty($day['schedule']['end_time']))
+                                                {{ \Carbon\Carbon::parse($day['schedule']['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($day['schedule']['end_time'])->format('H:i') }}
+                                            @else
+                                                {{ \Carbon\Carbon::parse($day['shift']->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($day['shift']->end_time)->format('H:i') }}
+                                            @endif
+                                        </p>
+                                    </div>
                                 @else
                                     @if($isCurrentMonth)
                                         <div class="mt-4 flex items-center justify-center">

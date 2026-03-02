@@ -53,51 +53,13 @@ class AttendanceController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        // Load worker relationships for shift display in virtual absent rows
-        $worker->load('department', 'shift', 'workerShifts.shift', 'shiftOverrides.shift');
+        $attendances = $this->attendanceService->getAll($filters);
 
-        // Get real attendance records as collection for the filter range
-        $realAttendances = $this->attendanceService->getCollectionByPeriod(
-            $worker->id,
-            $filters['date_from'],
-            $filters['date_to'],
-            array_filter(['status' => $filters['status'], 'search' => $filters['search']])
-        );
-
-        // Compute virtual absent days: past work days in range with no attendance record
-        $virtualAbsents = $this->computeVirtualAbsentDays(
-            $worker,
-            $filters['date_from'],
-            $filters['date_to'],
-            $realAttendances
-        );
-
-        // Capture count before optional status-filter might clear the collection
-        $periodVirtualAbsentCount = $virtualAbsents->count();
-
-        // When filtering by a specific status other than absent, exclude virtual absent rows
-        if (!empty($filters['status']) && $filters['status'] !== 'absent') {
-            $virtualAbsents = collect();
-        }
-
-        // Build merged, date-sorted, paginated attendance list
-        $allRecords = $realAttendances->concat($virtualAbsents)->sortByDesc('attendance_date');
-        $page = max(1, (int) $request->get('page', 1));
-        $perPage = (int) ($filters['per_page'] ?? 15);
-        $attendances = new \Illuminate\Pagination\LengthAwarePaginator(
-            $allRecords->forPage($page, $perPage)->values(),
-            $allRecords->count(),
-            $perPage,
-            $page,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        // Ringkasan absensi untuk periode yang dipilih
-        $filterStart = \Carbon\Carbon::parse($filters['date_from']);
+        // Ringkasan absensi untuk bulan berjalan menggunakan kode status internal
         $monthlySummary = $this->attendanceService->getMonthlyReport(
             $worker->id,
-            $filterStart->month,
-            $filterStart->year
+            now()->month,
+            now()->year
         );
 
         // Hitung jumlah yang terlambat (is_late = true)
@@ -114,14 +76,13 @@ class AttendanceController extends Controller
             ->count();
 
         $summary = [
-            // Total hari kerja = DB records + hari tidak hadir tanpa catatan
-            'total_days' => $monthlySummary->count() + $periodVirtualAbsentCount,
+            'total_days' => $monthlySummary->count(),
             'present' => $monthlySummary->whereIn('status', ['present', 'late'])->count(),
             'late' => $lateCount,
             'early_leave' => $earlyLeaveCount,
             'perfect' => $perfectCount,
-            // Tidak hadir = recorded absents (sakit/izin/cuti/absent) + hari tanpa catatan sama sekali
-            'absent' => $monthlySummary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count() + $periodVirtualAbsentCount,
+            // Semua status tidak hadir: absent, sick, permission, leave
+            'absent' => $monthlySummary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count(),
         ];
 
         // Cek apakah ada sesi absensi yang aktif (Check In tapi belum Check Out)
@@ -144,12 +105,13 @@ class AttendanceController extends Controller
             if ($prevAttendance && $prevAttendance->check_in && !$prevAttendance->check_out && $prevAttendance->status === 'present') {
                 $activeAttendance = $prevAttendance;
             } else {
-                $activeAttendance = null;
+                $activeAttendance = null; // Tidak ada sesi aktif
             }
         }
 
         // ── Cek apakah hari ini pegawai libur / cuti / tanggal merah ──
         $todayOffInfo = null;
+        $worker->load('department');
 
         // 1. Cek libur nasional (tanggal merah)
         $holiday = \App\Models\Holiday::where('is_national', true)
@@ -216,7 +178,7 @@ class AttendanceController extends Controller
             }
         }
 
-        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance', 'todayOffInfo', 'filterStart'));
+        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance', 'todayOffInfo'));
     }
 
     /**
@@ -624,36 +586,70 @@ class AttendanceController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
+        $exportMonth = $request->input('export_month');
+        if ($exportMonth && preg_match('/^\d{4}-\d{2}$/', $exportMonth)) {
+            $selectedMonth = \Carbon\Carbon::createFromFormat('Y-m', $exportMonth)->startOfMonth();
+        } else {
+            $selectedMonth = now()->startOfMonth();
+        }
+
+        $startDate = $selectedMonth->copy()->startOfMonth();
+        $endDate = $selectedMonth->copy()->endOfMonth();
+
         $filters = [
             'worker_id' => $worker->id,
-            'date_from' => $request->date_from ?? now()->startOfMonth()->format('Y-m-d'),
-            'date_to' => $request->date_to ?? now()->endOfMonth()->format('Y-m-d'),
+            'date_from' => $startDate->format('Y-m-d'),
+            'date_to' => $endDate->format('Y-m-d'),
             'status' => $request->status,
             'search' => $request->search,
+            'export_month' => $selectedMonth->format('Y-m'),
         ];
 
-        // Get all records without pagination
-        $attendances = $this->attendanceService->getAll(array_merge($filters, ['per_page' => 10000]))->items();
+        $rows = $this->buildMonthlyExportRows($worker, $startDate, $endDate);
+        $rowsCollection = collect($rows);
+        $summary = [
+            'total' => $rowsCollection->count(),
+            'present' => $rowsCollection->whereIn('status', ['Hadir', 'Terlambat'])->count(),
+            'late' => $rowsCollection->where('status', 'Terlambat')->count(),
+            'absent' => $rowsCollection->where('status', 'Tidak Hadir')->count(),
+            'leave' => $rowsCollection->where('status', 'Cuti')->count(),
+            'sick' => $rowsCollection->where('status', 'Sakit')->count(),
+            'permission' => $rowsCollection->where('status', 'Izin')->count(),
+        ];
 
         $format = $request->input('format', 'pdf');
+        $filename = 'absensi_' . $worker->nip . '_' . $selectedMonth->format('Y-m');
 
         if ($format === 'excel') {
             return \Maatwebsite\Excel\Facades\Excel::download(
-                new \App\Exports\EmployeeAttendanceExport(collect($attendances), $worker),
-                'absensi_' . $worker->nip . '_' . now()->format('Y-m-d') . '.xlsx'
+                new \App\Exports\WorkerAttendanceCalendarExport($worker, $rows, $startDate, $endDate),
+                $filename . '.xlsx'
             );
         }
 
         if ($format === 'csv') {
             return \Maatwebsite\Excel\Facades\Excel::download(
-                new \App\Exports\EmployeeAttendanceExport(collect($attendances), $worker),
-                'absensi_' . $worker->nip . '_' . now()->format('Y-m-d') . '.csv',
+                new \App\Exports\WorkerAttendanceCalendarExport($worker, $rows, $startDate, $endDate),
+                $filename . '.csv',
                 \Maatwebsite\Excel\Excel::CSV
             );
         }
 
         // Default PDF
-        return $this->pdfExportService->exportAttendanceReport($attendances, $worker, $filters);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('employee.exports.attendance-pdf', [
+            'title' => 'Laporan Riwayat Absensi',
+            'worker' => $worker,
+            'rows' => $rows,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'filters' => $filters,
+            'summary' => $summary,
+            'generated_at' => now()->format('d F Y H:i'),
+        ]);
+
+        $pdf->setPaper('a4', 'portrait');
+
+        return $pdf->download($filename . '.pdf');
     }
 
     /**
@@ -665,103 +661,132 @@ class AttendanceController extends Controller
         return $this->export($request);
     }
 
-    /**
-     * Compute virtual "tidak hadir" rows: past work days in the given date range
-     * where the worker has no attendance record at all.
-     * Excludes off-days, national holidays, approved leaves, and business trips.
-     */
-    private function computeVirtualAbsentDays(
-        $worker,
-        string $dateFrom,
-        string $dateTo,
-        $existingAttendances
-    ): \Illuminate\Support\Collection {
-        $today = now()->startOfDay();
-        $start = \Carbon\Carbon::parse($dateFrom);
-        $end   = \Carbon\Carbon::parse($dateTo);
+    private function buildMonthlyExportRows($worker, \Carbon\Carbon $startDate, \Carbon\Carbon $endDate): array
+    {
+        $worker->loadMissing(['department', 'workerShifts.shift.dayTimes', 'shiftOverrides.shift']);
 
-        // Only consider past days (don't mark future or today as absent yet)
-        if ($end->gt($today)) {
-            $end = $today->copy()->subDay(); // exclude today — employee might still check in
-        }
-
-        if ($end->lt($start)) {
-            return collect();
-        }
-
-        // Build a set of dates that already have a DB attendance record
-        $existingDates = $existingAttendances->pluck('attendance_date')
-            ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'))
-            ->toArray();
-
-        // Collect all off-days in the range (from patterns + exceptions)
-        $offDays = $this->offDayService->getOffDaysInRange($worker, $start, $end);
-
-        // National holidays (skip if dept requires holiday attendance)
-        $deptRequiresAttendance = $worker->department && $worker->department->requires_holiday_attendance;
-        $holidays = $deptRequiresAttendance ? [] : \App\Models\Holiday::where('is_national', true)
-            ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
-            ->pluck('date')
-            ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'))
-            ->toArray();
-
-        // Approved leave requests overlapping the range
-        $approvedLeaves = \App\Models\LeaveRequest::where('worker_id', $worker->id)
-            ->where('status', 'approved')
-            ->where('start_date', '<=', $end->format('Y-m-d'))
-            ->where('end_date', '>=', $start->format('Y-m-d'))
+        $attendances = \App\Models\Attendance::with(['shift', 'location'])
+            ->where('worker_id', $worker->id)
+            ->whereDate('attendance_date', '>=', $startDate->format('Y-m-d'))
+            ->whereDate('attendance_date', '<=', $endDate->format('Y-m-d'))
             ->get();
 
-        // Approved business trips overlapping the range
-        $businessTrips = \App\Models\BusinessTrip::where('worker_id', $worker->id)
+        $attendanceByDate = $attendances->keyBy(function ($attendance) {
+            return \Carbon\Carbon::parse($attendance->attendance_date)->format('Y-m-d');
+        });
+
+        $leaveRequests = \App\Models\LeaveRequest::with('leaveType')
+            ->where('worker_id', $worker->id)
             ->where('status', 'approved')
-            ->where('start_date', '<=', $end->format('Y-m-d'))
-            ->where('end_date', '>=', $start->format('Y-m-d'))
+            ->whereDate('start_date', '<=', $endDate->format('Y-m-d'))
+            ->whereDate('end_date', '>=', $startDate->format('Y-m-d'))
             ->get();
 
-        $virtualDays = collect();
+        $holidays = \App\Models\Holiday::where('is_national', true)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->get()
+            ->keyBy(function ($holiday) {
+                return \Carbon\Carbon::parse($holiday->date)->format('Y-m-d');
+            });
 
-        for ($current = $start->copy(); $current->lte($end); $current->addDay()) {
-            $dateStr = $current->format('Y-m-d');
+        $requiresHolidayAttendance = (bool) ($worker->department?->requires_holiday_attendance ?? false);
 
-            if (in_array($dateStr, $existingDates)) continue; // already has a record
-            if (in_array($dateStr, $offDays))        continue; // scheduled off-day
-            if (in_array($dateStr, $holidays))        continue; // national holiday
+        $rows = [];
 
-            $onLeave = $approvedLeaves->first(fn($l) =>
-                $dateStr >= \Carbon\Carbon::parse($l->start_date)->format('Y-m-d') &&
-                $dateStr <= \Carbon\Carbon::parse($l->end_date)->format('Y-m-d')
-            );
-            if ($onLeave) continue;
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            $dateKey = $date->format('Y-m-d');
+            $attendance = $attendanceByDate->get($dateKey);
+            $holiday = $holidays->get($dateKey);
+            $isHoliday = !is_null($holiday);
+            $isOffDay = method_exists($worker, 'isOffDay') ? $worker->isOffDay($date->toDateTime()) : false;
 
-            $onTrip = $businessTrips->first(fn($t) =>
-                $dateStr >= \Carbon\Carbon::parse($t->start_date)->format('Y-m-d') &&
-                $dateStr <= \Carbon\Carbon::parse($t->end_date)->format('Y-m-d')
-            );
-            if ($onTrip) continue;
+            $shiftId = method_exists($worker, 'getShiftForDate')
+                ? $worker->getShiftForDate($date->toDateTime())
+                : null;
+            $shift = $shiftId ? \App\Models\Shift::with('dayTimes')->find($shiftId) : null;
 
-            // This is a work day with no attendance record → virtual "tidak hadir"
-            $virtualDays->push((object) [
-                'id'                  => null,
-                'attendance_date'     => $dateStr,
-                'status'              => 'absent',
-                'is_virtual'          => true,
-                'check_in'            => null,
-                'check_out'           => null,
-                'is_late'             => false,
-                'late_minutes'        => 0,
-                'is_early_leave'      => false,
-                'early_leave_minutes' => 0,
-                'worker_id'           => $worker->id,
-                'worker'              => $worker,
-                'shift_id'            => null,
-                'shift'               => null,
-                'location'            => null,
-                'photos'              => collect(),
-                'notes'               => null,
-            ]);
+            $shiftTime = '-';
+            if ($shift) {
+                $schedule = $shift->getScheduleForDate($date->toDateTime());
+                $shiftTime = \Carbon\Carbon::parse($schedule['start_time'])->format('H:i')
+                    . ' - '
+                    . \Carbon\Carbon::parse($schedule['end_time'])->format('H:i');
+            }
+
+            $leaveRequest = $leaveRequests->first(function ($leave) use ($date) {
+                return $date->between(
+                    \Carbon\Carbon::parse($leave->start_date)->startOfDay(),
+                    \Carbon\Carbon::parse($leave->end_date)->endOfDay()
+                );
+            });
+
+            $status = 'Tidak Hadir';
+            $notes = '-';
+            $checkIn = '-';
+            $checkOut = '-';
+            $lateInfo = '-';
+
+            if ($attendance) {
+                $status = match ($attendance->status) {
+                    'present' => $attendance->is_late ? 'Terlambat' : 'Hadir',
+                    'late' => 'Terlambat',
+                    'absent' => 'Tidak Hadir',
+                    'leave' => 'Cuti',
+                    'sick' => 'Sakit',
+                    'permission' => 'Izin',
+                    default => ucfirst($attendance->status),
+                };
+
+                $checkIn = $attendance->check_in ? \Carbon\Carbon::parse($attendance->check_in)->format('H:i:s') : '-';
+                $checkOut = $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i:s') : '-';
+                $lateInfo = ($attendance->is_late && (int) $attendance->late_minutes > 0)
+                    ? ((int) $attendance->late_minutes . ' menit')
+                    : '-';
+                $notes = $attendance->notes ?: '-';
+            } elseif ($leaveRequest) {
+                $leaveName = $leaveRequest->leaveType->name ?? 'Cuti';
+                $leaveNameLower = strtolower($leaveName);
+
+                if (str_contains($leaveNameLower, 'sakit')) {
+                    $status = 'Sakit';
+                } elseif (str_contains($leaveNameLower, 'izin')) {
+                    $status = 'Izin';
+                } else {
+                    $status = 'Cuti';
+                }
+
+                $notes = $leaveName;
+            } else {
+                $isHolidayOff = $isHoliday && !$requiresHolidayAttendance;
+                $isWorkday = !empty($shiftId) && !$isOffDay && !$isHolidayOff;
+
+                if ($isWorkday) {
+                    $status = 'Tidak Hadir';
+                } else {
+                    $status = 'Libur';
+                    if ($isOffDay) {
+                        $notes = 'Libur Off-day';
+                    } elseif ($isHolidayOff) {
+                        $notes = 'Libur Nasional: ' . ($holiday->name ?? '-');
+                    } elseif (empty($shiftId)) {
+                        $notes = 'Libur (Tidak ada jadwal shift)';
+                    }
+                }
+            }
+
+            $rows[] = [
+                'date' => $date->format('d/m/Y'),
+                'day_name' => $date->translatedFormat('l'),
+                'shift_name' => $shift?->name ?? '-',
+                'shift_time' => $shiftTime,
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'status' => $status,
+                'late' => $lateInfo,
+                'notes' => $notes,
+            ];
         }
 
-        return $virtualDays;
+        return $rows;
     }
 }

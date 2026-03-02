@@ -31,11 +31,11 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
                 <i class="fas fa-user-check mr-3 text-blue-600"></i>
                 Manajemen Absensi
             </h1>
-            <p cl\ass="mt-1 text-sm text-gray-600">Kelola data absensi pegawai dan monitoring kehadiran</p>
+            <p class="mt-1 text-sm text-gray-600">Kelola data absensi pegawai dan monitoring kehadiran</p>
             <div id="real-time-clock" class="mt-2 text-sm text-blue-600 font-semibold"></div>
         </div>
         <div class="flex gap-2">
@@ -260,16 +260,16 @@ phpinfo() di browser
 
     <!-- Toggle View -->
     <div class="bg-white rounded-lg shadow-md mb-6 p-4">
-        <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-gray-900">Tampilan Data</h3>
-            <div class="flex space-x-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-900">Tampilan Data</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full sm:w-auto">
                 <button id="btn-history-view" @click="activeTab = 'history'"
-                    class="px-4 py-2 rounded-lg transition duration-200"
+                    class="px-3 sm:px-4 py-2 rounded-lg transition duration-200 text-sm"
                     :class="activeTab === 'history' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'">
                     Riwayat Absensi
                 </button>
                 <button id="btn-today-view" @click="activeTab = 'today'"
-                    class="px-4 py-2 rounded-lg transition duration-200"
+                    class="px-3 sm:px-4 py-2 rounded-lg transition duration-200 text-sm"
                     :class="activeTab !== 'history' ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'">
                     Absensi Hari Ini
                 </button>
@@ -285,7 +285,7 @@ phpinfo() di browser
                     Absensi Tanggal:
                     <span id="selected-date-display" class="text-blue-600">{{ request('attendance_date') ? \Carbon\Carbon::parse(request('attendance_date'))->isoFormat('dddd, D MMMM Y') : now()->isoFormat('dddd, D MMMM Y') }}</span>
                 </h3>
-                <div class="flex items-center gap-2 flex-wrap">
+                <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
                     <!-- Export Dropdown -->
                     <div class="relative inline-block text-left" x-data="{ openExport: false }">
                         <button @click="openExport = !openExport" type="button" class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition duration-200 shadow-sm">
@@ -317,7 +317,7 @@ phpinfo() di browser
                     </div>
 
                     <!-- Date Filter Form -->
-                    <form method="GET" action="{{ route('admin.attendance.index') }}" class="flex items-center gap-2" id="date-filter-form">
+                    <form method="GET" action="{{ route('admin.attendance.index') }}" class="flex flex-wrap sm:flex-nowrap items-center gap-2 w-full sm:w-auto" id="date-filter-form">
                         <input type="hidden" name="tab" id="tab-input" value="{{ request('tab', 'today') }}">
                         <label for="attendance_date" class="text-sm font-medium text-gray-700 whitespace-nowrap">
                             <i class="fas fa-calendar-alt mr-1 text-blue-600"></i>
@@ -342,7 +342,7 @@ phpinfo() di browser
             </div>
         </div>
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="min-w-[980px] md:min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Pegawai</th>

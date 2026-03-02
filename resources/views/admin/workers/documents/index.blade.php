@@ -163,8 +163,54 @@
         </div>
     </div>
 
+    {{-- Mobile Cards --}}
+    <div class="md:hidden space-y-3">
+        @forelse($workersWithDocStats as $worker)
+            <div class="bg-white rounded-lg shadow border border-gray-200 p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $worker->name }}</p>
+                        <p class="text-xs text-gray-500">{{ $worker->nip ?? '-' }}</p>
+                        <p class="text-xs text-gray-500 truncate">{{ $worker->department->name ?? '-' }}</p>
+                    </div>
+                    <span class="text-xs font-semibold px-2 py-1 rounded-full {{ $worker->completionPercentage >= 100 ? 'bg-green-100 text-green-700' : ($worker->completionPercentage > 0 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700') }}">
+                        {{ $worker->completionPercentage }}%
+                    </span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
+                    <div class="bg-gray-50 rounded p-2 text-center">
+                        <p class="text-gray-500">Wajib</p>
+                        <p class="font-bold text-gray-800">{{ $worker->totalRequired }}</p>
+                    </div>
+                    <div class="bg-blue-50 rounded p-2 text-center">
+                        <p class="text-blue-600">Upload</p>
+                        <p class="font-bold text-blue-700">{{ $worker->uploadedCount }}</p>
+                    </div>
+                    <div class="bg-green-50 rounded p-2 text-center">
+                        <p class="text-green-600">Verified</p>
+                        <p class="font-bold text-green-700">{{ $worker->verifiedCount }}</p>
+                    </div>
+                </div>
+                <div class="mt-3 flex justify-end gap-2">
+                    <a href="{{ route('admin.worker-documents.worker-documents', $worker->id) }}"
+                       class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150">
+                        Detail
+                    </a>
+                    <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id]) }}"
+                       class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150">
+                        Upload
+                    </a>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow px-6 py-10 text-center text-gray-500">
+                <p class="text-sm">Tidak ada data pegawai</p>
+            </div>
+        @endforelse
+    </div>
+
     {{-- Workers Table --}}
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <div class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
@@ -210,13 +256,13 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
-                                    @if(($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url))
+                                    @if(($worker->photo_url ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url))
                                         <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ Storage::url($worker->photo_url) }}" 
+                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo_url) }}" 
                                              alt="{{ $worker->name }}">
-                                    @elseif(($worker->photo ?? false) && Storage::disk('public')->exists($worker->photo))
+                                    @elseif(($worker->photo ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo))
                                         <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ Storage::url($worker->photo) }}" 
+                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo) }}" 
                                              alt="{{ $worker->name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">

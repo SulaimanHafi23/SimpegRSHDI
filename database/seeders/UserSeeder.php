@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\Worker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -62,19 +61,17 @@ class UserSeeder extends Seeder
                 'is_active' => true,
             ]);
 
-            // Assign role based on NIP
+            // Assign role based on NIP / name keyword
             $workerNip = $worker->nip ?? '';
+            $workerName = strtolower($worker->name ?? '');
 
-            if (str_starts_with($workerNip, 'MGR')) {
-                // Manager role for MGR001, MGR002, MGR003, MGR004
+            if (str_starts_with(strtoupper($workerNip), 'MGR') || str_contains($workerName, 'manager')) {
                 $user->assignRole($roleManager);
                 $role = 'Manager';
-            } elseif (str_starts_with($workerNip, 'HR')) {
-                // HR role for HR001
+            } elseif (str_starts_with(strtoupper($workerNip), 'HR') || str_contains($workerName, 'hr')) {
                 $user->assignRole($roleHR);
                 $role = 'HR';
             } else {
-                // Employee role for everyone else
                 $user->assignRole($roleUser);
                 $role = 'Employee';
             }

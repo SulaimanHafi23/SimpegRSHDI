@@ -52,6 +52,8 @@ class WorkerShiftRepository implements WorkerShiftRepositoryInterface
                 $query->whereNull('effective_until')
                     ->orWhere('effective_until', '>=', now());
             })
+            ->orderByDesc('effective_from')
+            ->orderByDesc('created_at')
             ->with(['shift'])
             ->first();
     }
