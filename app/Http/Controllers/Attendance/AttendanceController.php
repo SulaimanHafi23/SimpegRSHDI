@@ -238,19 +238,24 @@ class AttendanceController extends Controller
             'end_date' => $statsEndDate,
         ];
 
-        // Hitung statistik keseluruhan untuk tab Riwayat (dari allPeriodAttendances yang sudah di-query)
+        // Hitung statistik keseluruhan untuk tab Riwayat — aggregate dari workerStats yang sudah benar
+        // (workerStats sudah menghitung absent = hari kerja - hadir - cuti/sakit/izin)
         $allPeriodFlat = $allPeriodAttendances->flatten();
+        $statsCollection = collect($workerStats);
         $historySummary = [
-            'total_records' => $allPeriodFlat->count(),
-            'present' => $allPeriodFlat->whereIn('status', ['present', 'late'])->count(),
-            'late' => $allPeriodFlat->where('is_late', true)->count(),
-            'early_leave' => $allPeriodFlat->where('is_early_leave', true)->count(),
-            'perfect' => $allPeriodFlat->whereIn('status', ['present'])
-                ->where('is_late', false)
-                ->where('is_early_leave', false)
-                ->count(),
-            'absent' => $allPeriodFlat->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count(),
-            'on_leave' => $allPeriodFlat->where('status', 'leave')->count(),
+            'total_records' => $statsCollection->sum('total_present')
+                             + $statsCollection->sum('total_absent')
+                             + $statsCollection->sum('total_leave')
+                             + $statsCollection->sum('total_sick')
+                             + $statsCollection->sum('total_permission'),
+            'present' => $statsCollection->sum('total_present'),
+            'late' => $statsCollection->sum('total_late'),
+            'early_leave' => $statsCollection->sum('total_early_leave'),
+            'perfect' => $statsCollection->sum('total_perfect'),
+            'absent' => $statsCollection->sum('total_absent'),
+            'on_leave' => $statsCollection->sum('total_leave')
+                        + $statsCollection->sum('total_sick')
+                        + $statsCollection->sum('total_permission'),
             'period_label' => $statsPeriod === 'year'
                 ? 'Tahun ' . $statsYear
                 : ($statsPeriod === 'custom'
