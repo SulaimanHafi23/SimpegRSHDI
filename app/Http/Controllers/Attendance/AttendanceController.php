@@ -198,8 +198,18 @@ class AttendanceController extends Controller
             $avgLateMinutes = $lateItems->count() > 0 ? round($totalLateMinutes / $lateItems->count()) : 0;
             $avgEarlyLeaveMinutes = $earlyLeaveItems->count() > 0 ? round($totalEarlyLeaveMinutes / $earlyLeaveItems->count()) : 0;
 
+            $totalPresent  = $attendanceItems->whereIn('status', ['present', 'late'])->count();
+            $totalLeave    = $attendanceItems->whereIn('status', ['leave', 'cuti'])->count();
+            $totalSick     = $attendanceItems->where('status', 'sick')->count();
+            $totalPerm     = $attendanceItems->whereIn('status', ['permission', 'izin'])->count();
+
+            // Hitung total hari kerja dalam periode (berdasarkan jadwal shift pegawai)
+            // Kemudian kurangi dengan hadir + cuti/sakit/izin → sisanya = tidak hadir (tanpa catatan)
+            $totalWorkDays = $this->getWorkingDaysCount($statsStartDate, $statsEndDate, $worker);
+            $totalAbsent   = max(0, $totalWorkDays - $totalPresent - $totalLeave - $totalSick - $totalPerm);
+
             $workerStats[$worker->id] = [
-                'total_present' => $attendanceItems->whereIn('status', ['present', 'late'])->count(),
+                'total_present' => $totalPresent,
                 'total_late' => $lateItems->count(),
                 'total_late_minutes' => $totalLateMinutes,
                 'avg_late_minutes' => $avgLateMinutes,
@@ -210,10 +220,10 @@ class AttendanceController extends Controller
                     ->where('is_late', false)
                     ->where('is_early_leave', false)
                     ->count(),
-                'total_absent' => $attendanceItems->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count(),
-                'total_sick' => $attendanceItems->where('status', 'sick')->count(),
-                'total_permission' => $attendanceItems->where('status', 'permission')->count(),
-                'total_leave' => $attendanceItems->where('status', 'leave')->count(),
+                'total_absent' => $totalAbsent,
+                'total_sick' => $totalSick,
+                'total_permission' => $totalPerm,
+                'total_leave' => $totalLeave,
             ];
         }
 
