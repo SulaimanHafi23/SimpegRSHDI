@@ -4,82 +4,149 @@ config:
 ---
 
 erDiagram
-    %% ===== MASTER DATA =====
+    %% ===== MASTER =====
     religions {
         uuid id PK
         string name
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
     }
 
     genders {
         uuid id PK
         string name
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
     }
 
     departments {
         uuid id PK
-        string name "IGD, Rawat Inap, dll"
+        string name
         string code
-        text description
+        uuid parent_id FK
+        uuid manager_id FK
+        boolean requires_holiday_attendance
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
     }
 
     locations {
         uuid id PK
         string name
-        text address
         decimal latitude
         decimal longitude
-        integer radius "dalam meter"
+        integer radius
         boolean enforce_geofence
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
     }
 
     document_types {
         uuid id PK
-        string name "KTP, NPWP, Ijazah, dll"
-        text description
-        boolean is_required
+        string name
+        string file_format
+        bigint max_file_size
+        boolean is_universal
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
     }
 
-    %% ===== SHIFT MANAGEMENT (IMPROVED) =====
+    holidays {
+        uuid id PK
+        date date
+        string name
+        boolean is_national
+    }
+
+    %% ===== WORKFORCE & AUTH =====
+    workers {
+        uuid id PK
+        string nip UK
+        string name
+        string email UK
+        string phone_number UK
+        uuid gender_id FK
+        uuid religion_id FK
+        uuid department_id FK
+        date hire_date
+        date resign_date
+        enum employment_status
+        enum status
+        timestamp deleted_at
+    }
+
+    users {
+        uuid id PK
+        uuid worker_id FK
+        string email UK
+        string username UK
+        timestamp last_login
+        boolean is_active
+    }
+
+    %% ===== SPATIE RBAC =====
+    permissions {
+        bigint id PK
+        string name
+        string guard_name
+    }
+
+    roles {
+        bigint id PK
+        string name
+        string guard_name
+    }
+
+    model_has_permissions {
+        bigint permission_id FK
+        uuid model_id
+        string model_type
+    }
+
+    model_has_roles {
+        bigint role_id FK
+        uuid model_id
+        string model_type
+    }
+
+    role_has_permissions {
+        bigint permission_id FK
+        bigint role_id FK
+    }
+
+    %% ===== SCHEDULING =====
     shifts {
         uuid id PK
-        string name "Pagi, Siang, Malam"
+        string name
         time start_time
         time end_time
-        integer total_hours
-        integer grace_period_minutes "toleransi terlambat"
-        boolean is_overnight "shift melewati tengah malam"
+        decimal total_hours
+        integer grace_period_minutes
+        boolean is_overnight
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
+    }
+
+    shift_day_times {
+        uuid id PK
+        uuid shift_id FK
+        tinyint day_of_week
+        time start_time
+        time end_time
     }
 
     worker_shifts {
         uuid id PK
         uuid worker_id FK
         uuid shift_id FK
-        enum pattern_type "fixed rotating custom"
-        json rotating_days "untuk rotating: [1,2,3] artinya shift_id di hari ke-1,2,3 minggu"
         date effective_from
         date effective_until
         boolean is_active
         text notes
-        timestamp created_at
-        timestamp updated_at
+    }
+
+    worker_shift_histories {
+        uuid id PK
+        uuid worker_id FK
+        uuid shift_id FK
+        uuid changed_by FK
+        date effective_from
+        date effective_until
+        timestamp changed_at
     }
 
     shift_overrides {
@@ -87,81 +154,25 @@ erDiagram
         uuid worker_id FK
         uuid shift_id FK
         date override_date
-        text reason
         uuid created_by FK
-        timestamp created_at
-        timestamp updated_at
     }
 
-    %% ===== WORKERS & USERS =====
-    workers {
+    worker_off_days {
         uuid id PK
-        string nip UK
-        string name
-        string email UK
-        string phone_number UK
-        text address
-        date birth_date
-        string birth_place
-        uuid gender_id FK
-        uuid religion_id FK
-        uuid department_id FK
-        date hire_date
-        date resign_date
-        enum employment_status "permanent contract internship"
-        enum status "active inactive resigned"
-        string photo_url
-        timestamp created_at
-        timestamp updated_at
-        timestamp deleted_at
+        uuid worker_id FK
+        json day_of_week
+        date effective_from
+        date effective_until
+        uuid created_by
     }
 
-    users {
+    worker_off_day_exceptions {
         uuid id PK
-        uuid worker_id FK, UK
-        string email UK
-        string username UK
-        string password
-        timestamp email_verified_at
-        timestamp last_login
-        boolean is_active
-        string remember_token
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    %% ===== SPATIE PERMISSION =====
-    permissions {
-        bigint id PK
-        string name
-        string guard_name
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    roles {
-        bigint id PK
-        string name
-        string guard_name
-        timestamp created_at
-        timestamp updated_at
-    }
-
-    model_has_permissions {
-        uuid model_id FK
-        string model_type
-        bigint permission_id FK
-    }
-
-    model_has_roles {
-        uuid model_id FK
-        string model_type
-        bigint role_id FK
-    }
-
-    role_has_permissions {
-        bigint permission_id FK
-        bigint role_id FK
+        uuid worker_id FK
+        date off_date
+        enum type
+        json recurring_pattern
+        uuid created_by
     }
 
     %% ===== ATTENDANCE =====
@@ -173,47 +184,35 @@ erDiagram
         date attendance_date
         datetime check_in
         datetime check_out
-        decimal check_in_latitude
-        decimal check_in_longitude
-        decimal check_out_latitude
-        decimal check_out_longitude
-        integer distance_check_in "meter"
-        integer distance_check_out "meter"
-        enum status "present absent leave sick permission"
+        enum status
+        boolean check_in_by_admin
+        uuid check_in_admin_id FK
+        boolean check_out_by_admin
+        uuid check_out_admin_id FK
         boolean is_late
         integer late_minutes
         boolean is_early_leave
         integer early_leave_minutes
-        boolean is_outside_radius
-        integer overtime_minutes "lembur dalam menit"
-        text notes
-        timestamp created_at
-        timestamp updated_at
     }
 
     attendance_photos {
         uuid id PK
         uuid attendance_id FK
         string photo_path
-        enum photo_type "check_in check_out"
+        enum photo_type
         timestamp taken_at
-        decimal latitude
-        decimal longitude
-        timestamp created_at
     }
 
-    %% ===== LEAVE MANAGEMENT =====
+    %% ===== LEAVE / OVERTIME / TRIP =====
     leave_types {
         uuid id PK
-        string name "Tahunan, Sakit, Izin, dll"
-        string code "ANNUAL, SICK, PERMISSION"
+        string name
+        string code UK
         integer max_days_per_year
         boolean requires_approval
         boolean requires_attachment
-        integer days_notice "berapa hari sebelumnya harus diajukan"
+        integer days_notice
         boolean is_active
-        timestamp created_at
-        timestamp updated_at
     }
 
     leave_requests {
@@ -223,63 +222,81 @@ erDiagram
         date start_date
         date end_date
         integer total_days
-        text reason
-        string attachment_path
-        enum status "pending approved rejected cancelled"
+        enum status
         uuid approved_by FK
         timestamp approved_at
-        text rejection_reason
-        timestamp created_at
-        timestamp updated_at
+    }
+
+    overtime_requests {
+        uuid id PK
+        uuid worker_id FK
+        date overtime_date
+        time start_time
+        time end_time
+        integer total_hours
+        enum status
+        uuid approved_by FK
+        timestamp approved_at
+    }
+
+    business_trips {
+        uuid id PK
+        uuid worker_id FK
+        date start_date
+        date end_date
+        enum status
+        uuid approved_by FK
+        json itinerary
+    }
+
+    salary_components {
+        uuid id PK
+        string code UK
+        string name
+        enum type
+        boolean is_taxable
+        boolean is_active
+        timestamp deleted_at
     }
 
     %% ===== DOCUMENTS =====
-    worker_documents {
-        uuid id PK
-        uuid worker_id FK
-        uuid document_type_id FK
-        // optional relation to department_document_type
-        uuid department_document_type_id FK
-        string file_name
-        string file_path
-        integer file_size "bytes"
-        date expired_date
-        enum status "pending verified rejected"
-        uuid verified_by FK
-        timestamp verified_at
-        text notes
-        timestamp created_at
-        timestamp updated_at
-    }
-
     department_document_type {
         uuid id PK
         uuid department_id FK
         uuid document_type_id FK
-        timestamp created_at
-        timestamp updated_at
     }
 
-    %% ===== SHIFT SWAP REQUESTS =====
+    worker_documents {
+        uuid id PK
+        uuid worker_id FK
+        uuid document_type_id FK
+        uuid department_document_type_id FK
+        bigint file_size
+        date expired_date
+        enum status
+        uuid verified_by FK
+        timestamp verified_at
+    }
+
+    %% ===== SHIFT SWAP =====
     shift_swap_requests {
         uuid id PK
         uuid requester_id FK
         uuid target_worker_id FK
         uuid requester_shift_id FK
         uuid target_shift_id FK
-        enum status "pending accepted rejected cancelled awaiting_approval approved executed"
-        boolean requires_manager_approval
+        string swap_type
+        date swap_date
+        date swap_start_date
+        date swap_end_date
+        json swap_dates
+        enum status
         uuid manager_id FK
-        timestamp manager_approved_at
-        text reason
-        json metadata
+        uuid executed_by FK
         timestamp requested_at
         timestamp expires_at
-        uuid executed_by FK
         timestamp executed_at
         timestamp deleted_at
-        timestamp created_at
-        timestamp updated_at
     }
 
     shift_swap_audit_logs {
@@ -289,71 +306,65 @@ erDiagram
         string action
         string old_status
         string new_status
-        text notes
-        json metadata
-        string ip_address
-        string user_agent
-        timestamp created_at
-        timestamp updated_at
     }
 
-    %% ===== OVERTIME (LEMBUR) =====
-    overtime_requests {
-        uuid id PK
-        uuid worker_id FK
-        date overtime_date
-        time start_time
-        time end_time
-        integer total_hours
-        text reason
-        enum status "pending approved rejected"
-        uuid approved_by FK
-        timestamp approved_at
-        text rejection_reason
+    shift_swap_overrides {
+        bigint id PK
         timestamp created_at
         timestamp updated_at
     }
 
     %% ===== RELATIONSHIPS =====
-    genders ||--o{ workers : ""
-    religions ||--o{ workers : ""
-    departments ||--o{ workers : ""
+    genders ||--o{ workers : has
+    religions ||--o{ workers : has
+    departments ||--o{ workers : has
+    departments ||--o{ departments : parent
+    users ||--o{ departments : manager
 
-    workers ||--|| users : ""
-    workers ||--o{ worker_shifts : "assigned_shifts"
-    workers ||--o{ shift_overrides : "manual_overrides"
-    workers ||--o{ attendances : ""
-    workers ||--o{ worker_documents : ""
-    workers ||--o{ leave_requests : "requester"
-    workers ||--o{ overtime_requests : "requester"
+    workers ||--|| users : account
 
-    users ||--o{ model_has_roles : ""
-    users ||--o{ model_has_permissions : ""
-    users ||--o{ shift_overrides : "creator"
-    users ||--o{ worker_documents : "verifier"
-    users ||--o{ leave_requests : "approver"
-    users ||--o{ overtime_requests : "approver"
+    permissions ||--o{ model_has_permissions : map
+    roles ||--o{ model_has_roles : map
+    permissions ||--o{ role_has_permissions : map
+    roles ||--o{ role_has_permissions : map
 
-    roles ||--o{ model_has_roles : ""
-    roles ||--o{ role_has_permissions : ""
-    permissions ||--o{ model_has_permissions : ""
-    permissions ||--o{ role_has_permissions : ""
+    shifts ||--o{ shift_day_times : daily_time
+    workers ||--o{ worker_shifts : assigned
+    shifts ||--o{ worker_shifts : assigned
+    workers ||--o{ worker_shift_histories : history
+    shifts ||--o{ worker_shift_histories : history
+    users ||--o{ worker_shift_histories : changed_by
+    workers ||--o{ shift_overrides : override
+    shifts ||--o{ shift_overrides : override
+    users ||--o{ shift_overrides : created_by
+    workers ||--o{ worker_off_days : off_day
+    workers ||--o{ worker_off_day_exceptions : off_day_exception
 
-    shifts ||--o{ worker_shifts : ""
-    shifts ||--o{ shift_overrides : ""
-    shifts ||--o{ attendances : ""
-    locations ||--o{ attendances : ""
-    attendances ||--o{ attendance_photos : ""
-    
-    leave_types ||--o{ leave_requests : ""
-    document_types ||--o{ worker_documents : ""
-    departments ||--o{ department_document_type : ""
-    document_types ||--o{ department_document_type : ""
+    workers ||--o{ attendances : records
+    shifts ||--o{ attendances : shift
+    locations ||--o{ attendances : location
+    users ||--o{ attendances : admin_action
+    attendances ||--o{ attendance_photos : photos
 
-    workers ||--o{ shift_swap_requests : "requester"
-    workers ||--o{ shift_swap_requests : "target"
-    worker_shifts ||--o{ shift_swap_requests : "requester_shift"
-    worker_shifts ||--o{ shift_swap_requests : "target_shift"
-    users ||--o{ shift_swap_requests : "manager/executor"
-    shift_swap_requests ||--o{ shift_swap_audit_logs : "audit_logs"
-    users ||--o{ shift_swap_audit_logs : "actor"
+    leave_types ||--o{ leave_requests : type
+    workers ||--o{ leave_requests : requester
+    users ||--o{ leave_requests : approver
+
+    workers ||--o{ overtime_requests : requester
+    users ||--o{ overtime_requests : approver
+
+    workers ||--o{ business_trips : requester
+    users ||--o{ business_trips : approver
+
+    departments ||--o{ department_document_type : rule
+    document_types ||--o{ department_document_type : rule
+    workers ||--o{ worker_documents : owner
+    document_types ||--o{ worker_documents : type
+    department_document_type ||--o{ worker_documents : requirement
+    users ||--o{ worker_documents : verifier
+
+    workers ||--o{ shift_swap_requests : requester_target
+    worker_shifts ||--o{ shift_swap_requests : shift_ref
+    users ||--o{ shift_swap_requests : manager_executor
+    shift_swap_requests ||--o{ shift_swap_audit_logs : logs
+    users ||--o{ shift_swap_audit_logs : actor
