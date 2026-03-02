@@ -51,6 +51,11 @@ class AttendanceService
         return $this->attendanceRepository->getMonthlyReport($workerId, $month, $year);
     }
 
+    public function getCollectionByPeriod(string $workerId, string $dateFrom, string $dateTo, array $filters = [])
+    {
+        return $this->attendanceRepository->getCollectionByPeriod($workerId, $dateFrom, $dateTo, $filters);
+    }
+
     public function checkIn(array $data)
     {
         DB::beginTransaction();

@@ -20,4 +20,5 @@ interface AttendanceRepositoryInterface
     public function checkOut(string $id, AttendanceDTO $dto): object;
     public function getTodayAttendance(string $workerId): ?object;
     public function getMonthlyReport(string $workerId, int $month, int $year): Collection;
+    public function getCollectionByPeriod(string $workerId, string $dateFrom, string $dateTo, array $filters = []): Collection;
 }

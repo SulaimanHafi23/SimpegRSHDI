@@ -158,4 +158,34 @@ class AttendanceRepository implements AttendanceRepositoryInterface
             ->orderBy('attendance_date')
             ->get();
     }
+
+    public function getCollectionByPeriod(string $workerId, string $dateFrom, string $dateTo, array $filters = []): Collection
+    {
+        $query = $this->model->with([
+            'worker.shift',
+            'worker.workerShifts.shift',
+            'worker.shiftOverrides.shift',
+            'shift',
+            'location'
+        ])->where('worker_id', $workerId)
+          ->whereBetween('attendance_date', [$dateFrom, $dateTo]);
+
+        if (!empty($filters['status'])) {
+            if ($filters['status'] === 'late') {
+                $query->where('is_late', true);
+            } else {
+                $query->where('status', $filters['status']);
+            }
+        }
+
+        if (!empty($filters['search'])) {
+            $search = strtolower($filters['search']);
+            $query->where(function($q) use ($search) {
+                $q->whereRaw('LOWER(attendance_date) LIKE ?', ['%' . $search . '%'])
+                  ->orWhereRaw('LOWER(status) LIKE ?', ['%' . $search . '%']);
+            });
+        }
+
+        return $query->orderBy('attendance_date', 'desc')->get();
+    }
 }
