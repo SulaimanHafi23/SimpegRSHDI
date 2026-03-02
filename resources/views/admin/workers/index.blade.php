@@ -13,6 +13,14 @@
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-export-dropdown route="admin.workers.export" />
             @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
+                <x-button
+                    variant="primary"
+                    icon="fas fa-file-import"
+                    onclick="document.getElementById('importModal').classList.remove('hidden')">
+                    Import
+                </x-button>
+            @endif
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-button
                     variant="success"
@@ -421,4 +429,100 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 @endpush
+
+{{-- Import Modal --}}
+<div id="importModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        {{-- Backdrop --}}
+        <div class="fixed inset-0 bg-gray-500/75 backdrop-blur-sm transition-opacity" onclick="document.getElementById('importModal').classList.add('hidden')"></div>
+
+        {{-- Modal Content --}}
+        <div class="relative bg-white rounded-2xl shadow-2xl transform transition-all sm:max-w-lg sm:w-full mx-auto z-10">
+            {{-- Header --}}
+            <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-t-2xl px-6 py-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-white flex items-center">
+                        <i class="fas fa-file-import mr-2"></i>
+                        Import Data Pegawai
+                    </h3>
+                    <button onclick="document.getElementById('importModal').classList.add('hidden')" class="text-white/80 hover:text-white transition">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <form action="{{ route('admin.workers.import') }}" method="POST" enctype="multipart/form-data" class="p-6">
+                @csrf
+
+                <div class="space-y-5">
+                    {{-- Info Box --}}
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-info-circle text-blue-500 mt-0.5 mr-3"></i>
+                            <div class="text-sm text-blue-700">
+                                <p class="font-semibold mb-1">Petunjuk Import:</p>
+                                <ul class="list-disc list-inside space-y-1 text-blue-600">
+                                    <li>Unduh template terlebih dahulu</li>
+                                    <li>Isi data sesuai format template</li>
+                                    <li>Format yang didukung: <strong>.xlsx, .xls, .csv</strong></li>
+                                    <li>Ukuran maksimal: <strong>5 MB</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Download Template --}}
+                    <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-file-excel text-green-600 text-2xl mr-3"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-green-800">Template Import</p>
+                                <p class="text-xs text-green-600">Download template Excel</p>
+                            </div>
+                        </div>
+                        <a href="{{ route('admin.workers.template') }}" class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition">
+                            <i class="fas fa-download mr-1.5"></i>
+                            Download
+                        </a>
+                    </div>
+
+                    {{-- File Upload --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-upload text-green-600 mr-1"></i>
+                            Pilih File
+                        </label>
+                        <div class="relative" x-data="{ fileName: '' }">
+                            <input
+                                type="file"
+                                name="file"
+                                accept=".xlsx,.xls,.csv"
+                                required
+                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-500"
+                            >
+                        </div>
+                        @error('file')
+                            <p class="text-red-600 text-sm mt-1">
+                                <i class="fas fa-exclamation-circle mr-1"></i>
+                                {{ $message }}
+                            </p>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Footer Buttons --}}
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="document.getElementById('importModal').classList.add('hidden')" class="px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
+                        Batal
+                    </button>
+                    <button type="submit" class="px-4 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm transition flex items-center">
+                        <i class="fas fa-upload mr-1.5"></i>
+                        Import Data
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @endsection

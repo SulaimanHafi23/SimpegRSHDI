@@ -67,7 +67,7 @@ class AuthService
             \Log::error('Login error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return [
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat login: ' . $e->getMessage(),
@@ -110,11 +110,11 @@ class AuthService
     public function getAuthenticatedUser(): ?User
     {
         $user = Auth::user();
-        
+
         if ($user) {
             return $user->load(['worker.department', 'roles.permissions']);
         }
-        
+
         return null;
     }
 }

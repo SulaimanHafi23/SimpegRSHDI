@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 
 // ========== ROLE & USER CONTROLLERS ==========
 use App\Http\Controllers\Role\RoleController;
@@ -36,6 +38,7 @@ use App\Http\Controllers\Master\DepartmentDocumentTypeController;
 use App\Http\Controllers\Master\ReligionController;
 use App\Http\Controllers\Master\LeaveTypeController;
 use App\Http\Controllers\Admin\HolidayController;
+use App\Http\Controllers\Admin\AuditLogController;
 
 // Dashboard Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -75,6 +78,12 @@ Route::get('/', function () {
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
+
+    // Password Reset Routes
+    Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
+    Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLinkEmail'])->middleware('throttle:3,1')->name('password.email');
+    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [ResetPasswordController::class, 'reset'])->middleware('throttle:3,1')->name('password.update');
 });
 
 Route::post('/logout', [LoginController::class, 'logout'])
@@ -309,8 +318,10 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [WorkerController::class, 'index'])->name('index');
         Route::get('/create', [WorkerController::class, 'create'])->name('create');
         Route::get('/export', [WorkerController::class, 'export'])->name('export');
-        Route::get('/template', [WorkerController::class, 'downloadTemplate'])->name('template');
-        Route::post('/import', [WorkerController::class, 'import'])->name('import');
+        Route::middleware('role:Super Admin|HR')->group(function () {
+            Route::get('/template', [WorkerController::class, 'downloadTemplate'])->name('template');
+            Route::post('/import', [WorkerController::class, 'import'])->name('import');
+        });
         Route::post('/', [WorkerController::class, 'store'])->name('store');
         Route::get('/{id}', [WorkerController::class, 'show'])->name('show');
         Route::get('/{id}/attendance-history', [WorkerController::class, 'attendanceHistory'])->name('attendance-history');
@@ -481,6 +492,12 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/bulk-store', [HolidayController::class, 'bulkStore'])->name('bulk-store');
         Route::get('/auto-generate', [HolidayController::class, 'autoGenerate'])->name('auto-generate');
         Route::post('/auto-generate', [HolidayController::class, 'storeAutoGenerate'])->name('auto-generate.store');
+    });
+
+    // ========== AUDIT LOG ==========
+    Route::prefix('audit-logs')->name('admin.audit-logs.')->middleware(['auth', 'role:Super Admin'])->group(function () {
+        Route::get('/', [AuditLogController::class, 'index'])->name('index');
+        Route::get('/{id}', [AuditLogController::class, 'show'])->name('show');
     });
 });
 

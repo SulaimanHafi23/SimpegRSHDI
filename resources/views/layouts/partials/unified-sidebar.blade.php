@@ -1,6 +1,6 @@
 {{-- filepath: resources/views/layouts/partials/unified-sidebar.blade.php --}}
 @if(auth()->check())
-<aside class="fixed top-16 lg:top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 flex flex-col"
+<aside class="fixed top-0 left-0 z-50 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 flex flex-col"
     id="unified-sidebar">
 
     <!-- Modern Header with Glassmorphism -->
@@ -459,6 +459,16 @@
                 <i class="fas fa-user-shield text-xs {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-gray-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('admin.users.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Users</span>
+        </a>
+        @endif
+
+        @if(auth()->user()->hasRole('Super Admin'))
+        <a href="{{ route('admin.audit-logs.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.audit-logs.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.audit-logs.*') ? 'bg-white/20' : 'bg-gray-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-history text-xs {{ request()->routeIs('admin.audit-logs.*') ? 'text-white' : 'text-gray-300' }}"></i>
+            </div>
+            <span class="text-sm {{ request()->routeIs('admin.audit-logs.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Audit Log</span>
         </a>
         @endif
         @endif

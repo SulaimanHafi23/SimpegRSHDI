@@ -46,7 +46,7 @@
     <div class="min-h-screen flex overflow-x-hidden max-w-full">
         <!-- Backdrop Overlay for Mobile -->
         <div id="sidebar-backdrop"
-             class="fixed inset-0 backdrop-blur-sm bg-white/30 z-30 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
+             class="fixed inset-0 backdrop-blur-sm bg-white/30 z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
              onclick="toggleUnifiedSidebar()"></div>
 
         <!-- Unified Sidebar -->

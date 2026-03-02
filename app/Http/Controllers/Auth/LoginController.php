@@ -7,6 +7,7 @@ use App\Helpers\PermissionHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\Auth\AuthService;
+use App\Models\AuditLog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -45,6 +46,9 @@ class LoginController extends Controller
             // Regenerate session
             $request->session()->regenerate();
 
+            // Log login event
+            AuditLog::log('login', 'User berhasil login', $result['user']);
+
             // Redirect based on role
             return redirect()->intended(
                 $this->getRedirectUrl($result['user'])
@@ -62,7 +66,14 @@ class LoginController extends Controller
      */
     public function logout(): RedirectResponse
     {
-        $this->authService->logout(auth()->user() ?? null);
+        $user = auth()->user();
+
+        // Log logout event before invalidating session
+        if ($user) {
+            AuditLog::log('logout', 'User logout', $user);
+        }
+
+        $this->authService->logout($user);
 
         request()->session()->invalidate();
         request()->session()->regenerateToken();

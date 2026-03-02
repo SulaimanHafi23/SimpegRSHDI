@@ -221,12 +221,15 @@
                             @enderror
                         </div>
 
-                        <!-- Remember Me -->
+                        <!-- Remember Me & Forgot Password -->
                         <div class="flex items-center justify-between">
                             <label class="flex items-center cursor-pointer">
                                 <input type="checkbox" name="remember_me" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded cursor-pointer">
                                 <span class="ml-2 text-sm text-gray-600">Ingat saya</span>
                             </label>
+                            <a href="{{ route('password.request') }}" class="text-sm text-green-600 hover:text-green-700 font-medium transition duration-200">
+                                Lupa Kata Sandi?
+                            </a>
                         </div>
 
                         <!-- Submit Button -->

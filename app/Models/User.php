@@ -11,11 +11,14 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Traits\Auditable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasApiTokens, HasUuids, HasRoles, SoftDeletes;
+    use HasFactory, Notifiable, HasApiTokens, HasUuids, HasRoles, SoftDeletes, Auditable;
+
+    protected $auditExclude = ['password', 'remember_token', 'last_login', 'email_verified_at'];
 
     /**
      * The attributes that are mass assignable.
