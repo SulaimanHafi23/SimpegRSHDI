@@ -101,21 +101,21 @@
             @forelse($rows as $index => $row)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $row['date'] }}</td>
-                <td>{{ $row['day_name'] }}</td>
-                <td>{{ $row['shift_name'] }}</td>
-                <td>{{ $row['shift_time'] }}</td>
-                <td>{{ $row['check_in'] }}</td>
-                <td>{{ $row['check_out'] }}</td>
-                <td>{{ $row['status'] }}</td>
-                <td class="text-center">{{ $row['late'] }}</td>
-                <td class="text-center">{{ $row['early_leave'] }}</td>
-                <td>{{ $row['location'] }}</td>
+                <td>{{ $row['date'] ?? '-' }}</td>
+                <td>{{ $row['day_name'] ?? '-' }}</td>
+                <td>{{ $row['shift_name'] ?? '-' }}</td>
+                <td>{{ $row['shift_time'] ?? '-' }}</td>
+                <td>{{ $row['check_in'] ?? '-' }}</td>
+                <td>{{ $row['check_out'] ?? '-' }}</td>
+                <td>{{ $row['status'] ?? '-' }}</td>
+                <td class="text-center">{{ $row['late'] ?? '-' }}</td>
+                <td class="text-center">{{ $row['early_leave'] ?? '-' }}</td>
+                <td>{{ $row['location'] ?? '-' }}</td>
             </tr>
-            @if($row['notes'] !== '-')
+            @if(($row['notes'] ?? '-') !== '-')
             <tr>
                 <td></td>
-                <td colspan="10" style="font-size: 9px; color: #4b5563;">Catatan: {{ $row['notes'] }}</td>
+                <td colspan="10" style="font-size: 9px; color: #4b5563;">Catatan: {{ $row['notes'] ?? '-' }}</td>
             </tr>
             @endif
             @empty

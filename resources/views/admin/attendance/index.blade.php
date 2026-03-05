@@ -714,6 +714,11 @@ phpinfo() di browser
                                                     class="p-2 text-orange-600 hover:text-orange-900 hover:bg-orange-50 rounded-lg transition-colors" title="Check Out">
                                                 <i class="fas fa-sign-out-alt w-4 h-4"></i>
                                             </button>
+                                            <a href="{{ route('admin.attendance.edit', $worker->today_attendance->id) }}"
+                                               class="p-2 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded-lg transition-colors"
+                                               title="Koreksi Checkout">
+                                                <i class="fas fa-pen-to-square w-4 h-4"></i>
+                                            </a>
                                         @endif
                                     @else
                                         <button onclick="checkInWorker('{{ $worker->id }}', '{{ $worker->name }}')"

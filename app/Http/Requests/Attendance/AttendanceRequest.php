@@ -40,8 +40,8 @@ class AttendanceRequest extends FormRequest
         return [
             'worker_id' => ['required', Rule::exists('workers', 'id')],
             'date' => 'required|date',
-            'check_in' => 'required|date_format:Y-m-d H:i:s',
-            'check_out' => 'nullable|date_format:Y-m-d H:i:s|after:check_in',
+            'check_in' => 'required|date',
+            'check_out' => 'nullable|date|after:check_in',
             'status' => ['required', Rule::in(array_keys(AttendanceRequest::getStatuses()))],
             'notes' => 'nullable|string|max:500',
             'latitude_in' => 'nullable|numeric|between:-90,90',
