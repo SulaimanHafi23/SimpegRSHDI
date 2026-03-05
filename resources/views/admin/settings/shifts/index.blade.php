@@ -3,7 +3,7 @@
 @section('title', 'Manajemen Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
         <div>

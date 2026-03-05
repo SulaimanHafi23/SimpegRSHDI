@@ -71,7 +71,42 @@
     </div>
 
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Mobile Card Layout -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($documents as $doc)
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900">{{ $doc->worker->name }}</div>
+                        <div class="text-xs text-gray-500">{{ $doc->worker->nip }}@if($doc->worker->department) &bull; {{ $doc->worker->department->name }}@endif</div>
+                    </div>
+                    @if($doc->status === 'pending')
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                    @elseif($doc->status === 'verified')
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800">Verified</span>
+                    @elseif($doc->status === 'rejected')
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800">Rejected</span>
+                    @endif
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-gray-500">Tipe:</span> <span class="font-medium text-gray-700">{{ $doc->documentType->name }}</span>
+                        <span class="text-gray-400 mx-1">&bull;</span>
+                        <span class="text-gray-500">{{ $doc->created_at->format('d M Y') }}</span>
+                    </div>
+                    <a href="{{ route('approvals.documents.show', $doc->id) }}" class="inline-flex items-center px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">
+                        <i class="fas fa-eye mr-1"></i>Detail
+                    </a>
+                </div>
+            </div>
+            @empty
+            <div class="p-6 text-center">
+                <i class="fas fa-inbox text-gray-300 text-4xl mb-3"></i>
+                <p class="text-gray-500 text-sm">Tidak ada dokumen untuk diverifikasi</p>
+            </div>
+            @endforelse
+        </div>
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

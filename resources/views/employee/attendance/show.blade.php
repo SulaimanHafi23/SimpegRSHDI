@@ -3,12 +3,12 @@
 @section('title', 'Detail Absensi')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-5xl">
+<div class="space-y-6 max-w-5xl">
     <!-- Header -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
         <div class="flex items-center justify-between">
             <div class="flex items-center">
-                <a href="{{ route('employee.attendance.index') }}" 
+                <a href="{{ route('employee.attendance.index') }}"
                    class="mr-4 p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -35,7 +35,7 @@
             <i class="fas fa-info-circle text-blue-600"></i>
             Status Overview
         </h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <!-- Main Status -->
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
@@ -122,7 +122,7 @@
                 <i class="fas fa-sign-in-alt text-green-600"></i>
                 Informasi Check-In
             </h2>
-            
+
             <div class="space-y-4">
                 <!-- Check-In Time -->
                 <div class="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
@@ -171,13 +171,13 @@
                             Foto Check-In
                         </div>
                         <div class="relative group">
-                            @php 
+                            @php
                                 $photoUrl = asset('storage/' . $checkInPhoto->photo_path);
                                 $filePath = storage_path('app/public/' . $checkInPhoto->photo_path);
                                 $altPhotoUrl = url('storage/' . $checkInPhoto->photo_path);
                             @endphp
-        
-                            <img src="{{ $photoUrl }}" 
+
+                            <img src="{{ $photoUrl }}"
                                  alt="Foto Check-In"
                                  class="w-full h-48 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow cursor-pointer"
                                  onclick="openImageModal('{{ $photoUrl }}', 'Foto Check-In')"
@@ -209,7 +209,7 @@
                 <i class="fas fa-sign-out-alt text-red-600"></i>
                 Informasi Check-Out
             </h2>
-            
+
             <div class="space-y-4">
                 <!-- Check-Out Time -->
                 <div class="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
@@ -258,13 +258,13 @@
                             Foto Check-Out
                         </div>
                         <div class="relative group">
-                            @php 
+                            @php
                                 $photoUrl = asset('storage/' . $checkOutPhoto->photo_path);
                                 $filePath = storage_path('app/public/' . $checkOutPhoto->photo_path);
                                 $altPhotoUrl = url('storage/' . $checkOutPhoto->photo_path);
                             @endphp
-                            
-                            <img src="{{ $photoUrl }}" 
+
+                            <img src="{{ $photoUrl }}"
                                  alt="Foto Check-Out"
                                  class="w-full h-48 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow cursor-pointer"
                                  onclick="openImageModal('{{ $photoUrl }}', 'Foto Check-Out')"
@@ -302,7 +302,7 @@
             <i class="fas fa-chart-bar text-blue-600"></i>
             Informasi Kerja & Lokasi
         </h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Duration -->
             <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
@@ -375,30 +375,30 @@
                 ->sortByDesc('effective_date')
                 ->first();
         @endphp
-        
+
         @if($todayShift && $todayShift->shift)
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                     <i class="fas fa-chart-line text-blue-600"></i>
                     Analisis Waktu Kerja
                 </h2>
-                
+
                 @php
                     $shiftStart = \Carbon\Carbon::parse($todayShift->shift->start_time);
                     $shiftEnd = \Carbon\Carbon::parse($todayShift->shift->end_time);
                     $checkInTime = \Carbon\Carbon::parse($attendance->check_in);
                     $checkOutTime = $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out) : null;
                     $tolerance = $todayShift->shift->tolerance_minutes ?? 15;
-                    
+
                     // Set tanggal yang sama
                     $shiftStart->setDateFrom($checkInTime);
                     $shiftEnd->setDateFrom($checkInTime);
-                    
+
                     // Jika shift end lebih kecil dari start (misal shift malam), tambah 1 hari
                     if ($shiftEnd->lessThan($shiftStart)) {
                         $shiftEnd->addDay();
                     }
-                    
+
                     $expectedCheckIn = $shiftStart->copy()->addMinutes($tolerance);
                     $expectedCheckOut = $shiftEnd;
                 @endphp
@@ -537,7 +537,7 @@
                 <i class="fas fa-satellite-dish text-blue-600"></i>
                 Informasi GPS
             </h2>
-            
+
             <div class="space-y-3">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-200">
@@ -549,16 +549,16 @@
                         <div class="font-mono text-sm font-bold text-blue-800">{{ number_format($attendance->longitude, 6) }}</div>
                     </div>
                 </div>
-                
+
                 @if($attendance->accuracy)
                     <div class="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 border border-green-200">
                         <div class="text-xs text-green-700 mb-1">Akurasi GPS</div>
                         <div class="text-sm font-bold text-green-800">±{{ round($attendance->accuracy) }} meter</div>
                     </div>
                 @endif
-                
+
                 <div class="text-center">
-                    <a href="https://www.google.com/maps?q={{ $attendance->latitude }},{{ $attendance->longitude }}" 
+                    <a href="https://www.google.com/maps?q={{ $attendance->latitude }},{{ $attendance->longitude }}"
                        target="_blank"
                        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors">
                         <i class="fas fa-external-link-alt"></i>
@@ -580,19 +580,19 @@
                     </h3>
                     <p class="text-sm text-gray-600">Anda sudah melakukan check-in hari ini. Silakan lakukan check-out untuk menyelesaikan absensi.</p>
                 </div>
-                
+
                 <div class="space-y-3">
                     <a href="{{ route('employee.attendance.check-out-form') }}"
                        class="inline-flex items-center justify-center gap-2 px-8 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-                        <i class="fas fa-sign-out-alt"></i> 
+                        <i class="fas fa-sign-out-alt"></i>
                         Check Out Lengkap
                     </a>
-                    
+
                     <div class="text-sm text-gray-500">atau</div>
-                    
+
                     <form action="{{ route('employee.attendance.check-out', $attendance->id) }}" method="POST" class="inline-block">
                         @csrf
-                        <button type="submit" 
+                        <button type="submit"
                                 class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200"
                                 onclick="return confirm('Check-out cepat tanpa foto. Lanjutkan?')">
                             <i class="fas fa-running"></i>
@@ -619,7 +619,7 @@
                 <img id="modalImage" src="" alt="" class="max-w-full max-h-[70vh] object-contain rounded-lg">
             </div>
             <div class="p-4 border-t text-center">
-                <a id="modalDownload" href="" target="_blank" 
+                <a id="modalDownload" href="" target="_blank"
                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                     <i class="fas fa-download"></i>
                     Download Foto

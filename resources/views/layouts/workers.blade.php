@@ -25,13 +25,14 @@
         <!-- Top Navbar -->
         @include('layouts.partials.workers-navbar')
 
-        <div class="flex pt-16 lg:pt-20">
+        <div class="pt-16 lg:pt-20">
             <!-- Sidebar for Desktop/Tablet -->
             @include('layouts.partials.workers-sidebar')
 
             <!-- Page Content -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8 lg:ml-64">
-                <div class="max-w-7xl mx-auto">
+            <div class="lg:ml-64">
+                <main class="p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+                <div class="w-full">
                     @php
                         $currentRoute = \Illuminate\Support\Facades\Route::currentRouteName();
                         $isCreateOrEditPage = str_contains($currentRoute, '.create') ||
@@ -92,6 +93,7 @@
                     @yield('content')
                 </div>
             </main>
+            </div>
         </div>
     </div>
 

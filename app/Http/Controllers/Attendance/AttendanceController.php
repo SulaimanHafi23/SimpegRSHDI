@@ -1029,68 +1029,62 @@ class AttendanceController extends Controller
     /**
      * Menghitung jumlah hari kerja berdasarkan jadwal shift pegawai dalam periode tertentu
      */
+    /**
+     * Hitung jumlah hari kerja YANG SUDAH LEWAT dalam periode.
+     * Hanya menghitung hari yang sudah lewat (sebelum hari ini), karena hari ini belum selesai.
+     * Mengecualikan: hari libur nasional (kecuali dept standby), off-day shift.
+     * TIDAK mengecualikan cuti/dinas — itu ditangani formula penghitung di caller.
+     */
     private function getWorkingDaysCount($dateFrom, $dateTo, $worker = null)
     {
         $start = \Carbon\Carbon::parse($dateFrom);
-        $end = \Carbon\Carbon::parse($dateTo);
-        $workDays = 0;
+        $end   = \Carbon\Carbon::parse($dateTo);
+        $today = now()->startOfDay();
 
-        // Jika ada data worker, coba ambil jadwal shift-nya
-        $workingDays = [1, 2, 3, 4, 5, 6]; // Default: Senin-Sabtu (karena rumah sakit biasanya 6 hari kerja)
+        // Cap end di kemarin — hari ini belum lewat, belum bisa dihitung absent
+        if ($end->gte($today)) {
+            $end = $today->copy()->subDay();
+        }
 
+        if ($start->gt($end)) {
+            return 0;
+        }
+
+        // Ambil shift days dari worker -----------
+        $workingDays = [1, 2, 3, 4, 5, 6]; // Default: Senin-Sabtu (rumah sakit)
+
+        $activeShift = null;
         if ($worker) {
-            // Cari shift aktif worker
-            $activeShift = null;
-
-            // Coba ambil dari worker shifts yang aktif
             if ($worker->workerShifts) {
                 $activeWorkerShift = $worker->workerShifts
                     ->where('is_active', true)
                     ->where('effective_from', '<=', $start->format('Y-m-d'))
-                    ->filter(function($ws) use ($end) {
-                        return is_null($ws->effective_until) || $ws->effective_until >= $end->format('Y-m-d');
-                    })
+                    ->filter(fn($ws) => is_null($ws->effective_until) || $ws->effective_until >= $end->format('Y-m-d'))
                     ->first();
 
                 if ($activeWorkerShift && $activeWorkerShift->shift) {
                     $activeShift = $activeWorkerShift->shift;
                 }
             }
-
-            // Fallback ke shift default worker
             if (!$activeShift && $worker->shift) {
                 $activeShift = $worker->shift;
             }
 
-            // Jika ada shift, ambil hari kerja dari shift
             if ($activeShift) {
                 $workingDays = [];
-
-                // Mapping hari dalam shift (asumsi ada field seperti working_days atau individual day flags)
-                // Jika tidak ada, gunakan default 5 hari kerja
                 if (isset($activeShift->working_days)) {
-                    // Jika ada field working_days (format: "1,2,3,4,5" untuk Senin-Jumat)
-                    $workingDays = explode(',', $activeShift->working_days);
-                    $workingDays = array_map('intval', $workingDays);
+                    $workingDays = array_map('intval', explode(',', $activeShift->working_days));
                 } else {
-                    // Cek individual day flags jika ada
                     $dayFlags = [
-                        'is_sunday' => 0,
-                        'is_monday' => 1,
-                        'is_tuesday' => 2,
-                        'is_wednesday' => 3,
-                        'is_thursday' => 4,
-                        'is_friday' => 5,
-                        'is_saturday' => 6
+                        'is_sunday'    => 0, 'is_monday'   => 1, 'is_tuesday'  => 2,
+                        'is_wednesday' => 3, 'is_thursday' => 4, 'is_friday'   => 5,
+                        'is_saturday'  => 6,
                     ];
-
-                    foreach ($dayFlags as $flag => $dayNumber) {
+                    foreach ($dayFlags as $flag => $num) {
                         if (isset($activeShift->$flag) && $activeShift->$flag) {
-                            $workingDays[] = $dayNumber;
+                            $workingDays[] = $num;
                         }
                     }
-
-                    // Jika tidak ada flag hari, gunakan default Senin-Sabtu untuk rumah sakit
                     if (empty($workingDays)) {
                         $workingDays = [1, 2, 3, 4, 5, 6];
                     }
@@ -1098,11 +1092,47 @@ class AttendanceController extends Controller
             }
         }
 
-        // Hitung hari kerja berdasarkan jadwal
-        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-            if (in_array($date->dayOfWeek, $workingDays)) {
-                $workDays++;
+        // Ambil libur nasional dalam periode
+        $holidays = \App\Models\Holiday::where('is_national', true)
+            ->whereBetween('date', [$start->format('Y-m-d'), $end->format('Y-m-d')])
+            ->get()
+            ->keyBy(fn($h) => \Carbon\Carbon::parse($h->date)->format('Y-m-d'));
+
+        $requiresHolidayAttendance = false;
+        if ($worker && $worker->department) {
+            $requiresHolidayAttendance = (bool) ($worker->department->requires_holiday_attendance ?? false);
+        }
+
+        // Off-days (pola libur pekerja)
+        $offDays = [];
+        if ($worker) {
+            $offDayService = app(\App\Services\WorkerOffDay\WorkerOffDayService::class);
+            if (method_exists($offDayService, 'getOffDaysInRange')) {
+                $offDays = array_flip($offDayService->getOffDaysInRange($worker, $start, $end));
             }
+        }
+
+        // Iterate per hari, hitung yang benar-benar hari kerja efektif
+        $workDays = 0;
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            $dateKey = $date->format('Y-m-d');
+
+            // Bukan hari kerja menurut jadwal shift
+            if (!in_array($date->dayOfWeek, $workingDays)) {
+                continue;
+            }
+
+            // Libur nasional (kecuali dept standby)
+            if (!$requiresHolidayAttendance && isset($holidays[$dateKey])) {
+                continue;
+            }
+
+            // Off-day pekerja
+            if (isset($offDays[$dateKey])) {
+                continue;
+            }
+
+            $workDays++;
         }
 
         return $workDays;

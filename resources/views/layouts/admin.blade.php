@@ -25,8 +25,8 @@
 
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50 overflow-x-hidden">
-    <div class="min-h-screen flex overflow-x-hidden max-w-full">
+<body class="font-sans antialiased bg-gray-50">
+    <div class="min-h-screen">
         <!-- Backdrop Overlay for Mobile -->
         <div id="sidebar-backdrop"
              class="fixed inset-0 backdrop-blur-sm bg-white/30 z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
@@ -36,12 +36,12 @@
         @include('layouts.partials.unified-sidebar')
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col lg:ml-64 overflow-x-hidden w-full max-w-full">
+        <div class="min-h-screen flex flex-col lg:ml-64">
             <!-- Navbar -->
             @include('layouts.partials.admin-navbar')
 
             <!-- Page Content -->
-            <main class="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 lg:p-8 w-full max-w-full {{ auth()->check() && auth()->user()->hasRole('Employee') ? 'pb-20 lg:pb-8' : '' }}">
+            <main class="flex-1 p-4 sm:p-6 lg:p-8 {{ auth()->check() && auth()->user()->hasRole('Employee') ? 'pb-20 lg:pb-8' : '' }}">
                 <!-- Breadcrumb -->
                 @if(isset($breadcrumbs))
                     <x-ui.breadcrumb :items="$breadcrumbs" />

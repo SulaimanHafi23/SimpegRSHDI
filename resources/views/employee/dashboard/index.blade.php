@@ -137,7 +137,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1">Hadir</p>
-                    <h3 class="text-3xl font-bold text-green-600">{{ $attendanceSummary['present'] ?? 0 }}</h3>
+                    <h3 class="text-2xl md:text-3xl font-bold text-green-600">{{ $attendanceSummary['present'] ?? 0 }}</h3>
                     <p class="text-gray-500 text-xs mt-2">Bulan ini</p>
                     <div class="mt-2">
                         <span class="text-xs text-green-600 font-medium">
@@ -156,7 +156,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1">Terlambat</p>
-                    <h3 class="text-3xl font-bold text-yellow-600">{{ $attendanceSummary['late'] ?? 0 }}</h3>
+                    <h3 class="text-2xl md:text-3xl font-bold text-yellow-600">{{ $attendanceSummary['late'] ?? 0 }}</h3>
                     <p class="text-gray-500 text-xs mt-2">Bulan ini</p>
                     @if(($attendanceSummary['late'] ?? 0) > 0)
                     <div class="mt-2">
@@ -176,7 +176,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1">Tidak Hadir</p>
-                    <h3 class="text-3xl font-bold text-red-600">{{ $attendanceSummary['absent'] ?? 0 }}</h3>
+                    <h3 class="text-2xl md:text-3xl font-bold text-red-600">{{ $attendanceSummary['absent'] ?? 0 }}</h3>
                     <p class="text-gray-500 text-xs mt-2">Bulan ini</p>
                     @if(($attendanceSummary['absent'] ?? 0) > 0)
                     <div class="mt-2">
@@ -196,7 +196,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-600 text-sm mb-1">Lembur</p>
-                    <h3 class="text-3xl font-bold text-purple-600">{{ $overtimeSummary['total_requests'] ?? 0 }}</h3>
+                    <h3 class="text-2xl md:text-3xl font-bold text-purple-600">{{ $overtimeSummary['total_requests'] ?? 0 }}</h3>
                     <p class="text-gray-500 text-xs mt-2">{{ number_format($overtimeSummary['total_hours'] ?? 0, 1) }} jam</p>
                     <div class="mt-2">
                         <span class="text-xs text-purple-600 font-medium">
@@ -313,7 +313,7 @@
             <i class="fas fa-bolt text-yellow-500 mr-2"></i>
             Menu Cepat
         </h3>
-        <div class="grid grid-cols-3 gap-3">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
             <a href="{{ route('employee.leaves.create') }}" class="flex flex-col items-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg hover:shadow-md transition duration-300">
                 <div class="bg-blue-500 text-white p-3 rounded-full mb-2">
                     <i class="fas fa-calendar-plus text-xl"></i>

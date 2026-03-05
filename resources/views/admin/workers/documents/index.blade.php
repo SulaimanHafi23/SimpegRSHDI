@@ -3,14 +3,14 @@
 @section('title', 'Manajemen Dokumen Pegawai')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <div>
             <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Manajemen Dokumen Pegawai</h1>
             <p class="text-gray-600 mt-1">Kelola dan pantau kelengkapan dokumen pegawai</p>
         </div>
-        <a href="{{ route('admin.worker-documents.create') }}" 
+        <a href="{{ route('admin.worker-documents.create') }}"
            class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg shadow-md transition duration-150">
             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -97,18 +97,18 @@
     {{-- Filter Section --}}
     <div x-data="{ showFilters: false }" class="mb-6">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <button @click="showFilters = !showFilters" 
+            <button @click="showFilters = !showFilters"
                     class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors">
                 <div class="flex items-center space-x-3">
                     <i class="fas fa-filter text-indigo-600"></i>
                     <span class="font-semibold text-gray-900">Filter & Pencarian</span>
                 </div>
-                <i class="fas fa-chevron-down transform transition-transform" 
+                <i class="fas fa-chevron-down transform transition-transform"
                    :class="{ 'rotate-180': showFilters }"></i>
             </button>
 
-            <div x-show="showFilters" 
-                 x-collapse 
+            <div x-show="showFilters"
+                 x-collapse
                  class="border-t border-gray-200">
                 <form method="GET" action="{{ route('admin.worker-documents.index') }}" class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -151,7 +151,7 @@
                                 <i class="fas fa-search mr-2"></i>
                                 Filter
                             </button>
-                            <a href="{{ route('admin.worker-documents.index') }}" 
+                            <a href="{{ route('admin.worker-documents.index') }}"
                                class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg shadow-md transition duration-150 flex items-center">
                                 <i class="fas fa-redo mr-2"></i>
                                 Reset
@@ -257,12 +257,12 @@
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     @if(($worker->photo_url ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url))
-                                        <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo_url) }}" 
+                                        <img class="h-10 w-10 rounded-full object-cover"
+                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo_url) }}"
                                              alt="{{ $worker->name }}">
                                     @elseif(($worker->photo ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo))
-                                        <img class="h-10 w-10 rounded-full object-cover" 
-                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo) }}" 
+                                        <img class="h-10 w-10 rounded-full object-cover"
+                                             src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo) }}"
                                              alt="{{ $worker->name }}">
                                     @else
                                         <div class="h-10 w-10 rounded-full bg-indigo-500 flex items-center justify-center text-white font-bold">
@@ -303,7 +303,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-center">
                             <div class="flex flex-col items-center">
                                 <div class="w-full bg-gray-200 rounded-full h-2.5 max-w-[100px] mb-1">
-                                    <div class="bg-{{ $statusColor }}-600 h-2.5 rounded-full transition-all duration-300" 
+                                    <div class="bg-{{ $statusColor }}-600 h-2.5 rounded-full transition-all duration-300"
                                          style="width: {{ min($worker->completionPercentage, 100) }}%"></div>
                                 </div>
                                 <span class="text-xs font-semibold text-{{ $statusColor }}-700">
@@ -313,13 +313,13 @@
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div class="flex justify-end space-x-2">
-                                <a href="{{ route('admin.worker-documents.worker-documents', $worker->id) }}" 
+                                <a href="{{ route('admin.worker-documents.worker-documents', $worker->id) }}"
                                    class="inline-flex items-center px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150"
                                    title="Lihat Detail Dokumen">
                                     <i class="fas fa-eye mr-1"></i>
                                     Detail
                                 </a>
-                                <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id]) }}" 
+                                <a href="{{ route('admin.worker-documents.create', ['worker_id' => $worker->id]) }}"
                                    class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150"
                                    title="Upload Dokumen">
                                     <i class="fas fa-upload mr-1"></i>
@@ -344,7 +344,7 @@
                 </tbody>
             </table>
         </div>
-        
+
         {{-- Pagination --}}
         <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
             {{ $workersWithDocStats->links() }}

@@ -80,7 +80,80 @@
             <p class="text-sm mt-2">Upload dokumen pertama Anda</p>
         </div>
         @else
-        <div class="overflow-x-auto">
+        <!-- Mobile Cards -->
+        <div class="sm:hidden divide-y divide-gray-200">
+            @foreach($documents as $document)
+            <div class="p-4 space-y-3">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            @if($document->file_type == 'application/pdf')
+                            <div class="h-10 w-10 bg-red-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-pdf text-red-600"></i>
+                            </div>
+                            @else
+                            <div class="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-file-image text-blue-600"></i>
+                            </div>
+                            @endif
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ $document->fileRequirement->documentType->name ?? 'Dokumen' }}</p>
+                            <p class="text-xs text-gray-500">{{ $document->file_name }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">{{ $document->created_at->format('d/m/Y') }}</p>
+                        </div>
+                    </div>
+                    <div>
+                        @if($document->status == 'verified')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            <i class="fas fa-check-circle mr-1"></i>Disetujui
+                        </span>
+                        @elseif($document->status == 'rejected')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                            <i class="fas fa-times-circle mr-1"></i>Ditolak
+                        </span>
+                        @else
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            <i class="fas fa-clock mr-1"></i>Pending
+                        </span>
+                        @endif
+                    </div>
+                </div>
+
+                @if($document->expired_date)
+                <div class="text-xs {{ $document->is_expired ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
+                    <i class="fas fa-calendar-times mr-1"></i>Expired: {{ \Carbon\Carbon::parse($document->expired_date)->format('d/m/Y') }}
+                </div>
+                @endif
+
+                <div class="flex items-center space-x-3 pt-1">
+                    <a href="{{ route('workers.documents.show', $document->id) }}"
+                       class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100">
+                        <i class="fas fa-eye mr-1"></i>Lihat
+                    </a>
+                    <a href="{{ route('workers.documents.download', $document->id) }}"
+                       class="inline-flex items-center px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100">
+                        <i class="fas fa-download mr-1"></i>Download
+                    </a>
+                    @if($document->status != 'verified')
+                    <form action="{{ route('workers.documents.destroy', $document->id) }}"
+                          method="POST"
+                          onsubmit="return confirm('Yakin ingin menghapus dokumen ini?')"
+                          class="inline">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100">
+                            <i class="fas fa-trash mr-1"></i>Hapus
+                        </button>
+                    </form>
+                    @endif
+                </div>
+            </div>
+            @endforeach
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden sm:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

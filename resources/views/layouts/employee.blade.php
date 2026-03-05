@@ -25,8 +25,8 @@
 
     @stack('styles')
 </head>
-<body class="font-sans antialiased bg-gray-50 overflow-x-hidden">
-    <div class="min-h-screen flex overflow-x-hidden max-w-full">
+<body class="font-sans antialiased bg-gray-50">
+    <div class="min-h-screen">
         <!-- Backdrop Overlay for Mobile -->
         <div id="sidebar-backdrop"
              class="fixed inset-0 backdrop-blur-sm bg-white/30 z-30 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
@@ -36,13 +36,13 @@
         @include('layouts.partials.unified-sidebar')
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col lg:ml-64 overflow-x-hidden w-full max-w-full">
+        <div class="min-h-screen flex flex-col lg:ml-64">
             <!-- Top Navbar -->
             @include('layouts.partials.employee-navbar')
 
             <!-- Page Content with bottom padding for mobile footer -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8 overflow-x-hidden w-full max-w-full">
-            <div class="max-w-7xl mx-auto w-full overflow-x-hidden">
+            <main class="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8">
+            <div class="w-full">
                 <!-- Alert Messages -->
                 @php
                     $currentRoute = \Illuminate\Support\Facades\Route::currentRouteName();

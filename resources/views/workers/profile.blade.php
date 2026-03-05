@@ -6,7 +6,7 @@
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Profile Saya</h1>
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Profile Saya</h1>
         <p class="mt-2 text-sm text-gray-600">Kelola informasi profile dan keamanan akun Anda</p>
     </div>
 

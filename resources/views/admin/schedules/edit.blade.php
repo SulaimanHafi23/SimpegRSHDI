@@ -3,7 +3,7 @@
 @section('title', 'Edit Jadwal Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
@@ -60,7 +60,7 @@
                 <label for="worker_id" class="block text-sm font-medium text-gray-700 mb-2">
                     Pegawai <span class="text-red-500">*</span>
                 </label>
-                <select name="worker_id" id="worker_id" 
+                <select name="worker_id" id="worker_id"
                         class="w-full px-4 py-2 border @error('worker_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         required>
                     <option value="">-- Pilih Pegawai --</option>
@@ -80,7 +80,7 @@
                 <label for="shift_id" class="block text-sm font-medium text-gray-700 mb-2">
                     Shift <span class="text-red-500">*</span>
                 </label>
-                <select name="shift_id" id="shift_id" 
+                <select name="shift_id" id="shift_id"
                         class="w-full px-4 py-2 border @error('shift_id') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         required>
                     <option value="">-- Pilih Shift --</option>
@@ -161,7 +161,7 @@
                     <label for="start_date" class="block text-sm font-medium text-gray-700 mb-2">
                         Tanggal Mulai <span class="text-red-500">*</span>
                     </label>
-                    <input type="date" name="start_date" id="start_date" 
+                    <input type="date" name="start_date" id="start_date"
                            value="{{ old('start_date', $workerShift->start_date) }}"
                            class="w-full px-4 py-2 border @error('start_date') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                            required>
@@ -175,7 +175,7 @@
                     <label for="end_date" class="block text-sm font-medium text-gray-700 mb-2">
                         Tanggal Selesai <span class="text-gray-500">(Opsional)</span>
                     </label>
-                    <input type="date" name="end_date" id="end_date" 
+                    <input type="date" name="end_date" id="end_date"
                            value="{{ old('end_date', $workerShift->end_date) }}"
                            class="w-full px-4 py-2 border @error('end_date') border-red-500 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                     @error('end_date')
@@ -188,7 +188,7 @@
             <!-- Status Aktif -->
             <div class="mb-6 mt-6">
                 <label class="flex items-center">
-                    <input type="checkbox" name="is_active" value="1" 
+                    <input type="checkbox" name="is_active" value="1"
                            {{ old('is_active', $workerShift->is_active) ? 'checked' : '' }}
                            class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
                     <span class="ml-2 text-sm font-medium text-gray-700">Status Aktif</span>
@@ -198,14 +198,14 @@
 
             <!-- Buttons -->
             <div class="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-                <button type="submit" 
+                <button type="submit"
                         class="inline-flex justify-center items-center px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition duration-150">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                     </svg>
                     Update Jadwal
                 </button>
-                <a href="{{ route('admin.worker-shifts.index') }}" 
+                <a href="{{ route('admin.worker-shifts.index') }}"
                    class="inline-flex justify-center items-center px-6 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition duration-150">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -244,14 +244,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const sequenceList = document.getElementById('sequence-list');
     const addSequenceBtn = document.getElementById('add-sequence');
     const sequenceTemplate = document.getElementById('sequence-template');
-    
+
     startDateInput.addEventListener('change', function() {
         endDateInput.setAttribute('min', this.value);
         if (endDateInput.value && endDateInput.value < this.value) {
             endDateInput.value = '';
         }
     });
-    
+
     // Set initial minimum on load
     if (startDateInput.value) {
         endDateInput.setAttribute('min', startDateInput.value);

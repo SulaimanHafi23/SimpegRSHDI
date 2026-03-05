@@ -341,8 +341,116 @@ phpinfo() di browser
                 </div>
             </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-[980px] md:min-w-full divide-y divide-gray-200">
+        {{-- ══════════════ MOBILE CARDS (visible < md) ══════════════ --}}
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($workersWithAttendance as $worker)
+                @php
+                    $shift = null; $activeWorkerShift = null;
+                    $selectedDate = \Carbon\Carbon::parse(request('attendance_date', now()->format('Y-m-d')));
+                    $override = $worker->shiftOverrides->filter(fn($o) => $o->override_date->format('Y-m-d') === $selectedDate->format('Y-m-d'))->first();
+                    if ($override && $override->shift) { $shift = $override->shift; } else {
+                        $activeWorkerShift = $worker->workerShifts->filter(fn($ws) => $ws->isActiveOnDate($selectedDate))->sortByDesc('effective_from')->first();
+                        if ($activeWorkerShift && $activeWorkerShift->shift) { $shift = $activeWorkerShift->shift; } elseif ($worker->shift) { $shift = $worker->shift; }
+                    }
+                    $schedule = $shift ? $shift->getScheduleForDate($selectedDate) : null;
+                    $statusConfig = [
+                        'present' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Hadir', 'icon' => 'fa-check'],
+                        'late' => ['bg' => 'bg-yellow-100', 'text' => 'text-yellow-800', 'label' => 'Terlambat', 'icon' => 'fa-clock'],
+                        'absent' => ['bg' => 'bg-red-100', 'text' => 'text-red-800', 'label' => 'Tidak Hadir', 'icon' => 'fa-times'],
+                        'off_day' => ['bg' => 'bg-rose-100', 'text' => 'text-rose-800', 'label' => 'Libur Kerja', 'icon' => 'fa-calendar-times'],
+                        'sick' => ['bg' => 'bg-orange-100', 'text' => 'text-orange-800', 'label' => 'Sakit', 'icon' => 'fa-medkit'],
+                        'permission' => ['bg' => 'bg-blue-100', 'text' => 'text-blue-800', 'label' => 'Izin', 'icon' => 'fa-info-circle'],
+                        'leave' => ['bg' => 'bg-purple-100', 'text' => 'text-purple-800', 'label' => 'Cuti', 'icon' => 'fa-umbrella-beach'],
+                        'not_checked_in' => ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Belum Absen', 'icon' => 'fa-clock'],
+                    ];
+                    $st = $statusConfig[$worker->attendance_status] ?? ['bg' => 'bg-gray-100', 'text' => 'text-gray-800', 'label' => 'Unknown', 'icon' => 'fa-question'];
+                @endphp
+                <div class="p-4 hover:bg-gray-50">
+                    {{-- Header: avatar + name + badge --}}
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            @if($worker->photo_url && Storage::disk('public')->exists($worker->photo_url))
+                                <img class="h-10 w-10 rounded-full object-cover flex-shrink-0" src="{{ asset('storage/' . $worker->photo_url) }}" alt="">
+                            @else
+                                <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">{{ substr($worker->name, 0, 1) }}</div>
+                            @endif
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-gray-900 truncate">{{ $worker->name }}</p>
+                                <p class="text-xs text-gray-500">{{ $worker->nip ?? '-' }} &middot; {{ $worker->department->name ?? '-' }}</p>
+                            </div>
+                        </div>
+                        <span class="px-2 py-0.5 text-xs font-semibold rounded-full whitespace-nowrap {{ $st['bg'] }} {{ $st['text'] }}">
+                            <i class="fas {{ $st['icon'] }} mr-0.5"></i>{{ $st['label'] }}
+                        </span>
+                    </div>
+
+                    @if($worker->leave_request || ($worker->is_off_day ?? false))
+                        <p class="text-sm text-gray-600 italic">{{ $worker->is_off_day ? 'Libur Kerja' : ($worker->leave_request->leaveType->name ?? 'Cuti') }}</p>
+                    @elseif(!$shift)
+                        <p class="text-sm text-gray-500 italic">Belum ada jadwal shift</p>
+                    @else
+                        {{-- Grid info --}}
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <p class="text-gray-500 mb-0.5">Shift</p>
+                                <p class="font-semibold text-gray-800">{{ $shift->name }}</p>
+                                <p class="text-gray-500">{{ \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') }}</p>
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <p class="text-gray-500 mb-0.5">Jam Masuk</p>
+                                @if($worker->check_in_time)
+                                    <p class="font-semibold text-gray-800">{{ $worker->check_in_time->format('H:i:s') }}</p>
+                                    @if($worker->is_late)
+                                        <p class="text-red-500"><i class="fas fa-clock mr-0.5"></i>Terlambat -{{ $worker->late_minutes }}m</p>
+                                    @else
+                                        <p class="text-green-500"><i class="fas fa-check mr-0.5"></i>Tepat waktu</p>
+                                    @endif
+                                @else
+                                    <p class="text-gray-400 italic">Belum check-in</p>
+                                @endif
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-2">
+                                <p class="text-gray-500 mb-0.5">Jam Keluar</p>
+                                @if($worker->check_out_time)
+                                    <p class="font-semibold text-gray-800">{{ $worker->check_out_time->format('H:i:s') }}</p>
+                                    @if($worker->is_early_leave && $worker->early_leave_minutes > 0)
+                                        <p class="text-orange-600"><i class="fas fa-exclamation-triangle mr-0.5"></i>Awal {{ $worker->early_leave_minutes }}m</p>
+                                    @endif
+                                @elseif($worker->check_in_time)
+                                    <p class="text-yellow-600 italic"><i class="fas fa-clock mr-0.5"></i>Belum check-out</p>
+                                @else
+                                    <p class="text-gray-400">-</p>
+                                @endif
+                            </div>
+                            <div class="bg-gray-50 rounded-lg p-2 flex items-center justify-center">
+                                @if($worker->today_attendance)
+                                    <div class="flex gap-2">
+                                        <a href="{{ route('admin.attendance.show', $worker->today_attendance->id) }}" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg" title="Detail"><i class="fas fa-eye"></i></a>
+                                        @if(!$worker->check_out_time)
+                                            <button onclick="checkOutWorker('{{ $worker->today_attendance->id }}', '{{ $worker->name }}')" class="p-2 text-orange-600 hover:bg-orange-50 rounded-lg" title="Check Out"><i class="fas fa-sign-out-alt"></i></button>
+                                        @endif
+                                    </div>
+                                @else
+                                    <button onclick="checkInWorker('{{ $worker->id }}', '{{ $worker->name }}')" class="p-2 text-green-600 hover:bg-green-50 rounded-lg" title="Check In"><i class="fas fa-sign-in-alt"></i></button>
+                                @endif
+                            </div>
+                        </div>
+                        @if($worker->today_attendance && $worker->today_attendance->location)
+                            <p class="text-xs text-gray-500 mt-2"><i class="fas fa-map-marker-alt mr-1"></i>{{ $worker->today_attendance->location->name }}</p>
+                        @endif
+                    @endif
+                </div>
+            @empty
+                <div class="p-8 text-center text-gray-500">
+                    <i class="fas fa-users text-3xl mb-2"></i>
+                    <p class="font-medium">Tidak ada data pegawai</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- ══════════════ DESKTOP TABLE (visible >= md) ══════════════ --}}
+        <div class="hidden md:block overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider">Pegawai</th>
@@ -720,7 +828,79 @@ phpinfo() di browser
                 </div>
             </div>
         </div>
-        <div class="overflow-x-auto">
+        {{-- ══════════════ HISTORY MOBILE CARDS (visible < md) ══════════════ --}}
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($workersWithAttendance as $worker)
+                @php
+                    $stats = $workerStats[$worker->id] ?? [
+                        'total_present' => 0, 'total_late' => 0, 'total_late_minutes' => 0, 'avg_late_minutes' => 0,
+                        'total_early_leave' => 0, 'total_early_leave_minutes' => 0, 'avg_early_leave_minutes' => 0,
+                        'total_perfect' => 0, 'total_absent' => 0, 'total_sick' => 0, 'total_permission' => 0, 'total_leave' => 0
+                    ];
+                @endphp
+                <div class="p-4 hover:bg-gray-50">
+                    {{-- Header --}}
+                    <div class="flex items-center gap-3 mb-3">
+                        @if($worker->photo_url && Storage::disk('public')->exists($worker->photo_url))
+                            <img class="h-10 w-10 rounded-full object-cover flex-shrink-0" src="{{ asset('storage/' . $worker->photo_url) }}" alt="">
+                        @else
+                            <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">{{ substr($worker->name, 0, 1) }}</div>
+                        @endif
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $worker->name }}</p>
+                            <p class="text-xs text-gray-500">{{ $worker->nip ?? '-' }} &middot; {{ $worker->department->name ?? '-' }}</p>
+                        </div>
+                        <a href="{{ route('admin.attendance.history', $worker->id) }}" class="p-2 text-purple-600 hover:bg-purple-50 rounded-lg flex-shrink-0" title="Statistik">
+                            <i class="fas fa-chart-bar"></i>
+                        </a>
+                    </div>
+                    {{-- Stats grid --}}
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-2 text-center">
+                            <p class="text-lg font-bold text-green-800">{{ $stats['total_present'] }}</p>
+                            <p class="text-green-600">Hadir</p>
+                        </div>
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-2 text-center">
+                            <p class="text-lg font-bold text-emerald-800">{{ $stats['total_perfect'] }}</p>
+                            <p class="text-emerald-600">Sempurna</p>
+                        </div>
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-2 text-center">
+                            <p class="text-lg font-bold text-red-800">{{ $stats['total_absent'] }}</p>
+                            <p class="text-red-600">Absen</p>
+                        </div>
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-center">
+                            <p class="text-lg font-bold text-yellow-800">{{ $stats['total_late'] }}</p>
+                            <p class="text-yellow-600">Terlambat</p>
+                            @if($stats['total_late'] > 0)
+                                <p class="text-yellow-500 mt-0.5">~{{ $stats['avg_late_minutes'] }}m</p>
+                            @endif
+                        </div>
+                        <div class="bg-orange-50 border border-orange-200 rounded-lg p-2 text-center">
+                            <p class="text-lg font-bold text-orange-800">{{ $stats['total_early_leave'] }}</p>
+                            <p class="text-orange-600">Plg Cepat</p>
+                            @if($stats['total_early_leave'] > 0)
+                                <p class="text-orange-500 mt-0.5">~{{ $stats['avg_early_leave_minutes'] }}m</p>
+                            @endif
+                        </div>
+                        @if($stats['total_sick'] > 0 || $stats['total_permission'] > 0 || $stats['total_leave'] > 0)
+                            <div class="bg-gray-50 border border-gray-200 rounded-lg p-2 text-center">
+                                @if($stats['total_sick'] > 0)<p class="text-gray-700">Sakit: {{ $stats['total_sick'] }}</p>@endif
+                                @if($stats['total_permission'] > 0)<p class="text-gray-700">Izin: {{ $stats['total_permission'] }}</p>@endif
+                                @if($stats['total_leave'] > 0)<p class="text-gray-700">Cuti: {{ $stats['total_leave'] }}</p>@endif
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="p-8 text-center text-gray-500">
+                    <i class="fas fa-users text-3xl mb-2"></i>
+                    <p class="font-medium">Tidak ada data pegawai</p>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- ══════════════ HISTORY DESKTOP TABLE (visible >= md) ══════════════ --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
                     <tr>

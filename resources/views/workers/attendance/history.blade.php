@@ -5,7 +5,7 @@
 @section('content')
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Riwayat Absensi</h1>
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Riwayat Absensi</h1>
         <p class="mt-2 text-sm text-gray-600">Lihat riwayat kehadiran Anda</p>
     </div>
 
@@ -13,11 +13,11 @@
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
         <form method="GET" action="{{ route('workers.attendance.history') }}" class="flex flex-wrap gap-4">
             <div class="flex-1 min-w-[200px]">
-                <input type="date" name="start_date" value="{{ request('start_date') }}" 
+                <input type="date" name="start_date" value="{{ request('start_date') }}"
                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
             </div>
             <div class="flex-1 min-w-[200px]">
-                <input type="date" name="end_date" value="{{ request('end_date') }}" 
+                <input type="date" name="end_date" value="{{ request('end_date') }}"
                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
             </div>
             <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
@@ -31,7 +31,31 @@
 
     <!-- Attendance Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Mobile Card Layout -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($attendances ?? [] as $attendance)
+            <div class="p-4">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($attendance->check_in)->format('d/m/Y') }}</p>
+                        <p class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->check_in)->isoFormat('dddd') }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Hadir</span>
+                </div>
+                <div class="mt-2 flex items-center space-x-4 text-xs text-gray-600">
+                    <span><i class="fas fa-sign-in-alt text-green-500 mr-1"></i>In: {{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}</span>
+                    <span><i class="fas fa-sign-out-alt text-red-500 mr-1"></i>Out: {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '-' }}</span>
+                </div>
+            </div>
+            @empty
+            <div class="p-6 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-3"></i>
+                <p>Belum ada riwayat absensi</p>
+            </div>
+            @endforelse
+        </div>
+
+        <div class="overflow-x-auto hidden md:block">
             <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>

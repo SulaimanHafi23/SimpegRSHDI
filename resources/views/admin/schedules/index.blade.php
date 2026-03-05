@@ -3,7 +3,7 @@
 @section('title', 'Manajemen Jadwal Pegawai')
 
 @section('content')
-<div class="container mx-auto px-4 py-6" x-data="{ activeTab: '{{ request('tab', 'list') }}' }">
+<div class="space-y-6" x-data="{ activeTab: '{{ request('tab', 'list') }}' }">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <div>
@@ -144,7 +144,98 @@
 
     <!-- Worker Shifts Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Mobile Cards -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($workersWithShifts as $worker)
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center min-w-0">
+                        <div class="flex-shrink-0 h-10 w-10">
+                            @if(($worker->photo_url ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url))
+                                <img class="h-10 w-10 rounded-full object-cover" src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo_url) }}" alt="{{ $worker->name }}">
+                            @elseif(($worker->photo ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo))
+                                <img class="h-10 w-10 rounded-full object-cover" src="{{ \Illuminate\Support\Facades\Storage::url($worker->photo) }}" alt="{{ $worker->name }}">
+                            @else
+                                <div class="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+                                    {{ strtoupper(substr($worker->name ?? ($worker->employee_number ?? '-'), 0, 1)) }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="ml-3 min-w-0">
+                            <p class="text-sm font-medium text-gray-900 truncate">{{ $worker->name }}</p>
+                            <p class="text-xs text-gray-500">{{ $worker->nip ?? '-' }}</p>
+                        </div>
+                    </div>
+                    @if($worker->latestShift)
+                        @if($worker->latestShift->is_active)
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 flex-shrink-0">Aktif</span>
+                        @else
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 flex-shrink-0">Tidak Aktif</span>
+                        @endif
+                    @else
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 flex-shrink-0">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Belum Ada Shift
+                        </span>
+                    @endif
+                </div>
+
+                @if($worker->latestShift)
+                <div class="grid grid-cols-2 gap-2 text-sm mb-3">
+                    <div>
+                        <p class="text-xs text-gray-500">Shift</p>
+                        <p class="font-medium text-gray-900">{{ $worker->latestShift->shift->name }}</p>
+                        <p class="text-xs text-gray-600">{{ \Carbon\Carbon::parse($worker->latestShift->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($worker->latestShift->shift->end_time)->format('H:i') }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500">Pola</p>
+                        @if($worker->hasRotation ?? false)
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">Rotasi</span>
+                        @else
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Tetap</span>
+                        @endif
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-xs text-gray-500">Periode</p>
+                        <p class="text-sm text-gray-900">{{ $worker->latestShift->effective_from->format('d M Y') }} s/d {{ $worker->latestShift->effective_until ? $worker->latestShift->effective_until->format('d M Y') : 'Selamanya' }}</p>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <a href="{{ route('admin.worker-shifts.show', $worker->latestShift->id) }}#off-day-management" class="text-amber-600 hover:text-amber-900" title="Kelola Libur">
+                        <i class="fas fa-calendar-alt"></i>
+                    </a>
+                    <a href="{{ route('admin.worker-shifts.show', $worker->latestShift->id) }}" class="text-blue-600 hover:text-blue-900" title="Detail">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ route('admin.worker-shifts.edit', $worker->latestShift->id) }}" class="text-indigo-600 hover:text-indigo-900" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ route('admin.worker-shifts.destroy', $worker->latestShift->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus jadwal shift ini?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus"><i class="fas fa-trash"></i></button>
+                    </form>
+                </div>
+                @else
+                <div class="flex justify-end">
+                    <a href="{{ route('admin.worker-shifts.create', ['worker_id' => $worker->id]) }}" class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-semibold rounded-lg shadow-sm transition duration-150">
+                        <i class="fas fa-plus mr-1"></i> Tambah Shift
+                    </a>
+                </div>
+                @endif
+            </div>
+            @empty
+            <div class="p-8 text-center text-gray-500">
+                <svg class="w-16 h-16 text-gray-300 mb-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <p class="text-lg font-medium text-gray-700 mb-1">Tidak ada data pegawai</p>
+                <p class="text-sm text-gray-500">Silakan tambahkan pegawai terlebih dahulu</p>
+            </div>
+            @endforelse
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

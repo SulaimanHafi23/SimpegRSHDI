@@ -3,7 +3,7 @@
 @section('title', 'Detail Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-gray-600 mb-2">
@@ -17,17 +17,17 @@
                 Detail Shift
             </h1>
             <div class="flex space-x-2">
-                <a href="{{ route('admin.master.shifts.edit', $shift->id) }}" 
+                <a href="{{ route('admin.master.shifts.edit', $shift->id) }}"
                    class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg transition duration-200">
                     <i class="fas fa-edit mr-2"></i>Edit
                 </a>
-                <form action="{{ route('admin.master.shifts.destroy', $shift->id) }}" 
-                      method="POST" 
+                <form action="{{ route('admin.master.shifts.destroy', $shift->id) }}"
+                      method="POST"
                       class="inline"
                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus shift ini?')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" 
+                    <button type="submit"
                             class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-200">
                         <i class="fas fa-trash mr-2"></i>Hapus
                     </button>
@@ -42,13 +42,13 @@
         <div class="lg:col-span-2">
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4">Informasi Shift</h2>
-                
+
                 <div class="grid grid-cols-2 gap-6">
                     <div class="col-span-2">
                         <label class="text-sm text-gray-600">Nama Shift</label>
                         <p class="text-xl font-bold text-gray-900">{{ $shift->name }}</p>
                     </div>
-                    
+
                     <div>
                         <label class="text-sm text-gray-600">Jam Masuk (Default)</label>
                         <p class="text-lg font-semibold text-green-600">
@@ -56,7 +56,7 @@
                             {{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}
                         </p>
                     </div>
-                    
+
                     <div>
                         <label class="text-sm text-gray-600">Jam Keluar (Default)</label>
                         <p class="text-lg font-semibold text-red-600">
@@ -64,7 +64,7 @@
                             {{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}
                         </p>
                     </div>
-                    
+
                     <div class="col-span-2">
                         <label class="text-sm text-gray-600">Durasi Kerja</label>
                         <p class="text-gray-900 font-medium">
@@ -72,12 +72,12 @@
                             {{ number_format($shift->total_hours, 2) }} jam
                         </p>
                     </div>
-                    
+
                     <div class="col-span-2">
                         <label class="text-sm text-gray-600">Deskripsi</label>
                         <p class="text-gray-900">{{ $shift->description ?? '-' }}</p>
                     </div>
-                    
+
                     <div>
                         <label class="text-sm text-gray-600">Status</label>
                         <div>

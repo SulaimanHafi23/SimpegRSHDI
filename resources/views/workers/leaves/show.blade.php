@@ -7,7 +7,7 @@
     <!-- Header -->
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Detail Cuti</h1>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Detail Cuti</h1>
             <p class="mt-2 text-sm text-gray-600">Informasi lengkap pengajuan cuti</p>
         </div>
         <a href="{{ route('workers.leaves.index') }}"
@@ -49,7 +49,7 @@
                 <h3 class="text-lg font-bold text-gray-800 mb-4">
                     <i class="fas fa-info-circle text-green-600 mr-2"></i>Informasi Cuti
                 </h3>
-                
+
                 <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -96,7 +96,7 @@
                     @if(isset($leave->attachment) && $leave->attachment)
                     <div class="pt-4 border-t border-gray-200">
                         <p class="text-sm text-gray-600 mb-2">Lampiran</p>
-                        <a href="{{ route('workers.leaves.download', $leave->id) }}" 
+                        <a href="{{ route('workers.leaves.download', $leave->id) }}"
                            class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
                             <i class="fas fa-download mr-2 text-gray-600"></i>
                             <span class="text-sm font-medium text-gray-700">Download Lampiran</span>
@@ -112,7 +112,7 @@
                 <h3 class="text-lg font-bold text-gray-800 mb-4">
                     <i class="fas fa-user-check text-blue-600 mr-2"></i>Informasi Persetujuan
                 </h3>
-                
+
                 <div class="space-y-3">
                     <div>
                         <p class="text-sm text-gray-600 mb-1">Disetujui/Ditolak Oleh</p>
@@ -142,7 +142,7 @@
             <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">Aksi</h3>
                 <div class="space-y-3">
-                    <a href="{{ route('workers.leaves.edit', $leave->id) }}" 
+                    <a href="{{ route('workers.leaves.edit', $leave->id) }}"
                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center justify-center">
                         <i class="fas fa-edit mr-2"></i>Edit Pengajuan
                     </a>
@@ -150,7 +150,7 @@
                           onsubmit="return confirm('Yakin ingin membatalkan pengajuan cuti ini?')">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" 
+                        <button type="submit"
                                 class="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center justify-center">
                             <i class="fas fa-trash mr-2"></i>Batalkan Pengajuan
                         </button>

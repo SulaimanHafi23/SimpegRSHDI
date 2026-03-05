@@ -3,7 +3,7 @@
 @section('title', 'Edit Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-gray-600 mb-2">
@@ -29,9 +29,9 @@
                     <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
                         Nama Shift <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" 
-                           name="name" 
-                           id="name" 
+                    <input type="text"
+                           name="name"
+                           id="name"
                            value="{{ old('name', $shift->name) }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('name') border-red-500 @enderror"
                            required>
@@ -45,9 +45,9 @@
                     <label for="start_time" class="block text-sm font-medium text-gray-700 mb-2">
                         Jam Masuk <span class="text-red-500">*</span>
                     </label>
-                    <input type="time" 
-                           name="start_time" 
-                           id="start_time" 
+                    <input type="time"
+                           name="start_time"
+                           id="start_time"
                            value="{{ old('start_time', \Carbon\Carbon::parse($shift->start_time)->format('H:i')) }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('start_time') border-red-500 @enderror"
                            required>
@@ -61,9 +61,9 @@
                     <label for="end_time" class="block text-sm font-medium text-gray-700 mb-2">
                         Jam Keluar <span class="text-red-500">*</span>
                     </label>
-                    <input type="time" 
-                           name="end_time" 
-                           id="end_time" 
+                    <input type="time"
+                           name="end_time"
+                           id="end_time"
                            value="{{ old('end_time', \Carbon\Carbon::parse($shift->end_time)->format('H:i')) }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('end_time') border-red-500 @enderror"
                            required>
@@ -77,9 +77,9 @@
                     <label for="total_hours" class="block text-sm font-medium text-gray-700 mb-2">
                         Total Jam <span class="text-red-500">*</span>
                     </label>
-                    <input type="number" 
-                           name="total_hours" 
-                           id="total_hours" 
+                    <input type="number"
+                           name="total_hours"
+                           id="total_hours"
                            value="{{ old('total_hours', $shift->total_hours) }}"
                            step="0.01"
                            readonly
@@ -171,8 +171,8 @@
                     <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
                         Deskripsi
                     </label>
-                    <textarea name="description" 
-                              id="description" 
+                    <textarea name="description"
+                              id="description"
                               rows="3"
                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('description') border-red-500 @enderror">{{ old('description', $shift->description) }}</textarea>
                     @error('description')
@@ -183,8 +183,8 @@
                 <!-- Status -->
                 <div class="md:col-span-2">
                     <label class="flex items-center space-x-2">
-                        <input type="checkbox" 
-                               name="is_active" 
+                        <input type="checkbox"
+                               name="is_active"
                                value="1"
                                {{ old('is_active', $shift->is_active) ? 'checked' : '' }}
                                class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
@@ -195,11 +195,11 @@
 
             <!-- Buttons -->
             <div class="flex justify-end space-x-3 mt-6 pt-6 border-t">
-                <a href="{{ route('admin.master.shifts.index') }}" 
+                <a href="{{ route('admin.master.shifts.index') }}"
                    class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition duration-200">
                     <i class="fas fa-times mr-2"></i>Batal
                 </a>
-                <button type="submit" 
+                <button type="submit"
                         class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200">
                     <i class="fas fa-save mr-2"></i>Update
                 </button>
@@ -215,30 +215,30 @@
     function calculateTotalHours() {
         const startTime = document.getElementById('start_time').value;
         const endTime = document.getElementById('end_time').value;
-        
+
         if (startTime && endTime) {
             // Parse hours and minutes
             const [startHour, startMinute] = startTime.split(':').map(num => parseInt(num, 10));
             const [endHour, endMinute] = endTime.split(':').map(num => parseInt(num, 10));
-            
+
             // Convert to minutes since midnight
             let startMinutes = (startHour * 60) + startMinute;
             let endMinutes = (endHour * 60) + endMinute;
-            
+
             // Handle overnight shift (end time is before start time)
             if (endMinutes <= startMinutes) {
                 endMinutes += (24 * 60); // Add 24 hours in minutes
             }
-            
+
             // Calculate difference in minutes
             const diffMinutes = endMinutes - startMinutes;
-            
+
             // Convert to hours (with 2 decimal places)
             const totalHours = parseFloat((diffMinutes / 60).toFixed(2));
-            
+
             // Update the total_hours field
             document.getElementById('total_hours').value = totalHours;
-            
+
             console.log('Calculation:', {
                 startTime,
                 endTime,
@@ -249,7 +249,7 @@
             });
         }
     }
-    
+
     // Add event listeners when page loads
     document.addEventListener('DOMContentLoaded', function() {
         const startTimeInput = document.getElementById('start_time');
@@ -259,11 +259,11 @@
         const dayStartInputs = Array.from(document.querySelectorAll('[data-day-start]'));
         const dayEndInputs = Array.from(document.querySelectorAll('[data-day-end]'));
         const dayActiveInputs = Array.from(document.querySelectorAll('[data-day-active]'));
-        
+
         // Calculate on change
         startTimeInput.addEventListener('change', calculateTotalHours);
         endTimeInput.addEventListener('change', calculateTotalHours);
-        
+
         // Calculate on page load if both values exist (for old input)
         calculateTotalHours();
 

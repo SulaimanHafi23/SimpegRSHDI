@@ -3,7 +3,7 @@
 @section('title', 'Detail Jadwal Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
@@ -233,7 +233,54 @@
             </div>
         </div>
 
-        <div class="overflow-x-auto">
+        {{-- Mobile Card Layout --}}
+        <div class="md:hidden p-4 space-y-3">
+            @foreach($rotationShifts as $index => $rotation)
+                <div class="bg-gray-50 rounded-lg p-4 {{ $rotation->id === $workerShift->id ? 'ring-2 ring-indigo-300 bg-indigo-50/50' : '' }}">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs text-gray-500">#{{ $index + 1 }}</span>
+                            <div class="font-medium text-gray-900">{{ $rotation->shift->name ?? '-' }}</div>
+                            <div class="text-xs text-gray-500">{{ $rotation->shift->code ?? '-' }}</div>
+                        </div>
+                        <div>
+                            @if($rotation->id === $workerShift->id)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">Sedang Dilihat</span>
+                            @elseif($rotation->is_active)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">Tidak Aktif</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="space-y-1 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-500">Jam:</span>
+                            @if($rotation->shift)
+                                <span class="text-gray-900">{{ \Carbon\Carbon::parse($rotation->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($rotation->shift->end_time)->format('H:i') }}</span>
+                            @else
+                                <span class="text-gray-400">-</span>
+                            @endif
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-500">Periode:</span>
+                            <span class="text-gray-900">
+                                {{ \Carbon\Carbon::parse($rotation->effective_from)->format('d M Y') }}
+                                &#8212;
+                                @if($rotation->effective_until)
+                                    {{ \Carbon\Carbon::parse($rotation->effective_until)->format('d M Y') }}
+                                @else
+                                    <span class="text-gray-400 italic">Tanpa batas</span>
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- Desktop Table --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -301,7 +348,68 @@
             <p class="text-sm text-gray-500 mt-1">Daftar shift sebelumnya yang pernah berlaku untuk pegawai ini</p>
         </div>
 
-        <div class="overflow-x-auto">
+        {{-- Mobile Card Layout --}}
+        <div class="md:hidden p-4 space-y-3">
+            @foreach($shiftHistories as $history)
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-start gap-3 mb-2">
+                        <div class="bg-orange-100 rounded-lg p-2 flex-shrink-0">
+                            <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</div>
+                            @if($history->shift)
+                                <div class="text-xs text-gray-500">
+                                    {{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} -
+                                    {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="space-y-1 text-sm">
+                        <div>
+                            <span class="font-medium text-gray-500">Periode:</span>
+                            <span class="text-gray-900">
+                                {{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }}
+                                &#8212;
+                                @if($history->effective_until)
+                                    {{ \Carbon\Carbon::parse($history->effective_until)->format('d M Y') }}
+                                @else
+                                    <span class="text-gray-400 italic">Tanpa batas</span>
+                                @endif
+                            </span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-500">Tanggal Diganti:</span>
+                            <span class="text-gray-900">{{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-500">Alasan:</span>
+                            @php
+                                $reasonLabels = [
+                                    'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
+                                    'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
+                                    'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
+                                ];
+                                $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
+                            @endphp
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
+                                {{ $label[0] }}
+                            </span>
+                        </div>
+                        <div>
+                            <span class="font-medium text-gray-500">Diubah Oleh:</span>
+                            <span class="text-gray-900">{{ $history->changedByUser->name ?? 'System' }}</span>
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- Desktop Table --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

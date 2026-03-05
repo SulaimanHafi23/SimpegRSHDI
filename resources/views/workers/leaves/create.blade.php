@@ -6,7 +6,7 @@
 <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
     <!-- Header -->
     <div class="mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Ajukan Cuti</h1>
+        <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Ajukan Cuti</h1>
         <p class="mt-2 text-sm text-gray-600">Isi formulir di bawah ini untuk mengajukan cuti</p>
     </div>
 
@@ -41,7 +41,7 @@
                         <label for="start_date" class="block text-sm font-medium text-gray-700 mb-1">
                             Tanggal Mulai <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="start_date" id="start_date" 
+                        <input type="date" name="start_date" id="start_date"
                                value="{{ old('start_date') }}" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                onchange="calculateDays()">
@@ -54,7 +54,7 @@
                         <label for="end_date" class="block text-sm font-medium text-gray-700 mb-1">
                             Tanggal Selesai <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="end_date" id="end_date" 
+                        <input type="date" name="end_date" id="end_date"
                                value="{{ old('end_date') }}" required
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                onchange="calculateDays()">
@@ -70,7 +70,7 @@
                         Total Hari Cuti
                     </label>
                     <div class="flex items-center">
-                        <input type="number" name="total_days" id="total_days" 
+                        <input type="number" name="total_days" id="total_days"
                                value="{{ old('total_days', 0) }}" readonly
                                class="w-32 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
                         <span class="ml-3 text-sm text-gray-600">hari</span>
@@ -112,7 +112,7 @@
                         <label for="emergency_contact" class="block text-sm font-medium text-gray-700 mb-1">
                             Kontak Darurat
                         </label>
-                        <input type="text" name="emergency_contact" id="emergency_contact" 
+                        <input type="text" name="emergency_contact" id="emergency_contact"
                                value="{{ old('emergency_contact') }}"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                placeholder="Nama kontak darurat">
@@ -125,7 +125,7 @@
                         <label for="emergency_phone" class="block text-sm font-medium text-gray-700 mb-1">
                             No. HP Darurat
                         </label>
-                        <input type="tel" name="emergency_phone" id="emergency_phone" 
+                        <input type="tel" name="emergency_phone" id="emergency_phone"
                                value="{{ old('emergency_phone') }}"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                placeholder="08xxxxxxxxxx">
@@ -177,11 +177,11 @@
 function calculateDays() {
     const startDate = document.getElementById('start_date').value;
     const endDate = document.getElementById('end_date').value;
-    
+
     if (startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        
+
         if (end >= start) {
             const diffTime = Math.abs(end - start);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;

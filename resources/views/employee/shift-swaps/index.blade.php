@@ -8,7 +8,7 @@
     <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-lg p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="text-white">
-                <h1 class="text-3xl font-bold flex items-center">
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold flex items-center">
                     <i class="fas fa-exchange-alt mr-3"></i>
                     Tukar Shift
                 </h1>

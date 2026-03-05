@@ -6,7 +6,7 @@
 <div class="max-w-4xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Detail Lembur</h1>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Detail Lembur</h1>
             <p class="mt-2 text-sm text-gray-600">Informasi lengkap pengajuan lembur</p>
         </div>
         <a href="{{ route('workers.overtimes.index') }}"
@@ -45,7 +45,7 @@
         <h3 class="text-lg font-bold text-gray-800 mb-4">
             <i class="fas fa-info-circle text-green-600 mr-2"></i>Informasi Lembur
         </h3>
-        
+
         <div class="space-y-4">
             <div>
                 <p class="text-sm text-gray-600 mb-1">Tanggal Lembur</p>
@@ -106,7 +106,7 @@
 
         @if(isset($overtime->status) && $overtime->status === 'pending')
         <div class="mt-6 pt-6 border-t border-gray-200 flex justify-end space-x-3">
-            <a href="{{ route('workers.overtimes.edit', $overtime->id) }}" 
+            <a href="{{ route('workers.overtimes.edit', $overtime->id) }}"
                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                 <i class="fas fa-edit mr-2"></i>Edit Pengajuan
             </a>

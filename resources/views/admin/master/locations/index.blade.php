@@ -3,7 +3,7 @@
 @section('title', 'Lokasi')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
@@ -23,10 +23,10 @@
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
         <form method="GET" action="{{ route('admin.master.locations.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div class="md:col-span-2">
-                <input type="text" 
-                       name="search" 
+                <input type="text"
+                       name="search"
                        value="{{ request('search') }}"
-                       placeholder="Cari nama atau alamat lokasi..." 
+                       placeholder="Cari nama atau alamat lokasi..."
                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm">
             </div>
             <div>
@@ -49,7 +49,71 @@
 
     <!-- Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Mobile Cards -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($locations as $location)
+            <div class="p-4 space-y-3">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-map-marker-alt text-blue-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ $location->name }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ Str::limit($location->address ?? '-', 60) }}</p>
+                        </div>
+                    </div>
+                    <div>
+                        @if($location->is_active)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>Aktif
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle mr-1"></i>Tidak Aktif
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4 text-xs text-gray-500">
+                    <span><i class="fas fa-crosshairs mr-1"></i>{{ number_format($location->latitude, 6) }}, {{ number_format($location->longitude, 6) }}</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-sky-100 text-sky-800 font-medium">
+                        <i class="fas fa-expand-arrows-alt mr-1"></i>{{ $location->radius }}m
+                    </span>
+                </div>
+
+                <div class="flex items-center space-x-2 pt-1">
+                    <a href="{{ route('admin.master.locations.show', $location->id) }}"
+                       class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100">
+                        <i class="fas fa-eye mr-1"></i>Lihat
+                    </a>
+                    <a href="{{ route('admin.master.locations.edit', $location->id) }}"
+                       class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-xs font-medium hover:bg-yellow-100">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </a>
+                    <form action="{{ route('admin.master.locations.destroy', $location->id) }}"
+                          method="POST"
+                          class="inline"
+                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus lokasi ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100">
+                            <i class="fas fa-trash mr-1"></i>Hapus
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div class="p-8 text-center text-gray-500">
+                <i class="fas fa-map-marked-alt text-4xl mb-2"></i>
+                <p>Tidak ada data lokasi</p>
+            </div>
+            @endforelse
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -104,24 +168,24 @@
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex justify-end items-center space-x-1 sm:space-x-2">
-                            <a href="{{ route('admin.master.locations.show', $location->id) }}" 
-                               class="text-blue-600 hover:text-blue-900 p-1" 
+                            <a href="{{ route('admin.master.locations.show', $location->id) }}"
+                               class="text-blue-600 hover:text-blue-900 p-1"
                                title="Lihat Detail">
                                 <i class="fas fa-eye text-xs sm:text-sm"></i>
                             </a>
-                            <a href="{{ route('admin.master.locations.edit', $location->id) }}" 
-                               class="text-yellow-600 hover:text-yellow-900 p-1" 
+                            <a href="{{ route('admin.master.locations.edit', $location->id) }}"
+                               class="text-yellow-600 hover:text-yellow-900 p-1"
                                title="Edit">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                             </a>
-                            <form action="{{ route('admin.master.locations.destroy', $location->id) }}" 
-                                  method="POST" 
+                            <form action="{{ route('admin.master.locations.destroy', $location->id) }}"
+                                  method="POST"
                                   class="inline"
                                   onsubmit="return confirm('Apakah Anda yakin ingin menghapus lokasi ini?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" 
-                                        class="text-red-600 hover:text-red-900 p-1" 
+                                <button type="submit"
+                                        class="text-red-600 hover:text-red-900 p-1"
                                         title="Hapus">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
                                 </button>
@@ -139,6 +203,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
         </div>
     </div>
 

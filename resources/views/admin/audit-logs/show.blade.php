@@ -77,7 +77,37 @@
                             Perubahan Data
                         </h3>
 
-                        <div class="overflow-x-auto">
+                        {{-- Mobile Card Layout --}}
+                        <div class="md:hidden space-y-3">
+                            @foreach($log->new_values as $field => $newValue)
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <div class="font-medium text-gray-900 text-sm mb-2">
+                                        {{ str_replace('_', ' ', ucfirst($field)) }}
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div>
+                                            <span class="text-xs font-medium text-gray-500">Nilai Lama:</span>
+                                            <div class="mt-0.5">
+                                                <span class="inline-flex items-center px-2 py-1 rounded bg-red-50 text-red-700 font-mono text-xs break-all">
+                                                    {{ is_array($log->old_values[$field] ?? null) ? json_encode($log->old_values[$field]) : ($log->old_values[$field] ?? '-') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <span class="text-xs font-medium text-gray-500">Nilai Baru:</span>
+                                            <div class="mt-0.5">
+                                                <span class="inline-flex items-center px-2 py-1 rounded bg-green-50 text-green-700 font-mono text-xs break-all">
+                                                    {{ is_array($newValue) ? json_encode($newValue) : ($newValue ?? '-') }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Desktop Table --}}
+                        <div class="hidden md:block overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -120,7 +150,20 @@
                             Data yang Dibuat
                         </h3>
 
-                        <div class="overflow-x-auto">
+                        {{-- Mobile Card Layout --}}
+                        <div class="md:hidden space-y-3">
+                            @foreach($log->new_values as $field => $value)
+                                <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-start gap-2">
+                                    <span class="font-medium text-gray-900 text-sm">{{ str_replace('_', ' ', ucfirst($field)) }}</span>
+                                    <span class="text-sm text-gray-600 font-mono text-right break-all max-w-[60%]">
+                                        {{ is_array($value) ? json_encode($value) : ($value ?? '-') }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Desktop Table --}}
+                        <div class="hidden md:block overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>
@@ -155,7 +198,20 @@
                             Data yang Dihapus
                         </h3>
 
-                        <div class="overflow-x-auto">
+                        {{-- Mobile Card Layout --}}
+                        <div class="md:hidden space-y-3">
+                            @foreach($log->old_values as $field => $value)
+                                <div class="bg-gray-50 rounded-lg p-3 flex justify-between items-start gap-2">
+                                    <span class="font-medium text-gray-900 text-sm">{{ str_replace('_', ' ', ucfirst($field)) }}</span>
+                                    <span class="text-sm text-gray-600 font-mono text-right break-all max-w-[60%]">
+                                        {{ is_array($value) ? json_encode($value) : ($value ?? '-') }}
+                                    </span>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        {{-- Desktop Table --}}
+                        <div class="hidden md:block overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
                                     <tr>

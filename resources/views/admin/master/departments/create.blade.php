@@ -3,7 +3,7 @@
 @section('title', 'Tambah Departemen')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-gray-600 mb-2">

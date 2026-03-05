@@ -3,7 +3,7 @@
 @section('title', 'Departemen')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
@@ -49,7 +49,75 @@
 
     <!-- Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Mobile Cards -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($departments as $department)
+            <div class="p-4 space-y-3">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{{ $department->code }}</span>
+                            <span class="text-sm font-medium text-gray-900">{{ $department->name }}</span>
+                        </div>
+                        @if($department->description)
+                        <p class="text-xs text-gray-500 mt-1">{{ Str::limit($department->description, 80) }}</p>
+                        @endif
+                    </div>
+                    <div class="flex flex-col items-end space-y-1">
+                        @if($department->is_active)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>Aktif
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="fas fa-times-circle mr-1"></i>Tidak Aktif
+                            </span>
+                        @endif
+                        @if($department->requires_holiday_attendance)
+                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                <i class="fas fa-hospital mr-1"></i>Standby
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <i class="fas fa-users mr-1"></i>{{ $department->workers_count ?? 0 }} Pegawai
+                    </span>
+                </div>
+
+                <div class="flex items-center space-x-2 pt-1">
+                    <a href="{{ route('admin.master.departments.show', $department->id) }}"
+                       class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100">
+                        <i class="fas fa-eye mr-1"></i>Lihat
+                    </a>
+                    <a href="{{ route('admin.master.departments.edit', $department->id) }}"
+                       class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-xs font-medium hover:bg-yellow-100">
+                        <i class="fas fa-edit mr-1"></i>Edit
+                    </a>
+                    <form action="{{ route('admin.master.departments.destroy', $department->id) }}"
+                          method="POST"
+                          class="inline"
+                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus departemen ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100">
+                            <i class="fas fa-trash mr-1"></i>Hapus
+                        </button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div class="p-8 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-2"></i>
+                <p>Tidak ada data departemen</p>
+            </div>
+            @endforelse
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden md:block overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -137,6 +205,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
         </div>
     </div>
 

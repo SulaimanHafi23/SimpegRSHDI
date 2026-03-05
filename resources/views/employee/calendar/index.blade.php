@@ -60,8 +60,9 @@
         </div>
 
         <!-- Calendar Grid -->
-        <div class="p-4 overflow-x-auto -mx-4 px-4 md:mx-0 md:px-4">
-            <div class="min-w-[700px]">
+        <p class="text-xs text-gray-400 italic px-4 mb-1 md:hidden"><i class="fas fa-arrows-alt-h mr-1"></i>Geser untuk melihat kalender lengkap</p>
+        <div class="p-4 overflow-x-auto scroll-smooth -mx-4 px-4 md:mx-0 md:px-4">
+            <div class="min-w-[600px]">
                 <!-- Day Headers -->
                 <div class="grid grid-cols-7 gap-2 mb-2">
                     <template x-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']">

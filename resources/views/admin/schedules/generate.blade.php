@@ -3,7 +3,7 @@
 @section('title', 'Generate Rotasi Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
@@ -317,20 +317,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function calculatePeriods(startDate, endDate, rotationType) {
         if (!startDate || !rotationType) return 0;
-        
+
         const start = new Date(startDate);
         const end = endDate ? new Date(endDate) : null;
-        
+
         if (!end) {
             // Jika tidak ada end date, gunakan default 12 periode
             return 12;
         }
-        
+
         if (start > end) return 0;
-        
+
         let periods = 0;
         let current = new Date(start);
-        
+
         if (rotationType === 'weekly') {
             // Hitung berapa minggu
             while (current <= end) {
@@ -348,16 +348,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 current = nextMonth;
             }
         }
-        
+
         return periods;
     }
 
     function calculateEndDate(startDate, periods, rotationType) {
         if (!startDate || !periods || !rotationType) return null;
-        
+
         const start = new Date(startDate);
         let end = new Date(start);
-        
+
         if (rotationType === 'weekly') {
             // Tambah (periods * 7) - 1 hari
             end.setDate(end.getDate() + (periods * 7) - 1);
@@ -375,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             end = current;
         }
-        
+
         return end;
     }
 
@@ -392,18 +392,18 @@ document.addEventListener('DOMContentLoaded', function() {
         const rotationType = rotationTypeSelect?.value || '';
         const startDate = startDateInput?.value || '';
         const endDate = endDateInput?.value || '';
-        
+
         // Update jumlah pegawai
         estWorkers.textContent = workerCount;
-        
+
         // Hitung periode
         const periods = calculatePeriods(startDate, endDate, rotationType);
         estPeriods.textContent = periods;
-        
+
         // Hitung total
         const total = workerCount * periods;
         estTotal.innerHTML = `${total} <span class="text-xs text-gray-500">data</span>`;
-        
+
         // Hitung tanggal akhir estimasi
         let estimatedEnd = null;
         if (endDate) {
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (startDate && rotationType && periods > 0) {
             estimatedEnd = calculateEndDate(startDate, periods, rotationType);
         }
-        
+
         // Format tanggal akhir
         if (estimatedEnd) {
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
@@ -422,7 +422,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             estEndDate.textContent = '-';
         }
-        
+
         // Deskripsi
         let desc = '';
         if (workerCount === 0) {
@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', function() {
             desc = `${workerCount} pegawai × ${periods} periode ${rotationLabel}${endLabel}${durationText}`;
         }
         estDescription.textContent = desc;
-        
+
         // Tampilkan atau sembunyikan box
         if (workerCount > 0 || startDate || rotationType) {
             estimationBox?.classList.remove('hidden');

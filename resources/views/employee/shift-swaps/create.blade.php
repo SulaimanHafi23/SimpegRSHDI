@@ -3,7 +3,7 @@
 @section('title', 'Buat Permintaan Tukar Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-4xl">
+<div class="space-y-6 max-w-4xl">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center justify-between">

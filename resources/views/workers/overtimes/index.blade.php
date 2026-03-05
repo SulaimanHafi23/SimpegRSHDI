@@ -6,10 +6,10 @@
 <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
     <div class="mb-6 flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-bold text-gray-800">Lembur Saya</h1>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800">Lembur Saya</h1>
             <p class="mt-2 text-sm text-gray-600">Kelola pengajuan lembur Anda</p>
         </div>
-        <a href="{{ route('workers.overtimes.create') }}" 
+        <a href="{{ route('workers.overtimes.create') }}"
            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center">
             <i class="fas fa-plus mr-2"></i>Ajukan Lembur
         </a>
@@ -21,7 +21,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Total Jam Lembur Bulan Ini</p>
-                    <p class="text-3xl font-bold text-green-600">{{ $totalHours ?? 0 }}</p>
+                    <p class="text-2xl md:text-3xl font-bold text-green-600">{{ $totalHours ?? 0 }}</p>
                     <p class="text-xs text-gray-500 mt-1">jam kerja</p>
                 </div>
                 <div class="p-3 bg-green-100 rounded-full">
@@ -34,7 +34,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Menunggu Persetujuan</p>
-                    <p class="text-3xl font-bold text-yellow-600">{{ $pendingOvertimes ?? 0 }}</p>
+                    <p class="text-2xl md:text-3xl font-bold text-yellow-600">{{ $pendingOvertimes ?? 0 }}</p>
                     <p class="text-xs text-gray-500 mt-1">pengajuan</p>
                 </div>
                 <div class="p-3 bg-yellow-100 rounded-full">
@@ -46,7 +46,50 @@
 
     <!-- Overtimes Table -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Mobile Card Layout -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($overtimes ?? [] as $overtime)
+            <div class="p-4 space-y-2">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($overtime->overtime_date)->format('d/m/Y') }}</p>
+                        <p class="text-xs text-gray-500">{{ $overtime->start_time }} - {{ $overtime->end_time }}</p>
+                    </div>
+                    @if($overtime->status === 'pending')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Menunggu</span>
+                    @elseif($overtime->status === 'approved')
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
+                    @else
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
+                    @endif
+                </div>
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">{{ $overtime->total_hours }} jam</span>
+                        <span class="text-xs text-gray-500 ml-2">{{ Str::limit($overtime->description, 30) }}</span>
+                    </div>
+                    <div class="flex items-center space-x-3 text-sm">
+                        <a href="{{ route('workers.overtimes.show', $overtime->id) }}" class="text-green-600 hover:text-green-900"><i class="fas fa-eye"></i></a>
+                        @if($overtime->status === 'pending')
+                        <a href="{{ route('workers.overtimes.edit', $overtime->id) }}" class="text-blue-600 hover:text-blue-900"><i class="fas fa-edit"></i></a>
+                        <form action="{{ route('workers.overtimes.destroy', $overtime->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin ingin membatalkan?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="text-red-600 hover:text-red-900"><i class="fas fa-trash"></i></button>
+                        </form>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @empty
+            <div class="p-6 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-3"></i>
+                <p>Belum ada pengajuan lembur</p>
+            </div>
+            @endforelse
+        </div>
+
+        <div class="overflow-x-auto hidden md:block">
             <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -90,12 +133,12 @@
                         @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a href="{{ route('workers.overtimes.show', $overtime->id) }}" 
+                        <a href="{{ route('workers.overtimes.show', $overtime->id) }}"
                            class="text-green-600 hover:text-green-900 mr-3">
                             <i class="fas fa-eye"></i>
                         </a>
                         @if($overtime->status === 'pending')
-                        <a href="{{ route('workers.overtimes.edit', $overtime->id) }}" 
+                        <a href="{{ route('workers.overtimes.edit', $overtime->id) }}"
                            class="text-blue-600 hover:text-blue-900 mr-3">
                             <i class="fas fa-edit"></i>
                         </a>

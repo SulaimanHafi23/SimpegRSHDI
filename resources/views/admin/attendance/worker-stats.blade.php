@@ -38,15 +38,15 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Periode Statistik</label>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                        <input type="date" 
-                               name="date_from" 
-                               value="{{ $dateFrom }}" 
+                        <input type="date"
+                               name="date_from"
+                               value="{{ $dateFrom }}"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
                     <div>
-                        <input type="date" 
-                               name="date_to" 
-                               value="{{ $dateTo }}" 
+                        <input type="date"
+                               name="date_to"
+                               value="{{ $dateTo }}"
                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                     </div>
                 </div>
@@ -73,12 +73,12 @@
                 <p class="text-sm text-gray-600">Unduh laporan statistik kehadiran dalam format PDF atau Excel</p>
             </div>
             <div class="flex gap-3">
-                <a href="{{ route('admin.attendance.stats.export-pdf', ['worker' => $worker->id, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
+                <a href="{{ route('admin.attendance.stats.export-pdf', ['worker' => $worker->id, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}"
                    class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
                     <i class="fas fa-file-pdf mr-2 text-lg"></i>
                     Export PDF
                 </a>
-                <a href="{{ route('admin.attendance.stats.export-excel', ['worker' => $worker->id, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}" 
+                <a href="{{ route('admin.attendance.stats.export-excel', ['worker' => $worker->id, 'date_from' => $dateFrom, 'date_to' => $dateTo]) }}"
                    class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
                     <i class="fas fa-file-excel mr-2 text-lg"></i>
                     Export Excel
@@ -219,7 +219,7 @@
                     </span>
                     <span class="font-medium text-yellow-600">{{ $stats['permission_days'] }}</span>
                 </div>
-                
+
                 <!-- Chart Simple -->
                 <div class="mt-6 pt-4 border-t border-gray-200">
                     <div class="space-y-2">
@@ -247,8 +247,73 @@
                 {{ \Carbon\Carbon::parse($dateFrom)->format('d M Y') }} - {{ \Carbon\Carbon::parse($dateTo)->format('d M Y') }}
             </div>
         </div>
-        
-        <div class="overflow-x-auto">
+
+        <!-- Mobile Card Layout -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($attendances as $attendance)
+            <div class="p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <div class="text-sm font-semibold text-gray-900">{{ \Carbon\Carbon::parse($attendance->attendance_date)->format('d M Y') }}</div>
+                        <div class="text-xs text-gray-500">{{ \Carbon\Carbon::parse($attendance->attendance_date)->format('l') }}</div>
+                    </div>
+                    @switch($attendance->status)
+                        @case('present')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Hadir</span>
+                            @break
+                        @case('absent')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Tidak Hadir</span>
+                            @break
+                        @case('leave')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Cuti</span>
+                            @break
+                        @case('sick')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Sakit</span>
+                            @break
+                        @case('permission')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Izin</span>
+                            @break
+                        @default
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">{{ ucfirst($attendance->status) }}</span>
+                    @endswitch
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <span class="text-gray-500">Check In:</span>
+                        @if($attendance->check_in)
+                            <span class="font-medium">{{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}</span>
+                            @if($attendance->is_late)
+                                <span class="text-red-600">(Terlambat)</span>
+                            @endif
+                        @else
+                            <span class="text-gray-400">-</span>
+                        @endif
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Check Out:</span>
+                        @if($attendance->check_out)
+                            <span class="font-medium">{{ \Carbon\Carbon::parse($attendance->check_out)->format('H:i') }}</span>
+                            @if($attendance->is_early_leave)
+                                <span class="text-orange-600">(Awal)</span>
+                            @endif
+                        @else
+                            <span class="text-gray-400">-</span>
+                        @endif
+                    </div>
+                </div>
+                @if($attendance->notes)
+                    <div class="mt-1 text-xs text-gray-500">{{ Str::limit($attendance->notes, 50) }}</div>
+                @endif
+            </div>
+            @empty
+            <div class="p-6 text-center">
+                <i class="fas fa-calendar-times text-gray-400 text-3xl mb-2"></i>
+                <p class="text-gray-500 text-sm">Tidak ada data absensi dalam periode ini</p>
+            </div>
+            @endforelse
+        </div>
+
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

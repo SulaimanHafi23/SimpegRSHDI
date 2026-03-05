@@ -3,7 +3,7 @@
 @section('title', 'Daftar Pegawai - Manajemen Absensi')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-3">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Daftar Pegawai</h1>
@@ -15,7 +15,58 @@
         </form>
     </div>
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
+        <!-- Mobile Card Layout -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @foreach($workers as $worker)
+            @php
+                $month = now()->month;
+                $year = now()->year;
+                $summary = app('App\\Services\\Attendance\\AttendanceService')->getMonthlyReport($worker->id, $month, $year);
+                $hadir = $summary->where('status', 'present')->count();
+                $terlambat = $summary->where('status', 'late')->count();
+                $tidakHadir = $summary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count();
+                $izin = $summary->where('status', 'permission')->count();
+                $sakit = $summary->where('status', 'sick')->count();
+                $cuti = $summary->where('status', 'leave')->count();
+            @endphp
+            <div class="p-4">
+                <div class="mb-2">
+                    <div class="text-sm font-semibold text-gray-900">{{ $worker->name }}</div>
+                    <div class="text-xs text-gray-500">{{ $worker->nip }} &bull; {{ $worker->department->name ?? '-' }}</div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                    <div class="bg-green-50 rounded px-1 py-1.5">
+                        <div class="text-xs text-gray-500">Hadir</div>
+                        <div class="text-sm font-bold text-green-700">{{ $hadir }}</div>
+                    </div>
+                    <div class="bg-yellow-50 rounded px-1 py-1.5">
+                        <div class="text-xs text-gray-500">Terlambat</div>
+                        <div class="text-sm font-bold text-yellow-700">{{ $terlambat }}</div>
+                    </div>
+                    <div class="bg-red-50 rounded px-1 py-1.5">
+                        <div class="text-xs text-gray-500">Tidak Hadir</div>
+                        <div class="text-sm font-bold text-red-700">{{ $tidakHadir }}</div>
+                    </div>
+                    <div class="bg-blue-50 rounded px-1 py-1.5">
+                        <div class="text-xs text-gray-500">Izin</div>
+                        <div class="text-sm font-bold text-blue-700">{{ $izin }}</div>
+                    </div>
+                    <div class="bg-orange-50 rounded px-1 py-1.5">
+                        <div class="text-xs text-gray-500">Sakit</div>
+                        <div class="text-sm font-bold text-orange-700">{{ $sakit }}</div>
+                    </div>
+                    <div class="bg-purple-50 rounded px-1 py-1.5">
+                        <div class="text-xs text-gray-500">Cuti</div>
+                        <div class="text-sm font-bold text-purple-700">{{ $cuti }}</div>
+                    </div>
+                </div>
+                <a href="{{ route('admin.attendance.history', $worker->id) }}" class="inline-flex items-center px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold">
+                    <i class="fas fa-list mr-1"></i> Riwayat Absensi
+                </a>
+            </div>
+            @endforeach
+        </div>
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

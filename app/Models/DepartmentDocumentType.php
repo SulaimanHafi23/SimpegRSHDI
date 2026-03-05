@@ -13,7 +13,7 @@ class DepartmentDocumentType extends Pivot
     use HasFactory, HasUuids, Auditable;
 
     protected $table = 'department_document_type';
-    
+
     public $incrementing = false;
     protected $keyType = 'string';
 

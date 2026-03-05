@@ -52,7 +52,28 @@
 
     <x-card>
         @if(isset($report) && $report->isNotEmpty())
-            <div class="overflow-x-auto">
+            <!-- Mobile Card Layout -->
+            <div class="md:hidden divide-y divide-gray-200">
+                @foreach($report as $i => $row)
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm font-semibold text-gray-900">{{ $row->attendance_date?->format('d M Y') ?? '-' }}</div>
+                        <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{{ ucfirst($row->status ?? '-') }}</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mb-2">Shift: {{ $row->shift->name ?? '-' }}</div>
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-2">
+                        <div><span class="text-gray-500">Check-in:</span> <span class="font-medium">{{ $row->check_in?->format('H:i') ?? '-' }}</span></div>
+                        <div><span class="text-gray-500">Check-out:</span> <span class="font-medium">{{ $row->check_out?->format('H:i') ?? '-' }}</span></div>
+                        <div><span class="text-gray-500">Telat:</span> <span class="font-medium">{{ $row->late_minutes ?? 0 }} mnt</span></div>
+                        <div><span class="text-gray-500">Lembur:</span> <span class="font-medium">{{ $row->overtime_minutes ?? 0 }} mnt</span></div>
+                    </div>
+                    @if($row->notes)
+                        <div class="text-xs text-gray-500"><span class="font-medium">Catatan:</span> {{ $row->notes }}</div>
+                    @endif
+                </div>
+                @endforeach
+            </div>
+            <div class="hidden md:block overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr>
@@ -87,7 +108,23 @@
         @elseif(isset($report) && $report->isEmpty())
             <x-empty-state icon="fas fa-inbox" title="Tidak ada data" description="Tidak ditemukan data absensi untuk filter yang dipilih" />
         @elseif(isset($attendances) && $attendances->isNotEmpty())
-            <div class="overflow-x-auto">
+            <!-- Mobile Card Layout -->
+            <div class="md:hidden divide-y divide-gray-200">
+                @foreach($attendances as $i => $a)
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="text-sm font-semibold text-gray-900">{{ $a->worker->name ?? '-' }}</div>
+                        <span class="text-xs font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded">{{ ucfirst($a->status ?? '-') }}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div><span class="text-gray-500">Shift:</span> <span class="font-medium">{{ $a->shift->name ?? '-' }}</span></div>
+                        <div><span class="text-gray-500">In:</span> <span class="font-medium">{{ $a->check_in?->format('H:i') ?? '-' }}</span></div>
+                        <div><span class="text-gray-500">Out:</span> <span class="font-medium">{{ $a->check_out?->format('H:i') ?? '-' }}</span></div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            <div class="hidden md:block overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr>

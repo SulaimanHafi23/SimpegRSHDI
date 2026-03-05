@@ -91,6 +91,117 @@
                 title="Tidak ada data tukar shift"
                 description="Permintaan tukar shift akan ditampilkan di sini" />
         @elseif(isset($items))
+            {{-- Mobile Card Layout --}}
+            <div class="md:hidden space-y-4">
+                @foreach($items as $index => $item)
+                    @php
+                        $statusBadges = [
+                            'pending' => ['variant' => 'secondary', 'label' => 'Pending'],
+                            'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
+                            'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Persetujuan'],
+                            'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                            'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                            'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
+                            'executed' => ['variant' => 'success', 'label' => 'Dieksekusi'],
+                        ];
+                        $badge = $statusBadges[$item->status] ?? ['variant' => 'secondary', 'label' => ucfirst($item->status)];
+                        $reqShift = $item->requesterShift?->shift;
+                        $tgtShift = $item->targetShift?->shift;
+                    @endphp
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <span class="text-xs text-gray-500">#{{ $items->firstItem() + $index }}</span>
+                                <div class="text-sm text-gray-600">
+                                    {{ $item->requested_at?->format('d M Y H:i') ?? $item->created_at->format('d M Y H:i') }}
+                                </div>
+                            </div>
+                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
+                        </div>
+
+                        <div class="space-y-2 text-sm">
+                            <div>
+                                <span class="font-medium text-gray-500">Pemohon:</span>
+                                <span class="text-gray-900">{{ $item->requester->name }}</span>
+                                <span class="text-xs text-gray-400">({{ $item->requester->nip ?? '-' }})</span>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-500">Target:</span>
+                                @if($item->targetWorker)
+                                    <span class="text-gray-900">{{ $item->targetWorker->name }}</span>
+                                    <span class="text-xs text-gray-400">({{ $item->targetWorker->nip ?? '-' }})</span>
+                                @else
+                                    <x-badge variant="secondary">Open Request</x-badge>
+                                @endif
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <span class="font-medium text-gray-500 block">Shift Pemohon:</span>
+                                    @if($reqShift)
+                                        <span class="text-gray-900">{{ $reqShift->name }}</span>
+                                        <div class="text-xs text-gray-500">{{ $reqShift->start_time }} - {{ $reqShift->end_time }}</div>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500 block">Shift Target:</span>
+                                    @if($tgtShift)
+                                        <span class="text-gray-900">{{ $tgtShift->name }}</span>
+                                        <div class="text-xs text-gray-500">{{ $tgtShift->start_time }} - {{ $tgtShift->end_time }}</div>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div>
+                                <span class="font-medium text-gray-500">Tanggal Tukar:</span>
+                                @if($item->swap_type === 'single_date' && $item->swap_date)
+                                    <span class="text-gray-900">{{ $item->swap_date->format('d M Y') }}</span>
+                                @elseif($item->swap_type === 'date_range' && $item->swap_start_date && $item->swap_end_date)
+                                    <span class="text-gray-900">{{ $item->swap_start_date->format('d M') }} - {{ $item->swap_end_date->format('d M Y') }}</span>
+                                @elseif($item->swap_type === 'recurring' && $item->swap_dates)
+                                    <span class="text-gray-900 text-xs">{{ collect($item->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))->join(', ') }}</span>
+                                @else
+                                    <span class="text-gray-400">-</span>
+                                @endif
+                            </div>
+                            @if($item->reason)
+                                <div>
+                                    <span class="font-medium text-gray-500">Alasan:</span>
+                                    <span class="text-gray-600">{{ Str::limit($item->reason, 80) }}</span>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="flex justify-end gap-3 mt-3 pt-3 border-t border-gray-100">
+                            <a href="{{ route('manager.shift-swap-approvals.show', $item->id) }}"
+                               class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                                <i class="fas fa-eye mr-1"></i> Detail
+                            </a>
+                            @if($item->status === 'awaiting_approval')
+                                <button onclick="approveSwap('{{ $item->id }}')"
+                                        class="text-green-600 hover:text-green-900 text-sm font-medium">
+                                    <i class="fas fa-check mr-1"></i> Setujui
+                                </button>
+                                <button onclick="rejectSwap('{{ $item->id }}')"
+                                        class="text-red-600 hover:text-red-900 text-sm font-medium">
+                                    <i class="fas fa-times mr-1"></i> Tolak
+                                </button>
+                            @endif
+                            @if($item->status === 'approved' && !$item->executed_at)
+                                <button onclick="executeSwap('{{ $item->id }}')"
+                                        class="text-purple-600 hover:text-purple-900 text-sm font-medium">
+                                    <i class="fas fa-check-double mr-1"></i> Eksekusi
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Desktop Table --}}
+            <div class="hidden md:block">
             <x-table>
                 <x-slot:thead>
                     <x-table.row>
@@ -223,6 +334,7 @@
                     </x-table.row>
                 @endforeach
             </x-table>
+            </div>
 
             {{-- Pagination --}}
             @if($items->hasPages())

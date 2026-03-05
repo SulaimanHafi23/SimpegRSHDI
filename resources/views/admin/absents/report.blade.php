@@ -4,17 +4,17 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-            <h1 class="text-2xl font-bold text-gray-900">Laporan Absensi</h1>
+            <h1 class="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Laporan Absensi</h1>
             <p class="text-sm text-gray-600 mt-1">Rekap kehadiran pegawai</p>
         </div>
-        <div class="flex space-x-2">
-            <button onclick="window.print()" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg shadow">
+        <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+            <button onclick="window.print()" class="inline-flex items-center justify-center flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg shadow text-xs sm:text-sm">
                 <i class="fas fa-print mr-2"></i>Cetak
             </button>
-            <a href="#" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow">
-                <i class="fas fa-file-excel mr-2"></i>Export Excel
+            <a href="#" class="inline-flex items-center justify-center flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow text-xs sm:text-sm">
+                <i class="fas fa-file-excel mr-2"></i>Export
             </a>
         </div>
     </div>
@@ -27,9 +27,9 @@
                 <option value="monthly">Bulanan</option>
                 <option value="range">Rentang Tanggal</option>
             </select>
-            <input type="date" name="start_date" 
+            <input type="date" name="start_date"
                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
-            <input type="date" name="end_date" 
+            <input type="date" name="end_date"
                    class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
             <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
                 <i class="fas fa-search mr-2"></i>Tampilkan
@@ -38,12 +38,12 @@
     </div>
 
     <!-- Summary Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow p-4 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm opacity-90">Total Hadir</p>
-                    <p class="text-3xl font-bold">0</p>
+                    <p class="text-xs sm:text-sm opacity-90">Total Hadir</p>
+                    <p class="text-2xl md:text-3xl font-bold">0</p>
                 </div>
                 <i class="fas fa-check-circle text-4xl opacity-50"></i>
             </div>
@@ -51,8 +51,8 @@
         <div class="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow p-4 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm opacity-90">Terlambat</p>
-                    <p class="text-3xl font-bold">0</p>
+                    <p class="text-xs sm:text-sm opacity-90">Terlambat</p>
+                    <p class="text-2xl md:text-3xl font-bold">0</p>
                 </div>
                 <i class="fas fa-clock text-4xl opacity-50"></i>
             </div>
@@ -60,8 +60,8 @@
         <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow p-4 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm opacity-90">Cuti</p>
-                    <p class="text-3xl font-bold">0</p>
+                    <p class="text-xs sm:text-sm opacity-90">Cuti</p>
+                    <p class="text-2xl md:text-3xl font-bold">0</p>
                 </div>
                 <i class="fas fa-plane text-4xl opacity-50"></i>
             </div>
@@ -69,8 +69,8 @@
         <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow p-4 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm opacity-90">Sakit</p>
-                    <p class="text-3xl font-bold">0</p>
+                    <p class="text-xs sm:text-sm opacity-90">Sakit</p>
+                    <p class="text-2xl md:text-3xl font-bold">0</p>
                 </div>
                 <i class="fas fa-user-md text-4xl opacity-50"></i>
             </div>
@@ -78,8 +78,8 @@
         <div class="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow p-4 text-white">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm opacity-90">Alpha</p>
-                    <p class="text-3xl font-bold">0</p>
+                    <p class="text-xs sm:text-sm opacity-90">Alpha</p>
+                    <p class="text-2xl md:text-3xl font-bold">0</p>
                 </div>
                 <i class="fas fa-times-circle text-4xl opacity-50"></i>
             </div>

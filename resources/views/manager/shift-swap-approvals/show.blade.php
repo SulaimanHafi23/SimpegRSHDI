@@ -8,7 +8,7 @@
     <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-lg shadow-lg p-6 mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div class="text-white">
-                <h1 class="text-3xl font-bold flex items-center">
+                <h1 class="text-xl sm:text-2xl md:text-3xl font-bold flex items-center">
                     <i class="fas fa-exchange-alt mr-3"></i>
                     Detail Permintaan Tukar Shift
                 </h1>
@@ -327,12 +327,16 @@
             </div>
 
             <!-- Action Buttons -->
-            @if($swap->status === 'awaiting_approval' || $swap->status === 'pending')
+            @if($swap->status === 'awaiting_approval')
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                         <i class="fas fa-hand-pointer text-blue-600 mr-2"></i>
                         Aksi Persetujuan
                     </h3>
+                    <p class="text-sm text-gray-500 mb-4">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Kedua pegawai sudah saling menyetujui. Menunggu persetujuan Manager/HR.
+                    </p>
                     <div class="flex flex-col sm:flex-row gap-3">
                         <button type="button" onclick="approveSwap('{{ $swap->id }}')" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
                             <i class="fas fa-check-circle mr-2"></i>
@@ -431,8 +435,8 @@
 </div>
 
 <!-- Approve Modal -->
-<div id="approveModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50" x-data="{ open: false }" x-show="open" x-cloak>
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white" @click.away="open = false">
+<div id="approveModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
         <form action="{{ route('manager.shift-swap-approvals.approve', $swap->id) }}" method="POST">
             @csrf
             <div class="flex items-center justify-between mb-4 pb-3 border-b">
@@ -440,7 +444,7 @@
                     <i class="fas fa-check-circle text-green-600 mr-2"></i>
                     Setujui Permintaan
                 </h3>
-                <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 transition">
+                <button type="button" onclick="closeModal('approveModal')" class="text-gray-400 hover:text-gray-600 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -453,7 +457,7 @@
             </div>
 
             <div class="flex gap-3 justify-end">
-                <button type="button" @click="open = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                <button type="button" onclick="closeModal('approveModal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
                     Batal
                 </button>
                 <button type="submit" class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition font-bold shadow-lg">
@@ -466,8 +470,8 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50" x-data="{ open: false }" x-show="open" x-cloak>
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white" @click.away="open = false">
+<div id="rejectModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
         <form action="{{ route('manager.shift-swap-approvals.reject', $swap->id) }}" method="POST">
             @csrf
             <div class="flex items-center justify-between mb-4 pb-3 border-b">
@@ -475,7 +479,7 @@
                     <i class="fas fa-times-circle text-red-600 mr-2"></i>
                     Tolak Permintaan
                 </h3>
-                <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 transition">
+                <button type="button" onclick="closeModal('rejectModal')" class="text-gray-400 hover:text-gray-600 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -489,7 +493,7 @@
             </div>
 
             <div class="flex gap-3 justify-end">
-                <button type="button" @click="open = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                <button type="button" onclick="closeModal('rejectModal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
                     Batal
                 </button>
                 <button type="submit" class="px-6 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition font-bold shadow-lg">
@@ -502,8 +506,8 @@
 </div>
 
 <!-- Execute Modal -->
-<div id="executeModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50" x-data="{ open: false }" x-show="open" x-cloak>
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white" @click.away="open = false">
+<div id="executeModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
         <form action="{{ route('manager.shift-swap-approvals.execute', $swap->id) }}" method="POST">
             @csrf
             <div class="flex items-center justify-between mb-4 pb-3 border-b">
@@ -511,7 +515,7 @@
                     <i class="fas fa-play-circle text-purple-600 mr-2"></i>
                     Eksekusi Pertukaran Shift
                 </h3>
-                <button type="button" @click="open = false" class="text-gray-400 hover:text-gray-600 transition">
+                <button type="button" onclick="closeModal('executeModal')" class="text-gray-400 hover:text-gray-600 transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
@@ -526,7 +530,7 @@
             </div>
 
             <div class="flex gap-3 justify-end">
-                <button type="button" @click="open = false" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                <button type="button" onclick="closeModal('executeModal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
                     Batal
                 </button>
                 <button type="submit" class="px-6 py-2 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition font-bold shadow-lg">
@@ -541,17 +545,18 @@
 <script>
 function approveSwap(id) {
     document.getElementById('approveModal').classList.remove('hidden');
-    Alpine.store('approveModal', { open: true });
 }
 
 function rejectSwap(id) {
     document.getElementById('rejectModal').classList.remove('hidden');
-    Alpine.store('rejectModal', { open: true });
 }
 
 function executeSwap(id) {
     document.getElementById('executeModal').classList.remove('hidden');
-    Alpine.store('executeModal', { open: true });
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
 }
 
 // Close modals on ESC key
@@ -562,9 +567,14 @@ document.addEventListener('keydown', function(e) {
         document.getElementById('executeModal').classList.add('hidden');
     }
 });
-</script>
 
-<style>
-[x-cloak] { display: none !important; }
-</style>
+// Close modal on backdrop click
+['approveModal', 'rejectModal', 'executeModal'].forEach(function(modalId) {
+    document.getElementById(modalId)?.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal(modalId);
+        }
+    });
+});
+</script>
 @endsection

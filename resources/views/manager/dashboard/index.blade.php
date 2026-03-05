@@ -17,7 +17,27 @@
             <div class="mt-1"><i class="fas fa-bell text-lg"></i></div>
             <div class="flex-1">
                 <h3 class="font-semibold text-lg mb-1">Peringatan: {{ $pendingCheckouts->count() }} pegawai departemen belum check-out</h3>
-                <div class="overflow-x-auto">
+                {{-- Mobile cards --}}
+                <div class="md:hidden divide-y divide-yellow-100">
+                    @foreach($pendingCheckouts->take(10) as $item)
+                    <div class="py-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <div>
+                                <span class="font-semibold text-sm">{{ $item['worker_name'] }}</span>
+                                <span class="text-xs text-yellow-700 ml-1">{{ $item['position'] }}</span>
+                            </div>
+                            <span class="text-red-600 font-semibold text-xs">{{ $item['formatted_late'] }}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-yellow-800">
+                            <span><i class="fas fa-clock mr-1"></i>{{ $item['shift_name'] }}</span>
+                            <span><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($item['attendance_date'])->format('d M Y') }}</span>
+                            <span><i class="fas fa-hourglass-end mr-1"></i>{{ \Carbon\Carbon::parse($item['shift_end_time'])->format('H:i') }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                {{-- Desktop table --}}
+                <div class="hidden md:block overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead class="text-left text-xs uppercase text-yellow-700">
                             <tr>
@@ -189,7 +209,29 @@
                 </a>
             </div>
         </x-slot:header>
-        <div class="overflow-x-auto">
+        {{-- Mobile cards --}}
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($recentLeaves as $leave)
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">{{ $leave->worker->name }}</p>
+                        <p class="text-xs text-gray-500">{{ $leave->worker->department->name ?? '-' }}</p>
+                    </div>
+                    <a href="{{ route('admin.leave.show', $leave->id) }}" class="text-blue-600 text-sm font-medium">Review <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <span class="bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{{ $leave->leaveType->name }}</span>
+                    <span class="text-gray-600">{{ \Carbon\Carbon::parse($leave->start_date)->format('d M') }} - {{ \Carbon\Carbon::parse($leave->end_date)->format('d M Y') }}</span>
+                    <span class="font-semibold text-gray-900">{{ $leave->total_days }} hari</span>
+                </div>
+            </div>
+            @empty
+            <div class="p-8 text-center text-gray-500">Tidak ada pengajuan cuti pending</div>
+            @endforelse
+        </div>
+        {{-- Desktop table --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -244,7 +286,29 @@
                 </a>
             </div>
         </x-slot:header>
-        <div class="overflow-x-auto">
+        {{-- Mobile cards --}}
+        <div class="md:hidden divide-y divide-gray-200">
+            @forelse($recentOvertimes as $overtime)
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">{{ $overtime->worker->name }}</p>
+                        <p class="text-xs text-gray-500">{{ $overtime->worker->department->name ?? '-' }}</p>
+                    </div>
+                    <a href="{{ route('admin.overtime.show', $overtime->id) }}" class="text-blue-600 text-sm font-medium">Review <i class="fas fa-arrow-right ml-1"></i></a>
+                </div>
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <span class="text-gray-600"><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}</span>
+                    <span class="text-gray-600"><i class="fas fa-clock mr-1"></i>{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</span>
+                    <span class="font-semibold text-gray-900">{{ number_format($overtime->total_hours, 1) }} jam</span>
+                </div>
+            </div>
+            @empty
+            <div class="p-8 text-center text-gray-500">Tidak ada pengajuan lembur pending</div>
+            @endforelse
+        </div>
+        {{-- Desktop table --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -297,7 +361,26 @@
         <div class="p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-900">Penukaran Shift Terbaru</h3>
         </div>
-        <div class="overflow-x-auto">
+        {{-- Mobile cards --}}
+        <div class="md:hidden divide-y divide-gray-200">
+            @foreach($recentShiftSwaps as $swap)
+            <div class="p-4 hover:bg-gray-50">
+                <div class="flex items-center justify-between mb-2">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-900">{{ $swap->requester->name }}</p>
+                        <p class="text-xs text-gray-500"><i class="fas fa-exchange-alt mr-1"></i>{{ $swap->targetWorker->name ?? '-' }}</p>
+                    </div>
+                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                </div>
+                <div class="flex items-center justify-between text-xs">
+                    <span class="text-gray-600"><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($swap->requesterShift->shift_date)->format('d M Y') }}</span>
+                    <a href="#" class="text-blue-600 font-medium">Review</a>
+                </div>
+            </div>
+            @endforeach
+        </div>
+        {{-- Desktop table --}}
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

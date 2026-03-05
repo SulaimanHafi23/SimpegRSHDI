@@ -3,7 +3,7 @@
 @section('title', 'Detail Departemen')
 
 @section('content')
-<div class="container mx-auto px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center space-x-2 text-gray-600 mb-2">
@@ -142,7 +142,22 @@
             Daftar Pegawai
         </h2>
 
-        <div class="overflow-x-auto">
+        <!-- Mobile Card Layout -->
+        <div class="md:hidden divide-y divide-gray-200">
+            @foreach($department->workers as $worker)
+            <div class="p-4 flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-semibold text-gray-900">{{ $worker->name }}</div>
+                    <div class="text-xs text-gray-500 font-mono">{{ $worker->nip }}</div>
+                    <div class="text-xs text-gray-400">{{ $worker->email ?? '-' }}</div>
+                </div>
+                <span class="px-2 py-0.5 text-xs font-semibold rounded-full {{ $worker->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                    {{ ucfirst($worker->status) }}
+                </span>
+            </div>
+            @endforeach
+        </div>
+        <div class="hidden md:block overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>

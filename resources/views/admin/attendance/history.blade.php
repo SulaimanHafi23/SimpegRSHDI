@@ -211,8 +211,9 @@
         </div>
 
         {{-- Scrollable Calendar Container for Mobile --}}
-        <div class="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
-            <div class="min-w-[700px]">
+        <p class="text-xs text-gray-400 italic px-4 mb-1 md:hidden"><i class="fas fa-arrows-alt-h mr-1"></i>Geser untuk melihat kalender lengkap</p>
+        <div class="overflow-x-auto scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
+            <div class="min-w-[600px]">
                 {{-- Calendar Header (Days of Week) --}}
                 <div class="grid grid-cols-7 gap-2 mb-2">
                     <div class="text-center font-semibold text-sm text-red-600 py-2">Minggu</div>

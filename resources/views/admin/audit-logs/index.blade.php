@@ -99,6 +99,60 @@
                 title="Belum ada log aktivitas"
                 description="Log aktivitas akan muncul saat ada perubahan data dalam sistem." />
         @else
+            {{-- Mobile Card Layout --}}
+            <div class="md:hidden space-y-4">
+                @foreach($logs as $log)
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-green-700 text-xs font-bold">
+                                        {{ substr($log->user_name ?? 'S', 0, 1) }}
+                                    </span>
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ $log->user_name ?? 'System' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $log->created_at->format('d/m/Y H:i:s') }}</div>
+                                </div>
+                            </div>
+                            @php $mobileBadge = $log->action_badge; @endphp
+                            <x-badge :variant="$mobileBadge['variant']">
+                                <i class="{{ $mobileBadge['icon'] }} mr-1"></i>
+                                {{ $mobileBadge['label'] }}
+                            </x-badge>
+                        </div>
+
+                        <div class="space-y-2 text-sm">
+                            <div>
+                                <span class="font-medium text-gray-500">Tipe Data:</span>
+                                <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                                    {{ $log->model_name }}
+                                </span>
+                            </div>
+                            @if($log->description)
+                                <div>
+                                    <span class="font-medium text-gray-500">Deskripsi:</span>
+                                    <span class="text-gray-600">{{ Str::limit($log->description, 80) }}</span>
+                                </div>
+                            @endif
+                            <div>
+                                <span class="font-medium text-gray-500">IP:</span>
+                                <span class="text-xs text-gray-500 font-mono">{{ $log->ip_address ?? '-' }}</span>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end mt-3 pt-3 border-t border-gray-100">
+                            <a href="{{ route('admin.audit-logs.show', $log->id) }}"
+                               class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                                <i class="fas fa-eye mr-1"></i> Detail
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            {{-- Desktop Table --}}
+            <div class="hidden md:block">
             <x-table>
                 <x-slot:thead>
                     <x-table.row>
@@ -173,6 +227,7 @@
                     </x-table.row>
                 @endforeach
             </x-table>
+            </div>
 
             {{-- Pagination --}}
             <div class="mt-4">

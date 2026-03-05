@@ -17,7 +17,27 @@
             <div class="mt-1"><i class="fas fa-bell text-lg"></i></div>
             <div class="flex-1">
                 <h3 class="font-semibold text-lg mb-1">Peringatan: {{ $pendingCheckouts->count() }} pegawai belum check-out</h3>
-                <div class="overflow-x-auto">
+                {{-- Mobile cards --}}
+                <div class="md:hidden divide-y divide-yellow-100">
+                    @foreach($pendingCheckouts->take(10) as $item)
+                    <div class="py-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <div>
+                                <span class="font-semibold text-sm">{{ $item['worker_name'] }}</span>
+                                <span class="text-xs text-yellow-700 ml-1">{{ $item['position'] }}</span>
+                            </div>
+                            <span class="text-red-600 font-semibold text-xs">{{ $item['formatted_late'] }}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-yellow-800">
+                            <span><i class="fas fa-clock mr-1"></i>{{ $item['shift_name'] }}</span>
+                            <span><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($item['attendance_date'])->format('d M Y') }}</span>
+                            <span><i class="fas fa-hourglass-end mr-1"></i>{{ \Carbon\Carbon::parse($item['shift_end_time'])->format('H:i') }}</span>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                {{-- Desktop table --}}
+                <div class="hidden md:block overflow-x-auto">
                     <table class="min-w-full text-sm">
                         <thead class="text-left text-xs uppercase text-yellow-700">
                             <tr>
