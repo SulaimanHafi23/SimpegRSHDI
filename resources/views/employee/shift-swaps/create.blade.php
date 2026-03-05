@@ -3,7 +3,7 @@
 @section('title', 'Buat Permintaan Tukar Shift')
 
 @section('content')
-<div class="container mx-auto px-4 py-6 max-w-4xl">
+<div class="container mx-auto px-4 py-6 max-w-6xl">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center justify-between">
@@ -59,6 +59,8 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
             <!-- Your Shift Selection -->
             <div class="mb-6">
                 <label for="requester_shift_id" class="block text-sm font-medium text-gray-700 mb-2">
@@ -112,7 +114,7 @@
             </div>
 
             <!-- Swap Type Selection -->
-            <div class="mb-6">
+            <div class="mb-6 xl:col-span-2">
                 <label class="block text-sm font-medium text-gray-700 mb-3">
                     <i class="fas fa-calendar-check text-indigo-600 mr-1"></i>
                     Jenis Tukar Shift
@@ -150,7 +152,7 @@
             </div>
 
             <!-- Single Date Selection -->
-            <div id="single_date_section" class="mb-6 swap-date-section">
+            <div id="single_date_section" class="mb-6 swap-date-section xl:col-span-2">
                 <label for="swap_date" class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fas fa-calendar-day text-green-600 mr-1"></i>
                     Tanggal Tukar Shift
@@ -169,7 +171,7 @@
             </div>
 
             <!-- Date Range Selection -->
-            <div id="date_range_section" class="mb-6 swap-date-section" style="display: none;">
+            <div id="date_range_section" class="mb-6 swap-date-section xl:col-span-2" style="display: none;">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                         <label for="swap_start_date" class="block text-sm font-medium text-gray-700 mb-2">
@@ -207,7 +209,7 @@
             </div>
 
             <!-- Recurring Dates Selection -->
-            <div id="recurring_section" class="mb-6 swap-date-section" style="display: none;">
+            <div id="recurring_section" class="mb-6 swap-date-section xl:col-span-2" style="display: none;">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                     <i class="fas fa-calendar-plus text-orange-600 mr-1"></i>
                     Tanggal-Tanggal Spesifik
@@ -268,6 +270,8 @@
                 @error('reason')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
+            </div>
+
             </div>
 
             <!-- Submit Buttons -->

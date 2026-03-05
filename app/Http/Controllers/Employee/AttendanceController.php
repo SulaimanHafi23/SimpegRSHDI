@@ -725,6 +725,8 @@ class AttendanceController extends Controller
             $checkIn = '-';
             $checkOut = '-';
             $lateInfo = '-';
+            $earlyLeaveInfo = '-';
+            $locationName = '-';
 
             if ($attendance) {
                 $status = match ($attendance->status) {
@@ -742,6 +744,10 @@ class AttendanceController extends Controller
                 $lateInfo = ($attendance->is_late && (int) $attendance->late_minutes > 0)
                     ? ((int) $attendance->late_minutes . ' menit')
                     : '-';
+                $earlyLeaveInfo = ($attendance->is_early_leave && (int) $attendance->early_leave_minutes > 0)
+                    ? ((int) $attendance->early_leave_minutes . ' menit')
+                    : '-';
+                $locationName = $attendance->location?->name ?? '-';
                 $notes = $attendance->notes ?: '-';
             } elseif ($leaveRequest) {
                 $leaveName = $leaveRequest->leaveType->name ?? 'Cuti';
@@ -783,6 +789,8 @@ class AttendanceController extends Controller
                 'check_out' => $checkOut,
                 'status' => $status,
                 'late' => $lateInfo,
+                'early_leave' => $earlyLeaveInfo,
+                'location' => $locationName,
                 'notes' => $notes,
             ];
         }

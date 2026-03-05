@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Models\Worker;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 
@@ -28,8 +30,29 @@ class ForgotPasswordController extends Controller
             'email.email' => 'Format email tidak valid.',
         ]);
 
+        $inputEmail = strtolower(trim((string) $request->input('email')));
+
+        $targetEmail = User::query()
+            ->where('email', $inputEmail)
+            ->value('email');
+
+        if (!$targetEmail) {
+            $worker = Worker::query()
+                ->where('email', $inputEmail)
+                ->with('user')
+                ->first();
+
+            if ($worker && $worker->user) {
+                $targetEmail = $worker->user->email;
+            }
+        }
+
+        if (!$targetEmail) {
+            return back()->withErrors(['email' => $this->getStatusMessage(Password::INVALID_USER)]);
+        }
+
         $status = Password::sendResetLink(
-            $request->only('email')
+            ['email' => $targetEmail]
         );
 
         return $status === Password::RESET_LINK_SENT
@@ -43,7 +66,7 @@ class ForgotPasswordController extends Controller
     protected function getStatusMessage(string $status): string
     {
         return match ($status) {
-            Password::INVALID_USER => 'Email tidak ditemukan dalam sistem.',
+            Password::INVALID_USER => 'Email tidak ditemukan dalam sistem. Gunakan email akun yang terdaftar untuk login.',
             Password::RESET_THROTTLED => 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.',
             default => 'Terjadi kesalahan. Silakan coba lagi.',
         };

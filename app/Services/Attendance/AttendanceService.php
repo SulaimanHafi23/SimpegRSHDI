@@ -10,6 +10,7 @@ use App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface;
 use App\Repositories\Contracts\Master\LocationRepositoryInterface;
 use App\Repositories\Contracts\Master\ShiftRepositoryInterface;
 use App\Services\WorkerOffDay\WorkerOffDayService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -457,8 +458,57 @@ class AttendanceService
 
     public function update(string $id, array $data)
     {
-        $dto = AttendanceDTO::fromRequest($data);
+        $existing = $this->attendanceRepository->getById($id);
+
+        if (!$existing) {
+            throw new \Exception('Data absensi tidak ditemukan.');
+        }
+
+        $normalized = [
+            'id' => $existing->id,
+            'worker_id' => $data['worker_id'] ?? $existing->worker_id,
+            'shift_id' => $data['shift_id'] ?? $existing->shift_id,
+            'location_id' => $data['location_id'] ?? $existing->location_id,
+            'attendance_date' => $data['attendance_date'] ?? $data['date'] ?? $existing->attendance_date?->format('Y-m-d'),
+            'check_in' => $this->normalizeDateTime($data['check_in'] ?? $existing->check_in),
+            'check_out' => array_key_exists('check_out', $data)
+                ? $this->normalizeDateTime($data['check_out'])
+                : $this->normalizeDateTime($existing->check_out),
+            'check_in_latitude' => $data['check_in_latitude'] ?? $data['latitude_in'] ?? $existing->check_in_latitude,
+            'check_in_longitude' => $data['check_in_longitude'] ?? $data['longitude_in'] ?? $existing->check_in_longitude,
+            'check_out_latitude' => $data['check_out_latitude'] ?? $data['latitude_out'] ?? $existing->check_out_latitude,
+            'check_out_longitude' => $data['check_out_longitude'] ?? $data['longitude_out'] ?? $existing->check_out_longitude,
+            'distance_check_in' => $data['distance_check_in'] ?? $existing->distance_check_in,
+            'distance_check_out' => $data['distance_check_out'] ?? $existing->distance_check_out,
+            'check_in_by_admin' => $data['check_in_by_admin'] ?? $existing->check_in_by_admin,
+            'check_in_admin_id' => $data['check_in_admin_id'] ?? $existing->check_in_admin_id,
+            'check_out_by_admin' => $data['check_out_by_admin'] ?? $existing->check_out_by_admin,
+            'check_out_admin_id' => $data['check_out_admin_id'] ?? $existing->check_out_admin_id,
+            'status' => $data['status'] ?? $existing->status,
+            'is_late' => $data['is_late'] ?? $existing->is_late,
+            'late_minutes' => $data['late_minutes'] ?? $existing->late_minutes,
+            'is_early_leave' => $data['is_early_leave'] ?? $existing->is_early_leave,
+            'early_leave_minutes' => $data['early_leave_minutes'] ?? $existing->early_leave_minutes,
+            'is_outside_radius' => $data['is_outside_radius'] ?? $existing->is_outside_radius,
+            'overtime_minutes' => $data['overtime_minutes'] ?? $existing->overtime_minutes,
+            'notes' => $data['notes'] ?? $existing->notes,
+        ];
+
+        $dto = AttendanceDTO::fromRequest($normalized);
         return $this->attendanceRepository->update($id, $dto);
+    }
+
+    private function normalizeDateTime($value): ?string
+    {
+        if (is_null($value) || $value === '') {
+            return null;
+        }
+
+        if ($value instanceof Carbon) {
+            return $value->format('Y-m-d H:i:s');
+        }
+
+        return Carbon::parse((string) $value)->format('Y-m-d H:i:s');
     }
 
     public function delete(string $id): bool
