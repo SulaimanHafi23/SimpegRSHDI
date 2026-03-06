@@ -162,8 +162,8 @@ class BusinessTripApprovalController extends Controller
                     $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
                 }
             } else {
-                $startDate = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
-                $endDate = $request->input('date_to', now()->endOfMonth()->format('Y-m-d'));
+                $startDate = $request->input('date_from');
+                $endDate = $request->input('date_to');
             }
 
             $filters = [
@@ -202,8 +202,8 @@ class BusinessTripApprovalController extends Controller
 
             $trips = $query->orderBy('start_date', 'desc')->get();
 
-            $dateFrom = \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y');
-            $dateTo = \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y');
+            $dateFrom = $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y') : 'Semua';
+            $dateTo = $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y') : 'Semua';
 
             $filename = 'laporan-perjalanan-dinas-' . now()->format('Y-m-d-His');
 

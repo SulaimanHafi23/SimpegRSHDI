@@ -3,7 +3,7 @@
 @section('title', 'Detail Absensi')
 
 @section('content')
-<div class="space-y-6 max-w-5xl">
+<div class="space-y-6">
     <!-- Header -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
         <div class="flex items-center justify-between">

@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ShiftSwap\ShiftSwapRequestRequest;
 use App\Services\ShiftSwap\ShiftSwapService;
+use App\Exports\EmployeeShiftSwapExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
 class ShiftSwapController extends Controller
@@ -176,5 +179,68 @@ class ShiftSwapController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menerima request: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export shift swap data (PDF, Excel, CSV)
+     */
+    public function export(Request $request)
+    {
+        $worker = auth()->user()->worker;
+        if (!$worker) {
+            return redirect()->route('employee.dashboard')->with('error', 'Data pekerja tidak ditemukan.');
+        }
+
+        $format = $request->input('format', 'pdf');
+
+        $items = $this->shiftSwapService->listForWorker($worker->id);
+
+        // Apply date filters
+        if ($request->filled('date_from')) {
+            $items = $items->filter(fn($item) => $item->created_at >= $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $items = $items->filter(fn($item) => $item->created_at <= $request->date_to . ' 23:59:59');
+        }
+
+        // Filter by partner name
+        if ($request->filled('partner_id')) {
+            $partnerId = $request->partner_id;
+            $items = $items->filter(function ($item) use ($partnerId, $worker) {
+                if ($item->requester_id === $worker->id) {
+                    return $item->target_worker_id === $partnerId;
+                }
+                return $item->requester_id === $partnerId;
+            });
+        }
+
+        $items = $items->values();
+        $filters = $request->only(['date_from', 'date_to', 'partner_id']);
+
+        if ($format === 'excel') {
+            return Excel::download(
+                new EmployeeShiftSwapExport($items, $worker),
+                'tukar-shift-' . now()->format('Y-m-d') . '.xlsx'
+            );
+        }
+
+        if ($format === 'csv') {
+            return Excel::download(
+                new EmployeeShiftSwapExport($items, $worker),
+                'tukar-shift-' . now()->format('Y-m-d') . '.csv',
+                \Maatwebsite\Excel\Excel::CSV
+            );
+        }
+
+        // PDF
+        $pdf = Pdf::loadView('employee.exports.shift-swap-pdf', [
+            'title' => 'Laporan Tukar Shift',
+            'worker' => $worker,
+            'swaps' => $items,
+            'filters' => $filters,
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('Tukar_Shift_' . $worker->name . '_' . now()->format('YmdHis') . '.pdf');
     }
 }

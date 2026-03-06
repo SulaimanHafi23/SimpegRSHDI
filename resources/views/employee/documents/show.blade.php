@@ -3,7 +3,7 @@
 @section('title', 'Detail Dokumen')
 
 @section('content')
-<div class="mx-auto w-full max-w-7xl px-4 py-6">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6 flex items-center">
         <!-- <a href="{{ route('employee.documents.index') }}" 

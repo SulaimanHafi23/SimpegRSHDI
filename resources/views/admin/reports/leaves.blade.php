@@ -10,7 +10,7 @@
         description="Ringkasan permohonan cuti berdasarkan rentang tanggal dan status"
         icon="fas fa-calendar-times">
         <x-slot:actions>
-            <x-export-dropdown route="reports.leaves.export" />
+            <x-export-buttons :route="route('reports.leaves.export')" title="Export Laporan Cuti" />
         </x-slot:actions>
     </x-page-header>
 

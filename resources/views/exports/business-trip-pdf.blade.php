@@ -12,6 +12,7 @@
                 'pending' => 'Menunggu Persetujuan',
                 'approved' => 'Disetujui',
                 'rejected' => 'Ditolak',
+                'cancelled' => 'Dibatalkan',
                 default => ucfirst($status)
             };
         @endphp
@@ -59,6 +60,7 @@
                         'approved' => 'Disetujui',
                         'pending' => 'Menunggu',
                         'rejected' => 'Ditolak',
+                        'cancelled' => 'Dibatalkan',
                         default => ucfirst($trip->status)
                     };
                 @endphp
@@ -84,6 +86,7 @@
     <p style="margin: 5px 0; font-size: 10px;">Disetujui: {{ $trips->where('status', 'approved')->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Menunggu: {{ $trips->where('status', 'pending')->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Ditolak: {{ $trips->where('status', 'rejected')->count() }}</p>
+    <p style="margin: 5px 0; font-size: 10px;">Dibatalkan: {{ $trips->where('status', 'cancelled')->count() }}</p>
     @php $totalDays = $trips->where('status', 'approved')->sum(fn($t) => $t->start_date && $t->end_date ? $t->start_date->diffInDays($t->end_date) + 1 : 0); @endphp
     <p style="margin: 5px 0; font-size: 10px;">Total Hari Perjalanan: {{ $totalDays }} hari</p>
 </div>

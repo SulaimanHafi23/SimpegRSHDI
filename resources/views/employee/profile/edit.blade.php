@@ -3,7 +3,7 @@
 @section('title', 'Edit Profile')
 
 @section('content')
-<div class="space-y-6 max-w-3xl">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6 flex items-center">
         <a href="{{ route('employee.profile.show') }}"

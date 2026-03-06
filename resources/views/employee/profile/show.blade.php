@@ -3,7 +3,7 @@
 @section('title', 'Profile Saya')
 
 @section('content')
-<div class="space-y-6 max-w-5xl">
+<div class="space-y-6">
     <!-- Header -->
     <div class="mb-6">
         <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Profile Saya</h1>

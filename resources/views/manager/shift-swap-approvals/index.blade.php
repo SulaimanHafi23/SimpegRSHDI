@@ -9,6 +9,32 @@
         title="Persetujuan Tukar Shift"
         description="Kelola permintaan pertukaran shift dari pegawai"
         icon="fas fa-exchange-alt">
+        <x-slot name="actions">
+            <x-export-buttons :route="route('manager.shift-swap-approvals.export')" title="Export Tukar Shift">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Diterima</option>
+                        <option value="awaiting_approval">Menunggu Persetujuan</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
+                        <option value="cancelled">Dibatalkan</option>
+                        <option value="executed">Dieksekusi</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pemohon</label>
+                    <select name="requester_id" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="">Semua Pemohon</option>
+                        @foreach($workers as $w)
+                            <option value="{{ $w->id }}">{{ $w->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </x-export-buttons>
+        </x-slot>
     </x-page-header>
 
     {{-- Statistics Cards --}}

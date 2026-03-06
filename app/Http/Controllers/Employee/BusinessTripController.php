@@ -4,8 +4,11 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BusinessTrip\BusinessTripRequest;
+use App\Exports\EmployeeBusinessTripExport;
 use App\Models\BusinessTrip;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class BusinessTripController extends Controller
 {
@@ -96,5 +99,56 @@ class BusinessTripController extends Controller
         $trip->update(['status' => 'cancelled']);
 
         return redirect()->route('employee.business-trips.index')->with('success', 'Permohonan perjalanan dinas dibatalkan.');
+    }
+
+    public function export(Request $request)
+    {
+        $worker = auth()->user()->worker;
+        if (!$worker) {
+            return redirect()->route('employee.dashboard')->with('error', 'Data pekerja tidak ditemukan.');
+        }
+
+        $format = $request->input('format', 'pdf');
+
+        $query = BusinessTrip::where('worker_id', $worker->id);
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('start_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('end_date', '<=', $request->date_to);
+        }
+
+        $trips = $query->orderBy('start_date', 'desc')->get();
+        $filters = $request->only(['date_from', 'date_to', 'status']);
+
+        if ($format === 'excel') {
+            return Excel::download(
+                new EmployeeBusinessTripExport($trips, $worker),
+                'perjalanan-dinas-' . now()->format('Y-m-d') . '.xlsx'
+            );
+        }
+
+        if ($format === 'csv') {
+            return Excel::download(
+                new EmployeeBusinessTripExport($trips, $worker),
+                'perjalanan-dinas-' . now()->format('Y-m-d') . '.csv',
+                \Maatwebsite\Excel\Excel::CSV
+            );
+        }
+
+        // PDF
+        $pdf = Pdf::loadView('employee.exports.business-trip-pdf', [
+            'title' => 'Laporan Perjalanan Dinas',
+            'worker' => $worker,
+            'trips' => $trips,
+            'filters' => $filters,
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('Perjalanan_Dinas_' . $worker->name . '_' . now()->format('YmdHis') . '.pdf');
     }
 }

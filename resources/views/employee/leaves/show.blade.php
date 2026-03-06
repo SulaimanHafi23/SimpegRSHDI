@@ -3,7 +3,7 @@
 @section('title', 'Detail Cuti')
 
 @section('content')
-<div class="max-w-2xl mx-auto">
+<div class="space-y-6">
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div class="flex items-center gap-3 sm:gap-4 min-w-0">

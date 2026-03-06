@@ -10,10 +10,24 @@
             <h1 class="text-2xl font-bold text-gray-900">Perjalanan Dinas</h1>
             <p class="text-gray-600 mt-1">Kelola perjalanan dinas Anda</p>
         </div>
-        <a href="{{ route('employee.business-trips.create') }}"
-           class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-            <i class="fas fa-plus mr-2"></i>Ajukan Baru
-        </a>
+        <div class="flex flex-wrap items-center gap-2">
+            <x-export-buttons :route="route('employee.business-trips.export')" title="Export Perjalanan Dinas">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Menunggu</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
+                        <option value="cancelled">Dibatalkan</option>
+                    </select>
+                </div>
+            </x-export-buttons>
+            <a href="{{ route('employee.business-trips.create') }}"
+               class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                <i class="fas fa-plus mr-2"></i>Ajukan Baru
+            </a>
+        </div>
     </div>
 
     <!-- Alert Success -->

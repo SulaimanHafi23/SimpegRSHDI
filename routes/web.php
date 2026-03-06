@@ -155,6 +155,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Shift swaps for employees
         Route::prefix('shift-swaps')->name('shift-swaps.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'index'])->name('index');
+            Route::get('/export', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'export'])->name('export');
             Route::get('/create', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'store'])->name('store');
             Route::post('/{id}/accept', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'accept'])->name('accept');
@@ -195,6 +196,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Business Trip requests for employees
         Route::prefix('business-trips')->name('business-trips.')->group(function () {
             Route::get('/', [EmployeeBusinessTripController::class, 'index'])->name('index');
+            Route::get('/export', [EmployeeBusinessTripController::class, 'export'])->name('export');
             Route::get('/create', [EmployeeBusinessTripController::class, 'create'])->name('create');
             Route::post('/', [EmployeeBusinessTripController::class, 'store'])->name('store');
             Route::get('/{id}', [EmployeeBusinessTripController::class, 'show'])->name('show');
@@ -241,6 +243,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Shift swap approvals
         Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'index'])->name('index');
+            Route::get('/export', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'export'])->name('export');
             Route::get('/{id}', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'show'])->name('show');
             Route::post('/{id}/approve', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'reject'])->name('reject');

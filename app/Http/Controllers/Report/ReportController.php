@@ -319,8 +319,8 @@ class ReportController extends Controller
                 $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
             }
         } else {
-            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+            $startDate = $request->input('date_from') ?? $request->input('start_date');
+            $endDate = $request->input('date_to') ?? $request->input('end_date');
         }
 
         $filters = [
@@ -369,8 +369,8 @@ class ReportController extends Controller
                 $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
             }
         } else {
-            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+            $startDate = $request->input('date_from') ?? $request->input('start_date');
+            $endDate = $request->input('date_to') ?? $request->input('end_date');
         }
 
         $filters = [
@@ -420,8 +420,8 @@ class ReportController extends Controller
                 $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
             }
         } else {
-            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
+            $startDate = $request->input('date_from') ?? $request->input('start_date');
+            $endDate = $request->input('date_to') ?? $request->input('end_date');
         }
 
         $filters = [
@@ -470,8 +470,8 @@ class ReportController extends Controller
                 $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
             }
         } else {
-            $startDate = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('date_to', now()->endOfMonth()->format('Y-m-d'));
+            $startDate = $request->input('date_from') ?? $request->input('start_date');
+            $endDate = $request->input('date_to') ?? $request->input('end_date');
         }
 
         $filters = [

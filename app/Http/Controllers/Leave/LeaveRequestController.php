@@ -202,8 +202,8 @@ class LeaveRequestController extends Controller
 
             $filters = [
                 'worker_id' => $request->input('worker_id'),
-                'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
-                'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
                 'status' => $request->input('status'),
                 'leave_type_id' => $request->input('leave_type_id'),
             ];
@@ -228,8 +228,8 @@ class LeaveRequestController extends Controller
 
             $leaves = $query->orderBy('start_date', 'desc')->get();
 
-            $dateFrom = \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y');
-            $dateTo = \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y');
+            $dateFrom = $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y') : 'Semua';
+            $dateTo = $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y') : 'Semua';
 
             $filename = 'laporan-cuti-' . now()->format('Y-m-d-His');
 

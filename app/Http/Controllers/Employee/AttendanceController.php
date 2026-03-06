@@ -625,15 +625,26 @@ class AttendanceController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $exportMonth = $request->input('export_month');
-        if ($exportMonth && preg_match('/^\d{4}-\d{2}$/', $exportMonth)) {
-            $selectedMonth = \Carbon\Carbon::createFromFormat('Y-m', $exportMonth)->startOfMonth();
-        } else {
-            $selectedMonth = now()->startOfMonth();
-        }
+        $hasDateFilter = $request->filled('date_from') || $request->filled('date_to');
 
-        $startDate = $selectedMonth->copy()->startOfMonth();
-        $endDate = $selectedMonth->copy()->endOfMonth();
+        if ($hasDateFilter) {
+            $startDate = $request->filled('date_from')
+                ? \Carbon\Carbon::parse($request->input('date_from'))->startOfDay()
+                : now()->startOfMonth();
+            $endDate = $request->filled('date_to')
+                ? \Carbon\Carbon::parse($request->input('date_to'))->endOfDay()
+                : now()->endOfMonth();
+        } else {
+            $exportMonth = $request->input('export_month');
+            if ($exportMonth && preg_match('/^\d{4}-\d{2}$/', $exportMonth)) {
+                $selectedMonth = \Carbon\Carbon::createFromFormat('Y-m', $exportMonth)->startOfMonth();
+            } else {
+                $selectedMonth = now()->startOfMonth();
+            }
+            $startDate = $selectedMonth->copy()->startOfMonth();
+            // Without explicit date filter, cap at today
+            $endDate = min($selectedMonth->copy()->endOfMonth(), now()->endOfDay());
+        }
 
         $filters = [
             'worker_id' => $worker->id,
@@ -641,7 +652,6 @@ class AttendanceController extends Controller
             'date_to' => $endDate->format('Y-m-d'),
             'status' => $request->status,
             'search' => $request->search,
-            'export_month' => $selectedMonth->format('Y-m'),
         ];
 
         $rows = $this->buildMonthlyExportRows($worker, $startDate, $endDate);
@@ -654,10 +664,11 @@ class AttendanceController extends Controller
             'leave' => $rowsCollection->where('status', 'Cuti')->count(),
             'sick' => $rowsCollection->where('status', 'Sakit')->count(),
             'permission' => $rowsCollection->where('status', 'Izin')->count(),
+            'no_data' => $rowsCollection->where('status', 'Belum Ada Data')->count(),
         ];
 
         $format = $request->input('format', 'pdf');
-        $filename = 'absensi_' . $worker->nip . '_' . $selectedMonth->format('Y-m');
+        $filename = 'absensi_' . $worker->nip . '_' . now()->format('Y-m-d');
 
         if ($format === 'excel') {
             return \Maatwebsite\Excel\Facades\Excel::download(
@@ -828,6 +839,8 @@ class AttendanceController extends Controller
     {
         $worker->loadMissing(['department', 'workerShifts.shift.dayTimes', 'shiftOverrides.shift']);
 
+        $today = now()->startOfDay();
+
         $attendances = \App\Models\Attendance::with(['shift', 'location'])
             ->where('worker_id', $worker->id)
             ->whereDate('attendance_date', '>=', $startDate->format('Y-m-d'))
@@ -862,6 +875,7 @@ class AttendanceController extends Controller
             $holiday = $holidays->get($dateKey);
             $isHoliday = !is_null($holiday);
             $isOffDay = method_exists($worker, 'isOffDay') ? $worker->isOffDay($date->toDateTime()) : false;
+            $isFutureDate = $date->gt($today);
 
             $shiftId = method_exists($worker, 'getShiftForDate')
                 ? $worker->getShiftForDate($date->toDateTime())
@@ -925,6 +939,9 @@ class AttendanceController extends Controller
                 }
 
                 $notes = $leaveName;
+            } elseif ($isFutureDate) {
+                $status = 'Belum Ada Data';
+                $notes = 'Tanggal belum terlewati';
             } else {
                 $isHolidayOff = $isHoliday && !$requiresHolidayAttendance;
                 $isWorkday = !empty($shiftId) && !$isOffDay && !$isHolidayOff;

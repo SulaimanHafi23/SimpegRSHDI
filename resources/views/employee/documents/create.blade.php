@@ -3,7 +3,7 @@
 @section('title', 'Upload Dokumen')
 
 @section('content')
-<div class="employee-doc-upload">
+<div class="space-y-6">
     <div class="employee-doc-hero">
         <div>
             <p class="employee-doc-eyebrow">Portal Pegawai</p>

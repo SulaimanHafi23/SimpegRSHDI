@@ -562,8 +562,8 @@ class AttendanceController extends Controller
 
             $filters = [
                 'worker_id' => $request->input('worker_id'),
-                'date_from' => $request->input('date_from', now()->startOfMonth()->format('Y-m-d')),
-                'date_to' => $request->input('date_to', now()->endOfMonth()->format('Y-m-d')),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
                 'status' => $request->input('status'),
             ];
 
@@ -601,8 +601,8 @@ class AttendanceController extends Controller
                     $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('exports.attendance-pdf', [
                         'attendances' => $attendances,
                         'worker' => $worker,
-                        'dateFrom' => \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y'),
-                        'dateTo' => \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y'),
+                        'dateFrom' => $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y') : 'Semua',
+                        'dateTo' => $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y') : 'Semua',
                         'status' => $filters['status'],
                     ]);
                     $pdf->setPaper('a4', 'landscape');
@@ -771,6 +771,7 @@ class AttendanceController extends Controller
             'leave' => $rowsCollection->where('status', 'Cuti')->count(),
             'sick' => $rowsCollection->where('status', 'Sakit')->count(),
             'permission' => $rowsCollection->where('status', 'Izin')->count(),
+            'no_data' => $rowsCollection->where('status', 'Belum Ada Data')->count(),
         ];
         $filename = 'riwayat-absensi-' . str_replace(' ', '-', strtolower($worker->name)) . '-' . $startDate->format('Y-m') . '-' . now()->format('His');
 
@@ -912,6 +913,8 @@ class AttendanceController extends Controller
 
     private function buildWorkerAttendanceCalendarRows($worker, $startDate, $endDate): array
     {
+        $today = now()->startOfDay();
+
         $attendances = \App\Models\Attendance::with(['location', 'shift'])
             ->where('worker_id', $worker->id)
             ->whereDate('attendance_date', '>=', $startDate->format('Y-m-d'))
@@ -945,6 +948,7 @@ class AttendanceController extends Controller
             $holiday = $holidays->get($dateKey);
             $isHoliday = !is_null($holiday);
             $isOffDay = method_exists($worker, 'isOffDay') ? $worker->isOffDay($date->toDateTime()) : false;
+            $isFutureDate = $date->gt($today);
 
             $leaveRequest = $leaveRequests->first(function ($leave) use ($date) {
                 return $date->between($leave->start_date, $leave->end_date);
@@ -989,6 +993,9 @@ class AttendanceController extends Controller
                     $statusLabel = 'Cuti';
                 }
                 $notes = $leaveName;
+            } elseif ($isFutureDate) {
+                $statusLabel = 'Belum Ada Data';
+                $notes = 'Tanggal belum terlewati';
             } else {
                 $isHolidayOff = $isHoliday && !$requiresHolidayAttendance;
                 $isWorkday = !empty($shift) && !$isOffDay && !$isHolidayOff;

@@ -10,7 +10,7 @@
         description="Lihat ringkasan dan ekspor data dokumen pegawai"
         icon="fas fa-folder-open">
         <x-slot:actions>
-            <x-export-dropdown route="reports.worker-documents.export" />
+            <x-export-buttons :route="route('reports.worker-documents.export')" title="Export Dokumen Pegawai" />
         </x-slot:actions>
     </x-page-header>
 

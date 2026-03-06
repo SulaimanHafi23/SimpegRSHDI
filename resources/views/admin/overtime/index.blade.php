@@ -10,8 +10,18 @@
         description="Kelola data lembur pegawai"
         icon="fas fa-business-time">
         <x-slot:actions>
-            {{-- Export Dropdown --}}
-            <x-export-dropdown route="admin.overtime.export" />
+            {{-- Export Buttons --}}
+            <x-export-buttons :route="route('admin.overtime.export')" title="Export Lembur">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Menunggu</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
+                    </select>
+                </div>
+            </x-export-buttons>
 
             @can('create-overtime')
                 <x-button

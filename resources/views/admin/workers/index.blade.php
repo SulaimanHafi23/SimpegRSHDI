@@ -11,7 +11,17 @@
         icon="fas fa-users">
         <x-slot:actions>
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
-                <x-export-dropdown route="admin.workers.export" />
+                <x-export-buttons :route="route('admin.workers.export')" title="Export Pegawai" :showDateRange="false">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Departemen</label>
+                        <select name="department_id" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="">Semua Departemen</option>
+                            @foreach($departments as $dept)
+                                <option value="{{ $dept->id }}">{{ $dept->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </x-export-buttons>
             @endif
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR'))
                 <x-button

@@ -3,7 +3,7 @@
 @section('title', 'Ajukan Cuti')
 
 @section('content')
-<div class="max-w-2xl mx-auto">
+<div class="space-y-6">
     {{-- Page Header --}}
     <div class="flex items-center gap-3 sm:gap-4 mb-6">
         <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">

@@ -3,7 +3,7 @@
 @section('title', 'Riwayat Absensi')
 
 @section('content')
-<div class="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+<div class="space-y-4 sm:space-y-6">
     <!-- Header & Actions -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
@@ -17,21 +17,19 @@
             </h1>
         </div>
         <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <div class="w-full sm:w-auto bg-gray-50 border border-gray-200 rounded-lg p-1 flex items-center gap-1">
-                <a href="{{ route('employee.attendance.export', array_merge(request()->all(), ['format' => 'pdf'])) }}"
-                   target="_blank"
-                   class="inline-flex items-center justify-center px-3 py-2 rounded-md text-xs sm:text-sm font-semibold text-red-700 bg-red-50 hover:bg-red-100 transition">
-                    <i class="fas fa-file-pdf mr-1.5"></i>PDF
-                </a>
-                <a href="{{ route('employee.attendance.export', array_merge(request()->all(), ['format' => 'excel'])) }}"
-                   class="inline-flex items-center justify-center px-3 py-2 rounded-md text-xs sm:text-sm font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition">
-                    <i class="fas fa-file-excel mr-1.5"></i>Excel
-                </a>
-                <a href="{{ route('employee.attendance.export', array_merge(request()->all(), ['format' => 'csv'])) }}"
-                   class="inline-flex items-center justify-center px-3 py-2 rounded-md text-xs sm:text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 transition">
-                    <i class="fas fa-file-csv mr-1.5"></i>CSV
-                </a>
-            </div>
+            <x-export-buttons :route="route('employee.attendance.export')" title="Export Absensi">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="">Semua Status</option>
+                        <option value="present">Hadir</option>
+                        <option value="late">Terlambat</option>
+                        <option value="absent">Alpha</option>
+                        <option value="sick">Sakit</option>
+                        <option value="leave">Cuti</option>
+                    </select>
+                </div>
+            </x-export-buttons>
             @if(isset($todayOffInfo) && $todayOffInfo)
                 {{-- Hari libur — tidak perlu tombol check-in --}}
             @elseif(isset($activeAttendance) && $activeAttendance && $activeAttendance->status === 'present')

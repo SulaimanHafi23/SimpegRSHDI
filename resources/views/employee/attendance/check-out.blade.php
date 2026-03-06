@@ -3,7 +3,7 @@
 @section('title', 'Check Out')
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 py-8">
+<div class="space-y-6">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 

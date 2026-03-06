@@ -5,6 +5,9 @@ namespace App\Http\Controllers\Manager;
 use App\Http\Controllers\Controller;
 use App\Traits\DepartmentFilterable;
 use App\Services\ShiftSwap\ShiftSwapService;
+use App\Exports\ShiftSwapExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
 class ShiftSwapApprovalController extends Controller
@@ -172,5 +175,51 @@ class ShiftSwapApprovalController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal me-revert pertukaran: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export shift swap data (PDF, Excel, CSV)
+     */
+    public function export(Request $request)
+    {
+        $user = auth()->user();
+        $format = $request->input('format', 'pdf');
+
+        $filters = [
+            'status' => $request->input('status', ''),
+            'requester_id' => $request->input('requester_id'),
+            'date_from' => $request->input('date_from'),
+            'date_to' => $request->input('date_to'),
+            'per_page' => 10000,
+        ];
+
+        $items = $this->shiftSwapService->listPendingApprovalsForManager($user->id, $filters);
+        $swaps = collect($items->items());
+
+        if ($format === 'excel') {
+            return Excel::download(
+                new ShiftSwapExport($swaps),
+                'tukar-shift-approvals-' . now()->format('Y-m-d') . '.xlsx'
+            );
+        }
+
+        if ($format === 'csv') {
+            return Excel::download(
+                new ShiftSwapExport($swaps),
+                'tukar-shift-approvals-' . now()->format('Y-m-d') . '.csv',
+                \Maatwebsite\Excel\Excel::CSV
+            );
+        }
+
+        // PDF
+        $pdf = Pdf::loadView('exports.shift-swap-pdf', [
+            'swaps' => $swaps,
+            'dateFrom' => $request->date_from ? \Carbon\Carbon::parse($request->date_from)->translatedFormat('d M Y') : null,
+            'dateTo' => $request->date_to ? \Carbon\Carbon::parse($request->date_to)->translatedFormat('d M Y') : null,
+            'status' => $request->status,
+        ]);
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('Tukar_Shift_Approvals_' . now()->format('YmdHis') . '.pdf');
     }
 }

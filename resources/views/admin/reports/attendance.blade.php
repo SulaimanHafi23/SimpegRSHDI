@@ -10,7 +10,7 @@
         description="Lihat dan ekspor data presensi pegawai"
         icon="fas fa-calendar-check">
         <x-slot:actions>
-            <x-export-dropdown route="reports.attendance.export" />
+            <x-export-buttons :route="route('reports.attendance.export')" title="Export Laporan Presensi" />
         </x-slot:actions>
     </x-page-header>
 

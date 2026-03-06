@@ -10,7 +10,7 @@
         description="Ringkasan permohonan lembur berdasarkan rentang tanggal dan status"
         icon="fas fa-business-time">
         <x-slot:actions>
-            <x-export-dropdown route="reports.overtimes.export" />
+            <x-export-buttons :route="route('reports.overtimes.export')" title="Export Laporan Lembur" />
         </x-slot:actions>
     </x-page-header>
 
