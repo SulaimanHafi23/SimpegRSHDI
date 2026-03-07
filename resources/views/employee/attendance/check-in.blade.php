@@ -56,6 +56,46 @@
                 <div class="text-xs sm:text-sm text-gray-600 mt-1">{{ now()->format('l, d F Y') }}</div>
             </div>
 
+            @php
+                $effectiveShift = $todayShiftInfo['shift'] ?? null;
+                $effectiveSchedule = $todayShiftInfo['schedule'] ?? null;
+                $shiftSource = $todayShiftInfo['source'] ?? 'none';
+            @endphp
+            <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg border {{ $effectiveShift ? 'bg-indigo-50 border-indigo-200' : 'bg-yellow-50 border-yellow-200' }}">
+                @if(is_object($effectiveShift) && is_array($effectiveSchedule))
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-clock text-indigo-600 mt-1"></i>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="text-sm font-semibold text-indigo-900">Shift Efektif Hari Ini: {{ $effectiveShift->name }}</p>
+                                @if($shiftSource === 'shift_swap')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-purple-100 text-purple-800">Tukar Shift</span>
+                                @elseif($shiftSource === 'override')
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-indigo-100 text-indigo-800">Override</span>
+                                @endif
+                            </div>
+                            <p class="text-sm text-indigo-800 mt-1">
+                                {{ \Carbon\Carbon::parse($effectiveSchedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($effectiveSchedule['end_time'])->format('H:i') }}
+                            </p>
+                            @if($shiftSource === 'shift_swap' && !empty($todayShiftInfo['swap_with_name']))
+                                <p class="text-xs text-purple-700 mt-1">
+                                    <i class="fas fa-exchange-alt mr-1"></i>
+                                    Jam shift ini berasal dari tukar shift dengan {{ $todayShiftInfo['swap_with_name'] }}.
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 mt-1"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-yellow-800">Jadwal shift belum tersedia</p>
+                            <p class="text-xs text-yellow-700 mt-1">Silakan hubungi HR/Admin untuk memastikan jadwal shift Anda.</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+
             <!-- Location -->
             <div class="mb-4">
                 <label for="location_id" class="block text-sm font-medium text-gray-700 mb-2">

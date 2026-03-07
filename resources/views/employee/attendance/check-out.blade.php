@@ -27,6 +27,11 @@
 
     <!-- Session Info -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+        @php
+            $effectiveShift = $attendanceShiftInfo['shift'] ?? null;
+            $effectiveSchedule = $attendanceShiftInfo['schedule'] ?? null;
+            $shiftSource = $attendanceShiftInfo['source'] ?? 'none';
+        @endphp
         <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 border-b border-gray-200">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -38,6 +43,18 @@
                         <i class="fas fa-sign-in-alt text-xs"></i>
                         Check-in: {{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}
                     </div>
+                    @if(is_object($effectiveShift) && is_array($effectiveSchedule))
+                        <div class="text-sm text-indigo-700 mt-1 flex items-center gap-1">
+                            <i class="fas fa-clock text-xs"></i>
+                            Shift: {{ $effectiveShift->name }} ({{ \Carbon\Carbon::parse($effectiveSchedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($effectiveSchedule['end_time'])->format('H:i') }})
+                        </div>
+                        @if($shiftSource === 'shift_swap' && !empty($attendanceShiftInfo['swap_with_name']))
+                            <div class="text-xs text-purple-700 mt-1">
+                                <i class="fas fa-exchange-alt mr-1"></i>
+                                Jam ini berasal dari tukar shift dengan {{ $attendanceShiftInfo['swap_with_name'] }}.
+                            </div>
+                        @endif
+                    @endif
                 </div>
                 <div class="text-right">
                     <div class="text-sm text-gray-600">Selamat bekerja,</div>

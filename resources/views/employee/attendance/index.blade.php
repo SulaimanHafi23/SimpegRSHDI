@@ -48,6 +48,52 @@
         </div>
     </div>
 
+    @php
+        $effectiveShift = $todayShiftInfo['shift'] ?? null;
+        $effectiveSchedule = $todayShiftInfo['schedule'] ?? null;
+        $shiftSource = $todayShiftInfo['source'] ?? 'none';
+    @endphp
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-5">
+        @if(is_object($effectiveShift) && is_array($effectiveSchedule))
+            <div class="flex items-start gap-3">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-indigo-50 text-indigo-700">
+                    <i class="fas fa-clock"></i>
+                </span>
+                <div class="min-w-0 flex-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <p class="text-sm sm:text-base font-semibold text-gray-900">
+                            Shift Efektif Hari Ini: {{ $effectiveShift->name }}
+                        </p>
+                        @if($shiftSource === 'shift_swap')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Tukar Shift</span>
+                        @elseif($shiftSource === 'override')
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Override</span>
+                        @endif
+                    </div>
+                    <p class="text-sm text-gray-700 mt-1">
+                        {{ \Carbon\Carbon::parse($effectiveSchedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($effectiveSchedule['end_time'])->format('H:i') }}
+                    </p>
+                    @if($shiftSource === 'shift_swap' && !empty($todayShiftInfo['swap_with_name']))
+                        <p class="text-xs text-purple-700 mt-1">
+                            <i class="fas fa-exchange-alt mr-1"></i>
+                            Jadwal ini berasal dari tukar shift dengan {{ $todayShiftInfo['swap_with_name'] }}.
+                        </p>
+                    @endif
+                </div>
+            </div>
+        @else
+            <div class="flex items-start gap-3">
+                <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-yellow-50 text-yellow-700">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </span>
+                <div>
+                    <p class="text-sm sm:text-base font-semibold text-yellow-800">Jadwal shift hari ini belum tersedia</p>
+                    <p class="text-xs sm:text-sm text-yellow-700 mt-1">Hubungi HR/Admin jika Anda seharusnya melakukan absensi hari ini.</p>
+                </div>
+            </div>
+        @endif
+    </div>
+
     {{-- Banner Hari Libur / Cuti / Tanggal Merah --}}
     @if(isset($todayOffInfo) && $todayOffInfo)
         @php

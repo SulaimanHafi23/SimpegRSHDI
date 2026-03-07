@@ -242,4 +242,89 @@ class Worker extends Model
         // Fallback to default shift
         return $this->shift;
     }
+
+    /**
+     * Resolve effective shift for a specific date.
+     *
+     * Priority:
+     * 1) Shift override on that date (including executed shift swap override)
+     * 2) Active worker shift assignment on that date
+     * 3) Default worker shift
+     */
+    public function resolveShiftForDate($date): array
+    {
+        $dateObj = $date instanceof Carbon ? $date->copy() : Carbon::parse($date);
+        $dateStr = $dateObj->format('Y-m-d');
+
+        $override = $this->shiftOverrides()
+            ->whereDate('override_date', $dateStr)
+            ->with([
+                'shift',
+                'shiftSwapRequest.requester',
+                'shiftSwapRequest.targetWorker',
+            ])
+            ->first();
+
+        if ($override && $override->shift) {
+            $swapRequest = $override->shiftSwapRequest;
+            $swapWithName = null;
+
+            if ($swapRequest) {
+                $swapWithName = $swapRequest->requester_id === $this->id
+                    ? optional($swapRequest->targetWorker)->name
+                    : optional($swapRequest->requester)->name;
+            }
+
+            return [
+                'shift' => $override->shift,
+                'schedule' => $override->shift->getScheduleForDate($dateObj),
+                'source' => $override->shift_swap_request_id ? 'shift_swap' : 'override',
+                'override' => $override,
+                'swap_request' => $swapRequest,
+                'swap_with_name' => $swapWithName,
+            ];
+        }
+
+        $workerShift = $this->workerShifts()
+            ->where('is_active', true)
+            ->where('effective_from', '<=', $dateStr)
+            ->where(function ($query) use ($dateStr) {
+                $query->whereNull('effective_until')
+                    ->orWhere('effective_until', '>=', $dateStr);
+            })
+            ->with('shift')
+            ->orderByDesc('effective_from')
+            ->first();
+
+        if ($workerShift && $workerShift->shift) {
+            return [
+                'shift' => $workerShift->shift,
+                'schedule' => $workerShift->shift->getScheduleForDate($dateObj),
+                'source' => 'worker_shift',
+                'override' => null,
+                'swap_request' => null,
+                'swap_with_name' => null,
+            ];
+        }
+
+        if ($this->shift) {
+            return [
+                'shift' => $this->shift,
+                'schedule' => $this->shift->getScheduleForDate($dateObj),
+                'source' => 'default_shift',
+                'override' => null,
+                'swap_request' => null,
+                'swap_with_name' => null,
+            ];
+        }
+
+        return [
+            'shift' => null,
+            'schedule' => null,
+            'source' => 'none',
+            'override' => null,
+            'swap_request' => null,
+            'swap_with_name' => null,
+        ];
+    }
 }

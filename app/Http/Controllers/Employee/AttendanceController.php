@@ -217,7 +217,10 @@ class AttendanceController extends Controller
             }
         }
 
-        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance', 'todayOffInfo', 'filterStart'));
+        // Shift efektif hari ini (sudah termasuk override/tukar shift jika ada)
+        $todayShiftInfo = $worker->resolveShiftForDate($today);
+
+        return view('employee.attendance.index', compact('attendances', 'filters', 'summary', 'worker', 'activeAttendance', 'todayOffInfo', 'todayShiftInfo', 'filterStart'));
     }
 
     /**
@@ -284,9 +287,12 @@ class AttendanceController extends Controller
             ->whereDate('end_date', '>=', $today)
             ->first();
 
+        // Shift efektif hari ini (sudah termasuk tukar shift yang dieksekusi)
+        $todayShiftInfo = $worker->resolveShiftForDate($today);
+
         $locations = $this->locationService->getAllActive();
 
-        return view('employee.attendance.check-in', compact('locations', 'activeBusinessTrip'));
+        return view('employee.attendance.check-in', compact('locations', 'activeBusinessTrip', 'todayShiftInfo'));
     }
 
     /**
@@ -339,7 +345,10 @@ class AttendanceController extends Controller
 
         $locations = $this->locationService->getAllActive();
 
-        return view('employee.attendance.check-out', compact('locations', 'attendance'));
+        // Shift yang berlaku pada tanggal attendance (mendukung overnight + tukar shift)
+        $attendanceShiftInfo = $worker->resolveShiftForDate($attendance->attendance_date);
+
+        return view('employee.attendance.check-out', compact('locations', 'attendance', 'attendanceShiftInfo'));
     }
 
     /**

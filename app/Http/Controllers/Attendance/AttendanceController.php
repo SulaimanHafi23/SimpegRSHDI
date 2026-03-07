@@ -328,10 +328,10 @@ class AttendanceController extends Controller
                 ]];
             });
 
-            // Get worker's current shift
-            $currentShift = $worker->getCurrentShift();
+            // Shift efektif hari ini (termasuk override/tukar shift jika ada)
+            $shiftInfo = $worker->resolveShiftForDate($today);
 
-            return view('admin.attendance.check-in', compact('worker', 'locations', 'locationsData', 'currentShift'));
+            return view('admin.attendance.check-in', compact('worker', 'locations', 'locationsData', 'shiftInfo'));
         } catch (\Exception $e) {
             \Log::error('Check-in form error: ' . $e->getMessage(), [
                 'worker_id' => $workerId,
@@ -402,7 +402,12 @@ class AttendanceController extends Controller
                 ]];
             });
 
-            return view('admin.attendance.check-out', compact('attendance', 'locations', 'locationsData'));
+            $attendanceDate = $attendance->attendance_date?->format('Y-m-d') ?? now()->format('Y-m-d');
+            $shiftInfo = $attendance->worker
+                ? $attendance->worker->resolveShiftForDate($attendanceDate)
+                : ['shift' => null, 'schedule' => null, 'source' => 'none', 'override' => null, 'swap_request' => null, 'swap_with_name' => null];
+
+            return view('admin.attendance.check-out', compact('attendance', 'locations', 'locationsData', 'shiftInfo'));
         } catch (\Exception $e) {
             \Log::error('Check-out form error: ' . $e->getMessage(), [
                 'attendance_id' => $id,

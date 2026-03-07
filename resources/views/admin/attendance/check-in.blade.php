@@ -88,23 +88,41 @@
                 </div>
 
                 {{-- Shift Info --}}
-                @if($currentShift)
+                @php
+                    $effectiveShift = $shiftInfo['shift'] ?? null;
+                    $effectiveSchedule = $shiftInfo['schedule'] ?? null;
+                    $shiftSource = $shiftInfo['source'] ?? 'none';
+                @endphp
+                @if(is_object($effectiveShift) && is_array($effectiveSchedule))
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div class="flex items-start">
                             <i class="fas fa-clock text-blue-600 mt-0.5 mr-3"></i>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-blue-800">Shift Hari Ini</p>
-                                <p class="text-lg font-bold text-blue-900 mt-1">{{ $currentShift->name }}</p>
+                                <p class="text-sm font-medium text-blue-800">Shift Efektif Hari Ini</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <p class="text-lg font-bold text-blue-900">{{ $effectiveShift->name }}</p>
+                                    @if($shiftSource === 'shift_swap')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Tukar Shift</span>
+                                    @elseif($shiftSource === 'override')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Override</span>
+                                    @endif
+                                </div>
                                 <div class="flex items-center space-x-4 mt-2 text-sm text-blue-700">
                                     <span>
                                         <i class="fas fa-sign-in-alt mr-1"></i>
-                                        Masuk: {{ \Carbon\Carbon::parse($currentShift->start_time)->format('H:i') }}
+                                        Masuk: {{ \Carbon\Carbon::parse($effectiveSchedule['start_time'])->format('H:i') }}
                                     </span>
                                     <span>
                                         <i class="fas fa-sign-out-alt mr-1"></i>
-                                        Pulang: {{ \Carbon\Carbon::parse($currentShift->end_time)->format('H:i') }}
+                                        Pulang: {{ \Carbon\Carbon::parse($effectiveSchedule['end_time'])->format('H:i') }}
                                     </span>
                                 </div>
+                                @if($shiftSource === 'shift_swap' && !empty($shiftInfo['swap_with_name']))
+                                    <p class="text-xs text-purple-700 mt-2">
+                                        <i class="fas fa-exchange-alt mr-1"></i>
+                                        Jam ini berasal dari tukar shift dengan {{ $shiftInfo['swap_with_name'] }}.
+                                    </p>
+                                @endif
                             </div>
                         </div>
                     </div>

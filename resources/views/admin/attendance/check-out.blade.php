@@ -45,6 +45,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {{-- Informasi Pegawai --}}
         <x-card title="Informasi Absensi">
+            @php
+                $effectiveShift = $shiftInfo['shift'] ?? null;
+                $effectiveSchedule = $shiftInfo['schedule'] ?? null;
+                $shiftSource = $shiftInfo['source'] ?? 'none';
+            @endphp
             <div class="space-y-4">
                 <div>
                     <label class="text-sm font-medium text-gray-700">Pegawai</label>
@@ -59,6 +64,31 @@
                         {{ $attendance->check_in->format('H:i:s') }}
                     </p>
                 </div>
+
+                @if(is_object($effectiveShift) && is_array($effectiveSchedule))
+                    <div>
+                        <label class="text-sm font-medium text-gray-700">Shift Efektif</label>
+                        <div class="mt-1">
+                            <p class="text-base font-semibold text-gray-900">
+                                {{ $effectiveShift->name }}
+                                @if($shiftSource === 'shift_swap')
+                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Tukar Shift</span>
+                                @elseif($shiftSource === 'override')
+                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Override</span>
+                                @endif
+                            </p>
+                            <p class="text-sm text-gray-700 mt-1">
+                                {{ \Carbon\Carbon::parse($effectiveSchedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($effectiveSchedule['end_time'])->format('H:i') }}
+                            </p>
+                            @if($shiftSource === 'shift_swap' && !empty($shiftInfo['swap_with_name']))
+                                <p class="text-xs text-purple-700 mt-1">
+                                    <i class="fas fa-exchange-alt mr-1"></i>
+                                    Shift hasil tukar dengan {{ $shiftInfo['swap_with_name'] }}.
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                @endif
 
                 <div>
                     <label class="text-sm font-medium text-gray-700">Lokasi Check In</label>
