@@ -345,49 +345,7 @@
         @endif
         @endif
 
-        <!-- Reports Section - Admin/HR/Manager or anyone with report.view permission -->
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('report.view'))
-
-        <!-- LAPORAN Label -->
-        <div class="pt-3 pb-1.5 px-3">
-            <div class="flex items-center space-x-2">
-                <i class="fas fa-chart-bar text-xs text-sky-400"></i>
-                <span class="text-xs font-bold text-sky-400 tracking-wider uppercase">Laporan</span>
-            </div>
-        </div>
-
-        <a href="{{ route('reports.attendance') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.attendance') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.attendance') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-clipboard-list text-xs {{ request()->routeIs('reports.attendance') ? 'text-white' : 'text-sky-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('reports.attendance') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Attendance</span>
-        </a>
-
-        <a href="{{ route('reports.leaves') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.leaves') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.leaves') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-calendar-alt text-xs {{ request()->routeIs('reports.leaves') ? 'text-white' : 'text-sky-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('reports.leaves') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Cuti</span>
-        </a>
-
-        <a href="{{ route('reports.overtimes') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.overtimes') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.overtimes') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-clock text-xs {{ request()->routeIs('reports.overtimes') ? 'text-white' : 'text-sky-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('reports.overtimes') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur</span>
-        </a>
-
-        <a href="{{ route('reports.worker-documents') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('reports.worker-documents') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('reports.worker-documents') ? 'bg-white/20' : 'bg-sky-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-file-alt text-xs {{ request()->routeIs('reports.worker-documents') ? 'text-white' : 'text-sky-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('reports.worker-documents') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Dokumen Pegawai</span>
-        </a>
-        @endif
+        {{-- Reports section intentionally hidden --}}
 
         <!-- HR & Finance Section - All roles with worker profile -->
         @if((auth()->user()->hasRole('Employee') || auth()->user()->hasRole('Manager') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR')) && auth()->user()->worker)

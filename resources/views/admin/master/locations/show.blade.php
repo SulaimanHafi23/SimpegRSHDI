@@ -18,26 +18,9 @@
                 <p class="text-sm text-gray-600 mt-1">Informasi lengkap lokasi</p>
             </div>
         </div>
-        <div class="flex gap-2">
-            <x-button 
-                variant="warning"
-                icon="fas fa-edit"
-                size="sm"
-                onclick="window.location.href='{{ route('admin.master.locations.edit', $location->id) }}'">
-                Edit
-            </x-button>
-            <form action="{{ route('admin.master.locations.destroy', $location->id) }}" method="POST" 
-                  onsubmit="return confirm('Yakin ingin menghapus lokasi ini?')">
-                @csrf
-                @method('DELETE')
-                <x-button 
-                    variant="danger"
-                    icon="fas fa-trash"
-                    size="sm"
-                    type="submit">
-                    Hapus
-                </x-button>
-            </form>
+        <div class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium">
+            <i class="fas fa-lock mr-2"></i>
+            Mode baca saja
         </div>
     </div>
 
@@ -100,7 +83,7 @@
         <div class="space-y-3">
             <div id="location-map" class="w-full h-96 rounded-lg border border-gray-200"></div>
             <p class="text-sm text-gray-600">
-                Titik lokasi dan preview radius geofence {{ $location->radius }} meter.
+                Titik lokasi dan preview radius geofence {{ $location->radius }} meter. Gunakan kontrol layer di pojok kanan atas untuk ganti tampilan satelit/peta jalan.
             </p>
         </div>
     </x-card>
@@ -208,9 +191,27 @@
 
         const map = L.map('location-map').setView([latitude, longitude], 16);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+            maxZoom: 19
+        });
+
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        });
+
+        // Default layer: satellite
+        satelliteLayer.addTo(map);
+
+        L.control.layers(
+            {
+                'Satelit': satelliteLayer,
+                'Peta Jalan': streetLayer
+            },
+            {},
+            { collapsed: false }
+        ).addTo(map);
 
         const marker = L.marker([latitude, longitude]).addTo(map);
         marker.bindPopup('<strong>{{ addslashes($location->name) }}</strong><br>{{ $location->latitude }}, {{ $location->longitude }}').openPopup();

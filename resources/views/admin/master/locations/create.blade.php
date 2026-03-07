@@ -270,9 +270,25 @@
             const defaultCenter = [-2.5489, 118.0149];
             map = L.map('location-map').setView(defaultCenter, 5);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+                maxZoom: 19
+            });
+
+            const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            });
+
+            satelliteLayer.addTo(map);
+            L.control.layers(
+                {
+                    'Satelit': satelliteLayer,
+                    'Peta Jalan': streetLayer,
+                },
+                {},
+                { collapsed: false }
+            ).addTo(map);
 
             const initialLat = getCoordinateValue(latInput);
             const initialLng = getCoordinateValue(lngInput);

@@ -450,9 +450,25 @@ function initMap() {
         dragging: true           // Keep dragging enabled
     }).setView([-2.5489, 118.0149], 5);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+        maxZoom: 19
+    });
+
+    const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    });
+
+    satelliteLayer.addTo(map);
+    L.control.layers(
+        {
+            'Satelit': satelliteLayer,
+            'Peta Jalan': streetLayer,
+        },
+        {},
+        { collapsed: false }
+    ).addTo(map);
 
     // Add message to enable scroll zoom
     map.on('click', function() {

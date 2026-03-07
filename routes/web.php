@@ -465,8 +465,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Shifts
         Route::resource('shifts', ShiftController::class);
 
-        // Locations
-        Route::resource('locations', LocationController::class);
+        // Locations (read-only)
+        Route::resource('locations', LocationController::class)->only(['index', 'show']);
 
         // Genders
         Route::resource('genders', GenderController::class);

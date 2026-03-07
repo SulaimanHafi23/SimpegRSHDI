@@ -11,12 +11,8 @@
                 <i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>
                 Lokasi
             </h1>
-            <p class="text-sm sm:text-base text-gray-600 mt-1">Kelola data lokasi rumah sakit</p>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Daftar lokasi rumah sakit</p>
         </div>
-        <a href="{{ route('admin.master.locations.create') }}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 transition duration-200">
-            <i class="fas fa-plus"></i>
-            <span>Tambah Lokasi</span>
-        </a>
     </div>
 
     <!-- Filters -->
@@ -88,20 +84,6 @@
                        class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-xs font-medium hover:bg-blue-100">
                         <i class="fas fa-eye mr-1"></i>Lihat
                     </a>
-                    <a href="{{ route('admin.master.locations.edit', $location->id) }}"
-                       class="inline-flex items-center px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-xs font-medium hover:bg-yellow-100">
-                        <i class="fas fa-edit mr-1"></i>Edit
-                    </a>
-                    <form action="{{ route('admin.master.locations.destroy', $location->id) }}"
-                          method="POST"
-                          class="inline"
-                          onsubmit="return confirm('Apakah Anda yakin ingin menghapus lokasi ini?')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-xs font-medium hover:bg-red-100">
-                            <i class="fas fa-trash mr-1"></i>Hapus
-                        </button>
-                    </form>
                 </div>
             </div>
             @empty
@@ -122,7 +104,7 @@
                     <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Koordinat</th>
                     <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Radius</th>
                     <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
+                    <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -173,23 +155,6 @@
                                title="Lihat Detail">
                                 <i class="fas fa-eye text-xs sm:text-sm"></i>
                             </a>
-                            <a href="{{ route('admin.master.locations.edit', $location->id) }}"
-                               class="text-yellow-600 hover:text-yellow-900 p-1"
-                               title="Edit">
-                                <i class="fas fa-edit text-xs sm:text-sm"></i>
-                            </a>
-                            <form action="{{ route('admin.master.locations.destroy', $location->id) }}"
-                                  method="POST"
-                                  class="inline"
-                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus lokasi ini?')">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="text-red-600 hover:text-red-900 p-1"
-                                        title="Hapus">
-                                    <i class="fas fa-trash text-xs sm:text-sm"></i>
-                                </button>
-                            </form>
                         </div>
                     </td>
                 </tr>
