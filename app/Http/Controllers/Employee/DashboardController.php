@@ -63,8 +63,10 @@ class DashboardController extends Controller
         // Get leave balance with quota
         $leaveBalances = $this->dashboardService->getLeaveBalance($worker->id);
 
-        // Check if this worker needs to checkout (shift has ended but still no checkout)
-        $pendingCheckout = $this->attendanceService->getPendingCheckouts($worker->id)->first();
+        // Split pending checkout into actionable vs expired window to avoid misleading CTA.
+        $pendingCheckouts = $this->attendanceService->getPendingCheckouts($worker->id);
+        $pendingCheckout = $pendingCheckouts->firstWhere('can_checkout', true);
+        $expiredPendingCheckout = $pendingCheckouts->firstWhere('is_window_expired', true);
 
         return view('employee.dashboard.index', compact(
             'worker',
@@ -76,7 +78,8 @@ class DashboardController extends Controller
             'upcomingLeaves',
             'recentLeaves',
             'leaveBalances',
-            'pendingCheckout'
+            'pendingCheckout',
+            'expiredPendingCheckout'
         ));
     }
 }

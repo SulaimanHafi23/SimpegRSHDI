@@ -354,14 +354,25 @@ class AttendanceService
                 ->exists();
 
             $maxCheckoutTime = $shiftEndDateTime->copy()->addHours($checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0));
+            $isAdminCheckout = (bool) ($data['by_admin'] ?? false);
 
-            if ($checkOutTime->greaterThan($maxCheckoutTime)) {
+            if (!$isAdminCheckout && $checkOutTime->greaterThan($maxCheckoutTime)) {
                 $hoursDiff = $shiftEndDateTime->diffInHours($checkOutTime);
                 throw new \Exception(
                     "Check-out terlalu terlambat ({$hoursDiff} jam setelah shift berakhir pukul {$shiftEndDateTime->format('H:i')}). " .
                     "Batas checkout adalah {$maxCheckoutTime->format('d M Y H:i')}. " .
                     "Silakan hubungi admin untuk koreksi absensi."
                 );
+            }
+
+            if ($isAdminCheckout && $checkOutTime->greaterThan($maxCheckoutTime)) {
+                \Log::info('Admin bypassed checkout window', [
+                    'attendance_id' => $attendanceId,
+                    'worker_id' => $attendance->worker_id,
+                    'admin_id' => $data['admin_id'] ?? null,
+                    'max_checkout_time' => $maxCheckoutTime->format('Y-m-d H:i:s'),
+                    'actual_checkout_time' => $checkOutTime->format('Y-m-d H:i:s'),
+                ]);
             }
 
             // Validate location
@@ -405,6 +416,25 @@ class AttendanceService
                     : 0;
             }
 
+            $existingNotes = trim((string) $attendance->notes);
+            $noteLines = [];
+
+            if ($isEarlyLeave) {
+                $noteLines[] = "[SYSTEM] Pulang lebih awal: {$earlyLeaveMinutes} menit";
+            }
+
+            if ($isAdminCheckout) {
+                $adminName = \App\Models\User::find($data['admin_id'] ?? null)?->name ?? 'Admin';
+                $adminNote = trim((string) ($data['admin_checkout_note'] ?? ''));
+                $adminAudit = "[ADMIN] Check-out dicatat oleh {$adminName}";
+                if ($adminNote !== '') {
+                    $adminAudit .= ". Keterangan: {$adminNote}";
+                }
+                $noteLines[] = $adminAudit;
+            }
+
+            $combinedNotes = trim(implode("\n", array_filter(array_merge([$existingNotes], $noteLines))));
+
             // Update attendance
             $attendanceDTO = AttendanceDTO::fromRequest([
                 'id' => $attendance->id,
@@ -431,7 +461,7 @@ class AttendanceService
                 'early_leave_minutes' => $earlyLeaveMinutes,
                 'is_outside_radius' => $distance > $location->radius,
                 'overtime_minutes' => $overtimeMinutes,
-                'notes' => $attendance->notes . ($isEarlyLeave ? "\n[SYSTEM] Pulang lebih awal: {$earlyLeaveMinutes} menit" : ''),
+                'notes' => $combinedNotes,
             ]);
 
             $updated = $this->attendanceRepository->update($attendanceId, $attendanceDTO);
@@ -570,7 +600,7 @@ class AttendanceService
      * @param int $hoursThreshold How many hours after shift end to consider as "pending" (default: 0)
      * @return \Illuminate\Support\Collection
      */
-    public function getPendingCheckouts(?string $workerId = null, int $hoursThreshold = 0)
+    public function getPendingCheckouts(?string $workerId = null, int $hoursThreshold = 0, bool $onlyActionable = false)
     {
         $now = now();
 
@@ -640,6 +670,19 @@ class AttendanceService
             if ($now->greaterThan($thresholdTime)) {
                 $hoursLate = $now->diffInHours($shiftEndTime);
 
+                $checkOutWindowAfterHours = (int) config('attendance.check_out_window_after_hours', 4);
+                $hasApprovedOvertime = \App\Models\OvertimeRequest::where('worker_id', $worker->id)
+                    ->where('status', 'approved')
+                    ->whereDate('overtime_date', $attendanceDate->format('Y-m-d'))
+                    ->exists();
+
+                $maxCheckoutTime = $shiftEndTime->copy()->addHours($checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0));
+                $isWindowExpired = $now->greaterThan($maxCheckoutTime);
+
+                if ($onlyActionable && $isWindowExpired) {
+                    continue;
+                }
+
                 $pendingCheckouts->push([
                     'attendance_id' => $attendance->id,
                     'worker_id' => $worker->id,
@@ -651,6 +694,9 @@ class AttendanceService
                     'shift_end_time' => $shiftEndTime->format('Y-m-d H:i'),
                     'hours_late' => $hoursLate,
                     'formatted_late' => $this->formatHoursLate($hoursLate),
+                    'max_checkout_time' => $maxCheckoutTime->format('Y-m-d H:i'),
+                    'is_window_expired' => $isWindowExpired,
+                    'can_checkout' => !$isWindowExpired,
                 ]);
             }
         }

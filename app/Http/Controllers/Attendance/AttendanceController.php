@@ -349,12 +349,15 @@ class AttendanceController extends Controller
         $validated = $request->validate([
             'worker_id' => 'required|uuid|exists:workers,id',
             'location_id' => 'required|uuid|exists:locations,id',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
+            // Use selected location coordinates to avoid manual lat/lng input errors.
+            $location = $this->locationService->findById($validated['location_id']);
+            $validated['latitude'] = (float) $location->latitude;
+            $validated['longitude'] = (float) $location->longitude;
+
             // Add admin flag since this is from admin controller
             $validated['by_admin'] = true;
             $validated['admin_id'] = auth()->id();
@@ -424,12 +427,16 @@ class AttendanceController extends Controller
     {
         $validated = $request->validate([
             'location_id' => 'required|uuid|exists:locations,id',
-            'latitude' => 'required|numeric',
-            'longitude' => 'required|numeric',
+            'admin_checkout_note' => 'nullable|string|max:500',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
+            // Use selected location coordinates to prevent manual lat/lng entry errors.
+            $location = $this->locationService->findById($validated['location_id']);
+            $validated['latitude'] = (float) $location->latitude;
+            $validated['longitude'] = (float) $location->longitude;
+
             // Add admin flag since this is from admin controller
             $validated['by_admin'] = true;
             $validated['admin_id'] = auth()->id();

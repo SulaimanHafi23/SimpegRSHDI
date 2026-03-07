@@ -130,6 +130,11 @@
                   enctype="multipart/form-data" 
                   class="space-y-4">
                 @csrf
+
+                <div class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                    <p class="font-semibold mb-1">Info Checkout Admin</p>
+                    <p>Checkout dari halaman ini akan ditandai sebagai checkout oleh admin. Koordinat akan otomatis menggunakan lokasi yang dipilih.</p>
+                </div>
                 
                 <x-form.select 
                     name="location_id" 
@@ -145,25 +150,20 @@
                     @endforeach
                 </x-form.select>
 
-                <x-form.input 
-                    name="latitude" 
-                    label="Latitude" 
-                    type="number"
-                    step="any"
-                    :value="old('latitude', '0')"
-                    required 
-                    :error="$errors->first('latitude')"
-                    placeholder="Contoh: -6.200000" />
-
-                <x-form.input 
-                    name="longitude" 
-                    label="Longitude" 
-                    type="number"
-                    step="any"
-                    :value="old('longitude', '0')"
-                    required 
-                    :error="$errors->first('longitude')"
-                    placeholder="Contoh: 106.816666" />
+                <div>
+                    <label for="admin_checkout_note" class="block text-sm font-medium text-gray-700 mb-1">
+                        Keterangan Admin (Opsional)
+                    </label>
+                    <textarea
+                        id="admin_checkout_note"
+                        name="admin_checkout_note"
+                        rows="3"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('admin_checkout_note') border-red-500 @enderror"
+                        placeholder="Contoh: Pegawai lupa checkout dan sudah dikonfirmasi atasan.">{{ old('admin_checkout_note') }}</textarea>
+                    @error('admin_checkout_note')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
                 <x-form.file 
                     name="photo" 
@@ -175,16 +175,28 @@
                     </x-slot>
                 </x-form.file>
 
-                {{-- Get Location Button --}}
                 <div>
-                    <x-button 
-                        type="button" 
-                        variant="secondary" 
+                    <x-button
+                        type="button"
+                        variant="secondary"
                         onclick="getCurrentLocation()"
-                        class="w-full">
+                        class="w-full"
+                        id="get-location-btn">
                         <i class="fas fa-map-marker-alt mr-2"></i>
-                        Ambil Lokasi Saat Ini
+                        Dapatkan Lokasi
                     </x-button>
+                    <p class="text-xs text-gray-500 mt-2 text-center" id="location-status"></p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <p class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Latitude/Longitude Lokasi Terpilih</p>
+                        <p id="selected-coordinates" class="mt-1 text-sm font-semibold text-gray-900">-</p>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+                        <p class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Latitude/Longitude Perangkat</p>
+                        <p id="current-coordinates" class="mt-1 text-sm font-semibold text-gray-900">-</p>
+                    </div>
                 </div>
 
                 {{-- Tombol Submit --}}
@@ -208,8 +220,9 @@
         </x-card>
     </div>
 
-    {{-- Location Map (Optional) --}}
-    <x-card title="Peta Lokasi">
+    {{-- Location Map --}}
+    <x-card title="Peta Lokasi Terpilih">
+        <p class="text-sm text-gray-600 mb-3">Peta hanya menampilkan area lokasi yang dipilih pada form check-out.</p>
         <div id="map" class="w-full h-96 rounded-lg"></div>
     </x-card>
 </div>
@@ -219,88 +232,109 @@
     // Location data from controller
     const locationsData = @json($locationsData);
     let map;
-    let marker;
-    let circles = [];
+    let selectedMarker;
+    let selectedCircle;
+    let currentLocationMarker;
+
+    function formatCoordinates(lat, lng) {
+        return `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+    }
 
     // Initialize map
     function initMap() {
-        // Default center (Indonesia)
         map = L.map('map').setView([-2.5489, 118.0149], 5);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Add location circles
-        updateLocationCircles();
-
-        // Try to get current location on load
-        getCurrentLocation();
+        renderSelectedLocation();
     }
 
-    // Update location circles on map
-    function updateLocationCircles() {
-        // Clear existing circles
-        circles.forEach(circle => circle.remove());
-        circles = [];
+    function renderSelectedLocation() {
+        const locationId = document.querySelector('select[name="location_id"]').value;
+        const selectedCoordinatesEl = document.getElementById('selected-coordinates');
 
-        // Add circles for all locations
-        Object.values(locationsData).forEach(location => {
-            const circle = L.circle([location.latitude, location.longitude], {
-                color: '#3B82F6',
-                fillColor: '#93C5FD',
-                fillOpacity: 0.2,
-                radius: location.radius
-            }).addTo(map);
+        if (selectedMarker) {
+            selectedMarker.remove();
+            selectedMarker = null;
+        }
+        if (selectedCircle) {
+            selectedCircle.remove();
+            selectedCircle = null;
+        }
 
-            circle.bindPopup(`
-                <div class="text-center">
-                    <strong>${location.name}</strong><br>
-                    <small>Radius: ${location.radius}m</small>
-                </div>
-            `);
+        if (!locationId || !locationsData[locationId]) {
+            if (selectedCoordinatesEl) {
+                selectedCoordinatesEl.textContent = '-';
+            }
+            return;
+        }
 
-            circles.push(circle);
-        });
+        const location = locationsData[locationId];
+        const latLng = [location.latitude, location.longitude];
+
+        selectedMarker = L.marker(latLng).addTo(map);
+        selectedMarker.bindPopup(`<strong>${location.name}</strong><br><small>Titik lokasi terpilih</small>`);
+
+        selectedCircle = L.circle(latLng, {
+            color: '#2563EB',
+            fillColor: '#60A5FA',
+            fillOpacity: 0.2,
+            radius: location.radius
+        }).addTo(map);
+
+        selectedCircle.bindPopup(`<strong>${location.name}</strong><br><small>Radius: ${location.radius}m</small>`);
+        map.fitBounds(selectedCircle.getBounds(), { padding: [24, 24] });
+
+        if (selectedCoordinatesEl) {
+            selectedCoordinatesEl.textContent = formatCoordinates(location.latitude, location.longitude);
+        }
     }
 
-    // Get current location
     function getCurrentLocation() {
         if (!navigator.geolocation) {
             alert('Geolocation tidak didukung oleh browser Anda');
             return;
         }
 
-        const button = event ? event.target : null;
+        const button = document.getElementById('get-location-btn');
+        const statusEl = document.getElementById('location-status');
+        const currentCoordinatesEl = document.getElementById('current-coordinates');
+
         if (button) {
             button.disabled = true;
             button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengambil lokasi...';
+        }
+        if (statusEl) {
+            statusEl.textContent = 'Mengambil lokasi GPS...';
+            statusEl.className = 'text-xs text-blue-600 mt-2 text-center';
         }
 
         navigator.geolocation.getCurrentPosition(
             function(position) {
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
 
-                // Update form inputs
-                document.querySelector('input[name="latitude"]').value = lat;
-                document.querySelector('input[name="longitude"]').value = lng;
-
-                // Update map
-                if (marker) {
-                    marker.remove();
+                if (currentLocationMarker) {
+                    currentLocationMarker.remove();
                 }
 
-                marker = L.marker([lat, lng]).addTo(map);
-                marker.bindPopup('Lokasi Anda').openPopup();
+                currentLocationMarker = L.marker([lat, lng]).addTo(map);
+                currentLocationMarker.bindPopup(`Lokasi perangkat admin<br><small>Akurasi: ±${Math.round(accuracy)}m</small>`).openPopup();
                 map.setView([lat, lng], 16);
-
-                // Validate location
-                validateLocation(lat, lng);
 
                 if (button) {
                     button.disabled = false;
-                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Ambil Lokasi Saat Ini';
+                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Dapatkan Lokasi';
+                }
+                if (statusEl) {
+                    statusEl.textContent = `Lokasi ditemukan (Akurasi: ±${Math.round(accuracy)}m)`;
+                    statusEl.className = 'text-xs text-green-600 mt-2 text-center';
+                }
+                if (currentCoordinatesEl) {
+                    currentCoordinatesEl.textContent = formatCoordinates(lat, lng);
                 }
             },
             function(error) {
@@ -318,11 +352,14 @@
                     default:
                         errorMessage += 'Terjadi kesalahan';
                 }
-                alert(errorMessage);
 
                 if (button) {
                     button.disabled = false;
-                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Ambil Lokasi Saat Ini';
+                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Dapatkan Lokasi';
+                }
+                if (statusEl) {
+                    statusEl.textContent = errorMessage;
+                    statusEl.className = 'text-xs text-red-600 mt-2 text-center';
                 }
             },
             {
@@ -333,64 +370,12 @@
         );
     }
 
-    // Validate location against selected location's geofence
-    function validateLocation(lat, lng) {
-        const locationId = document.querySelector('select[name="location_id"]').value;
-        if (!locationId) return;
-
-        const location = locationsData[locationId];
-        if (!location || !location.enforce_geofence) return;
-
-        const distance = calculateDistance(
-            lat, lng,
-            location.latitude, location.longitude
-        );
-
-        if (distance > location.radius) {
-            alert(`Peringatan: Anda berada di luar radius lokasi ${location.name} (${Math.round(distance)}m dari lokasi)`);
-        }
-    }
-
-    // Calculate distance between two coordinates (Haversine formula)
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Earth's radius in meters
-        const φ1 = lat1 * Math.PI / 180;
-        const φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180;
-        const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        return R * c;
-    }
-
-    // Update marker when coordinates change
-    document.querySelector('input[name="latitude"]').addEventListener('change', updateMarkerFromInputs);
-    document.querySelector('input[name="longitude"]').addEventListener('change', updateMarkerFromInputs);
-
-    function updateMarkerFromInputs() {
-        const lat = parseFloat(document.querySelector('input[name="latitude"]').value);
-        const lng = parseFloat(document.querySelector('input[name="longitude"]').value);
-
-        if (isNaN(lat) || isNaN(lng)) return;
-
-        if (marker) {
-            marker.remove();
-        }
-
-        marker = L.marker([lat, lng]).addTo(map);
-        marker.bindPopup('Lokasi Anda').openPopup();
-        map.setView([lat, lng], 16);
-
-        validateLocation(lat, lng);
-    }
-
-    // Initialize map when document is ready
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
+        const locationSelect = document.querySelector('select[name="location_id"]');
+        if (locationSelect) {
+            locationSelect.addEventListener('change', renderSelectedLocation);
+        }
     });
 </script>
 

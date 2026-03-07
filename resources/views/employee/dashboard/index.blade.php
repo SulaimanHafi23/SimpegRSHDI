@@ -56,8 +56,8 @@
         </div>
     </div>
 
-    <!-- Pending Checkout Alert -->
-    @if($pendingCheckout)
+    <!-- Pending Checkout Alert (Actionable) -->
+    @if(!empty($pendingCheckout))
     <div class="bg-gradient-to-r from-orange-500 to-red-500 rounded-xl shadow-lg p-6 text-white">
         <div class="flex items-start space-x-4">
             <div class="flex-shrink-0">
@@ -94,17 +94,20 @@
     </div>
     @endif
 
-    @if(!empty($pendingCheckout))
-    <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl p-4 flex items-start gap-3 shadow">
+    @if(!empty($expiredPendingCheckout))
+    <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-4 flex items-start gap-3 shadow">
         <div class="mt-1 text-yellow-500">
             <i class="fas fa-bell text-lg"></i>
         </div>
         <div class="flex-1">
-            <p class="font-semibold">Anda belum check-out untuk shift {{ $pendingCheckout['shift_name'] }} ({{ \Carbon\Carbon::parse($pendingCheckout['attendance_date'])->format('d M Y') }})</p>
-            <p class="text-sm mt-1">Shift berakhir pada {{ \Carbon\Carbon::parse($pendingCheckout['shift_end_time'])->format('d M Y H:i') }} ({{ $pendingCheckout['formatted_late'] }}). Silakan selesaikan check-out sekarang.</p>
+            <p class="font-semibold">Checkout terlewat untuk shift {{ $expiredPendingCheckout['shift_name'] }} ({{ \Carbon\Carbon::parse($expiredPendingCheckout['attendance_date'])->format('d M Y') }})</p>
+            <p class="text-sm mt-1">
+                Batas checkout sampai {{ \Carbon\Carbon::parse($expiredPendingCheckout['max_checkout_time'])->format('d M Y H:i') }} sudah terlewati.
+                Silakan hubungi admin/HR untuk koreksi absensi.
+            </p>
             <div class="mt-3 flex gap-2">
-                <a href="{{ route('employee.attendance.index') }}" class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white text-sm font-semibold rounded-lg hover:bg-yellow-700">
-                    <i class="fas fa-sign-out-alt mr-2"></i> Ke halaman absensi
+                <a href="{{ route('employee.attendance.index') }}" class="inline-flex items-center px-4 py-2 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700">
+                    <i class="fas fa-history mr-2"></i> Lihat Riwayat Absensi
                 </a>
             </div>
         </div>
