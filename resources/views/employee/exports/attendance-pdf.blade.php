@@ -12,7 +12,7 @@
 
 <div class="page-padding">
     <h3>RIWAYAT ABSENSI PEGAWAI</h3>
-
+e
     <div class="info-box">
         <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 0;">
             <tr>

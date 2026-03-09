@@ -21,6 +21,7 @@ erDiagram
         uuid id PK
         string name
         string code
+        text description
         uuid parent_id FK
         uuid manager_id FK
         boolean requires_holiday_attendance
@@ -30,6 +31,7 @@ erDiagram
     locations {
         uuid id PK
         string name
+        text address
         decimal latitude
         decimal longitude
         integer radius
@@ -40,8 +42,9 @@ erDiagram
     document_types {
         uuid id PK
         string name
+        text description
         string file_format
-        bigint max_file_size
+        integer max_file_size
         boolean is_universal
         boolean is_active
     }
@@ -50,6 +53,7 @@ erDiagram
         uuid id PK
         date date
         string name
+        text description
         boolean is_national
     }
 
@@ -60,6 +64,9 @@ erDiagram
         string name
         string email UK
         string phone_number UK
+        text address
+        date birth_date
+        string birth_place
         uuid gender_id FK
         uuid religion_id FK
         uuid department_id FK
@@ -67,6 +74,7 @@ erDiagram
         date resign_date
         enum employment_status
         enum status
+        string photo_url
         timestamp deleted_at
     }
 
@@ -75,8 +83,10 @@ erDiagram
         uuid worker_id FK
         string email UK
         string username UK
+        string password
         timestamp last_login
         boolean is_active
+        timestamp deleted_at
     }
 
     %% ===== SPATIE RBAC =====
@@ -146,7 +156,9 @@ erDiagram
         uuid changed_by FK
         date effective_from
         date effective_until
-        timestamp changed_at
+        date changed_at
+        string change_reason
+        text notes
     }
 
     shift_overrides {
@@ -154,7 +166,9 @@ erDiagram
         uuid worker_id FK
         uuid shift_id FK
         date override_date
+        text reason
         uuid created_by FK
+        uuid shift_swap_request_id FK
     }
 
     worker_off_days {
@@ -163,6 +177,7 @@ erDiagram
         json day_of_week
         date effective_from
         date effective_until
+        string reason
         uuid created_by
     }
 
@@ -172,6 +187,7 @@ erDiagram
         date off_date
         enum type
         json recurring_pattern
+        string reason
         uuid created_by
     }
 
@@ -183,16 +199,26 @@ erDiagram
         uuid location_id FK
         date attendance_date
         datetime check_in
-        datetime check_out
-        enum status
+        decimal check_in_latitude
+        decimal check_in_longitude
+        integer distance_check_in
         boolean check_in_by_admin
         uuid check_in_admin_id FK
+        datetime check_out
+        decimal check_out_latitude
+        decimal check_out_longitude
+        integer distance_check_out
         boolean check_out_by_admin
         uuid check_out_admin_id FK
+        enum status
         boolean is_late
         integer late_minutes
         boolean is_early_leave
         integer early_leave_minutes
+        boolean is_outside_radius
+        integer overtime_minutes
+        text notes
+        timestamp deleted_at
     }
 
     attendance_photos {
@@ -222,9 +248,13 @@ erDiagram
         date start_date
         date end_date
         integer total_days
+        text reason
+        string attachment_path
         enum status
         uuid approved_by FK
         timestamp approved_at
+        text rejection_reason
+        timestamp deleted_at
     }
 
     overtime_requests {
@@ -233,20 +263,29 @@ erDiagram
         date overtime_date
         time start_time
         time end_time
-        integer total_hours
+        decimal total_hours
+        text reason
         enum status
         uuid approved_by FK
         timestamp approved_at
+        text rejection_reason
+        timestamp deleted_at
     }
 
     business_trips {
         uuid id PK
         uuid worker_id FK
+        string destination
+        text purpose
         date start_date
         date end_date
+        decimal estimated_cost
         enum status
         uuid approved_by FK
+        timestamp approved_at
+        text rejection_reason
         json itinerary
+        timestamp deleted_at
     }
 
     salary_components {
@@ -254,6 +293,7 @@ erDiagram
         string code UK
         string name
         enum type
+        text description
         boolean is_taxable
         boolean is_active
         timestamp deleted_at
@@ -271,11 +311,15 @@ erDiagram
         uuid worker_id FK
         uuid document_type_id FK
         uuid department_document_type_id FK
+        string file_name
+        string file_path
         bigint file_size
         date expired_date
         enum status
         uuid verified_by FK
         timestamp verified_at
+        text notes
+        timestamp deleted_at
     }
 
     %% ===== SHIFT SWAP =====
@@ -291,7 +335,11 @@ erDiagram
         date swap_end_date
         json swap_dates
         enum status
+        boolean requires_manager_approval
         uuid manager_id FK
+        timestamp manager_approved_at
+        text reason
+        json metadata
         uuid executed_by FK
         timestamp requested_at
         timestamp expires_at
@@ -306,6 +354,10 @@ erDiagram
         string action
         string old_status
         string new_status
+        text notes
+        json metadata
+        string ip_address
+        string user_agent
     }
 
     shift_swap_overrides {
@@ -337,13 +389,15 @@ erDiagram
     workers ||--o{ shift_overrides : override
     shifts ||--o{ shift_overrides : override
     users ||--o{ shift_overrides : created_by
+    shift_swap_requests ||--o{ shift_overrides : source
     workers ||--o{ worker_off_days : off_day
     workers ||--o{ worker_off_day_exceptions : off_day_exception
 
     workers ||--o{ attendances : records
     shifts ||--o{ attendances : shift
     locations ||--o{ attendances : location
-    users ||--o{ attendances : admin_action
+    users ||--o{ attendances : checkin_admin
+    users ||--o{ attendances : checkout_admin
     attendances ||--o{ attendance_photos : photos
 
     leave_types ||--o{ leave_requests : type
@@ -363,8 +417,11 @@ erDiagram
     department_document_type ||--o{ worker_documents : requirement
     users ||--o{ worker_documents : verifier
 
-    workers ||--o{ shift_swap_requests : requester_target
-    worker_shifts ||--o{ shift_swap_requests : shift_ref
-    users ||--o{ shift_swap_requests : manager_executor
+    workers ||--o{ shift_swap_requests : requester
+    workers ||--o{ shift_swap_requests : target
+    worker_shifts ||--o{ shift_swap_requests : requester_shift
+    worker_shifts ||--o{ shift_swap_requests : target_shift
+    users ||--o{ shift_swap_requests : manager
+    users ||--o{ shift_swap_requests : executor
     shift_swap_requests ||--o{ shift_swap_audit_logs : logs
     users ||--o{ shift_swap_audit_logs : actor
