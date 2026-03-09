@@ -1,24 +1,38 @@
 @extends('exports.pdf-header', ['title' => 'Laporan Lembur'])
 
 @section('content')
-<h3>LAPORAN PERMOHONAN LEMBUR</h3>
+<h3>Laporan Permohonan Lembur</h3>
 
 <div class="info-box">
-    <p><strong>Periode:</strong> {{ $dateFrom }} s/d {{ $dateTo }}</p>
-    @if(isset($status) && $status)
-    <p><strong>Status:</strong>
-        @php
-            $statusLabel = match($status) {
-                'pending' => 'Menunggu Persetujuan',
-                'approved' => 'Disetujui',
-                'rejected' => 'Ditolak',
-                default => ucfirst($status)
-            };
-        @endphp
-        {{ $statusLabel }}
-    </p>
-    @endif
-    <p><strong>Total Data:</strong> {{ $overtimes->count() }} permohonan</p>
+    <table class="meta-table">
+        <tr>
+            <td style="width: 18%;"><strong>Periode</strong></td>
+            <td style="width: 2%;">:</td>
+            <td>{{ $dateFrom }} s/d {{ $dateTo }}</td>
+        </tr>
+        @if(isset($status) && $status)
+        <tr>
+            <td><strong>Status</strong></td>
+            <td>:</td>
+            <td>
+                @php
+                    $statusLabel = match($status) {
+                        'pending' => 'Menunggu Persetujuan',
+                        'approved' => 'Disetujui',
+                        'rejected' => 'Ditolak',
+                        default => ucfirst($status)
+                    };
+                @endphp
+                <span class="badge badge-warning">{{ $statusLabel }}</span>
+            </td>
+        </tr>
+        @endif
+        <tr>
+            <td><strong>Total Data</strong></td>
+            <td>:</td>
+            <td><strong>{{ $overtimes->count() }} permohonan</strong></td>
+        </tr>
+    </table>
 </div>
 
 <table>
@@ -40,8 +54,8 @@
         <tr>
             <td class="text-center">{{ $index + 1 }}</td>
             <td>
-                {{ $overtime->worker->name ?? '-' }}<br>
-                <small style="color: #666;">{{ $overtime->worker->nip ?? '-' }}</small>
+                <strong>{{ $overtime->worker->name ?? '-' }}</strong><br>
+                <span class="muted">{{ $overtime->worker->nip ?? '-' }}</span>
             </td>
             <td>{{ \Carbon\Carbon::parse($overtime->overtime_date)->translatedFormat('d M Y, l') }}</td>
             <td>{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }}</td>
@@ -64,30 +78,36 @@
                 @endphp
                 <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
                 @if($overtime->approved_at)
-                <br><small style="color: #666;">{{ \Carbon\Carbon::parse($overtime->approved_at)->translatedFormat('d M Y') }}</small>
+                <br><span class="muted">{{ \Carbon\Carbon::parse($overtime->approved_at)->translatedFormat('d M Y') }}</span>
                 @endif
             </td>
             <td>{{ $overtime->approver->name ?? '-' }}</td>
-            <td style="font-size: 9px;">{{ \Illuminate\Support\Str::limit($overtime->description, 50) }}</td>
+            <td>{{ \Illuminate\Support\Str::limit($overtime->description, 55) }}</td>
         </tr>
         @empty
         <tr>
-            <td colspan="9" class="text-center" style="padding: 20px; color: #666;">
-                Tidak ada data permohonan lembur
-            </td>
+            <td colspan="9" class="empty-state">Tidak ada data permohonan lembur untuk periode ini.</td>
         </tr>
         @endforelse
     </tbody>
 </table>
 
 @if($overtimes->count() > 0)
-<div class="summary-box" style="background-color: #dbeafe; border-color: #93c5fd;">
-    <p style="margin: 5px 0; font-size: 10px;"><strong>Ringkasan:</strong></p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Permohonan: {{ $overtimes->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Disetujui: {{ $overtimes->where('status', 'approved')->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Menunggu: {{ $overtimes->where('status', 'pending')->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Ditolak: {{ $overtimes->where('status', 'rejected')->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Jam Lembur: {{ number_format($overtimes->where('status', 'approved')->sum('total_hours'), 1) }} jam</p>
+<div class="summary-box">
+    <p class="summary-title">Ringkasan</p>
+    <table class="summary-grid">
+        <tr>
+            <td style="width: 50%;"><strong>Total Permohonan:</strong> {{ $overtimes->count() }}</td>
+            <td><strong>Disetujui:</strong> {{ $overtimes->where('status', 'approved')->count() }}</td>
+        </tr>
+        <tr>
+            <td><strong>Menunggu:</strong> {{ $overtimes->where('status', 'pending')->count() }}</td>
+            <td><strong>Ditolak:</strong> {{ $overtimes->where('status', 'rejected')->count() }}</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>Total Jam Lembur Disetujui:</strong> {{ number_format($overtimes->where('status', 'approved')->sum('total_hours'), 1) }} jam</td>
+        </tr>
+    </table>
 </div>
 @endif
 @endsection

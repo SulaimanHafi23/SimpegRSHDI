@@ -91,15 +91,54 @@ class LeaveExport implements FromCollection, WithHeadings, WithMapping, WithStyl
 
     public function styles(Worksheet $sheet)
     {
-        return [
-            1 => [
-                'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true, 'size' => 12],
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => 'F59E0B'],
+        // Header styling dengan tema hijau modern
+        $sheet->getStyle('A1:K1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 11,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_GRADIENT_LINEAR,
+                'rotation' => 90,
+                'startColor' => ['rgb' => '047857'],
+                'endColor' => ['rgb' => '059669'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => '047857'],
                 ],
             ],
-        ];
+        ]);
+
+        $sheet->getRowDimension(1)->setRowHeight(25);
+
+        $lastRow = $sheet->getHighestRow();
+        if ($lastRow > 1) {
+            $sheet->getStyle('A2:K' . $lastRow)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => 'E5E7EB'],
+                    ],
+                ],
+            ]);
+
+            for ($row = 2; $row <= $lastRow; $row++) {
+                if ($row % 2 == 0) {
+                    $sheet->getStyle('A' . $row . ':K' . $row)->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('FEF3C7');
+                }
+            }
+        }
+
+        return [];
     }
 
     protected function getStatusLabel($status)

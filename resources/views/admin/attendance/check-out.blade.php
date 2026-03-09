@@ -6,8 +6,8 @@
 <div class="space-y-4 sm:space-y-6">
     {{-- Page Header --}}
     <div class="flex items-center space-x-3">
-        <x-button 
-            variant="secondary" 
+        <x-button
+            variant="secondary"
             size="sm"
             icon="fas fa-arrow-left"
             onclick="window.location.href='{{ route('admin.attendance.index') }}'">
@@ -115,8 +115,8 @@
                 @if($attendance->photo)
                     <div>
                         <label class="text-sm font-medium text-gray-700">Foto Check In</label>
-                        <img src="{{ Storage::url($attendance->photo) }}" 
-                             alt="Check In Photo" 
+                        <img src="{{ Storage::url($attendance->photo) }}"
+                             alt="Check In Photo"
                              class="mt-2 rounded-lg max-h-48 object-cover">
                     </div>
                 @endif
@@ -125,9 +125,9 @@
 
         {{-- Check Out Form --}}
         <x-card title="Form Check Out">
-            <form action="{{ route('admin.attendance.check-out', $attendance->id) }}" 
-                  method="POST" 
-                  enctype="multipart/form-data" 
+            <form action="{{ route('admin.attendance.check-out', $attendance->id) }}"
+                  method="POST"
+                  enctype="multipart/form-data"
                   class="space-y-4">
                 @csrf
 
@@ -135,15 +135,15 @@
                     <p class="font-semibold mb-1">Info Checkout Admin</p>
                     <p>Checkout dari halaman ini akan ditandai sebagai checkout oleh admin. Koordinat akan otomatis menggunakan lokasi yang dipilih.</p>
                 </div>
-                
-                <x-form.select 
-                    name="location_id" 
+
+                <x-form.select
+                    name="location_id"
                     label="Lokasi"
-                    required 
+                    required
                     :error="$errors->first('location_id')">
                     <option value="">Pilih Lokasi</option>
                     @foreach($locations as $location)
-                        <option value="{{ $location->id }}" 
+                        <option value="{{ $location->id }}"
                                 {{ old('location_id', $attendance->location_id) == $location->id ? 'selected' : '' }}>
                             {{ $location->name }}
                         </option>
@@ -165,8 +165,8 @@
                     @enderror
                 </div>
 
-                <x-form.file 
-                    name="photo" 
+                <x-form.file
+                    name="photo"
                     label="Foto (Opsional)"
                     accept="image/*"
                     :error="$errors->first('photo')">
@@ -201,15 +201,15 @@
 
                 {{-- Tombol Submit --}}
                 <div class="flex gap-3 pt-4">
-                    <x-button 
-                        type="button" 
+                    <x-button
+                        type="button"
                         variant="secondary"
                         onclick="window.location.href='{{ route('admin.attendance.index') }}'"
                         class="flex-1">
                         Batal
                     </x-button>
-                    <x-button 
-                        type="submit" 
+                    <x-button
+                        type="submit"
                         variant="primary"
                         class="flex-1">
                         <i class="fas fa-sign-out-alt mr-2"></i>

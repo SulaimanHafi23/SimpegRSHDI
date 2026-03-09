@@ -323,12 +323,17 @@ class ReportController extends Controller
             $endDate = $request->input('date_to') ?? $request->input('end_date');
         }
 
+        // Get department filter: prioritas dari modal, fallback ke manager restriction
+        $departmentFilter = $request->input('department_id') ?: $this->getManagerDepartmentFilter();
+
         $filters = [
             'date_from' => $startDate,
             'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
             'location_id' => $request->input('location_id'),
-            'department_id' => $this->getManagerDepartmentFilter(),
+            'department_id' => $departmentFilter,
+            'status' => $request->input('status'),
+            'search' => $request->input('search'),
             'month' => $month,
             'year' => $year,
         ];

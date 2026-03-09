@@ -68,13 +68,76 @@ class WorkerAttendanceCalendarExport implements FromCollection, WithHeadings, Wi
 
     public function styles(Worksheet $sheet): array
     {
-        return [
-            1 => ['font' => ['bold' => true]],
-            2 => ['font' => ['bold' => true]],
-            3 => ['font' => ['bold' => true]],
-            4 => ['font' => ['bold' => true]],
-            6 => ['font' => ['bold' => true]],
-        ];
+        // Info header styling (rows 1-4)
+        foreach ([1, 2, 3, 4] as $row) {
+            $sheet->getStyle('A' . $row . ':J' . $row)->applyFromArray([
+                'font' => [
+                    'bold' => true,
+                    'size' => 11,
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => 'ECFDF5'],
+                ],
+                'borders' => [
+                    'outline' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => '6EE7B7'],
+                    ],
+                ],
+            ]);
+            $sheet->getStyle('A' . $row)->getFont()->getColor()->setRGB('047857');
+        }
+
+        // Table header styling (row 6)
+        $sheet->getStyle('A6:J6')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 11,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_GRADIENT_LINEAR,
+                'rotation' => 90,
+                'startColor' => ['rgb' => '047857'],
+                'endColor' => ['rgb' => '059669'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => '047857'],
+                ],
+            ],
+        ]);
+        $sheet->getRowDimension(6)->setRowHeight(25);
+
+        // Data rows styling
+        $lastRow = $sheet->getHighestRow();
+        if ($lastRow > 6) {
+            $sheet->getStyle('A7:J' . $lastRow)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => 'E5E7EB'],
+                    ],
+                ],
+            ]);
+
+            // Alternating row colors
+            for ($row = 7; $row <= $lastRow; $row++) {
+                if (($row - 6) % 2 == 0) {
+                    $sheet->getStyle('A' . $row . ':J' . $row)->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('F9FAFB');
+                }
+            }
+        }
+
+        return [];
     }
 
     private function padRow(array $row): array

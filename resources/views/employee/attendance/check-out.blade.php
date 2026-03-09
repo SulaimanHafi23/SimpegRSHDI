@@ -17,7 +17,7 @@
                 </h1>
                 <p class="text-sm text-gray-600 mt-1">Selesaikan sesi absensi Anda dengan mengonfirmasi check-out</p>
             </div>
-            <a href="{{ route('employee.attendance.index') }}" 
+            <a href="{{ route('employee.attendance.index') }}"
                class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
                 <i class="fas fa-arrow-left"></i>
                 <span class="hidden sm:inline">Kembali</span>
@@ -116,15 +116,15 @@
                         <i class="fas fa-map-marker-alt text-blue-600"></i>
                         Lokasi & Peta
                     </h3>
-                    
+
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Lokasi Check-Out</label>
                         <select name="location_id" id="location_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('location_id') border-red-500 @enderror" required>
                             <option value="">-- Pilih Lokasi --</option>
                             @foreach($locations as $location)
-                                <option value="{{ $location->id }}" 
-                                        data-lat="{{ $location->latitude }}" 
-                                        data-lng="{{ $location->longitude }}" 
+                                <option value="{{ $location->id }}"
+                                        data-lat="{{ $location->latitude }}"
+                                        data-lng="{{ $location->longitude }}"
                                         data-radius="{{ $location->radius }}">
                                     {{ $location->name }} (Radius: {{ $location->radius }}m)
                                 </option>
@@ -177,13 +177,13 @@
                     <!-- Photo Section -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-3">
-                            Foto Bukti 
+                            Foto Bukti
                             <span class="text-sm font-normal text-blue-600">(Sangat Direkomendasikan)</span>
                         </label>
                         <div class="text-xs text-gray-600 mb-3">
                             📸 Ambil foto selfie atau lingkungan sekitar sebagai bukti check-out Anda
                         </div>
-                        
+
                         <!-- Camera Preview -->
                         <div class="relative mb-4">
                             <video id="camera-preview" class="w-full rounded-lg border border-gray-300 bg-gray-900" style="display: none; max-height: 250px;" autoplay playsinline></video>
@@ -204,7 +204,7 @@
 
                         <!-- Camera Controls -->
                         <div class="grid grid-cols-2 gap-2 mb-4">
-                            <button type="button" id="btn-start-camera" onclick="startCamera()" 
+                            <button type="button" id="btn-start-camera" onclick="startCamera()"
                                     class="flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200">
                                 <i class="fas fa-camera"></i>
                                 Buka Kamera
@@ -232,8 +232,8 @@
                     <!-- Notes Section -->
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
-                        <textarea name="notes" id="notes" rows="4" 
-                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none" 
+                        <textarea name="notes" id="notes" rows="4"
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
                                   placeholder="Contoh: Pulang lebih awal karena ada keperluan keluarga..."></textarea>
                         <div class="text-xs text-gray-500 mt-1">
                             Maksimal 500 karakter
@@ -242,13 +242,13 @@
 
                     <!-- Action Buttons -->
                     <div class="space-y-3">
-                        <button type="submit" id="btn-submit" 
+                        <button type="submit" id="btn-submit"
                                 class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
-                            <i class="fas fa-sign-out-alt"></i> 
+                            <i class="fas fa-sign-out-alt"></i>
                             Konfirmasi Check Out
                         </button>
-                        
-                        <a href="{{ route('employee.attendance.index') }}" 
+
+                        <a href="{{ route('employee.attendance.index') }}"
                            class="block text-center text-sm text-gray-600 hover:text-gray-800 hover:underline transition-colors">
                             <i class="fas fa-times mr-1"></i>
                             Batal Check Out
@@ -352,10 +352,10 @@
                 updateLocation(position);
             }, function(error) {
                 handleLocationError(error);
-            }, { 
+            }, {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 300000 
+                maximumAge: 300000
             });
         } else {
             document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Browser tidak mendukung Geolocation';
@@ -365,7 +365,7 @@
         document.getElementById('refreshLocation').addEventListener('click', function() {
             this.disabled = true;
             this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mencari...';
-            
+
             navigator.geolocation.getCurrentPosition(function(position) {
                 updateLocation(position);
                 document.getElementById('refreshLocation').disabled = false;
@@ -374,10 +374,10 @@
                 handleLocationError(error);
                 document.getElementById('refreshLocation').disabled = false;
                 document.getElementById('refreshLocation').innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh Lokasi';
-            }, { 
+            }, {
                 enableHighAccuracy: true,
                 timeout: 10000,
-                maximumAge: 0 
+                maximumAge: 0
             });
         });
 
@@ -433,19 +433,19 @@
         function checkLocationDistance(userLat, userLng) {
             const select = document.getElementById('location_id');
             const selectedOption = select.options[select.selectedIndex];
-            
+
             if (selectedOption && selectedOption.value) {
                 const latLoc = parseFloat(selectedOption.getAttribute('data-lat'));
                 const lngLoc = parseFloat(selectedOption.getAttribute('data-lng'));
                 const radius = parseFloat(selectedOption.getAttribute('data-radius'));
-                
+
                 if (latLoc && lngLoc && radius) {
                     const distance = computeDistance(userLat, userLng, latLoc, lngLoc);
                     const badge = document.getElementById('insideBadge');
-                    
-                    document.getElementById('distanceInfo').innerHTML = 
+
+                    document.getElementById('distanceInfo').innerHTML =
                         `<i class="fas fa-map-marker-alt mr-1"></i>${Math.round(distance)} m dari lokasi terpilih`;
-                    
+
                     if (distance <= radius) {
                         badge.innerHTML = '<i class="fas fa-check-circle mr-1"></i>Di dalam area kerja';
                         badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium bg-green-100 text-green-800 border border-green-200';
@@ -465,10 +465,10 @@
             // Simple notification system
             const notification = document.createElement('div');
             notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform translate-x-full`;
-            
-            const bgColor = type === 'success' ? 'bg-green-500' : 
+
+            const bgColor = type === 'success' ? 'bg-green-500' :
                            type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
-            
+
             notification.classList.add(bgColor, 'text-white');
             notification.innerHTML = `
                 <div class="flex items-center gap-2">
@@ -476,14 +476,14 @@
                     <span class="text-sm">${message}</span>
                 </div>
             `;
-            
+
             document.body.appendChild(notification);
-            
+
             // Show notification
             setTimeout(() => {
                 notification.classList.remove('translate-x-full');
             }, 100);
-            
+
             // Hide notification
             setTimeout(() => {
                 notification.classList.add('translate-x-full');
@@ -505,7 +505,7 @@
 
             if (lat && lng) {
                 updateOfficeCircle(parseFloat(lat), parseFloat(lng), parseFloat(radius));
-                
+
                 // Update distance if user location exists
                 const ulat = document.getElementById('latitude').value;
                 const ulng = document.getElementById('longitude').value;
@@ -564,7 +564,7 @@
             const video = document.getElementById('camera-preview');
             const placeholder = document.getElementById('camera-placeholder');
             const canvas = document.getElementById('photo-canvas');
-            
+
             // Request camera access with current facing mode
             const constraints = {
                 video: {
@@ -573,22 +573,22 @@
                     height: { ideal: 720 }
                 }
             };
-            
+
             cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
             video.srcObject = cameraStream;
-            
+
             // Show video, hide others
             video.style.display = 'block';
             placeholder.style.display = 'none';
             canvas.style.display = 'none';
-            
+
             // Update buttons
             document.getElementById('btn-start-camera').style.display = 'none';
             document.getElementById('btn-capture').style.display = 'block';
             document.getElementById('btn-retake').style.display = 'none';
             document.getElementById('btn-remove').style.display = 'none';
             document.getElementById('btn-switch-camera').style.display = 'block';
-            
+
         } catch (error) {
             console.error('Error accessing camera:', error);
             alert('Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
@@ -599,13 +599,13 @@
     async function switchCamera() {
         // Toggle facing mode
         currentFacingMode = currentFacingMode === 'environment' ? 'user' : 'environment';
-        
+
         // Stop current stream
         if (cameraStream) {
             cameraStream.getTracks().forEach(track => track.stop());
             cameraStream = null;
         }
-        
+
         // Restart camera with new facing mode
         await startCamera();
     }
@@ -615,28 +615,28 @@
         const video = document.getElementById('camera-preview');
         const canvas = document.getElementById('photo-canvas');
         const context = canvas.getContext('2d');
-        
+
         // Set canvas size to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        
+
         // Draw video frame to canvas
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
+
         // Convert canvas to base64
         capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);
         document.getElementById('photo-data').value = capturedPhoto;
-        
+
         // Stop camera stream
         if (cameraStream) {
             cameraStream.getTracks().forEach(track => track.stop());
             cameraStream = null;
         }
-        
+
         // Show canvas, hide video
         video.style.display = 'none';
         canvas.style.display = 'block';
-        
+
         // Update buttons
         document.getElementById('btn-start-camera').style.display = 'none';
         document.getElementById('btn-capture').style.display = 'none';
@@ -649,22 +649,22 @@
     function retakePhoto() {
         const canvas = document.getElementById('photo-canvas');
         const placeholder = document.getElementById('camera-placeholder');
-        
+
         // Clear captured photo
         capturedPhoto = null;
         document.getElementById('photo-data').value = '';
-        
+
         // Hide canvas, show placeholder
         canvas.style.display = 'none';
         placeholder.style.display = 'flex';
-        
+
         // Update buttons
         document.getElementById('btn-start-camera').style.display = 'block';
         document.getElementById('btn-capture').style.display = 'none';
         document.getElementById('btn-retake').style.display = 'none';
         document.getElementById('btn-remove').style.display = 'none';
         document.getElementById('btn-switch-camera').style.display = 'none';
-        
+
         // Reset to rear camera
         currentFacingMode = 'environment';
     }

@@ -5,176 +5,274 @@
     <title>{{ $title ?? 'Laporan' }}</title>
     <style>
         @page {
-            margin: 18px 22px 22px 22px;
+            margin: 14px 18px 18px 18px;
         }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            line-height: 1.4;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 10px;
+            line-height: 1.45;
+            color: #1f2937;
         }
+
         .page {
-            padding: 0;
+            width: 100%;
         }
+
         .header {
-            text-align: center;
-            margin-bottom: 12px;
-            padding-bottom: 8px;
+            border: 1px solid #d1d5db;
+            border-top: 3px solid #0f766e;
+            border-radius: 6px;
+            padding: 8px 10px 6px 10px;
+            margin-bottom: 3px;
+            background: #ffffff;
         }
+
         .header-table {
             width: 100%;
             border: none;
-            margin-bottom: 5px;
+            margin: 0;
         }
+
         .header-table td {
             border: none;
             vertical-align: middle;
+            padding: 0;
         }
+
         .logo-cell {
-            width: 80px;
+            width: 72px;
             text-align: center;
+            padding-right: 6px;
         }
+
         .logo {
-            max-width: 65px;
-            max-height: 65px;
+            max-width: 56px;
+            max-height: 56px;
         }
+
         .header-text-cell {
             text-align: center;
-            padding-left: 10px;
+            padding: 0 6px;
         }
-        .header-gov {
-            margin: 0;
-            font-size: 11px;
-            font-weight: normal;
-        }
+
+        .header-gov,
         .header-dept {
-            margin: 0;
-            font-size: 11px;
-            font-weight: normal;
+            font-size: 9px;
+            font-weight: 600;
+            color: #4b5563;
+            line-height: 1.35;
+            letter-spacing: 0.2px;
         }
+
         .header-hospital {
             margin: 2px 0;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 14px;
+            font-weight: 800;
+            color: #0f766e;
+            letter-spacing: 0.3px;
         }
+
         .header-address {
+            font-size: 8px;
+            color: #6b7280;
+            line-height: 1.3;
+        }
+
+        .header-line {
+            height: 2px;
+            background: #0f766e;
+            margin-top: 5px;
+        }
+
+        main {
+            margin-top: 0;
+        }
+
+        h3 {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f766e;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 6px 5px 6px;
+            margin: 0 0 5px 0;
+            border-bottom: 1.5px solid #99f6e4;
+        }
+
+        .meta-table {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
             margin: 0;
+            box-shadow: none;
+            border-radius: 0;
+            overflow: visible;
+        }
+
+        .meta-table td {
+            border: none;
+            padding: 2px 0;
             font-size: 9px;
         }
-        .header-line {
-            border-bottom: 3px double #000;
-            margin-bottom: 8px;
+
+        .info-box {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-left: 3px solid #0f766e;
+            border-radius: 6px;
+            padding: 7px 9px;
+            margin-bottom: 6px;
         }
-        .report-title {
-            font-size: 14px;
-            font-weight: bold;
-            color: #047857;
-            margin: 10px 0 5px 0;
+
+        .info-box strong {
+            color: #0f766e;
         }
-        .print-date {
-            font-size: 10px;
-            color: #666;
-        }
-        main {
-            margin-top: 8px;
-        }
-        h3 {
-            font-size: 14px;
-            font-weight: bold;
-            color: #047857;
-            margin-bottom: 10px;
-            text-align: center;
-        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-        }
-        table th {
-            background-color: #047857;
-            color: white;
-            font-weight: bold;
-            padding: 6px 5px;
-            text-align: left;
-            font-size: 10px;
-        }
-        table td {
-            padding: 4px 5px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 10px;
-        }
-        table tbody tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-        .info-box {
-            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-            border: 1px solid #a7f3d0;
-            border-left: 4px solid #047857;
+            margin-top: 4px;
+            border: 1px solid #d1d5db;
             border-radius: 6px;
-            padding: 10px 12px;
-            margin-bottom: 10px;
+            overflow: hidden;
+            box-shadow: none;
         }
-        .info-box p {
-            margin-bottom: 5px;
-            font-size: 10px;
+
+        table th {
+            background: #0f766e;
+            color: #ffffff;
+            font-weight: 700;
+            text-align: left;
+            font-size: 8px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            padding: 6px 5px;
+            border-right: 1px solid #0b5f59;
         }
-        .info-box strong {
-            color: #047857;
+
+        table th:last-child {
+            border-right: none;
         }
+
+        table td {
+            padding: 5px;
+            border-top: 1px solid #e5e7eb;
+            border-right: 1px solid #f3f4f6;
+            font-size: 9px;
+            vertical-align: top;
+        }
+
+        table td:last-child {
+            border-right: none;
+        }
+
+        table tbody tr:nth-child(even) {
+            background: #fbfbfc;
+        }
+
         .text-center {
             text-align: center;
         }
+
         .text-right {
             text-align: right;
         }
+
+        .muted {
+            color: #6b7280;
+        }
+
         .badge {
             display: inline-block;
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 9px;
-            font-weight: bold;
-        }
-        .badge-success {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        .badge-warning {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        .badge-danger {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        .badge-secondary {
-            background-color: #e5e7eb;
-            color: #374151;
-        }
-        .footer {
-            margin-top: 16px;
+            min-width: 52px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 8px;
+            font-weight: 700;
             text-align: center;
-            font-size: 10px;
-            color: #999;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 8px;
+            border: 1px solid transparent;
         }
+
+        .badge-success {
+            color: #065f46;
+            background: #dcfce7;
+            border-color: #86efac;
+        }
+
+        .badge-warning {
+            color: #92400e;
+            background: #fef3c7;
+            border-color: #fcd34d;
+        }
+
+        .badge-danger {
+            color: #991b1b;
+            background: #fee2e2;
+            border-color: #fca5a5;
+        }
+
+        .badge-secondary {
+            color: #374151;
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
         .summary-box {
-            margin-top: 10px;
-            margin-bottom: 18px;
-            padding: 12px 18px;
+            margin-top: 6px;
+            border: 1px solid #d1d5db;
+            border-left: 3px solid #0f766e;
             border-radius: 6px;
-            border-left: 4px solid #047857;
+            background: #fcfcfd;
+            padding: 7px 9px;
         }
-        .summary-box p {
-            margin: 5px 0;
+
+        .summary-title {
             font-size: 10px;
+            font-weight: 700;
+            color: #0f766e;
+            margin-bottom: 4px;
         }
-        .summary-box strong {
-            color: #333;
+
+        .summary-grid {
+            width: 100%;
+            border: none;
+            border-collapse: collapse;
+            margin: 0;
+            box-shadow: none;
+            border-radius: 0;
+            overflow: visible;
+        }
+
+        .summary-grid td {
+            border: none;
+            padding: 2px 0;
+            font-size: 9px;
+        }
+
+        .empty-state {
+            padding: 14px 6px;
+            text-align: center;
+            color: #6b7280;
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        .footer {
+            margin-top: 10px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 6px;
+            text-align: center;
+            font-size: 8px;
+            color: #9ca3af;
+            line-height: 1.35;
         }
     </style>
 </head>
@@ -196,7 +294,7 @@
                         <p class="header-address">Kabupaten Tanah Laut Kode Pos 70853</p>
                         <p class="header-address">Email: Rsudhajidarlanismail@gmail.com</p>
                     </td>
-                    <td style="width: 80px;"></td>
+                    <td style="width: 72px;"></td>
                 </tr>
             </table>
             <div class="header-line"></div>

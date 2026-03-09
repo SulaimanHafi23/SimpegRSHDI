@@ -655,15 +655,57 @@ class AttendanceController extends Controller
             $endDate = min($selectedMonth->copy()->endOfMonth(), now()->endOfDay());
         }
 
+        // Map status dari form value (English) ke display label (Indonesian) yang dipakai di rows
+        $statusMap = [
+            'present' => 'Hadir',
+            'late' => 'Terlambat',
+            'absent' => 'Tidak Hadir',
+            'leave' => 'Cuti',
+            'sick' => 'Sakit',
+            'permission' => 'Izin',
+        ];
+
+        $statusFilter = $request->status ? ($statusMap[$request->status] ?? $request->status) : null;
+        $searchFilter = $request->search;
+
         $filters = [
             'worker_id' => $worker->id,
             'date_from' => $startDate->format('Y-m-d'),
             'date_to' => $endDate->format('Y-m-d'),
-            'status' => $request->status,
-            'search' => $request->search,
+            'status' => $statusFilter,
+            'search' => $searchFilter,
         ];
 
         $rows = $this->buildMonthlyExportRows($worker, $startDate, $endDate);
+
+        // Apply filters to rows
+        $rowsCollection = collect($rows);
+
+        // Filter by status if provided
+        if (!empty($statusFilter)) {
+            $rowsCollection = $rowsCollection->filter(function ($row) use ($statusFilter) {
+                // Filter "Hadir" mencakup "Hadir" dan "Terlambat"
+                if ($statusFilter === 'Hadir') {
+                    return in_array($row['status'], ['Hadir', 'Terlambat']);
+                }
+                // Filter lainnya tetap exact match
+                return $row['status'] === $statusFilter;
+            });
+        }
+
+        // Filter by search term if provided (search in notes, location, shift name)
+        if (!empty($searchFilter)) {
+            $searchLower = strtolower($searchFilter);
+            $rowsCollection = $rowsCollection->filter(function ($row) use ($searchLower) {
+                return str_contains(strtolower($row['notes']), $searchLower) ||
+                       str_contains(strtolower($row['location']), $searchLower) ||
+                       str_contains(strtolower($row['shift_name']), $searchLower);
+            });
+        }
+
+        $rows = $rowsCollection->values()->toArray();
+
+        // Hitung summary berdasarkan data yang sudah difilter
         $rowsCollection = collect($rows);
         $summary = [
             'total' => $rowsCollection->count(),

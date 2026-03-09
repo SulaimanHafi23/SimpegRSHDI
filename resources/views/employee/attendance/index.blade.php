@@ -24,9 +24,10 @@
                         <option value="">Semua Status</option>
                         <option value="present">Hadir</option>
                         <option value="late">Terlambat</option>
-                        <option value="absent">Alpha</option>
+                        <option value="absent">Tidak Hadir</option>
                         <option value="sick">Sakit</option>
                         <option value="leave">Cuti</option>
+                        <option value="permission">Izin</option>
                     </select>
                 </div>
             </x-export-buttons>

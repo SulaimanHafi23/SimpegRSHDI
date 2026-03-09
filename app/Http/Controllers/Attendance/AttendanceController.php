@@ -572,13 +572,16 @@ class AttendanceController extends Controller
         try {
             $format = $request->input('format', 'excel'); // pdf, excel, csv
 
+            // Get department filter: prioritas dari modal, fallback ke manager restriction
+            $departmentFilter = $request->input('department_id') ?: $this->getManagerDepartmentFilter();
+
             $filters = [
                 'worker_id' => $request->input('worker_id'),
                 'date_from' => $request->input('date_from'),
                 'date_to' => $request->input('date_to'),
                 'status' => $request->input('status'),
                 'search' => $request->input('search'),
-                'department_id' => $this->getManagerDepartmentFilter(),
+                'department_id' => $departmentFilter,
             ];
 
             // Get attendances data
@@ -599,8 +602,9 @@ class AttendanceController extends Controller
                 $query->where('status', $filters['status']);
             }
             if ($filters['department_id']) {
-                $query->whereHas('worker', function ($q) use ($filters) {
-                    $q->where('department_id', $filters['department_id']);
+                $departmentId = $filters['department_id'];
+                $query->whereHas('worker', function ($q) use ($departmentId) {
+                    $q->where('department_id', $departmentId);
                 });
             }
             if (!empty($filters['search'])) {

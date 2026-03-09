@@ -45,8 +45,9 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
         }
 
         if (!empty($this->filters['department_id'])) {
-            $query->whereHas('worker', function ($q) {
-                $q->where('department_id', $this->filters['department_id']);
+            $departmentId = $this->filters['department_id'];
+            $query->whereHas('worker', function ($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
             });
         }
 
@@ -88,7 +89,7 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
         if ($attendance->check_in && $attendance->check_out) {
             $workHours = number_format($attendance->check_in->diffInHours($attendance->check_out, true), 1) . ' jam';
         }
-        
+
         return [
             $attendance->attendance_date->format('d/m/Y'),
             $attendance->worker->nip ?? '-',
@@ -109,15 +110,57 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
 
     public function styles(Worksheet $sheet)
     {
-        return [
-            1 => [
-                'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
-                'fill' => [
-                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
-                    'startColor' => ['rgb' => '2196F3']
+        // Header styling dengan tema hijau modern
+        $sheet->getStyle('A1:N1')->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 11,
+                'color' => ['rgb' => 'FFFFFF'],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_GRADIENT_LINEAR,
+                'rotation' => 90,
+                'startColor' => ['rgb' => '047857'],
+                'endColor' => ['rgb' => '059669'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'color' => ['rgb' => '047857'],
                 ],
             ],
-        ];
+        ]);
+
+        // Row height untuk header
+        $sheet->getRowDimension(1)->setRowHeight(25);
+
+        // Data rows border
+        $lastRow = $sheet->getHighestRow();
+        if ($lastRow > 1) {
+            $sheet->getStyle('A2:N' . $lastRow)->applyFromArray([
+                'borders' => [
+                    'allBorders' => [
+                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                        'color' => ['rgb' => 'E5E7EB'],
+                    ],
+                ],
+            ]);
+
+            // Alternating row colors
+            for ($row = 2; $row <= $lastRow; $row++) {
+                if ($row % 2 == 0) {
+                    $sheet->getStyle('A' . $row . ':N' . $row)->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('F9FAFB');
+                }
+            }
+        }
+
+        return [];
     }
 
     protected function getStatusLabel($status)

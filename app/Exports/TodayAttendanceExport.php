@@ -35,14 +35,14 @@ class TodayAttendanceExport implements FromCollection, WithHeadings, WithStyles,
                 $schedule = $shift->getScheduleForDate($this->date);
                 $shiftInfo = $shift->name . ' (' . \Carbon\Carbon::parse($schedule['start_time'])->format('H:i') . '-' . \Carbon\Carbon::parse($schedule['end_time'])->format('H:i') . ')';
             }
-            
+
             // Jika ada leave request, tampilkan info cuti/sakit/izin
             if ($worker->leave_request) {
                 $checkInDisplay = 'CUTI/IZIN';
                 $checkOutDisplay = 'CUTI/IZIN';
                 $lateDisplay = '-';
-                $notesDisplay = $worker->leave_request->leaveType->name . ' (' . 
-                    $worker->leave_request->start_date->format('d/m/Y') . ' - ' . 
+                $notesDisplay = $worker->leave_request->leaveType->name . ' (' .
+                    $worker->leave_request->start_date->format('d/m/Y') . ' - ' .
                     $worker->leave_request->end_date->format('d/m/Y') . ')';
             } else {
                 $checkInDisplay = $worker->check_in_time ?? '-';
@@ -50,7 +50,7 @@ class TodayAttendanceExport implements FromCollection, WithHeadings, WithStyles,
                 $lateDisplay = $worker->is_late ? $worker->late_minutes . ' menit' : '-';
                 $notesDisplay = $worker->today_attendance?->notes ?? '-';
             }
-            
+
             return [
                 'no' => $index + 1,
                 'nip' => $worker->nip,
@@ -69,7 +69,7 @@ class TodayAttendanceExport implements FromCollection, WithHeadings, WithStyles,
     public function headings(): array
     {
         $dateFormatted = \Carbon\Carbon::parse($this->date)->translatedFormat('l, d F Y');
-        
+
         return [
             ['PEMERINTAH KABUPATEN TANAH LAUT'],
             ['RSUD HAJI DARLAN ISMAIL'],

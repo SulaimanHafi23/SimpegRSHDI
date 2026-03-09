@@ -39,7 +39,14 @@ class AttendanceRepository implements AttendanceRepositoryInterface
 
         if (!empty($filters['status'])) {
             if ($filters['status'] === 'late') {
+                // Filter "Terlambat" hanya menampilkan yang terlambat
                 $query->where('is_late', true);
+            } elseif ($filters['status'] === 'present') {
+                // Filter "Hadir" mencakup hadir dan terlambat
+                $query->where(function($q) {
+                    $q->where('status', 'present')
+                      ->orWhere('is_late', true);
+                });
             } else {
                 $query->where('status', $filters['status']);
             }
@@ -172,7 +179,14 @@ class AttendanceRepository implements AttendanceRepositoryInterface
 
         if (!empty($filters['status'])) {
             if ($filters['status'] === 'late') {
+                // Filter "Terlambat" hanya menampilkan yang terlambat
                 $query->where('is_late', true);
+            } elseif ($filters['status'] === 'present') {
+                // Filter "Hadir" mencakup hadir dan terlambat
+                $query->where(function($q) {
+                    $q->where('status', 'present')
+                      ->orWhere('is_late', true);
+                });
             } else {
                 $query->where('status', $filters['status']);
             }
