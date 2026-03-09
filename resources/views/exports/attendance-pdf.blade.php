@@ -10,9 +10,22 @@
     <p><strong>Departemen:</strong> {{ $worker->department->name ?? '-' }}</p>
     @endif
     @if(isset($status) && $status)
-    <p><strong>Status:</strong> {{ ucfirst($status) }}</p>
+    <p><strong>Filter Status:</strong> 
+        @php
+            $statusLabel = match($status) {
+                'present' => 'Hadir',
+                'late' => 'Terlambat',
+                'absent' => 'Tidak Hadir',
+                'leave' => 'Cuti',
+                'sick' => 'Sakit',
+                'permission' => 'Izin',
+                default => ucfirst($status)
+            };
+        @endphp
+        {{ $statusLabel }}
+    </p>
     @endif
-    <p><strong>Total Data:</strong> {{ $attendances->count() }} record</p>
+    <p><strong>Total Data:</strong> {{ $attendances->count() }} data</p>
 </div>
 
 <table>
@@ -23,8 +36,8 @@
             @if(!isset($worker))
             <th width="20%">Pegawai</th>
             @endif
-            <th width="10%">Check In</th>
-            <th width="10%">Check Out</th>
+            <th width="10%">Masuk</th>
+            <th width="10%">Pulang</th>
             <th width="10%" class="text-center">Jam Kerja</th>
             <th width="15%">Status</th>
             <th width="15%">Lokasi</th>
@@ -34,16 +47,22 @@
         @forelse($attendances as $index => $attendance)
         <tr>
             <td class="text-center">{{ $index + 1 }}</td>
-            <td>{{ \Carbon\Carbon::parse($attendance->date)->translatedFormat('d M Y') }}</td>
+            <td>{{ $attendance->attendance_date->translatedFormat('d M Y') }}</td>
             @if(!isset($worker))
             <td>
                 {{ $attendance->worker->name ?? '-' }}<br>
                 <small style="color: #666;">{{ $attendance->worker->nip ?? '-' }}</small>
             </td>
             @endif
-            <td>{{ $attendance->check_in_time ? \Carbon\Carbon::parse($attendance->check_in_time)->format('H:i') : '-' }}</td>
-            <td>{{ $attendance->check_out_time ? \Carbon\Carbon::parse($attendance->check_out_time)->format('H:i') : '-' }}</td>
-            <td class="text-center">{{ $attendance->work_hours ? number_format($attendance->work_hours, 1) . ' jam' : '-' }}</td>
+            <td>{{ $attendance->check_in ? $attendance->check_in->format('H:i') : '-' }}</td>
+            <td>{{ $attendance->check_out ? $attendance->check_out->format('H:i') : '-' }}</td>
+            <td class="text-center">
+                @if($attendance->check_in && $attendance->check_out)
+                    {{ number_format($attendance->check_in->diffInHours($attendance->check_out, true), 1) }} jam
+                @else
+                    -
+                @endif
+            </td>
             <td>
                 @php
                     $statusClass = match($attendance->status) {
@@ -80,12 +99,19 @@
 </table>
 
 @if($attendances->count() > 0)
-<div style="margin-top: 20px; padding: 10px; background-color: #f0fdf4; border-radius: 4px;">
+<div class="summary-box" style="background-color: #f0fdf4; border-color: #86efac;">
     <p style="margin: 5px 0; font-size: 10px;"><strong>Ringkasan:</strong></p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Hadir: {{ $attendances->where('status', 'present')->count() }} hari</p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Terlambat: {{ $attendances->where('status', 'late')->count() }} hari</p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Tidak Hadir: {{ $attendances->where('status', 'absent')->count() }} hari</p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Jam Kerja: {{ number_format($attendances->sum('work_hours'), 1) }} jam</p>
+    <p style="margin: 5px 0; font-size: 10px;">Hadir: {{ $attendances->where('status', 'present')->count() }} hari</p>
+    <p style="margin: 5px 0; font-size: 10px;">Terlambat: {{ $attendances->where('is_late', true)->count() }} hari</p>
+    <p style="margin: 5px 0; font-size: 10px;">Tidak Hadir: {{ $attendances->where('status', 'absent')->count() }} hari</p>
+    <p style="margin: 5px 0; font-size: 10px;">Cuti: {{ $attendances->where('status', 'leave')->count() }} hari</p>
+    <p style="margin: 5px 0; font-size: 10px;">Izin: {{ $attendances->where('status', 'permission')->count() }} hari</p>
+    @php
+        $totalHours = $attendances->sum(function($a) {
+            return $a->check_in && $a->check_out ? $a->check_in->diffInHours($a->check_out, true) : 0;
+        });
+    @endphp
+    <p style="margin: 5px 0; font-size: 10px;">Total Jam Kerja: {{ number_format($totalHours, 1) }} jam</p>
 </div>
 @endif
 @endsection

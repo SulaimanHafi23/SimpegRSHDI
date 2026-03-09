@@ -81,7 +81,7 @@
 </table>
 
 @if($overtimes->count() > 0)
-<div style="margin-top: 20px; padding: 10px; background-color: #dbeafe; border-radius: 4px;">
+<div class="summary-box" style="background-color: #dbeafe; border-color: #93c5fd;">
     <p style="margin: 5px 0; font-size: 10px;"><strong>Ringkasan:</strong></p>
     <p style="margin: 5px 0; font-size: 10px;">Total Permohonan: {{ $overtimes->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Disetujui: {{ $overtimes->where('status', 'approved')->count() }}</p>

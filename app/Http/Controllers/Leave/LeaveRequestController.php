@@ -206,6 +206,7 @@ class LeaveRequestController extends Controller
                 'date_to' => $request->input('date_to'),
                 'status' => $request->input('status'),
                 'leave_type_id' => $request->input('leave_type_id'),
+                'department_id' => $this->getManagerDepartmentFilter(),
             ];
 
             $query = \App\Models\LeaveRequest::with(['worker.department', 'leaveType', 'approver']);
@@ -224,6 +225,11 @@ class LeaveRequestController extends Controller
             }
             if ($filters['leave_type_id']) {
                 $query->where('leave_type_id', $filters['leave_type_id']);
+            }
+            if ($filters['department_id']) {
+                $query->whereHas('worker', function ($q) use ($filters) {
+                    $q->where('department_id', $filters['department_id']);
+                });
             }
 
             $leaves = $query->orderBy('start_date', 'desc')->get();

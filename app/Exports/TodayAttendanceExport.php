@@ -90,7 +90,7 @@ class TodayAttendanceExport implements FromCollection, WithHeadings, WithStyles,
             ['Izin: ' . $this->stats['permission'] . ' orang'],
             [''],
             ['DATA DETAIL ABSENSI'],
-            ['No', 'NIP', 'Nama Pegawai', 'Departemen', 'Shift', 'Check In', 'Check Out', 'Status', 'Keterlambatan', 'Catatan']
+            ['No', 'NIP', 'Nama Pegawai', 'Departemen', 'Shift', 'Jam Masuk', 'Jam Pulang', 'Status', 'Keterlambatan', 'Catatan']
         ];
     }
 

@@ -5,7 +5,7 @@
     <title>{{ $title ?? 'Laporan' }}</title>
     <style>
         @page {
-            margin: 25px 35px 35px 35px;
+            margin: 18px 22px 22px 22px;
         }
         * {
             margin: 0;
@@ -22,8 +22,8 @@
         }
         .header {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
         }
         .header-table {
             width: 100%;
@@ -67,7 +67,7 @@
         }
         .header-line {
             border-bottom: 3px double #000;
-            margin-bottom: 15px;
+            margin-bottom: 8px;
         }
         .report-title {
             font-size: 14px;
@@ -80,30 +80,30 @@
             color: #666;
         }
         main {
-            margin-top: 15px;
+            margin-top: 8px;
         }
         h3 {
             font-size: 14px;
             font-weight: bold;
             color: #047857;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-align: center;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
         }
         table th {
             background-color: #047857;
             color: white;
             font-weight: bold;
-            padding: 8px 6px;
+            padding: 6px 5px;
             text-align: left;
             font-size: 10px;
         }
         table td {
-            padding: 6px;
+            padding: 4px 5px;
             border-bottom: 1px solid #e5e7eb;
             font-size: 10px;
         }
@@ -115,8 +115,8 @@
             border: 1px solid #a7f3d0;
             border-left: 4px solid #047857;
             border-radius: 6px;
-            padding: 15px 18px;
-            margin-bottom: 18px;
+            padding: 10px 12px;
+            margin-bottom: 10px;
         }
         .info-box p {
             margin-bottom: 5px;
@@ -155,12 +155,12 @@
             color: #374151;
         }
         .footer {
-            margin-top: 30px;
+            margin-top: 16px;
             text-align: center;
             font-size: 10px;
             color: #999;
             border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
+            padding-top: 8px;
         }
         .summary-box {
             margin-top: 10px;

@@ -43,6 +43,12 @@ class LeaveExport implements FromCollection, WithHeadings, WithMapping, WithStyl
             $query->where('leave_type_id', $this->filters['leave_type_id']);
         }
 
+        if (!empty($this->filters['department_id'])) {
+            $query->whereHas('worker', function ($q) {
+                $q->where('department_id', $this->filters['department_id']);
+            });
+        }
+
         return $query->orderBy('start_date', 'desc')->get();
     }
 

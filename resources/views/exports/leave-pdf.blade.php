@@ -81,7 +81,7 @@
 </table>
 
 @if($leaves->count() > 0)
-<div style="margin-top: 20px; padding: 10px; background-color: #fef3c7; border-radius: 4px;">
+<div class="summary-box" style="background-color: #fef3c7; border-color: #fcd34d;">
     <p style="margin: 5px 0; font-size: 10px;"><strong>Ringkasan:</strong></p>
     <p style="margin: 5px 0; font-size: 10px;">Total Permohonan: {{ $leaves->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Disetujui: {{ $leaves->where('status', 'approved')->count() }}</p>

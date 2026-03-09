@@ -228,15 +228,15 @@ class ReportController extends Controller
 
             $callback = function () use ($collection) {
                 $out = fopen('php://output', 'w');
-                fputcsv($out, ['Worker', 'Document Type', 'File', 'Issued At', 'Expired At', 'Status']);
+                fputcsv($out, ['Pegawai', 'Jenis Dokumen', 'Nama File', 'Tanggal Terbit', 'Tanggal Kedaluwarsa', 'Status']);
                 foreach ($collection as $row) {
                     fputcsv($out, [
-                        $row->worker->name ?? '-',
-                        $row->documentType->name ?? '-',
-                        $row->file_path ? basename($row->file_path) : '-',
-                        $row->issued_at?->format('Y-m-d') ?? '-',
-                        $row->expired_at?->format('Y-m-d') ?? '-',
-                        $row->status ?? '-',
+                        trim((string) ($row->worker->name ?? '-')),
+                        trim((string) ($row->documentType->name ?? '-')),
+                        trim((string) ($row->file_path ? basename($row->file_path) : '-')),
+                        $row->issued_at?->format('d/m/Y') ?? '-',
+                        $row->expired_at?->format('d/m/Y') ?? '-',
+                        trim((string) ($row->status ?? '-')),
                     ]);
                 }
                 fclose($out);
@@ -280,15 +280,15 @@ class ReportController extends Controller
 
             $callback = function () use ($collection) {
                 $out = fopen('php://output', 'w');
-                fputcsv($out, ['Name', 'NIP', 'Email', 'Department', 'Employment Status', 'Status']);
+                fputcsv($out, ['Nama', 'NIP', 'Email', 'Departemen', 'Status Kepegawaian', 'Status']);
                 foreach ($collection as $w) {
                     fputcsv($out, [
-                        $w->name,
-                        $w->nip,
-                        $w->email,
-                        $w->department->name ?? '-',
-                        $w->employment_status ?? '-',
-                        $w->status ?? '-',
+                        trim((string) ($w->name ?? '-')),
+                        trim((string) ($w->nip ?? '-')),
+                        trim((string) ($w->email ?? '-')),
+                        trim((string) ($w->department->name ?? '-')),
+                        trim((string) ($w->employment_status ?? '-')),
+                        trim((string) ($w->status ?? '-')),
                     ]);
                 }
                 fclose($out);

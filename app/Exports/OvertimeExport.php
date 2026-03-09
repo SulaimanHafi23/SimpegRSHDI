@@ -39,6 +39,12 @@ class OvertimeExport implements FromCollection, WithHeadings, WithMapping, WithS
             $query->where('status', $this->filters['status']);
         }
 
+        if (!empty($this->filters['department_id'])) {
+            $query->whereHas('worker', function ($q) {
+                $q->where('department_id', $this->filters['department_id']);
+            });
+        }
+
         return $query->orderBy('overtime_date', 'desc')->get();
     }
 

@@ -577,6 +577,8 @@ class AttendanceController extends Controller
                 'date_from' => $request->input('date_from'),
                 'date_to' => $request->input('date_to'),
                 'status' => $request->input('status'),
+                'search' => $request->input('search'),
+                'department_id' => $this->getManagerDepartmentFilter(),
             ];
 
             // Get attendances data
@@ -595,6 +597,19 @@ class AttendanceController extends Controller
                 $query->where('is_late', true);
             } elseif ($filters['status']) {
                 $query->where('status', $filters['status']);
+            }
+            if ($filters['department_id']) {
+                $query->whereHas('worker', function ($q) use ($filters) {
+                    $q->where('department_id', $filters['department_id']);
+                });
+            }
+            if (!empty($filters['search'])) {
+                $searchTerm = strtolower($filters['search']);
+                $query->whereHas('worker', function ($q) use ($searchTerm) {
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                        ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $searchTerm . '%'])
+                        ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $searchTerm . '%']);
+                });
             }
 
             $attendances = $query->orderBy('attendance_date', 'desc')->get();

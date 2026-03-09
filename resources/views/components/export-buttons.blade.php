@@ -77,7 +77,14 @@
                 </div>
 
                 {{-- Form --}}
-                <form action="{{ $route }}" method="GET" class="p-6 space-y-4">
+                <form action="{{ $route }}" method="GET" class="p-6 space-y-4"
+                      @submit="Array.from($event.target.elements).forEach((el) => {
+                          if (!el.name || el.disabled) return;
+                          const type = (el.type || '').toLowerCase();
+                          if (['button', 'submit', 'reset'].includes(type)) return;
+                          const isEmpty = el.value === null || String(el.value).trim() === '';
+                          if (isEmpty) el.disabled = true;
+                      })">
                     <input type="hidden" name="format" :value="exportFormat">
 
                     {{-- Date Range --}}

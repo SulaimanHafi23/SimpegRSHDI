@@ -36,6 +36,15 @@ class WorkersExport implements FromCollection, WithHeadings, WithMapping, WithSt
             $query->where('department_id', $this->filters['department_id']);
         }
 
+        if (!empty($this->filters['search'])) {
+            $searchTerm = strtolower($this->filters['search']);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $searchTerm . '%']);
+            });
+        }
+
         return $query->orderBy('name')->get();
     }
 

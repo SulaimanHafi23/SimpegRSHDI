@@ -218,6 +218,7 @@ class OvertimeRequestController extends Controller
                 'date_from' => $request->input('date_from'),
                 'date_to' => $request->input('date_to'),
                 'status' => $request->input('status'),
+                'department_id' => $this->getManagerDepartmentFilter(),
             ];
 
             $query = \App\Models\OvertimeRequest::with(['worker.department', 'approver']);
@@ -233,6 +234,11 @@ class OvertimeRequestController extends Controller
             }
             if ($filters['status']) {
                 $query->where('status', $filters['status']);
+            }
+            if ($filters['department_id']) {
+                $query->whereHas('worker', function ($q) use ($filters) {
+                    $q->where('department_id', $filters['department_id']);
+                });
             }
 
             $overtimes = $query->orderBy('overtime_date', 'desc')->get();

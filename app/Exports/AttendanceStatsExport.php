@@ -81,10 +81,10 @@ class AttendanceStatsSummarySheet implements FromCollection, WithHeadings, WithS
         return collect([
             ['Total Hari Kerja', $this->stats['total_work_days'], 'Hari kerja dalam periode'],
             ['Total Hadir', $this->stats['total_present'], $this->stats['attendance_percentage'] . '% kehadiran'],
-            ['Total Absent', $this->stats['total_absent'], $this->stats['absence_percentage'] . '% ketidakhadiran'],
-            ['Check In + Check Out', $this->stats['complete_attendance'], 'Absensi lengkap'],
-            ['Check In Saja', $this->stats['check_in_only'], 'Tanpa check out'],
-            ['Check Out Saja', $this->stats['check_out_only'], 'Tanpa check in'],
+            ['Total Tidak Hadir', $this->stats['total_absent'], $this->stats['absence_percentage'] . '% ketidakhadiran'],
+            ['Masuk + Pulang', $this->stats['complete_attendance'], 'Absensi lengkap'],
+            ['Hanya Masuk', $this->stats['check_in_only'], 'Tanpa pulang'],
+            ['Hanya Pulang', $this->stats['check_out_only'], 'Tanpa masuk'],
             ['Keterlambatan', $this->stats['late_arrivals'], 'Datang terlambat'],
             ['Pulang Awal', $this->stats['early_departures'], 'Pulang lebih awal'],
             ['Total Lembur (Jam)', $this->stats['overtime_hours'], 'Jam lembur'],
@@ -210,7 +210,7 @@ class AttendanceStatsDetailSheet implements FromCollection, WithHeadings, WithSt
             ['DETAIL RIWAYAT KEHADIRAN - ' . $this->worker->name],
             ['Periode: ' . Carbon::parse($this->dateFrom)->format('d M Y') . ' - ' . Carbon::parse($this->dateTo)->format('d M Y')],
             [''],
-            ['No', 'Tanggal', 'Hari', 'Check In', 'Check Out', 'Status', 'Terlambat', 'Pulang Awal', 'Keterangan'],
+            ['No', 'Tanggal', 'Hari', 'Jam Masuk', 'Jam Pulang', 'Status', 'Terlambat', 'Pulang Awal', 'Keterangan'],
         ];
     }
 
