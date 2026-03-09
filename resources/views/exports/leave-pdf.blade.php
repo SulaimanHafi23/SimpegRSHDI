@@ -38,15 +38,15 @@
 <table>
     <thead>
         <tr>
-            <th class="text-center" width="5%">No</th>
-            <th width="15%">Pegawai</th>
-            <th width="12%">Jenis Cuti</th>
-            <th width="10%">Tanggal Mulai</th>
-            <th width="10%">Tanggal Selesai</th>
+            <th class="text-center" width="4%">No</th>
+            <th width="16%">Pegawai</th>
+            <th width="14%">Jenis Cuti</th>
+            <th width="10%">Mulai</th>
+            <th width="10%">Selesai</th>
             <th width="8%" class="text-center">Durasi</th>
-            <th width="12%">Status</th>
-            <th width="12%">Disetujui Oleh</th>
-            <th width="16%">Alasan</th>
+            <th width="11%">Status</th>
+            <th width="13%">Disetujui Oleh</th>
+            <th width="14%">Alasan</th>
         </tr>
     </thead>
     <tbody>
@@ -58,9 +58,9 @@
                 <span class="muted">{{ $leave->worker->nip ?? '-' }}</span>
             </td>
             <td>{{ $leave->leaveType->name ?? '-' }}</td>
-            <td>{{ \Carbon\Carbon::parse($leave->start_date)->translatedFormat('d M Y') }}</td>
-            <td>{{ \Carbon\Carbon::parse($leave->end_date)->translatedFormat('d M Y') }}</td>
-            <td class="text-center">{{ $leave->total_days }} hari</td>
+            <td class="nowrap">{{ \Carbon\Carbon::parse($leave->start_date)->translatedFormat('d M Y') }}</td>
+            <td class="nowrap">{{ \Carbon\Carbon::parse($leave->end_date)->translatedFormat('d M Y') }}</td>
+            <td class="text-center nowrap">{{ $leave->total_days }} hari</td>
             <td>
                 @php
                     $statusClass = match($leave->status) {
@@ -81,8 +81,8 @@
                 <br><span class="muted">{{ \Carbon\Carbon::parse($leave->approved_at)->translatedFormat('d M Y') }}</span>
                 @endif
             </td>
-            <td>{{ $leave->approver->name ?? '-' }}</td>
-            <td>{{ \Illuminate\Support\Str::limit($leave->reason, 55) }}</td>
+            <td class="wrap-2">{{ $leave->approver->name ?? '-' }}</td>
+            <td class="wrap-3">{{ \Illuminate\Support\Str::limit($leave->reason, 70) }}</td>
         </tr>
         @empty
         <tr>

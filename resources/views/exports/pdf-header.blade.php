@@ -111,6 +111,7 @@
             width: 100%;
             border: none;
             border-collapse: collapse;
+            table-layout: auto;
             margin: 0;
             box-shadow: none;
             border-radius: 0;
@@ -140,6 +141,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 4px;
+            table-layout: fixed;
             border: 1px solid #d1d5db;
             border-radius: 6px;
             overflow: hidden;
@@ -168,6 +170,8 @@
             border-right: 1px solid #f3f4f6;
             font-size: 9px;
             vertical-align: top;
+            word-break: break-word;
+            overflow-wrap: anywhere;
         }
 
         table td:last-child {
@@ -245,6 +249,7 @@
             width: 100%;
             border: none;
             border-collapse: collapse;
+            table-layout: auto;
             margin: 0;
             box-shadow: none;
             border-radius: 0;
@@ -255,6 +260,24 @@
             border: none;
             padding: 2px 0;
             font-size: 9px;
+        }
+
+        .nowrap {
+            white-space: nowrap;
+        }
+
+        .wrap-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .wrap-3 {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .empty-state {

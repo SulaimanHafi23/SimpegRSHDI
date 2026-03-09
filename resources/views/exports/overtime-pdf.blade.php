@@ -38,15 +38,15 @@
 <table>
     <thead>
         <tr>
-            <th class="text-center" width="5%">No</th>
-            <th width="15%">Pegawai</th>
-            <th width="12%">Tanggal</th>
-            <th width="10%">Waktu Mulai</th>
-            <th width="10%">Waktu Selesai</th>
+            <th class="text-center" width="4%">No</th>
+            <th width="16%">Pegawai</th>
+            <th width="14%">Tanggal</th>
+            <th width="8%">Mulai</th>
+            <th width="8%">Selesai</th>
             <th width="8%" class="text-center">Durasi</th>
-            <th width="12%">Status</th>
-            <th width="12%">Disetujui Oleh</th>
-            <th width="16%">Keterangan</th>
+            <th width="11%">Status</th>
+            <th width="13%">Disetujui Oleh</th>
+            <th width="18%">Keterangan</th>
         </tr>
     </thead>
     <tbody>
@@ -57,10 +57,10 @@
                 <strong>{{ $overtime->worker->name ?? '-' }}</strong><br>
                 <span class="muted">{{ $overtime->worker->nip ?? '-' }}</span>
             </td>
-            <td>{{ \Carbon\Carbon::parse($overtime->overtime_date)->translatedFormat('d M Y, l') }}</td>
-            <td>{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }}</td>
-            <td>{{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</td>
-            <td class="text-center">{{ number_format($overtime->total_hours, 1) }} jam</td>
+            <td class="nowrap">{{ \Carbon\Carbon::parse($overtime->overtime_date)->translatedFormat('d M Y') }}</td>
+            <td class="text-center nowrap">{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }}</td>
+            <td class="text-center nowrap">{{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</td>
+            <td class="text-center nowrap">{{ number_format($overtime->total_hours, 1) }} jam</td>
             <td>
                 @php
                     $statusClass = match($overtime->status) {
@@ -81,8 +81,8 @@
                 <br><span class="muted">{{ \Carbon\Carbon::parse($overtime->approved_at)->translatedFormat('d M Y') }}</span>
                 @endif
             </td>
-            <td>{{ $overtime->approver->name ?? '-' }}</td>
-            <td>{{ \Illuminate\Support\Str::limit($overtime->description, 55) }}</td>
+            <td class="wrap-2">{{ $overtime->approver->name ?? '-' }}</td>
+            <td class="wrap-3">{{ \Illuminate\Support\Str::limit($overtime->description, 80) }}</td>
         </tr>
         @empty
         <tr>
