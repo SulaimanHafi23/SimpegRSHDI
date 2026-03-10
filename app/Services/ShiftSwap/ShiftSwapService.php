@@ -91,6 +91,7 @@ class ShiftSwapService
         }
 
         $payload = $dto->toArray();
+        $payload['status'] = 'pending';
         $payload['requires_manager_approval'] = $requiresManager;
         $payload['requested_at'] = Carbon::now();
 
@@ -427,15 +428,15 @@ class ShiftSwapService
 
         $shift = $requesterShift->shift;
         $shiftDate = $requesterShift->effective_from
-            ? Carbon::parse($requesterShift->effective_from)
-            : Carbon::now();
+            ? Carbon::parse($requesterShift->effective_from)->startOfDay()
+            : Carbon::now()->startOfDay();
 
         // Count total workers scheduled for this shift on this date
         $totalScheduled = WorkerShift::where('shift_id', $shift->id)
-            ->where('effective_from', '<=', $shiftDate)
+            ->whereDate('effective_from', '<=', $shiftDate)
             ->where(function($q) use ($shiftDate) {
                 $q->whereNull('effective_until')
-                    ->orWhere('effective_until', '>=', $shiftDate);
+                    ->orWhereDate('effective_until', '>=', $shiftDate);
             })
             ->where('is_active', true)
             ->count();

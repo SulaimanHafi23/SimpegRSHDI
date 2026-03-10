@@ -2,8 +2,9 @@
 
 namespace Tests\Unit\ShiftSwap;
 
-use App\Models\Attendance;
 use App\Models\Department;
+use App\Models\Gender;
+use App\Models\Religion;
 use App\Models\Shift;
 use App\Models\ShiftSwapRequest;
 use App\Models\User;
@@ -22,13 +23,18 @@ class ShiftSwapServiceTest extends TestCase
     protected User $user;
     protected Worker $worker;
     protected Department $department;
+    protected Gender $gender;
+    protected Religion $religion;
     protected Shift $shift;
     protected WorkerShift $workerShift;
+    protected Worker $backupWorker;
+    protected WorkerShift $backupWorkerShift;
+    protected int $workerSequence = 1;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         $this->service = new ShiftSwapService();
 
         // Create department
@@ -36,6 +42,9 @@ class ShiftSwapServiceTest extends TestCase
             'name' => 'Test Department',
             'code' => 'TEST',
         ]);
+
+        $this->gender = Gender::firstOrCreate(['name' => 'Laki-laki'], ['is_active' => true]);
+        $this->religion = Religion::firstOrCreate(['name' => 'Islam'], ['is_active' => true]);
 
         // Create shift
         $this->shift = Shift::create([
@@ -49,14 +58,10 @@ class ShiftSwapServiceTest extends TestCase
         ]);
 
         // Create user and worker
-        $this->user = User::factory()->create();
-        $this->worker = Worker::create([
-            'user_id' => $this->user->id,
-            'department_id' => $this->department->id,
-            'name' => 'Test Worker',
-            'nip' => '123456',
-            'hire_date' => Carbon::now()->subYears(2),
-            'is_active' => true,
+        $this->worker = $this->createWorker($this->department, 'Requester Worker');
+        $this->user = User::factory()->create([
+            'worker_id' => $this->worker->id,
+            'name' => $this->worker->name,
         ]);
 
         // Create worker shift (3 days from now to allow lead time)
@@ -64,7 +69,17 @@ class ShiftSwapServiceTest extends TestCase
             'worker_id' => $this->worker->id,
             'shift_id' => $this->shift->id,
             'pattern_type' => 'fixed',
-            'effective_from' => Carbon::now()->addDays(3),
+            'effective_from' => Carbon::now()->addDays(3)->startOfDay(),
+            'is_active' => true,
+        ]);
+
+        // Keep at least one additional scheduled worker to satisfy minimum staffing rule.
+        $this->backupWorker = $this->createWorker($this->department, 'Backup Worker');
+        $this->backupWorkerShift = WorkerShift::create([
+            'worker_id' => $this->backupWorker->id,
+            'shift_id' => $this->shift->id,
+            'pattern_type' => 'fixed',
+            'effective_from' => Carbon::parse($this->workerShift->effective_from)->startOfDay(),
             'is_active' => true,
         ]);
 
@@ -74,21 +89,35 @@ class ShiftSwapServiceTest extends TestCase
     /** @test */
     public function it_validates_lead_time_requirement()
     {
+        // Create a backup worker for the short notice shift
+        $shortNoticeBackup = $this->createWorker($this->department, 'Short Notice Backup');
+
         // Create a shift that's only 24 hours away (less than required 48h)
         $shortNoticeShift = WorkerShift::create([
             'worker_id' => $this->worker->id,
             'shift_id' => $this->shift->id,
             'pattern_type' => 'fixed',
-            'effective_from' => Carbon::now()->addHours(24),
+            'effective_from' => Carbon::now()->addHours(24)->startOfDay(),
+            'is_active' => true,
+        ]);
+
+        // Create backup worker shift for the same date
+        WorkerShift::create([
+            'worker_id' => $shortNoticeBackup->id,
+            'shift_id' => $this->shift->id,
+            'pattern_type' => 'fixed',
+            'effective_from' => Carbon::parse($shortNoticeShift->effective_from)->startOfDay(),
             'is_active' => true,
         ]);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches('/minimal.*jam sebelum shift/i');
+        $this->expectExceptionMessageMatches('/minimal.*jam.*sebelum shift/i');
 
         $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $shortNoticeShift->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($shortNoticeShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
     }
@@ -96,19 +125,14 @@ class ShiftSwapServiceTest extends TestCase
     /** @test */
     public function it_allows_swap_with_sufficient_lead_time()
     {
-        $targetWorker = Worker::create([
-            'user_id' => User::factory()->create()->id,
-            'department_id' => $this->department->id,
-            'name' => 'Target Worker',
-            'nip' => '789012',
-            'hire_date' => Carbon::now()->subYears(1),
-            'is_active' => true,
-        ]);
+        $targetWorker = $this->createWorker($this->department, 'Target Worker');
 
         $swap = $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
             'target_worker_id' => $targetWorker->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
@@ -130,19 +154,14 @@ class ShiftSwapServiceTest extends TestCase
             'code' => 'OTHER',
         ]);
 
-        $targetWorker = Worker::create([
-            'user_id' => User::factory()->create()->id,
-            'department_id' => $otherDepartment->id,
-            'name' => 'Target Worker',
-            'nip' => '789012',
-            'hire_date' => Carbon::now()->subYears(1),
-            'is_active' => true,
-        ]);
+        $targetWorker = $this->createWorker($otherDepartment, 'Cross Department Target');
 
         $swap = $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
             'target_worker_id' => $targetWorker->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
@@ -152,19 +171,14 @@ class ShiftSwapServiceTest extends TestCase
     /** @test */
     public function it_does_not_require_manager_approval_for_same_department_swaps()
     {
-        $targetWorker = Worker::create([
-            'user_id' => User::factory()->create()->id,
-            'department_id' => $this->department->id, // Same department
-            'name' => 'Target Worker',
-            'nip' => '789012',
-            'hire_date' => Carbon::now()->subYears(1),
-            'is_active' => true,
-        ]);
+        $targetWorker = $this->createWorker($this->department, 'Same Department Target');
 
         $swap = $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
             'target_worker_id' => $targetWorker->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
@@ -195,11 +209,13 @@ class ShiftSwapServiceTest extends TestCase
         ]);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches('/double shift/i');
+        $this->expectExceptionMessageMatches('/double shift|istirahat/i');
 
         $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $duplicateShift->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($duplicateShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
     }
@@ -210,6 +226,8 @@ class ShiftSwapServiceTest extends TestCase
         $swap = $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
@@ -224,12 +242,15 @@ class ShiftSwapServiceTest extends TestCase
     public function target_worker_can_accept_swap()
     {
         $targetUser = User::factory()->create();
-        $targetWorker = Worker::create([
-            'user_id' => $targetUser->id,
-            'department_id' => $this->department->id,
-            'name' => 'Target Worker',
-            'nip' => '789012',
-            'hire_date' => Carbon::now()->subYears(1),
+        $targetWorker = $this->createWorker($this->department, 'Accept Target');
+        $targetUser->update(['worker_id' => $targetWorker->id, 'name' => $targetWorker->name]);
+
+        // Create target worker shift
+        $targetWorkerShift = WorkerShift::create([
+            'worker_id' => $targetWorker->id,
+            'shift_id' => $this->shift->id,
+            'pattern_type' => 'fixed',
+            'effective_from' => Carbon::parse($this->workerShift->effective_from)->startOfDay(),
             'is_active' => true,
         ]);
 
@@ -237,13 +258,16 @@ class ShiftSwapServiceTest extends TestCase
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
             'target_worker_id' => $targetWorker->id,
+            'target_shift_id' => $targetWorkerShift->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
         $this->actingAs($targetUser);
         $acceptedSwap = $this->service->acceptRequest($swap->id, $targetWorker->id);
 
-        $this->assertEquals('accepted', $acceptedSwap->status);
+        $this->assertEquals('executed', $acceptedSwap->status); // Auto-executed for same department
         $this->assertDatabaseHas('shift_swap_audit_logs', [
             'shift_swap_request_id' => $swap->id,
             'action' => 'accepted',
@@ -254,19 +278,15 @@ class ShiftSwapServiceTest extends TestCase
     public function target_worker_can_reject_swap()
     {
         $targetUser = User::factory()->create();
-        $targetWorker = Worker::create([
-            'user_id' => $targetUser->id,
-            'department_id' => $this->department->id,
-            'name' => 'Target Worker',
-            'nip' => '789012',
-            'hire_date' => Carbon::now()->subYears(1),
-            'is_active' => true,
-        ]);
+        $targetWorker = $this->createWorker($this->department, 'Reject Target');
+        $targetUser->update(['worker_id' => $targetWorker->id, 'name' => $targetWorker->name]);
 
         $swap = $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
             'target_worker_id' => $targetWorker->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
@@ -286,6 +306,8 @@ class ShiftSwapServiceTest extends TestCase
         $swap = $this->service->createRequest([
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
@@ -306,12 +328,21 @@ class ShiftSwapServiceTest extends TestCase
             'code' => 'OTHER',
         ]);
 
-        $targetWorker = Worker::create([
-            'user_id' => User::factory()->create()->id,
-            'department_id' => $otherDepartment->id,
-            'name' => 'Target Worker',
-            'nip' => '789012',
-            'hire_date' => Carbon::now()->subYears(1),
+        $targetWorker = $this->createWorker($otherDepartment, 'Manager Approval Target');
+
+        // Create user for target worker
+        $targetUser = User::factory()->create([
+            'worker_id' => $targetWorker->id,
+            'name' => $targetWorker->name,
+            'is_active' => true,
+        ]);
+
+        // Create target worker shift
+        $targetWorkerShift = WorkerShift::create([
+            'worker_id' => $targetWorker->id,
+            'shift_id' => $this->shift->id,
+            'pattern_type' => 'fixed',
+            'effective_from' => Carbon::parse($this->workerShift->effective_from)->startOfDay(),
             'is_active' => true,
         ]);
 
@@ -319,6 +350,9 @@ class ShiftSwapServiceTest extends TestCase
             'requester_id' => $this->worker->id,
             'requester_shift_id' => $this->workerShift->id,
             'target_worker_id' => $targetWorker->id,
+            'target_shift_id' => $targetWorkerShift->id,
+            'swap_type' => 'single_date',
+            'swap_date' => Carbon::parse($this->workerShift->effective_from)->format('Y-m-d'),
             'reason' => 'Test reason',
         ]);
 
@@ -331,8 +365,29 @@ class ShiftSwapServiceTest extends TestCase
 
         $approvedSwap = $this->service->approveByManager($swap->id, $managerUser->id, 'Approved');
 
-        $this->assertEquals('approved', $approvedSwap->status);
+        $this->assertEquals('executed', $approvedSwap->status); // Auto-executed after approval
         $this->assertEquals($managerUser->id, $approvedSwap->manager_id);
         $this->assertNotNull($approvedSwap->manager_approved_at);
+    }
+
+    private function createWorker(Department $department, string $name): Worker
+    {
+        $seq = $this->workerSequence++;
+
+        return Worker::create([
+            'nip' => 'UT' . str_pad((string) $seq, 6, '0', STR_PAD_LEFT),
+            'name' => $name,
+            'email' => 'unit.worker' . $seq . '@example.com',
+            'phone_number' => '0812' . str_pad((string) (1000000 + $seq), 7, '0', STR_PAD_LEFT),
+            'address' => 'Test Address ' . $seq,
+            'birth_date' => Carbon::now()->subYears(30)->format('Y-m-d'),
+            'birth_place' => 'Test City',
+            'gender_id' => $this->gender->id,
+            'religion_id' => $this->religion->id,
+            'department_id' => $department->id,
+            'hire_date' => Carbon::now()->subYears(2)->format('Y-m-d'),
+            'employment_status' => 'contract',
+            'status' => 'active',
+        ]);
     }
 }

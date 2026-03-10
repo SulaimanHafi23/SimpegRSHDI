@@ -13,16 +13,13 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('type'); // leave_approved, leave_rejected, overtime_approved, etc
-            $table->string('title');
-            $table->text('message');
-            $table->json('data')->nullable(); // {leave_id: xxx, status: approved, etc}
+            $table->string('type');
+            $table->uuidMorphs('notifiable'); // Creates notifiable_type and notifiable_id
+            $table->text('data');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
 
-            $table->index(['user_id', 'read_at']);
-            $table->index('created_at');
+            $table->index(['notifiable_type', 'notifiable_id', 'read_at']);
         });
     }
 
