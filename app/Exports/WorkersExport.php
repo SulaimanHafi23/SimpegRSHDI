@@ -90,12 +90,11 @@ class WorkersExport implements FromCollection, WithHeadings, WithMapping, WithSt
     {
         return [
             1 => [
-                'font' => ['bold' => true, 'size' => 12],
+                'font' => ['bold' => true, 'size' => 12, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => [
                     'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
                     'startColor' => ['rgb' => '4CAF50']
                 ],
-                'font' => ['color' => ['rgb' => 'FFFFFF'], 'bold' => true],
             ],
         ];
     }

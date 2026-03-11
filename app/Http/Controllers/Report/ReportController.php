@@ -71,7 +71,7 @@ class ReportController extends Controller
         $locations = Location::select('id', 'name')->orderBy('name')->get();
 
         if ($request->query('export') === 'csv') {
-            $collection = $attendances instanceof \Illuminate\Contracts\Pagination\Paginator ? $attendances->getCollection() : $attendances;
+            $collection = $attendances instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($attendances->items()) : $attendances;
             $filename = 'attendance_report_' . now()->format('Ymd_His') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv',
@@ -219,7 +219,7 @@ class ReportController extends Controller
         $documentTypes = DocumentType::select('id', 'name')->orderBy('name')->get();
 
         if ($request->query('export') === 'csv') {
-            $collection = $documents instanceof \Illuminate\Contracts\Pagination\Paginator ? $documents->getCollection() : $documents;
+            $collection = $documents instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($documents->items()) : $documents;
             $filename = 'worker_documents_' . now()->format('Ymd_His') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv',
@@ -271,7 +271,7 @@ class ReportController extends Controller
         $workers = $query->orderBy('name')->paginate(20);
 
         if ($request->query('export') === 'csv') {
-            $collection = $workers instanceof \Illuminate\Contracts\Pagination\Paginator ? $workers->getCollection() : $workers;
+            $collection = $workers instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($workers->items()) : $workers;
             $filename = 'workers_' . now()->format('Ymd_His') . '.csv';
             $headers = [
                 'Content-Type' => 'text/csv',
@@ -339,7 +339,7 @@ class ReportController extends Controller
         ];
 
         $attendances = $this->attendanceService->getAll($filters);
-        $collection = $attendances instanceof \Illuminate\Contracts\Pagination\Paginator ? $attendances->getCollection() : collect($attendances);
+        $collection = $attendances instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($attendances->items()) : collect($attendances);
 
         $format = $request->input('format', 'pdf');
         $filename = 'laporan-presensi-' . now()->format('Y-m-d-His');
@@ -390,7 +390,7 @@ class ReportController extends Controller
         ];
 
         $leaves = $this->leaveService->getAll($filters);
-        $collection = $leaves instanceof \Illuminate\Contracts\Pagination\Paginator ? $leaves->getCollection() : collect($leaves);
+        $collection = $leaves instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($leaves->items()) : collect($leaves);
 
         $format = $request->input('format', 'pdf');
         $filename = 'laporan-cuti-' . now()->format('Y-m-d-His');
@@ -440,7 +440,7 @@ class ReportController extends Controller
         ];
 
         $overtimes = $this->overtimeService->getAll($filters);
-        $collection = $overtimes instanceof \Illuminate\Contracts\Pagination\Paginator ? $overtimes->getCollection() : collect($overtimes);
+        $collection = $overtimes instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($overtimes->items()) : collect($overtimes);
 
         $format = $request->input('format', 'pdf');
         $filename = 'laporan-lembur-' . now()->format('Y-m-d-His');
@@ -491,7 +491,7 @@ class ReportController extends Controller
         ];
 
         $documents = $this->workerDocumentService->getAll($filters);
-        $collection = $documents instanceof \Illuminate\Contracts\Pagination\Paginator ? $documents->getCollection() : collect($documents);
+        $collection = $documents instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($documents->items()) : collect($documents);
 
         $format = $request->input('format', 'pdf');
         $filename = 'laporan-dokumen-pegawai-' . now()->format('Y-m-d-His');

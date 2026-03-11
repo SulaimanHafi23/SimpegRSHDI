@@ -10,6 +10,7 @@ use App\Services\Master\LocationService;
 use App\Http\Requests\Attendance\AttendanceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AttendanceExport;
 
@@ -333,7 +334,7 @@ class AttendanceController extends Controller
 
             return view('admin.attendance.check-in', compact('worker', 'locations', 'locationsData', 'shiftInfo'));
         } catch (\Exception $e) {
-            \Log::error('Check-in form error: ' . $e->getMessage(), [
+            Log::error('Check-in form error: ' . $e->getMessage(), [
                 'worker_id' => $workerId,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -368,7 +369,7 @@ class AttendanceController extends Controller
                 ->route('admin.attendance.show', $attendance->id)
                 ->with('success', 'Check-in berhasil dicatat oleh Admin');
         } catch (\Exception $e) {
-            \Log::error('Check-in error: ' . $e->getMessage(), [
+            Log::error('Check-in error: ' . $e->getMessage(), [
                 'worker_id' => $request->worker_id,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -412,7 +413,7 @@ class AttendanceController extends Controller
 
             return view('admin.attendance.check-out', compact('attendance', 'locations', 'locationsData', 'shiftInfo'));
         } catch (\Exception $e) {
-            \Log::error('Check-out form error: ' . $e->getMessage(), [
+            Log::error('Check-out form error: ' . $e->getMessage(), [
                 'attendance_id' => $id,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -470,7 +471,7 @@ class AttendanceController extends Controller
                 ->with('success', $message);
 
         } catch (\Exception $e) {
-            \Log::error('Checkout error: ' . $e->getMessage(), [
+            Log::error('Checkout error: ' . $e->getMessage(), [
                 'attendance_id' => $id,
                 'trace' => $e->getTraceAsString()
             ]);
@@ -1364,8 +1365,8 @@ class AttendanceController extends Controller
                     return back()->with('error', 'Format tidak didukung');
             }
         } catch (\Exception $e) {
-            \Log::error('Export today attendance error: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            Log::error('Export today attendance error: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
             return back()->with('error', 'Terjadi kesalahan saat export: ' . $e->getMessage());
         }
     }
