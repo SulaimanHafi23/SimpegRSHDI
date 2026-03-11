@@ -16,11 +16,13 @@ class Holiday extends Model
         'date',
         'description',
         'is_national',
+        'notify_users',
     ];
 
     protected $casts = [
         'date' => 'date',
         'is_national' => 'boolean',
+        'notify_users' => 'boolean',
     ];
 
     /**

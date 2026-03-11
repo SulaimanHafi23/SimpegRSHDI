@@ -5,7 +5,9 @@ namespace App\Services\Overtime;
 use App\DTOs\OvertimeRequestDTO;
 use App\Repositories\Contracts\Overtime\OvertimeRequestRepositoryInterface;
 use App\Services\Notification\NotificationService;
+use App\Notifications\OvertimeRequestNotification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class OvertimeRequestService
 {
@@ -99,9 +101,13 @@ class OvertimeRequestService
 
         $result = $this->overtimeRequestRepository->approve($id, $approvedBy);
 
-        // Send notification - get user_id from worker's user relationship
+        // Send both database and email notification
         $user = \App\Models\User::where('worker_id', $overtimeRequest->worker_id)->first();
         if ($user) {
+            // Send Laravel Notification (email + database)
+            Notification::send($user, new OvertimeRequestNotification($overtimeRequest, 'approved'));
+
+            // Also store in custom notifications table for dashboard
             $this->notificationService->notifyOvertimeApproved(
                 $user->id,
                 [
@@ -124,9 +130,13 @@ class OvertimeRequestService
 
         $result = $this->overtimeRequestRepository->reject($id, $approvedBy, $reason);
 
-        // Send notification - get user_id from worker's user relationship
+        // Send both database and email notification
         $user = \App\Models\User::where('worker_id', $overtimeRequest->worker_id)->first();
         if ($user) {
+            // Send Laravel Notification (email + database)
+            Notification::send($user, new OvertimeRequestNotification($overtimeRequest, 'rejected', $reason));
+
+            // Also store in custom notifications table for dashboard
             $this->notificationService->notifyOvertimeRejected(
                 $user->id,
                 [

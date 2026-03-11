@@ -4,7 +4,9 @@ namespace App\Services\WorkerDocument;
 
 use App\DTOs\WorkerDocumentDTO;
 use App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface;
+use App\Notifications\WorkerDocumentNotification;
 use App\Services\Notification\NotificationService;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 
 class WorkerDocumentService
@@ -119,6 +121,9 @@ class WorkerDocumentService
             $document = $this->workerDocumentRepository->getById($id);
             $user = \App\Models\User::where('worker_id', $document->worker_id)->first();
             if ($user) {
+                // Kirim email notifikasi ke pegawai
+                Notification::send($user, new WorkerDocumentNotification($document, 'verified'));
+                // Simpan ke custom notifications table untuk dashboard
                 $this->notificationService->notifyDocumentVerified(
                     $user->id,
                     [
@@ -140,6 +145,9 @@ class WorkerDocumentService
             $document = $this->workerDocumentRepository->getById($id);
             $user = \App\Models\User::where('worker_id', $document->worker_id)->first();
             if ($user) {
+                // Kirim email notifikasi ke pegawai
+                Notification::send($user, new WorkerDocumentNotification($document, 'rejected', $notes));
+                // Simpan ke custom notifications table untuk dashboard
                 $this->notificationService->notifyDocumentRejected(
                     $user->id,
                     [

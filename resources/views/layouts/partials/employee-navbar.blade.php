@@ -19,6 +19,20 @@
 
             <!-- Right Side Icons -->
             <div class="flex items-center space-x-2">
+                <!-- Notification Bell -->
+                <div x-data="employeeNotificationBell()" x-init="init()" class="relative">
+                    <a href="{{ route('employee.notifications.index') }}"
+                       class="relative flex items-center justify-center p-2 transition duration-200 rounded-lg hover:bg-green-500"
+                       title="Notifikasi"
+                       aria-label="Notifikasi">
+                        <i class="text-lg fas fa-bell"></i>
+                        <span x-show="unreadCount > 0"
+                            x-text="unreadCount > 99 ? '99+' : unreadCount"
+                            class="absolute -top-1 -right-1 min-w-5 h-5 px-1 text-[10px] font-bold leading-5 text-center text-red-700 bg-yellow-300 rounded-full border border-yellow-200">
+                        </span>
+                    </a>
+                </div>
+
                 <!-- Profile Dropdown -->
                 <div class="relative hidden sm:block" x-data="{ open: false }">
                     <button @click="open = !open" class="flex items-center p-2 space-x-2 transition duration-200 rounded-lg hover:bg-green-500">
@@ -59,3 +73,43 @@
         </div>
     </div>
 </header>
+
+<script>
+    function employeeNotificationBell() {
+        return {
+            unreadCount: 0,
+            intervalId: null,
+
+            init() {
+                this.fetchUnreadCount();
+                this.intervalId = setInterval(() => this.fetchUnreadCount(), 30000);
+
+                this.$el.addEventListener('alpine:destroy', () => {
+                    if (this.intervalId) {
+                        clearInterval(this.intervalId);
+                    }
+                });
+            },
+
+            async fetchUnreadCount() {
+                try {
+                    const response = await fetch("{{ route('employee.notifications.unread-count') }}", {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const data = await response.json();
+                    this.unreadCount = Number(data.count || 0);
+                } catch (error) {
+                    // Silently ignore network errors to avoid UI disruption.
+                }
+            }
+        };
+    }
+</script>

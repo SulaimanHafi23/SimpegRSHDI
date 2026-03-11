@@ -1,0 +1,65 @@
+name: Quality Gate
+
+on:
+  push:
+    branches:
+      - main
+      - Clear-Backend
+  pull_request:
+
+jobs:
+  laravel-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, bcmath, fileinfo, pdo_sqlite, gd, zip
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-8.2-${{ hashFiles('composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-8.2-
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare Laravel environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run migrations (sqlite memory for CI)
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: php artisan migrate --force
+
+      - name: Smoke test (critical bootstrap)
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        run: php artisan test --filter=ExampleTest
+
+      - name: Full tests (non-blocking report)
+        env:
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+        continue-on-error: true
+        run: php artisan test
+
+      - name: Security audit (Composer)
+        continue-on-error: true
+        run: composer audit

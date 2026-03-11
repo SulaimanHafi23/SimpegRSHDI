@@ -1,5 +1,10 @@
 {{-- filepath: resources/views/layouts/partials/unified-sidebar.blade.php --}}
 @if(auth()->check())
+@php
+    $sidebarUser = auth()->user();
+    $sidebarWorker = $sidebarUser->worker ?? null;
+    $sidebarDisplayName = $sidebarWorker?->name ?? $sidebarUser->name ?? $sidebarUser->username ?? $sidebarUser->email ?? 'User';
+@endphp
 <aside class="fixed top-0 left-0 z-50 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 flex flex-col"
     id="unified-sidebar">
 
@@ -15,7 +20,7 @@
                 </div>
                 <div class="min-w-0 flex-1">
                     <p class="text-xs text-yellow-400 font-semibold mb-0.5">SIMPEGRS HDI</p>
-                    <h1 class="text-sm text-white font-medium break-words leading-tight">{{ auth()->user()->worker->name ?? auth()->user()->name }}</h1>
+                    <h1 class="text-sm text-white font-medium break-words leading-tight">{{ $sidebarDisplayName }}</h1>
                 </div>
             </div>
             <!-- Close Button for Mobile -->

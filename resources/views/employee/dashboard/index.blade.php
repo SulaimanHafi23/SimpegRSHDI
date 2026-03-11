@@ -22,7 +22,7 @@
 <div class="space-y-4 pb-6" x-data="{
     period: 'month',
     showStats: true
-}"
+}">
     <!-- Welcome Card dengan Info Pegawai -->
     <div class="bg-gradient-to-br from-green-600 via-green-700 to-green-800 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
         <!-- Background Pattern -->

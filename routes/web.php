@@ -27,6 +27,7 @@ use App\Http\Controllers\Overtime\OvertimeRequestController;
 
 // ========== DOCUMENT CONTROLLER ==========
 use App\Http\Controllers\WorkerDocument\WorkerDocumentController;
+use App\Http\Controllers\Admin\DocumentExpiryController;
 
 // ========== MASTER DATA CONTROLLERS ==========
 use App\Http\Controllers\Master\ShiftController;
@@ -454,6 +455,13 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/{id}/verify', [WorkerDocumentController::class, 'verify'])->name('verify');
         Route::post('/{id}/reject', [WorkerDocumentController::class, 'reject'])->name('reject');
         Route::get('/{id}/download', [WorkerDocumentController::class, 'download'])->name('download');
+    });
+
+    // ========== DOCUMENT EXPIRY MONITORING ==========
+    Route::prefix('document-expiry')->name('admin.document-expiry.')->group(function () {
+        Route::get('/', [DocumentExpiryController::class, 'index'])->name('index');
+        Route::get('/statistics', [DocumentExpiryController::class, 'statistics'])->name('statistics');
+        Route::get('/export', [DocumentExpiryController::class, 'export'])->name('export');
     });
 
     // ========== MASTER DATA MANAGEMENT ==========

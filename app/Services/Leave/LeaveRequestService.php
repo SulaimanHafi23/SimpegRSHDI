@@ -6,8 +6,10 @@ use App\DTOs\LeaveRequestDTO;
 use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
 use App\Repositories\Contracts\Master\LeaveTypeRepositoryInterface;
 use App\Services\Notification\NotificationService;
+use App\Notifications\LeaveRequestNotification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class LeaveRequestService
 {
@@ -158,9 +160,13 @@ class LeaveRequestService
 
         $result = $this->leaveRequestRepository->approve($id, $approvedBy);
 
-        // Send notification - get user_id from worker's user relationship
+        // Send both database and email notification
         $user = \App\Models\User::where('worker_id', $leaveRequest->worker_id)->first();
         if ($user) {
+            // Send Laravel Notification (email + database)
+            Notification::send($user, new LeaveRequestNotification($leaveRequest, 'approved'));
+
+            // Also store in custom notifications table for dashboard
             $this->notificationService->notifyLeaveApproved(
                 $user->id,
                 [
@@ -184,9 +190,13 @@ class LeaveRequestService
 
         $result = $this->leaveRequestRepository->reject($id, $approvedBy, $reason);
 
-        // Send notification - get user_id from worker's user relationship
+        // Send both database and email notification
         $user = \App\Models\User::where('worker_id', $leaveRequest->worker_id)->first();
         if ($user) {
+            // Send Laravel Notification (email + database)
+            Notification::send($user, new LeaveRequestNotification($leaveRequest, 'rejected', $reason));
+
+            // Also store in custom notifications table for dashboard
             $this->notificationService->notifyLeaveRejected(
                 $user->id,
                 [

@@ -105,6 +105,140 @@
             trend="Menunggu Approval" />
     </div>
 
+    {{-- Document Expiry Alert --}}
+    @if(isset($documentExpiryStats) && ($documentExpiryStats['expired'] > 0 || $documentExpiryStats['expiring_30_days'] > 0))
+    <x-card class="border-red-200 bg-red-50">
+        <div class="flex items-start gap-3">
+            <div class="mt-1 text-red-600"><i class="fas fa-exclamation-triangle text-2xl"></i></div>
+            <div class="flex-1">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="font-bold text-lg text-red-800">
+                        <i class="fas fa-file-contract mr-2"></i>Peringatan Dokumen Kadaluarsa
+                    </h3>
+                    <a href="{{ route('admin.document-expiry.index') }}" class="text-sm font-medium text-red-600 hover:text-red-700">
+                        Lihat Semua <i class="ml-1 fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                {{-- Statistics --}}
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-white rounded-lg p-3 border border-red-200">
+                        <div class="text-xs text-gray-600 mb-1">Sudah Kadaluarsa</div>
+                        <div class="text-2xl font-bold text-red-600">{{ $documentExpiryStats['expired'] }}</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-orange-200">
+                        <div class="text-xs text-gray-600 mb-1">≤ 30 Hari</div>
+                        <div class="text-2xl font-bold text-orange-600">{{ $documentExpiryStats['expiring_30_days'] }}</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-yellow-200">
+                        <div class="text-xs text-gray-600 mb-1">≤ 60 Hari</div>
+                        <div class="text-2xl font-bold text-yellow-600">{{ $documentExpiryStats['expiring_60_days'] }}</div>
+                    </div>
+                    <div class="bg-white rounded-lg p-3 border border-blue-200">
+                        <div class="text-xs text-gray-600 mb-1">≤ 90 Hari</div>
+                        <div class="text-2xl font-bold text-blue-600">{{ $documentExpiryStats['expiring_90_days'] }}</div>
+                    </div>
+                </div>
+
+                {{-- Critical & Urgent Documents List --}}
+                @if((isset($criticalDocuments) && $criticalDocuments->count() > 0) || (isset($urgentDocuments) && $urgentDocuments->count() > 0))
+                <div class="bg-white rounded-lg p-4 border border-red-200">
+                    <h4 class="font-semibold text-red-800 mb-3 text-sm">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Dokumen yang Memerlukan Perhatian Segera
+                    </h4>
+
+                    {{-- Mobile view --}}
+                    <div class="md:hidden space-y-2">
+                        @foreach(collect([...$criticalDocuments->take(3), ...$urgentDocuments->take(2)]) as $doc)
+                        <div class="p-3 bg-gray-50 rounded border border-gray-200">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1">
+                                    <div class="font-semibold text-sm text-gray-900">{{ $doc->worker->name }}</div>
+                                    <div class="text-xs text-gray-600">{{ $doc->documentType?->name ?? $doc->departmentDocumentType?->customDocumentType?->name ?? 'Dokumen' }}</div>
+                                </div>
+                                @php
+                                    $daysUntilExpiry = now()->startOfDay()->diffInDays($doc->expired_date, false);
+                                @endphp
+                                @if($daysUntilExpiry < 0)
+                                    <span class="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700">
+                                        <i class="fas fa-times-circle"></i> Kadaluarsa
+                                    </span>
+                                @else
+                                    <span class="px-2 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700">
+                                        <i class="fas fa-clock"></i> {{ $daysUntilExpiry }}h
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="text-xs text-gray-500">
+                                <i class="fas fa-calendar mr-1"></i>{{ $doc->expired_date->format('d/m/Y') }}
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    {{-- Desktop view --}}
+                    <div class="hidden md:block overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="text-left text-xs uppercase text-gray-700 bg-gray-100">
+                                <tr>
+                                    <th class="py-2 px-3">Pegawai</th>
+                                    <th class="py-2 px-3">Unit</th>
+                                    <th class="py-2 px-3">Dokumen</th>
+                                    <th class="py-2 px-3">Tanggal Kadaluarsa</th>
+                                    <th class="py-2 px-3">Status</th>
+                                    <th class="py-2 px-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach(collect([...$criticalDocuments->take(3), ...$urgentDocuments->take(2)]) as $doc)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="py-2 px-3">
+                                        <div class="font-semibold text-gray-900">{{ $doc->worker->name }}</div>
+                                        <div class="text-xs text-gray-500">{{ $doc->worker->employee_id ?? '-' }}</div>
+                                    </td>
+                                    <td class="py-2 px-3 text-gray-700">{{ $doc->worker->unit?->name ?? '-' }}</td>
+                                    <td class="py-2 px-3 text-gray-700">{{ $doc->documentType?->name ?? $doc->departmentDocumentType?->customDocumentType?->name ?? 'Dokumen' }}</td>
+                                    <td class="py-2 px-3 text-gray-700">{{ $doc->expired_date->format('d/m/Y') }}</td>
+                                    <td class="py-2 px-3">
+                                        @php
+                                            $daysUntilExpiry = now()->startOfDay()->diffInDays($doc->expired_date, false);
+                                        @endphp
+                                        @if($daysUntilExpiry < 0)
+                                            <span class="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700">
+                                                <i class="fas fa-times-circle"></i> Kadaluarsa {{ abs($daysUntilExpiry) }}h lalu
+                                            </span>
+                                        @elseif($daysUntilExpiry === 0)
+                                            <span class="px-2 py-1 text-xs font-bold rounded-full bg-red-100 text-red-700">
+                                                <i class="fas fa-exclamation-circle"></i> Hari Ini
+                                            </span>
+                                        @elseif($daysUntilExpiry === 1)
+                                            <span class="px-2 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700">
+                                                <i class="fas fa-clock"></i> Besok
+                                            </span>
+                                        @else
+                                            <span class="px-2 py-1 text-xs font-bold rounded-full bg-orange-100 text-orange-700">
+                                                <i class="fas fa-clock"></i> {{ $daysUntilExpiry }} hari
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td class="py-2 px-3">
+                                        <a href="{{ route('admin.worker-documents.show', $doc->id) }}" class="text-blue-600 hover:text-blue-800 text-xs font-medium">
+                                            <i class="fas fa-eye"></i> Lihat
+                                        </a>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+    </x-card>
+    @endif
+
     {{-- Charts Row --}}
     <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
         {{-- Attendance Chart --}}

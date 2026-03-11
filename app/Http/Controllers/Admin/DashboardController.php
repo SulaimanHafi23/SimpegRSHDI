@@ -9,6 +9,7 @@ use App\Models\LeaveRequest;
 use App\Models\OvertimeRequest;
 use App\Services\Overtime\OvertimeRequestService;
 use App\Services\Attendance\AttendanceService;
+use App\Services\Document\DocumentExpiryService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,10 +21,12 @@ class DashboardController extends Controller
 
     protected OvertimeRequestService $overtimeRequestService;
     protected AttendanceService $attendanceService;
+    protected DocumentExpiryService $documentExpiryService;
 
     public function __construct(
         OvertimeRequestService $overtimeRequestService,
-        AttendanceService $attendanceService
+        AttendanceService $attendanceService,
+        DocumentExpiryService $documentExpiryService
     )
     {
         $this->middleware('auth');
@@ -31,6 +34,7 @@ class DashboardController extends Controller
 
         $this->overtimeRequestService = $overtimeRequestService;
         $this->attendanceService = $attendanceService;
+        $this->documentExpiryService = $documentExpiryService;
     }
 
     public function index()
@@ -160,6 +164,17 @@ class DashboardController extends Controller
         // Get workers who need to checkout (shift ended but still no checkout)
         $pendingCheckouts = $this->attendanceService->getPendingCheckouts();
 
+        // ========== DOCUMENT EXPIRY ALERTS ==========
+
+        // Get document expiry statistics
+        $documentExpiryStats = $this->documentExpiryService->getExpiryStatistics();
+
+        // Get documents grouped by urgency
+        $documentsByUrgency = $this->documentExpiryService->getDocumentsByUrgency();
+        $criticalDocuments = $documentsByUrgency['critical'];
+        $urgentDocuments = $documentsByUrgency['urgent'];
+        $warningDocuments = $documentsByUrgency['warning'];
+
         // ========== PREPARE VIEW DATA SHAPES EXPECTED BY BLADE ==========
 
         // Statistics array expected by the view
@@ -251,7 +266,13 @@ class DashboardController extends Controller
             'upcomingLeaves',
 
             // Pending Checkouts
-            'pendingCheckouts'
+            'pendingCheckouts',
+
+            // Document Expiry
+            'documentExpiryStats',
+            'criticalDocuments',
+            'urgentDocuments',
+            'warningDocuments'
         ));
     }
 

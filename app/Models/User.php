@@ -18,7 +18,7 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens, HasUuids, HasRoles, SoftDeletes, Auditable;
 
-    protected $auditExclude = ['password', 'remember_token', 'last_login', 'email_verified_at'];
+    protected $auditExclude = ['password', 'remember_token', 'last_login', 'email_verified_at', 'photo'];
 
     /**
      * The attributes that are mass assignable.
@@ -27,8 +27,10 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'worker_id',
+        'name',
         'email',
         'username',
+        'photo',
         'password',
         'email_verified_at',
         'last_login',

@@ -7,8 +7,10 @@ class UserDTO
     public function __construct(
         public readonly ?string $id,
         public readonly ?string $worker_id,
+        public readonly ?string $name,
         public readonly ?string $email,
         public readonly ?string $username,
+        public readonly ?string $photo,
         public readonly ?string $password,
         public readonly ?string $email_verified_at,
         public readonly ?string $last_login,
@@ -21,8 +23,10 @@ class UserDTO
         return new self(
             id: $data['id'] ?? null,
             worker_id: $data['worker_id'] ?? null,
+            name: $data['name'] ?? null,
             email: $data['email'] ?? null,
             username: $data['username'] ?? null,
+            photo: $data['photo'] ?? null,
             password: $data['password'] ?? null,
             email_verified_at: $data['email_verified_at'] ?? null,
             last_login: $data['last_login'] ?? null,
@@ -36,8 +40,10 @@ class UserDTO
         return array_filter([
             'id' => $this->id,
             'worker_id' => $this->worker_id,
+            'name' => $this->name,
             'email' => $this->email,
             'username' => $this->username,
+            'photo' => $this->photo,
             'password' => $this->password,
             'email_verified_at' => $this->email_verified_at,
             'last_login' => $this->last_login,
