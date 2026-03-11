@@ -8,16 +8,7 @@
     <x-page-header
         title="Form Pengajuan Cuti"
         description="Lengkapi form di bawah untuk mengajukan cuti"
-        icon="fas fa-calendar-plus">
-        <x-slot:actions>
-            <x-button
-                variant="secondary"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.leave.index') }}'">
-                Kembali
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+        icon="fas fa-calendar-plus" />
 
     {{-- Alert Messages --}}
     @if($errors->any())
@@ -35,7 +26,7 @@
     <form action="{{ route('admin.leave.store') }}" method="POST" enctype="multipart/form-data" x-data="leaveForm()">
         @csrf
 
-        <div class="max-w-3xl mx-auto">
+        <div class="w-full">
             <x-card title="Informasi Pengajuan Cuti">
                 <div class="space-y-5">
                     {{-- Pegawai --}}

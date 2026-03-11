@@ -17,6 +17,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index('date');
+            $table->index(['is_national', 'date'], 'holidays_national_date_index');
         });
     }
 

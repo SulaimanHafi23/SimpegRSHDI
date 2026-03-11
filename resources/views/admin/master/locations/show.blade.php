@@ -6,17 +6,9 @@
 <div class="space-y-4 sm:space-y-6">
     {{-- Page Header --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="flex items-center space-x-3">
-            <x-button 
-                variant="secondary" 
-                size="sm"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.master.locations.index') }}'">
-            </x-button>
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Lokasi</h1>
-                <p class="text-sm text-gray-600 mt-1">Informasi lengkap lokasi</p>
-            </div>
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Lokasi</h1>
+            <p class="text-sm text-gray-600 mt-1">Informasi lengkap lokasi</p>
         </div>
         <div class="inline-flex items-center px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium">
             <i class="fas fa-lock mr-2"></i>

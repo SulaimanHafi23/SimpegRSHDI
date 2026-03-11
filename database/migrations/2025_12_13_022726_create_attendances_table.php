@@ -23,12 +23,16 @@ return new class extends Migration
             $table->decimal('check_in_latitude', 10, 8);
             $table->decimal('check_in_longitude', 11, 8);
             $table->integer('distance_check_in')->comment('dalam meter');
+            $table->boolean('check_in_by_admin')->default(false);
+            $table->foreignUuid('check_in_admin_id')->nullable()->constrained('users')->nullOnDelete();
             
             // Check Out (nullable)
             $table->dateTime('check_out')->nullable();
             $table->decimal('check_out_latitude', 10, 8)->nullable();
             $table->decimal('check_out_longitude', 11, 8)->nullable();
             $table->integer('distance_check_out')->nullable()->comment('dalam meter');
+            $table->boolean('check_out_by_admin')->default(false);
+            $table->foreignUuid('check_out_admin_id')->nullable()->constrained('users')->nullOnDelete();
             
             // Status & Analytics
             $table->enum('status', ['present', 'absent', 'leave', 'sick', 'permission'])->default('present');
@@ -41,10 +45,13 @@ return new class extends Migration
             $table->text('notes')->nullable();
             
             $table->timestamps();
+            $table->softDeletes();
 
             $table->unique(['worker_id', 'attendance_date']);
             $table->index(['attendance_date', 'status']);
             $table->index(['worker_id', 'attendance_date']);
+            $table->index(['worker_id', 'status', 'is_late'], 'idx_attendances_worker_status_late');
+            $table->index(['attendance_date', 'worker_id'], 'idx_attendances_date_worker');
         });
     }
 

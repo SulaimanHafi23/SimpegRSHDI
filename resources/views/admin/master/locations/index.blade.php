@@ -8,7 +8,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
             <h1 class="text-xl sm:text-2xl font-bold text-gray-800">
-                <i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>
+                <i class="fas fa-map-marker-alt text-green-600 mr-2"></i>
                 Lokasi
             </h1>
             <p class="text-sm sm:text-base text-gray-600 mt-1">Daftar lokasi rumah sakit</p>
@@ -33,7 +33,7 @@
                 </select>
             </div>
             <div class="flex gap-2">
-                <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm">
+                <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm">
                     <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Filter</span>
                 </button>
                 <a href="{{ route('admin.master.locations.index') }}" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200 text-center text-sm">
@@ -56,7 +56,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-900">{{ $location->name }}</p>
-                            <p class="text-xs text-gray-500 mt-0.5">{{ Str::limit($location->address ?? '-', 60) }}</p>
+                            <p class="text-xs text-gray-500 mt-0.5">{{ \Illuminate\Support\Str::limit($location->address ?? '-', 60) }}</p>
                         </div>
                     </div>
                     <div>
@@ -119,7 +119,7 @@
                         </div>
                     </td>
                     <td class="px-3 sm:px-6 py-4 hidden md:table-cell">
-                        <div class="text-sm text-gray-600">{{ Str::limit($location->address ?? '-', 50) }}</div>
+                        <div class="text-sm text-gray-600">{{ \Illuminate\Support\Str::limit($location->address ?? '-', 50) }}</div>
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                         <div class="text-xs text-gray-600 font-mono">
@@ -134,19 +134,7 @@
                         </span>
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
-                        @if($location->is_active)
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Aktif</span>
-                                <i class="fas fa-check sm:hidden"></i>
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-times-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Tidak Aktif</span>
-                                <i class="fas fa-times sm:hidden"></i>
-                            </span>
-                        @endif
+                        <x-status-pill :active="$location->is_active" />
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex justify-end items-center space-x-1 sm:space-x-2">

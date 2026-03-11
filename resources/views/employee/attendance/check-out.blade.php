@@ -119,13 +119,18 @@
 
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Lokasi Check-Out</label>
+                        @php
+                            $singleLocation = $locations->count() === 1 ? $locations->first() : null;
+                            $defaultLocationId = old('location_id', $singleLocation?->id);
+                        @endphp
                         <select name="location_id" id="location_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('location_id') border-red-500 @enderror" required>
                             <option value="">-- Pilih Lokasi --</option>
                             @foreach($locations as $location)
                                 <option value="{{ $location->id }}"
                                         data-lat="{{ $location->latitude }}"
                                         data-lng="{{ $location->longitude }}"
-                                        data-radius="{{ $location->radius }}">
+                                        data-radius="{{ $location->radius }}"
+                                        {{ $defaultLocationId == $location->id ? 'selected' : '' }}>
                                     {{ $location->name }} (Radius: {{ $location->radius }}m)
                                 </option>
                             @endforeach
@@ -281,6 +286,71 @@
 <script>
     let map, userMarker, officeCircle;
 
+    const HARD_REJECT_ACCURACY = 2000; // meters
+
+    function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = {{ config('attendance.max_accuracy', 300) }}) {
+        return new Promise((resolve, reject) => {
+            let bestPosition = null;
+            let watchId = null;
+            let finished = false;
+
+            const finish = (position, error = null) => {
+                if (finished) return;
+                finished = true;
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+                if (position) {
+                    resolve(position);
+                } else {
+                    reject(error || { code: 3, message: 'TIMEOUT' });
+                }
+            };
+
+            const onSuccess = (position) => {
+                const accuracy = Number(position?.coords?.accuracy ?? 0);
+
+                if (!Number.isFinite(accuracy) || accuracy <= 0 || accuracy > HARD_REJECT_ACCURACY) {
+                    return;
+                }
+
+                if (!bestPosition || accuracy < bestPosition.coords.accuracy) {
+                    bestPosition = position;
+                }
+
+                if (accuracy <= targetAccuracy) {
+                    finish(position);
+                }
+            };
+
+            const onError = (error) => {
+                if (error && error.code === error.PERMISSION_DENIED) {
+                    finish(null, error);
+                }
+            };
+
+            watchId = navigator.geolocation.watchPosition(onSuccess, onError, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0,
+            });
+
+            navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+                enableHighAccuracy: true,
+                timeout: 12000,
+                maximumAge: 0,
+            });
+
+            setTimeout(() => {
+                if (bestPosition) {
+                    finish(bestPosition);
+                } else {
+                    finish(null, { code: 3, message: 'TIMEOUT' });
+                }
+            }, maxWaitMs);
+        });
+    }
+
     function initMap() {
         map = L.map('map').setView([-2.5489, 118.0149], 5);
 
@@ -345,39 +415,33 @@
         initMap();
         const ACC_THRESHOLD = {{ config('attendance.max_accuracy', 300) }}; // meters
 
-        // Geolocation
-        if ("geolocation" in navigator) {
-        if ("geolocation" in navigator) {
-            navigator.geolocation.getCurrentPosition(function(position) {
+        async function refreshBestLocation() {
+            if (!('geolocation' in navigator)) {
+                document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Browser tidak mendukung Geolocation';
+                return;
+            }
+
+            document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengambil beberapa sampel GPS...';
+
+            try {
+                const position = await getBestAvailablePosition(18000, ACC_THRESHOLD);
                 updateLocation(position);
-            }, function(error) {
+            } catch (error) {
                 handleLocationError(error);
-            }, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 300000
-            });
-        } else {
-            document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Browser tidak mendukung Geolocation';
+            }
         }
+
+        // Geolocation
+        refreshBestLocation();
 
         // Refresh location button
         document.getElementById('refreshLocation').addEventListener('click', function() {
             this.disabled = true;
             this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mencari...';
 
-            navigator.geolocation.getCurrentPosition(function(position) {
-                updateLocation(position);
+            refreshBestLocation().finally(() => {
                 document.getElementById('refreshLocation').disabled = false;
                 document.getElementById('refreshLocation').innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh Lokasi';
-            }, function(error) {
-                handleLocationError(error);
-                document.getElementById('refreshLocation').disabled = false;
-                document.getElementById('refreshLocation').innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Refresh Lokasi';
-            }, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
             });
         });
 
@@ -420,7 +484,7 @@
                     message = 'Informasi lokasi tidak tersedia.';
                     break;
                 case error.TIMEOUT:
-                    message = 'Request lokasi timeout. Coba refresh halaman.';
+                    message = 'Request lokasi timeout. Tekan refresh lokasi untuk ambil sampel baru.';
                     break;
                 default:
                     message = 'Error tidak diketahui saat mendapatkan lokasi.';
@@ -492,9 +556,6 @@
                 }, 300);
             }, 4000);
         }
-        } else {
-            document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Browser tidak mendukung Geolocation';
-        }
 
         // Handle Location Select Change
         document.getElementById('location_id').addEventListener('change', function() {
@@ -518,6 +579,11 @@
                 document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-map-marker-alt mr-1"></i>Pilih lokasi terlebih dahulu';
             }
         });
+
+        const locationSelect = document.getElementById('location_id');
+        if (locationSelect && locationSelect.value) {
+            locationSelect.dispatchEvent(new window.Event('change'));
+        }
 
         // Form submit validation for location and accuracy
         document.getElementById('checkout-form').addEventListener('submit', function(e) {

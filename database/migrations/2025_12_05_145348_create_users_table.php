@@ -21,6 +21,11 @@ return new class extends Migration
             $table->rememberToken();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::table('departments', function (Blueprint $table) {
+            $table->foreign('manager_id')->references('id')->on('users')->nullOnDelete();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -44,6 +49,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('departments', function (Blueprint $table) {
+            $table->dropForeign(['manager_id']);
+        });
+
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('users');

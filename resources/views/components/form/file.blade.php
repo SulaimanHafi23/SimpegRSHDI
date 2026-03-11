@@ -22,7 +22,7 @@
     
     @if($currentFile && $preview)
         <div class="mb-2">
-            @if(Str::contains($accept ?? '', 'image'))
+            @if(\Illuminate\Support\Str::contains($accept ?? '', 'image'))
                 <img src="{{ $currentFile }}" alt="Current file" class="h-32 w-32 object-cover rounded-lg border">
             @else
                 <a href="{{ $currentFile }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
@@ -72,7 +72,7 @@ function previewFile(input, previewId) {
     const file = input.files[0];
     
     if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
+        const reader = new window.FileReader();
         
         reader.onload = function(e) {
             preview.querySelector('img').src = e.target.result;

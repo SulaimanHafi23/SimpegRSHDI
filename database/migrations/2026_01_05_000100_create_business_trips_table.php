@@ -25,10 +25,12 @@ return new class extends Migration
             $table->text('rejection_reason')->nullable();
             $table->json('itinerary')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['worker_id', 'status']);
             $table->index('start_date');
             $table->index('end_date');
+            $table->index(['worker_id', 'start_date', 'end_date', 'status'], 'idx_business_trips_worker_dates_status');
         });
     }
 

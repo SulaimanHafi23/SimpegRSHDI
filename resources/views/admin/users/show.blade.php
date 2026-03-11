@@ -55,9 +55,8 @@
 			</div>
 		</div>
 
-		<div class="mt-6 flex justify-end space-x-2">
+		<div class="mt-6 flex justify-end">
 			<a href="{{ route('admin.users.edit', $user->id) }}" class="px-4 py-2 bg-yellow-600 text-white rounded">Edit</a>
-			<a href="{{ route('admin.users.index') }}" class="px-4 py-2 border rounded">Kembali</a>
 		</div>
 	</x-card>
 </div>

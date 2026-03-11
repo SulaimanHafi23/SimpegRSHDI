@@ -8,16 +8,7 @@
     <x-page-header
         title="Edit Data Lembur"
         description="Perbarui informasi data lembur"
-        icon="fas fa-edit">
-        <x-slot:actions>
-            <x-button
-                variant="secondary"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.overtime.show', $overtime->id) }}'">
-                Kembali
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+        icon="fas fa-edit" />
 
     {{-- Alert Messages --}}
     @if($errors->any())
@@ -36,7 +27,7 @@
         @csrf
         @method('PUT')
 
-        <div class="max-w-3xl mx-auto">
+        <div class="w-full">
             <x-card title="Informasi Lembur">
                 <div class="space-y-5">
                     {{-- Current Status Badge --}}

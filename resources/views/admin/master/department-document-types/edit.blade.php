@@ -4,9 +4,8 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    <div class="flex items-center justify-between">
+    <div>
         <h1 class="text-xl sm:text-2xl font-bold">Edit Relasi Departemen - Tipe Dokumen</h1>
-        <a href="{{ route('admin.master.department-document-types.index') }}" class="px-4 py-2 bg-gray-200 rounded">Kembali</a>
     </div>
 
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">

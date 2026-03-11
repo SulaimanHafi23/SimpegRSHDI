@@ -21,15 +21,15 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <form method="GET" action="{{ route('admin.master.leave-types.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <form method="GET" action="{{ route('admin.master.leave-types.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
             <input type="text" 
                    name="search" 
                    value="{{ request('search') }}"
                    placeholder="Cari nama tipe cuti..." 
-                   class="md:col-span-2 lg:col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                   class="md:col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm">
-                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Cari</span>
+                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Filter</span>
                 </button>
                 <a href="{{ route('admin.master.leave-types.index') }}" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200 text-sm text-center">
                     <i class="fas fa-redo mr-1"></i><span class="hidden sm:inline">Reset</span>
@@ -72,32 +72,16 @@
                     <td class="px-3 sm:px-6 py-4 hidden lg:table-cell">
                         @if($type->requires_approval ?? true)
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                <i class="fas fa-check hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Ya</span>
-                                <i class="fas fa-check sm:hidden"></i>
+                                <i class="fas fa-check-circle mr-1"></i>Ya
                             </span>
                         @else
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                <i class="fas fa-times hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Tidak</span>
-                                <i class="fas fa-times sm:hidden"></i>
+                                <i class="fas fa-times-circle mr-1"></i>Tidak
                             </span>
                         @endif
                     </td>
                     <td class="px-3 sm:px-6 py-4">
-                        @if($type->is_active)
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Aktif</span>
-                                <i class="fas fa-check-circle sm:hidden"></i>
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-times-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Tidak Aktif</span>
-                                <i class="fas fa-times-circle sm:hidden"></i>
-                            </span>
-                        @endif
+                        <x-status-pill :active="$type->is_active" />
                     </td>
                     <td class="px-3 sm:px-6 py-4 text-right">
                         <div class="flex justify-end space-x-1 sm:space-x-2">

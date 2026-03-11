@@ -15,19 +15,17 @@
         </a>
     </div>
 
-    <div class="bg-white rounded-lg shadow p-4">
-        <form method="GET" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari tipe dokumen..."
-                   class="md:col-span-2 lg:col-span-3 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-green-500">
+    <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+        <form method="GET" action="{{ route('admin.master.document-types.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari tipe dokumen..."
+                   class="md:col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
-                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Cari</span>
+                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Filter</span>
                 </button>
-                @if(request('search'))
                 <a href="{{ route('admin.master.document-types.index') }}" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm text-center">
                     <i class="fas fa-redo mr-1"></i><span class="hidden sm:inline">Reset</span>
                 </a>
-                @endif
             </div>
         </form>
     </div>
@@ -52,15 +50,14 @@
                             </div>
                             <div class="ml-3 sm:ml-4">
                                 <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $docType->name }}</div>
-                                <div class="text-xs text-green-600 md:hidden">Aktif</div>
+                                <div class="text-xs md:hidden mt-1">
+                                    <x-status-pill :active="$docType->is_active" size="xs" />
+                                </div>
                             </div>
                         </div>
                     </td>
                     <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm hidden md:table-cell">
-                        <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
-                            <i class="fas fa-check-circle hidden sm:inline mr-1"></i>
-                            Aktif
-                        </span>
+                        <x-status-pill :active="$docType->is_active" />
                     </td>
                     <td class="px-3 sm:px-6 py-4 text-right">
                         <div class="flex justify-end space-x-1 sm:space-x-2">

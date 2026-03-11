@@ -4,14 +4,9 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    <div class="flex items-center space-x-3">
-        <a href="{{ route('admin.absents.index') }}" class="text-gray-600 hover:text-gray-900">
-            <i class="fas fa-arrow-left"></i>
-        </a>
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Absen Manual</h1>
-            <p class="text-sm text-gray-600 mt-1">Input data absensi pegawai secara manual</p>
-        </div>
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Absen Manual</h1>
+        <p class="text-sm text-gray-600 mt-1">Input data absensi pegawai secara manual</p>
     </div>
 
     <form action="{{ route('admin.absents.store') }}" method="POST" class="space-y-6">

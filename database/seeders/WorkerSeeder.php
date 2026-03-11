@@ -34,6 +34,7 @@ class WorkerSeeder extends Seeder
         $usedNips = Worker::pluck('nip')->map(fn ($value) => strtoupper((string) $value))->flip()->all();
         $usedEmails = Worker::pluck('email')->map(fn ($value) => strtolower((string) $value))->flip()->all();
         $usedPhones = Worker::pluck('phone_number')->map(fn ($value) => (string) $value)->flip()->all();
+        $usedDepartmentCodes = Department::pluck('code')->map(fn ($value) => strtoupper((string) $value))->filter()->flip()->all();
 
         foreach ($rows as $index => $row) {
             $name = trim((string) ($row['name'] ?? ''));
@@ -47,9 +48,18 @@ class WorkerSeeder extends Seeder
 
             $gender = Gender::firstOrCreate(['name' => $genderName], ['is_active' => true]);
             $religion = Religion::firstOrCreate(['name' => $religionName], ['is_active' => true]);
+            $baseDepartmentCode = strtoupper(Str::slug($departmentName, ''));
+            if ($baseDepartmentCode === '') {
+                $baseDepartmentCode = 'DEPARTEMEN';
+            }
+            $departmentCode = $this->ensureUnique(substr($baseDepartmentCode, 0, 50), $usedDepartmentCodes, true);
             $department = Department::firstOrCreate(
                 ['name' => $departmentName],
-                ['description' => 'Generated from worker seed data', 'is_active' => true]
+                [
+                    'code' => $departmentCode,
+                    'description' => 'Generated from worker seed data',
+                    'is_active' => true,
+                ]
             );
 
             $baseNip = $this->normalizeNip($row['nip'] ?? null);

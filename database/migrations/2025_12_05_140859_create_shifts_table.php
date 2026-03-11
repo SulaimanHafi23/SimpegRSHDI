@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->time('start_time');
             $table->time('end_time');
-            $table->integer('total_hours');
+            $table->decimal('total_hours', 5, 2);
             $table->integer('grace_period_minutes')->default(15);
             $table->boolean('is_overnight')->default(false);
             $table->boolean('is_active')->default(true);

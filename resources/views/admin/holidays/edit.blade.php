@@ -3,7 +3,7 @@
 @section('title', 'Edit Libur Nasional')
 
 @section('content')
-<div class="max-w-2xl mx-auto">
+<div class="w-full">
     <!-- Header -->
     <div class="mb-6">
         <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">

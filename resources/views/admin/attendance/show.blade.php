@@ -6,18 +6,13 @@
 <div class="space-y-6">
     {{-- Page Header with Actions --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex items-center space-x-3">
-            <a href="{{ route('admin.attendance.index') }}" class="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left w-5 h-5"></i>
-            </a>
-            <div>
+        <div>
                 <h1 class="text-2xl font-bold text-gray-900 flex items-center">
                     <i class="fas fa-user-check mr-3 text-blue-600"></i>
                     Detail Absensi
                 </h1>
                 <p class="text-sm text-gray-600 mt-1">Informasi lengkap data absensi pegawai</p>
             </div>
-        </div>
         <div class="flex space-x-2 w-full sm:w-auto">
             @if(!$attendance->check_out)
                 <button onclick="document.getElementById('checkout-modal').classList.remove('hidden')" 
@@ -370,8 +365,12 @@
                 label="Lokasi"
                 required>
                 <option value="">Pilih Lokasi</option>
+                @php
+                    $singleLocation = $locations->count() === 1 ? $locations->first() : null;
+                    $defaultLocationId = old('location_id', $singleLocation?->id ?? $attendance->location_id);
+                @endphp
                 @foreach($locations as $location)
-                    <option value="{{ $location->id }}" {{ old('location_id', $attendance->location_id) == $location->id ? 'selected' : '' }}>
+                    <option value="{{ $location->id }}" {{ $defaultLocationId == $location->id ? 'selected' : '' }}>
                         {{ $location->name }}
                     </option>
                 @endforeach

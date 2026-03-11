@@ -17,16 +17,18 @@ return new class extends Migration
             $table->date('overtime_date');
             $table->time('start_time');
             $table->time('end_time');
-            $table->integer('total_hours');
+            $table->decimal('total_hours', 5, 2);
             $table->text('reason');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->foreignUuid('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['worker_id', 'status']);
             $table->index('overtime_date');
+            $table->index(['worker_id', 'overtime_date', 'status'], 'idx_overtime_req_worker_date_status');
         });
     }
 

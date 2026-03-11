@@ -10,12 +10,6 @@
         description="Informasi lengkap pengajuan cuti pegawai"
         icon="fas fa-calendar-check">
         <x-slot:actions>
-            <x-button
-                variant="secondary"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.leave.index') }}'">
-                Kembali
-            </x-button>
             @if($leaveRequest->status == 'Pending')
                 @can('edit-leave')
                     <x-button

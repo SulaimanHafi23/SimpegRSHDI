@@ -12,7 +12,7 @@
 
 <div class="page-padding">
     <h3>RIWAYAT ABSENSI PEGAWAI</h3>
-e
+
     <div class="info-box">
         <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 0;">
             <tr>
@@ -94,7 +94,6 @@ e
                 <th width="10%">Status</th>
                 <th width="9%">Terlambat</th>
                 <th width="9%">Pulang Cepat</th>
-                <th width="5%">Lokasi</th>
             </tr>
         </thead>
         <tbody>
@@ -110,9 +109,8 @@ e
                 <td>{{ $row['status'] ?? '-' }}</td>
                 <td class="text-center">{{ $row['late'] ?? '-' }}</td>
                 <td class="text-center">{{ $row['early_leave'] ?? '-' }}</td>
-                <td>{{ $row['location'] ?? '-' }}</td>
             </tr>
-            @if(($row['notes'] ?? '-') !== '-')
+            <!-- @if(($row['notes'] ?? '-') !== '-') -->
             <tr>
                 <td></td>
                 <td colspan="10" style="font-size: 9px; color: #4b5563;">Catatan: {{ $row['notes'] ?? '-' }}</td>

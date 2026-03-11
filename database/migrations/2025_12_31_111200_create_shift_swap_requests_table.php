@@ -18,6 +18,11 @@ return new class extends Migration
 
             $table->uuid('requester_shift_id');
             $table->uuid('target_shift_id')->nullable();
+            $table->string('swap_type')->default('single_date');
+            $table->date('swap_date')->nullable();
+            $table->date('swap_start_date')->nullable();
+            $table->date('swap_end_date')->nullable();
+            $table->json('swap_dates')->nullable();
 
             $table->enum('status', ['pending','accepted','rejected','cancelled','awaiting_approval','approved','executed'])->default('pending');
 
@@ -48,6 +53,13 @@ return new class extends Migration
             $table->index(['target_worker_id']);
             $table->index(['status']);
         });
+
+        Schema::table('shift_overrides', function (Blueprint $table) {
+            $table->foreign('shift_swap_request_id')
+                ->references('id')
+                ->on('shift_swap_requests')
+                ->nullOnDelete();
+        });
     }
 
     /**
@@ -55,6 +67,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::table('shift_overrides', function (Blueprint $table) {
+            $table->dropForeign(['shift_swap_request_id']);
+        });
+
         Schema::dropIfExists('shift_swap_requests');
     }
 };

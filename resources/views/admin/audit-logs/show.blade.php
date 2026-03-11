@@ -8,16 +8,7 @@
     <x-page-header
         title="Detail Audit Log"
         description="Detail lengkap perubahan data"
-        icon="fas fa-history">
-        <x-slot:actions>
-            <x-button
-                variant="secondary"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.audit-logs.index') }}'">
-                Kembali
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+        icon="fas fa-history" />
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Main Info --}}
@@ -297,7 +288,7 @@
                         @if($log->user_agent)
                             <div>
                                 <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">User Agent</label>
-                                <p class="text-xs text-gray-500 break-all">{{ Str::limit($log->user_agent, 100) }}</p>
+                                <p class="text-xs text-gray-500 break-all">{{ \Illuminate\Support\Str::limit($log->user_agent, 100) }}</p>
                             </div>
                         @endif
                     </div>

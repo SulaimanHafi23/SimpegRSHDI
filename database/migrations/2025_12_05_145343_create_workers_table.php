@@ -32,6 +32,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->index(['status', 'employment_status']);
+            $table->index(['department_id', 'status'], 'idx_workers_dept_status');
         });
     }
 

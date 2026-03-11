@@ -10,12 +10,6 @@
         description="Informasi lengkap data lembur pegawai"
         icon="fas fa-clock">
         <x-slot:actions>
-            <x-button
-                variant="secondary"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.overtime.index') }}'">
-                Kembali
-            </x-button>
             @if(strtolower($overtime->status) == 'pending')
                 <x-button
                     variant="primary"

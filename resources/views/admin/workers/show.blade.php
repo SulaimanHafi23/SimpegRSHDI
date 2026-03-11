@@ -6,17 +6,9 @@
 <div class="space-y-4 sm:space-y-6">
     {{-- Page Header with Actions --}}
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div class="flex items-center space-x-3">
-            <x-button
-                variant="secondary"
-                size="sm"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.workers.index') }}'">
-            </x-button>
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Pegawai</h1>
-                <p class="text-xs sm:text-sm text-gray-600 mt-1">Informasi lengkap pegawai</p>
-            </div>
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Pegawai</h1>
+            <p class="text-xs sm:text-sm text-gray-600 mt-1">Informasi lengkap pegawai dan ringkasan aktivitasnya.</p>
         </div>
         <div class="flex space-x-2 w-full sm:w-auto">
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
@@ -43,9 +35,14 @@
         <div class="lg:col-span-1 space-y-4 sm:space-y-6">
             {{-- Profile Photo & Status --}}
             <x-card>
+                @php
+                    $workerPhotoUrl = ($worker->photo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url))
+                        ? \Illuminate\Support\Facades\Storage::url($worker->photo_url)
+                        : null;
+                @endphp
                 <div class="flex flex-col items-center">
-                    @if($worker->photo_url && Storage::disk('public')->exists($worker->photo_url))
-                        <img src="{{ asset('storage/' . $worker->photo_url) }}"
+                    @if($workerPhotoUrl)
+                        <img src="{{ $workerPhotoUrl }}"
                              alt="{{ $worker->name ?? '' }}"
                              class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-green-500 object-cover mb-4"
                              onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-green-500 overflow-hidden bg-gray-100 flex items-center justify-center mb-4\'><i class=\'fas fa-user text-4xl sm:text-5xl text-gray-400\'></i></div>';">
@@ -332,7 +329,7 @@
                                 @if($leave->reason)
                                     <p class="text-sm text-gray-600 mt-2">
                                         <i class="fas fa-comment-dots mr-1"></i>
-                                        {{ Str::limit($leave->reason, 100) }}
+                                        {{ \Illuminate\Support\Str::limit($leave->reason, 100) }}
                                     </p>
                                 @endif
                             </div>
@@ -390,7 +387,7 @@
                                 @if($overtime->description)
                                     <p class="text-sm text-gray-600 mt-2">
                                         <i class="fas fa-tasks mr-1"></i>
-                                        {{ Str::limit($overtime->description, 100) }}
+                                        {{ \Illuminate\Support\Str::limit($overtime->description, 100) }}
                                     </p>
                                 @endif
                             </div>

@@ -5,17 +5,9 @@
 @section('content')
 <div class="space-y-4 sm:space-y-6">
     {{-- Page Header --}}
-    <div class="flex items-center space-x-3">
-        <x-button 
-            variant="secondary" 
-            size="sm"
-            icon="fas fa-arrow-left"
-            onclick="window.location.href='{{ route('admin.attendance.show', $attendance->id) }}'">
-        </x-button>
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Absensi</h1>
-            <p class="text-sm text-gray-600 mt-1">Perbarui data absensi pegawai</p>
-        </div>
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Absensi</h1>
+        <p class="text-sm text-gray-600 mt-1">Perbarui data absensi pegawai</p>
     </div>
 
     @if(session('error'))

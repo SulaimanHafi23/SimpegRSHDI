@@ -5,14 +5,9 @@
 @section('content')
 <div class="space-y-4 sm:space-y-6">
     <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-3">
-            <a href="{{ route('admin.absents.index') }}" class="text-gray-600 hover:text-gray-900">
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Absensi</h1>
-                <p class="text-sm text-gray-600 mt-1">Informasi lengkap kehadiran pegawai</p>
-            </div>
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Absensi</h1>
+            <p class="text-sm text-gray-600 mt-1">Informasi lengkap kehadiran pegawai</p>
         </div>
         <div class="flex space-x-2">
             <button onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()" 

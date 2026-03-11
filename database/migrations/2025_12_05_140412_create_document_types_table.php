@@ -18,7 +18,10 @@ return new class extends Migration
             $table->string('file_format')->default('pdf,jpg,png')->comment('Allowed file formats');
             $table->integer('max_file_size')->default(2048)->comment('in KB');
             $table->boolean('is_active')->default(true);
+            $table->boolean('is_universal')->default(false);
             $table->timestamps();
+
+            $table->index('is_universal');
         });
     }
 

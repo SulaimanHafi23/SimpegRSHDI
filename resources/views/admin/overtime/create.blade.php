@@ -8,16 +8,7 @@
     <x-page-header
         title="Form Input Lembur"
         description="Lengkapi form di bawah untuk input data lembur"
-        icon="fas fa-clock">
-        <x-slot:actions>
-            <x-button
-                variant="secondary"
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.overtime.index') }}'">
-                Kembali
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+        icon="fas fa-clock" />
 
     {{-- Alert Messages --}}
     @if($errors->any())
@@ -35,7 +26,7 @@
     <form action="{{ route('admin.overtime.store') }}" method="POST" enctype="multipart/form-data" x-data="overtimeForm()">
         @csrf
 
-        <div class="max-w-3xl mx-auto">
+        <div class="w-full">
             <x-card title="Informasi Lembur">
                 <div class="space-y-5">
                     {{-- Pegawai --}}

@@ -4,14 +4,9 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    <div class="flex items-center space-x-4">
-        <a href="{{ route('admin.master.positions.index') }}" class="text-gray-600 hover:text-gray-900">
-            <i class="fas fa-arrow-left text-xl"></i>
-        </a>
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Tambah Jabatan</h1>
-            <p class="text-sm text-gray-600 mt-1">Tambah jabatan baru</p>
-        </div>
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Tambah Jabatan</h1>
+        <p class="text-sm text-gray-600 mt-1">Tambah jabatan baru</p>
     </div>
 
     @if(session('error'))

@@ -10,12 +10,6 @@
         description="Informasi lengkap role dan permissions"
         icon="fas fa-user-tag">
         <x-slot:actions>
-            <x-button 
-                variant="secondary" 
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.roles.index') }}'">
-                Kembali
-            </x-button>
             @can('edit-roles')
                 <x-button 
                     variant="primary" 

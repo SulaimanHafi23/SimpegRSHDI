@@ -26,6 +26,7 @@ return new class extends Migration
             $table->timestamp('verified_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['worker_id', 'document_type_id']);
             $table->index(['worker_id', 'department_document_type_id']);

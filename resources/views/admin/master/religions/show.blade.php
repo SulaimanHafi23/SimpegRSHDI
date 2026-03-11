@@ -6,15 +6,9 @@
 <div class="space-y-4 sm:space-y-6">
     <!-- Header -->
     <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-            <a href="{{ route('admin.master.religions.index') }}" 
-               class="text-gray-600 hover:text-gray-900">
-                <i class="fas fa-arrow-left text-xl"></i>
-            </a>
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Agama</h1>
-                <p class="text-sm text-gray-600 mt-1">Informasi lengkap data agama</p>
-            </div>
+        <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Detail Agama</h1>
+            <p class="text-sm text-gray-600 mt-1">Informasi lengkap data agama</p>
         </div>
         <div class="flex items-center space-x-2">
             <a href="{{ route('admin.master.religions.edit', $religion->id) }}" 

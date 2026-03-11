@@ -4,18 +4,9 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    {{-- Page Header with Back Button --}}
-    <div class="flex items-center space-x-3">
-        <x-button
-            variant="secondary"
-            size="sm"
-            icon="fas fa-arrow-left"
-            onclick="window.location.href='{{ route('admin.workers.index') }}'">
-        </x-button>
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Data Pegawai</h1>
-            <p class="text-sm text-gray-600 mt-1">Perbarui informasi pegawai</p>
-        </div>
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Data Pegawai</h1>
+        <p class="text-sm text-gray-600 mt-1">Perbarui informasi pegawai dan pastikan data profil tetap lengkap.</p>
     </div>
 
     @if(session('error'))
@@ -48,13 +39,31 @@
 
         {{-- Photo Upload --}}
         <x-card title="Foto Pegawai">
-            <x-form.file
-                name="photo"
-                label="Ganti Foto"
-                accept="image/*"
-                preview
-                :currentFile="$worker->photo_url && Storage::disk('public')->exists($worker->photo_url) ? asset('storage/' . $worker->photo_url) : null"
-                help="Format: JPG, PNG (Max: 2MB) - Kosongkan jika tidak ingin mengubah" />
+            @php
+                $workerPhotoUrl = ($worker->photo_url && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url))
+                    ? \Illuminate\Support\Facades\Storage::url($worker->photo_url)
+                    : null;
+            @endphp
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
+                <div class="shrink-0">
+                    @if($workerPhotoUrl)
+                        <img id="worker-photo-preview" src="{{ $workerPhotoUrl }}" alt="{{ $worker->name }}" class="h-24 w-24 rounded-full border-4 border-green-100 object-cover shadow-sm sm:h-28 sm:w-28">
+                    @else
+                        <div id="worker-photo-placeholder" class="flex h-24 w-24 items-center justify-center rounded-full border-4 border-dashed border-green-200 bg-green-50 text-2xl font-semibold text-green-700 shadow-sm sm:h-28 sm:w-28">
+                            {{ \Illuminate\Support\Str::upper(\Illuminate\Support\Str::substr($worker->name ?? 'P', 0, 1)) }}
+                        </div>
+                        <img id="worker-photo-preview" src="" alt="Preview Foto" class="hidden h-24 w-24 rounded-full border-4 border-green-100 object-cover shadow-sm sm:h-28 sm:w-28">
+                    @endif
+                </div>
+                <div class="flex-1">
+                    <label for="photo" class="mb-2 block text-sm font-medium text-gray-700">Ganti Foto Profil</label>
+                    <input type="file" name="photo" id="photo" accept="image/*"
+                           class="block w-full cursor-pointer rounded-xl border border-gray-300 bg-gray-50 text-sm text-gray-900 file:mr-4 file:rounded-l-xl file:border-0 file:bg-green-600 file:px-4 file:py-3 file:text-sm file:font-semibold file:text-white hover:file:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                           onchange="previewWorkerPhoto(this)">
+                    <p class="mt-2 text-sm text-gray-500">Format JPG atau PNG, maksimal 2MB. Kosongkan jika tidak ingin mengubah foto saat ini.</p>
+                    @error('photo')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+                </div>
+            </div>
         </x-card>
 
         {{-- Personal Information --}}
@@ -91,6 +100,12 @@
                     :value="old('birth_date', $worker->birth_date?->format('Y-m-d') ?? '')"
                     required
                     max="{{ date('Y-m-d', strtotime('-1 day')) }}"
+                    :error="$errors->first('birth_date')" />
+
+                <x-form.select
+                    name="gender_id"
+                    label="Jenis Kelamin"
+                    required
                     :error="$errors->first('gender_id')">
                     <option value="">Pilih Jenis Kelamin</option>
                     @foreach($genders as $gender)
@@ -225,9 +240,30 @@
 
 @push('scripts')
 <script>
+    function previewWorkerPhoto(input) {
+        const file = input.files && input.files[0];
+        const preview = document.getElementById('worker-photo-preview');
+        const placeholder = document.getElementById('worker-photo-placeholder');
+
+        if (!file || !file.type.startsWith('image/')) {
+            return;
+        }
+
+        const reader = new window.FileReader();
+        reader.onload = function (event) {
+            if (placeholder) {
+                placeholder.classList.add('hidden');
+            }
+
+            preview.src = event.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+
     // Compress image before upload
     function compressImage(file, maxSizeMB = 0.5) {
-        return new Promise((resolve, reject) => {
+        return new window.Promise((resolve, reject) => {
             const maxSize = maxSizeMB * 1024 * 1024;
 
             if (file.size <= maxSize) {
@@ -235,10 +271,10 @@
                 return;
             }
 
-            const reader = new FileReader();
+            const reader = new window.FileReader();
             reader.readAsDataURL(file);
             reader.onload = (event) => {
-                const img = new Image();
+                const img = new window.Image();
                 img.src = event.target.result;
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
@@ -264,7 +300,7 @@
                     const tryCompress = () => {
                         canvas.toBlob((blob) => {
                             if (blob.size <= maxSize || quality <= 0.1) {
-                                const compressedFile = new File([blob], file.name, {
+                                const compressedFile = new window.File([blob], file.name, {
                                     type: 'image/jpeg',
                                     lastModified: Date.now()
                                 });
@@ -301,7 +337,7 @@
 
                     const compressedFile = await compressImage(file, 0.5);
 
-                    const dataTransfer = new DataTransfer();
+                    const dataTransfer = new window.DataTransfer();
                     dataTransfer.items.add(compressedFile);
                     photoInput.files = dataTransfer.files;
 

@@ -60,7 +60,7 @@
                             <span class="text-sm font-medium text-gray-900">{{ $department->name }}</span>
                         </div>
                         @if($department->description)
-                        <p class="text-xs text-gray-500 mt-1">{{ Str::limit($department->description, 80) }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($department->description, 80) }}</p>
                         @endif
                     </div>
                     <div class="flex flex-col items-end space-y-1">
@@ -139,7 +139,7 @@
                         <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $department->name }}</div>
                     </td>
                     <td class="px-3 sm:px-6 py-4 hidden md:table-cell">
-                        <div class="text-sm text-gray-600">{{ Str::limit($department->description ?? '-', 50) }}</div>
+                        <div class="text-sm text-gray-600">{{ \Illuminate\Support\Str::limit($department->description ?? '-', 50) }}</div>
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap hidden lg:table-cell">
                         <span class="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -148,19 +148,7 @@
                         </span>
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
-                        @if($department->is_active)
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Aktif</span>
-                                <i class="fas fa-check sm:hidden"></i>
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-times-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Tidak Aktif</span>
-                                <i class="fas fa-times sm:hidden"></i>
-                            </span>
-                        @endif
+                        <x-status-pill :active="$department->is_active" />
                         @if($department->requires_holiday_attendance)
                             <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 ml-1" title="Wajib hadir saat hari libur nasional">
                                 <i class="fas fa-hospital mr-1"></i>

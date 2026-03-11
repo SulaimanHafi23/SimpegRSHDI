@@ -4,12 +4,12 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    <div class="flex items-center justify-between">
-        <h1 class="text-xl sm:text-2xl font-bold">Detail Dokumen</h1>
-        <div class="flex space-x-2">
-            <a href="{{ route('admin.worker-documents.download', $document->id) }}" class="px-4 py-2 bg-blue-600 text-white rounded">Download</a>
-            <a href="{{ route('admin.worker-documents.index') }}" class="px-4 py-2 bg-gray-200 rounded">Kembali</a>
+    <div class="flex flex-col gap-4 rounded-2xl border border-gray-100 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+            <h1 class="text-xl font-bold text-gray-900 sm:text-2xl">Detail Dokumen</h1>
+            <p class="mt-1 text-sm text-gray-500">Tinjau file, status verifikasi, dan informasi dokumen pegawai.</p>
         </div>
+        <a href="{{ route('admin.worker-documents.download', $document->id) }}" class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700">Download</a>
     </div>
 
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">

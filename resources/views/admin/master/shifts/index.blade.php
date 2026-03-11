@@ -21,8 +21,8 @@
 
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <form method="GET" action="{{ route('admin.master.shifts.index') }}" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
+        <form method="GET" action="{{ route('admin.master.shifts.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="md:col-span-3">
                 <input type="text"
                        name="search"
                        value="{{ request('search') }}"
@@ -31,7 +31,7 @@
             </div>
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm">
-                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Cari</span>
+                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Filter</span>
                 </button>
                 <a href="{{ route('admin.master.shifts.index') }}" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition duration-200 text-center text-sm">
                     <i class="fas fa-redo mr-1"></i><span class="hidden sm:inline">Reset</span>
@@ -56,13 +56,7 @@
                             {{ number_format($shift->total_hours, 2) }} jam
                         </p>
                     </div>
-                    <div>
-                        @if($shift->is_active)
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span>
-                        @else
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">Tidak Aktif</span>
-                        @endif
-                    </div>
+                    <div><x-status-pill :active="$shift->is_active" /></div>
                 </div>
                 <div class="mt-3 flex items-center justify-end space-x-3 text-sm">
                     <a href="{{ route('admin.master.shifts.show', $shift->id) }}" class="text-blue-600 hover:text-blue-900" title="Lihat Detail">
@@ -127,19 +121,7 @@
                         </span>
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
-                        @if($shift->is_active)
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Aktif</span>
-                                <i class="fas fa-check sm:hidden"></i>
-                            </span>
-                        @else
-                            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                <i class="fas fa-times-circle hidden sm:inline mr-1"></i>
-                                <span class="hidden sm:inline">Tidak Aktif</span>
-                                <i class="fas fa-times sm:hidden"></i>
-                            </span>
-                        @endif
+                        <x-status-pill :active="$shift->is_active" />
                     </td>
                     <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div class="flex justify-end items-center space-x-1 sm:space-x-2">

@@ -8,16 +8,7 @@
     <x-page-header 
         title="Tambah Role Baru" 
         description="Buat role baru dengan permissions"
-        icon="fas fa-user-tag">
-        <x-slot:actions>
-            <x-button 
-                variant="secondary" 
-                icon="fas fa-arrow-left"
-                onclick="window.location.href='{{ route('admin.roles.index') }}'">
-                Kembali
-            </x-button>
-        </x-slot:actions>
-    </x-page-header>
+        icon="fas fa-user-tag" />
 
     {{-- Alert Messages --}}
     @if(session('success'))

@@ -101,6 +101,10 @@
                 <label for="location_id" class="block text-sm font-medium text-gray-700 mb-2">
                     Lokasi Absensi <span class="text-red-500">*</span>
                 </label>
+                @php
+                    $singleLocation = $locations->count() === 1 ? $locations->first() : null;
+                    $defaultLocationId = old('location_id', $singleLocation?->id);
+                @endphp
                 <select name="location_id"
                         id="location_id"
                         required
@@ -111,7 +115,7 @@
                                 data-lat="{{ $location->latitude }}"
                                 data-lng="{{ $location->longitude }}"
                                 data-radius="{{ $location->radius }}"
-                                {{ old('location_id') == $location->id ? 'selected' : '' }}>
+                                {{ $defaultLocationId == $location->id ? 'selected' : '' }}>
                             {{ $location->name }}
                         </option>
                     @endforeach
@@ -333,8 +337,76 @@ const ACC_THRESHOLD = {{ config('attendance.max_accuracy', 300) }}; // meters
 // Map Variables
 let map, userMarker, officeCircle;
 
+// Reject extremely coarse fixes (usually IP/cell fallback) and request better samples.
+const HARD_REJECT_ACCURACY = 2000; // meters
+
+function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = ACC_THRESHOLD) {
+    return new Promise((resolve, reject) => {
+        let bestPosition = null;
+        let watchId = null;
+        let finished = false;
+
+        const finish = (position, error = null) => {
+            if (finished) return;
+            finished = true;
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+
+            if (position) {
+                resolve(position);
+            } else {
+                reject(error || { code: 3, message: 'TIMEOUT' });
+            }
+        };
+
+        const onSuccess = (position) => {
+            const accuracy = Number(position?.coords?.accuracy ?? 0);
+
+            // Ignore clearly unusable coordinates and keep waiting.
+            if (!Number.isFinite(accuracy) || accuracy <= 0 || accuracy > HARD_REJECT_ACCURACY) {
+                return;
+            }
+
+            if (!bestPosition || accuracy < bestPosition.coords.accuracy) {
+                bestPosition = position;
+            }
+
+            if (accuracy <= targetAccuracy) {
+                finish(position);
+            }
+        };
+
+        const onError = (error) => {
+            if (error && error.code === error.PERMISSION_DENIED) {
+                finish(null, error);
+            }
+        };
+
+        watchId = navigator.geolocation.watchPosition(onSuccess, onError, {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0,
+        });
+
+        navigator.geolocation.getCurrentPosition(onSuccess, onError, {
+            enableHighAccuracy: true,
+            timeout: 12000,
+            maximumAge: 0,
+        });
+
+        setTimeout(() => {
+            if (bestPosition) {
+                finish(bestPosition);
+            } else {
+                finish(null, { code: 3, message: 'TIMEOUT' });
+            }
+        }, maxWaitMs);
+    });
+}
+
 // Get geolocation
-function getLocation(useFallback = false) {
+async function getLocation(retryCount = 0) {
     const statusDiv = document.getElementById('locationStatus');
 
     if (!navigator.geolocation) {
@@ -342,20 +414,10 @@ function getLocation(useFallback = false) {
         return;
     }
 
-    statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mendapatkan lokasi' + (useFallback ? ' (mode cepat)...' : '...');
+    statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengambil sampel GPS terbaik...';
 
-    const options = useFallback ? {
-        enableHighAccuracy: false,
-        timeout: 15000,
-        maximumAge: 60000
-    } : {
-        enableHighAccuracy: true,
-        timeout: 30000,
-        maximumAge: 0
-    };
-
-    navigator.geolocation.getCurrentPosition(
-        function(position) {
+    try {
+        const position = await getBestAvailablePosition(18000, ACC_THRESHOLD);
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
             const accuracy = position.coords.accuracy;
@@ -375,7 +437,7 @@ function getLocation(useFallback = false) {
             if (statusValue === 'present' && accuracy && accuracy > ACC_THRESHOLD) {
                 submit.disabled = true;
                 submit.classList.add('opacity-50','cursor-not-allowed');
-                statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>Akurasi buruk: ±${Math.round(accuracy)} m. Silakan gunakan ponsel atau pilih lokasi manual.`;
+                statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>Akurasi masih kurang baik: ±${Math.round(accuracy)} m. Tekan "Dapatkan Lokasi" lagi untuk ambil sampel baru.`;
             } else {
                 submit.disabled = false;
                 submit.classList.remove('opacity-50','cursor-not-allowed');
@@ -407,8 +469,7 @@ function getLocation(useFallback = false) {
                     }
                 }
             })();
-        },
-        function(error) {
+    } catch (error) {
             let errorMsg = 'Gagal mendapatkan lokasi';
             switch(error.code) {
                 case error.PERMISSION_DENIED:
@@ -418,15 +479,13 @@ function getLocation(useFallback = false) {
                     errorMsg = 'Informasi lokasi tidak tersedia. Pastikan GPS aktif.';
                     break;
                 case error.TIMEOUT:
-                    if (!useFallback) {
-                        errorMsg = 'Timeout. Mencoba dengan mode cepat...';
+                    if (retryCount < 1) {
+                        errorMsg = 'Timeout. Mengulang pengambilan lokasi...';
                         statusDiv.innerHTML = `<i class="fas fa-spinner fa-spin text-yellow-500 mr-1"></i>${errorMsg}`;
-                        // Retry with fallback (low accuracy, faster)
-                        setTimeout(() => getLocation(true), 1000);
+                        setTimeout(() => getLocation(retryCount + 1), 1000);
                         return;
-                    } else {
-                        errorMsg = 'Timeout mendapatkan lokasi. Coba lagi atau pindah ke area dengan sinyal lebih baik.';
                     }
+                    errorMsg = 'Timeout mendapatkan lokasi. Coba lagi dalam beberapa detik.';
                     break;
             }
             statusDiv.innerHTML = `<i class="fas fa-exclamation-circle text-red-500 mr-1"></i>${errorMsg}`;
@@ -435,9 +494,7 @@ function getLocation(useFallback = false) {
             if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
                 statusDiv.innerHTML += ` <button type="button" onclick="getLocation()" class="text-xs underline text-blue-600 hover:text-blue-700">Coba Lagi</button>`;
             }
-        },
-        options
-    );
+    }
 }
 
 // Initialize Map
@@ -568,6 +625,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         });
+
+        // Ensure single-location setup is reflected immediately on map and geofence UI.
+        if (locationSelect.value) {
+            locationSelect.dispatchEvent(new window.Event('change'));
+        }
     }
 
     // Check-in form validation

@@ -25,9 +25,11 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->text('rejection_reason')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['worker_id', 'status']);
             $table->index(['start_date', 'end_date']);
+            $table->index(['worker_id', 'status', 'start_date', 'end_date'], 'leave_requests_worker_status_dates_index');
         });
     }
 

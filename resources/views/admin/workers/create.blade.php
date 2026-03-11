@@ -3,7 +3,7 @@
 @section('title', 'Tambah Pegawai')
 
 @section('content')
-<div class="max-w-3xl mx-auto">
+<div class="w-full">
 
     {{-- Page Header --}}
     <div class="flex items-center gap-3 sm:gap-4 mb-6">

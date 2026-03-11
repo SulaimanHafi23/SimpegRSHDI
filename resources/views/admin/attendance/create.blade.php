@@ -5,17 +5,9 @@
 @section('content')
 <div class="space-y-4 sm:space-y-6">
     {{-- Page Header --}}
-    <div class="flex items-center space-x-3">
-        <x-button
-            variant="secondary"
-            size="sm"
-            icon="fas fa-arrow-left"
-            onclick="window.location.href='{{ route('admin.attendance.index') }}'">
-        </x-button>
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Absensi Manual</h1>
-            <p class="text-sm text-gray-600 mt-1">Input absensi pegawai secara manual</p>
-        </div>
+    <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Absensi Manual</h1>
+        <p class="text-sm text-gray-600 mt-1">Input absensi pegawai secara manual</p>
     </div>
 
     @if(session('error'))
@@ -67,8 +59,12 @@
                     required
                     :error="$errors->first('location_id')">
                     <option value="">Pilih Lokasi</option>
+                    @php
+                        $singleLocation = $locations->count() === 1 ? $locations->first() : null;
+                        $defaultLocationId = old('location_id', $singleLocation?->id);
+                    @endphp
                     @foreach($locations as $location)
-                        <option value="{{ $location->id }}" {{ old('location_id') == $location->id ? 'selected' : '' }}>
+                        <option value="{{ $location->id }}" {{ $defaultLocationId == $location->id ? 'selected' : '' }}>
                             {{ $location->name }}
                         </option>
                     @endforeach

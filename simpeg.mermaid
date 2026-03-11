@@ -288,17 +288,6 @@ erDiagram
         timestamp deleted_at
     }
 
-    salary_components {
-        uuid id PK
-        string code UK
-        string name
-        enum type
-        text description
-        boolean is_taxable
-        boolean is_active
-        timestamp deleted_at
-    }
-
     %% ===== DOCUMENTS =====
     department_document_type {
         uuid id PK
@@ -358,12 +347,6 @@ erDiagram
         json metadata
         string ip_address
         string user_agent
-    }
-
-    shift_swap_overrides {
-        bigint id PK
-        timestamp created_at
-        timestamp updated_at
     }
 
     %% ===== RELATIONSHIPS =====

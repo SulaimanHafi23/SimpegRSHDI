@@ -18,6 +18,7 @@ return new class extends Migration
             $table->date('override_date');
             $table->text('reason')->nullable();
             $table->foreignUuid('created_by')->constrained('users')->cascadeOnDelete();
+            $table->uuid('shift_swap_request_id')->nullable();
             $table->timestamps();
 
             $table->unique(['worker_id', 'override_date']);

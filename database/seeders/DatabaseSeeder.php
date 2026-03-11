@@ -22,7 +22,6 @@ class DatabaseSeeder extends Seeder
             DocumentTypeSeeder::class,
             DepartmentDocumentTypeSeeder::class, // Maps documents to departments
             LeaveTypeSeeder::class,
-            SalaryComponentSeeder::class,
             HolidaySeeder::class,
         ]);
 
