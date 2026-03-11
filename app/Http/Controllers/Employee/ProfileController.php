@@ -69,7 +69,7 @@ class ProfileController extends Controller
                 if ($worker->photo_url) {
                     Storage::disk('public')->delete($worker->photo_url);
                 }
-                
+
                 $photoPath = $request->file('photo')->store('workers/photos', 'public');
                 $worker->photo_url = $photoPath;
             }
