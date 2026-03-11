@@ -101,6 +101,10 @@
                         <i class="fas fa-calendar-check w-5"></i>
                         <span class="ml-3">Riwayat Absensi</span>
                     </a>
+                    <a href="{{ route('admin.workers.salary-components.edit', $worker->id) }}" class="flex items-center p-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg text-indigo-700">
+                        <i class="fas fa-money-bill-wave w-5"></i>
+                        <span class="ml-3">Komponen Gaji</span>
+                    </a>
                 </div>
             </x-card>
         </div>
@@ -197,6 +201,36 @@
                             $statusBadge = $statusBadges[$worker->status ?? 'active'] ?? ['variant' => 'secondary', 'label' => '-'];
                         @endphp
                         <x-badge :variant="$statusBadge['variant']">{{ $statusBadge['label'] }}</x-badge>
+                    </div>
+                </div>
+            </x-card>
+
+            {{-- Payroll Information --}}
+            <x-card>
+                <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-money-bill-wave text-indigo-600 mr-2"></i>
+                    Informasi Payroll
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Kategori Penggajian</p>
+                        <p class="font-semibold text-gray-900 uppercase">{{ $worker->payroll_category ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Gaji Pokok</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->base_salary ? 'Rp ' . number_format((float) $worker->base_salary, 0, ',', '.') : '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Pangkat</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->rank ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Golongan</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->rank_level ?? '-' }}</p>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <p class="text-sm text-gray-600">Vendor Outsourcing</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->outsourced_vendor ?? '-' }}</p>
                     </div>
                 </div>
             </x-card>

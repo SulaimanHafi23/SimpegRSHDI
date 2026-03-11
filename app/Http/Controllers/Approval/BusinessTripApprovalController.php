@@ -60,7 +60,8 @@ class BusinessTripApprovalController extends Controller
             $query->whereYear('start_date', $filters['year']);
         }
 
-        $trips = $query->orderBy('start_date', 'desc')
+        $trips = $query->orderByDesc('created_at')
+            ->orderByDesc('start_date')
             ->paginate($filters['per_page'])
             ->appends($filters);
 
@@ -200,7 +201,7 @@ class BusinessTripApprovalController extends Controller
                 });
             }
 
-            $trips = $query->orderBy('start_date', 'desc')->get();
+            $trips = $query->orderByDesc('created_at')->orderByDesc('start_date')->get();
 
             $dateFrom = $filters['date_from'] ? \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d F Y') : 'Semua';
             $dateTo = $filters['date_to'] ? \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d F Y') : 'Semua';

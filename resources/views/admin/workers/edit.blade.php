@@ -4,35 +4,51 @@
 
 @section('content')
 <div class="space-y-4 sm:space-y-6">
-    {{-- Page Header with Back Button --}}
-    <div class="flex items-center space-x-3">
-        <x-button
-            variant="secondary"
-            size="sm"
-            icon="fas fa-arrow-left"
-            onclick="window.location.href='{{ route('admin.workers.index') }}'">
-        </x-button>
-        <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Edit Data Pegawai</h1>
-            <p class="text-sm text-gray-600 mt-1">Perbarui informasi pegawai</p>
+    {{-- Page Header --}}
+    <div class="flex items-center gap-3 sm:gap-4 mb-6">
+        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+            <i class="fas fa-user-edit text-white text-lg sm:text-xl"></i>
+        </div>
+        <div class="min-w-0 flex-1">
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-800">Edit Data Pegawai</h1>
+            <p class="text-gray-500 text-xs sm:text-sm mt-0.5">Perbarui informasi pegawai dengan lengkap dan akurat</p>
+        </div>
+        <a href="{{ route('admin.workers.index') }}"
+           class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition shrink-0">
+            <i class="fas fa-arrow-left text-xs"></i>
+            <span class="hidden sm:inline">Kembali</span>
+        </a>
+    </div>
+
+    {{-- Info Banner --}}
+    <div class="flex items-start gap-3 px-4 py-3.5 bg-blue-50 rounded-xl border border-blue-200">
+        <i class="fas fa-info-circle text-blue-500 mt-0.5"></i>
+        <div class="min-w-0">
+            <p class="text-sm font-semibold text-blue-800 mb-1">Tips Pengisian</p>
+            <p class="text-xs sm:text-sm text-blue-700">Pastikan email, kategori payroll, dan data kepegawaian sesuai agar sinkron dengan akun pengguna dan perhitungan gaji.</p>
         </div>
     </div>
 
+    {{-- Alert Messages --}}
+    @if(session('success'))
+        <div class="bg-green-50 border border-green-200 p-4 rounded-xl">
+            <p class="text-green-700 text-sm">{{ session('success') }}</p>
+        </div>
+    @endif
+
     @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
+        <div class="bg-red-50 border border-red-200 p-4 rounded-xl">
+            <p class="text-red-700 text-sm">{{ session('error') }}</p>
         </div>
     @endif
 
     @if($errors->any())
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div class="bg-red-50 border border-red-200 p-4 rounded-xl">
             <div class="flex items-start">
-                <svg class="w-5 h-5 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
+                <i class="fas fa-exclamation-circle text-red-500 mr-3 mt-0.5"></i>
                 <div>
-                    <strong class="font-bold">Terdapat kesalahan pada form!</strong>
-                    <ul class="mt-2 ml-4 list-disc list-inside text-sm">
+                    <strong class="font-bold text-red-900">Terdapat kesalahan pada form!</strong>
+                    <ul class="mt-2 ml-4 list-disc list-inside text-sm text-red-700">
                         @foreach($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -42,7 +58,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.workers.update', $worker->id ?? 1) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+    <form action="{{ route('admin.workers.update', $worker->id ?? 1) }}" method="POST" enctype="multipart/form-data" class="space-y-5 sm:space-y-6">
         @csrf
         @method('PUT')
 
@@ -204,20 +220,73 @@
             </div>
         </x-card>
 
+        {{-- Payroll Information --}}
+        <x-card title="Data Payroll & Pangkat">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <x-form.select
+                    name="payroll_category"
+                    label="Kategori Penggajian"
+                    :error="$errors->first('payroll_category')">
+                    <option value="">Pilih Kategori</option>
+                    <option value="asn" {{ old('payroll_category', $worker->payroll_category ?? '') == 'asn' ? 'selected' : '' }}>ASN</option>
+                    <option value="pppk" {{ old('payroll_category', $worker->payroll_category ?? '') == 'pppk' ? 'selected' : '' }}>PPPK</option>
+                    <option value="non_asn" {{ old('payroll_category', $worker->payroll_category ?? '') == 'non_asn' ? 'selected' : '' }}>Non-ASN</option>
+                    <option value="outsourced" {{ old('payroll_category', $worker->payroll_category ?? '') == 'outsourced' ? 'selected' : '' }}>Outsourcing / Pihak Ketiga</option>
+                </x-form.select>
+
+                <x-form.input
+                    name="base_salary"
+                    label="Gaji Pokok"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    :value="old('base_salary', $worker->base_salary ?? '')"
+                    :error="$errors->first('base_salary')"
+                    placeholder="Contoh: 3500000" />
+
+                <x-form.input
+                    name="rank"
+                    label="Pangkat"
+                    :value="old('rank', $worker->rank ?? '')"
+                    :error="$errors->first('rank')"
+                    placeholder="Contoh: Penata Muda" />
+
+                <x-form.input
+                    name="rank_level"
+                    label="Golongan"
+                    :value="old('rank_level', $worker->rank_level ?? '')"
+                    :error="$errors->first('rank_level')"
+                    placeholder="Contoh: III/a" />
+
+                <x-form.input
+                    name="outsourced_vendor"
+                    label="Vendor Outsourcing (Opsional)"
+                    :value="old('outsourced_vendor', $worker->outsourced_vendor ?? '')"
+                    :error="$errors->first('outsourced_vendor')"
+                    placeholder="Nama perusahaan vendor" />
+
+                <div class="sm:col-span-2">
+                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" name="auto_sync_salary_components" value="1" {{ old('auto_sync_salary_components') ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        Sinkronisasi komponen gaji default otomatis berdasarkan kategori payroll
+                    </label>
+                </div>
+            </div>
+        </x-card>
+
         {{-- Action Buttons --}}
         <x-card>
-            <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-                <x-button
-                    variant="secondary"
-                    onclick="window.location.href='{{ route('admin.workers.index') }}'">
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+                <a href="{{ route('admin.workers.index') }}"
+                   class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
                     Batal
-                </x-button>
-                <x-button
-                    variant="success"
-                    icon="fas fa-save"
-                    type="submit">
-                    Update
-                </x-button>
+                </a>
+                <button
+                    type="submit"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 text-white rounded-xl text-sm font-semibold shadow-md hover:shadow-lg transition-all">
+                    <i class="fas fa-save"></i>
+                    Simpan Perubahan
+                </button>
             </div>
         </x-card>
     </form>

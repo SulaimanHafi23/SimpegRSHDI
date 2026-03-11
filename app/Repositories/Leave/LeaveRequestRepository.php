@@ -69,7 +69,8 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
             });
         }
 
-        return $query->latest('start_date')
+        return $query->orderByDesc('created_at')
+            ->orderByDesc('start_date')
             ->paginate($filters['per_page'] ?? 15)
             ->appends($filters);
     }
@@ -92,14 +93,15 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
             $query->whereYear('start_date', $filters['year']);
         }
 
-        return $query->latest('start_date')->get();
+        return $query->orderByDesc('created_at')->orderByDesc('start_date')->get();
     }
 
     public function getPendingRequests(): Collection
     {
         return $this->model->where('status', 'pending')
             ->with(['worker', 'leaveType'])
-            ->latest('start_date')
+            ->orderByDesc('created_at')
+            ->orderByDesc('start_date')
             ->get();
     }
 

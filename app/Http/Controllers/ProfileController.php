@@ -112,9 +112,10 @@ class ProfileController extends Controller
         $this->userService->update($user->id, $userData);
 
         // If user has worker data, update worker info (name/phone/address)
-        if ($user->worker_id && ($request->has('name') || $request->has('phone') || $request->has('address'))) {
+        if ($user->worker_id && ($request->has('name') || $request->has('phone') || $request->has('address') || $request->has('email'))) {
             $workerData = array_filter([
                 'name' => $request->name,
+                'email' => $request->email,
                 'phone_number' => $request->phone ?? $request->phone_number ?? null,
                 'address' => $request->address,
             ]);

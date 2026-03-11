@@ -6,23 +6,31 @@ class NotificationDTO
 {
     public function __construct(
         public readonly ?string $id,
-        public readonly string $user_id,
+        public readonly string $notifiable_type,
+        public readonly string $notifiable_id,
         public readonly string $type,
-        public readonly string $title,
-        public readonly string $message,
         public readonly ?array $data,
         public readonly ?string $read_at,
     ) {}
 
     public static function fromRequest(array $data): self
     {
+        $payload = $data['data'] ?? [];
+
+        if (!isset($payload['title']) && isset($data['title'])) {
+            $payload['title'] = $data['title'];
+        }
+
+        if (!isset($payload['message']) && isset($data['message'])) {
+            $payload['message'] = $data['message'];
+        }
+
         return new self(
             id: $data['id'] ?? null,
-            user_id: $data['user_id'],
+            notifiable_type: $data['notifiable_type'] ?? \App\Models\User::class,
+            notifiable_id: $data['notifiable_id'] ?? $data['user_id'],
             type: $data['type'],
-            title: $data['title'],
-            message: $data['message'],
-            data: $data['data'] ?? null,
+            data: $payload,
             read_at: $data['read_at'] ?? null,
         );
     }
@@ -31,10 +39,9 @@ class NotificationDTO
     {
         return array_filter([
             'id' => $this->id,
-            'user_id' => $this->user_id,
+            'notifiable_type' => $this->notifiable_type,
+            'notifiable_id' => $this->notifiable_id,
             'type' => $this->type,
-            'title' => $this->title,
-            'message' => $this->message,
             'data' => $this->data,
             'read_at' => $this->read_at,
         ], fn($value) => $value !== null);

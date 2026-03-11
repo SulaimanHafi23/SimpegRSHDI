@@ -51,7 +51,7 @@ class ProfileController extends Controller
         }
 
         $request->validate([
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,' . $user->id . '|unique:workers,email,' . $worker->id,
             'phone_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
@@ -75,6 +75,7 @@ class ProfileController extends Controller
             }
 
             // Update worker fields directly (avoiding DTO for partial update)
+            $worker->email = $request->email;
             $worker->phone_number = $request->phone_number;
             $worker->address = $request->address;
             $worker->save();

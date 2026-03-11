@@ -49,6 +49,13 @@ class DatabaseSeeder extends Seeder
             LeaveRequestSeeder::class,
         ]);
 
+        if (app()->environment('local', 'staging')) {
+            $this->command->info('💰 Seeding Payroll & Promotion Demo Data...');
+            $this->call([
+                PayrollPromotionDemoSeeder::class,
+            ]);
+        }
+
         $this->command->info('✅ Database seeded successfully!');
     }
 }

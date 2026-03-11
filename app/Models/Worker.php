@@ -33,6 +33,11 @@ class Worker extends Model
         'hire_date',
         'resign_date',
         'employment_status',
+        'payroll_category',
+        'base_salary',
+        'rank',
+        'rank_level',
+        'outsourced_vendor',
         'status',
         'photo_url',
     ];
@@ -41,6 +46,7 @@ class Worker extends Model
         'birth_date' => 'date',
         'hire_date' => 'date',
         'resign_date' => 'date',
+        'base_salary' => 'decimal:2',
     ];
 
     // Relationships
@@ -102,6 +108,26 @@ class Worker extends Model
     public function overtimeRequests(): HasMany
     {
         return $this->hasMany(OvertimeRequest::class);
+    }
+
+    public function salaryComponentAssignments(): HasMany
+    {
+        return $this->hasMany(WorkerSalaryComponent::class);
+    }
+
+    public function payrolls(): HasMany
+    {
+        return $this->hasMany(Payroll::class);
+    }
+
+    public function promotionRequests(): HasMany
+    {
+        return $this->hasMany(PromotionRequest::class);
+    }
+
+    public function promotionHistories(): HasMany
+    {
+        return $this->hasMany(PromotionHistory::class);
     }
 
     public function shiftSwapRequestsAsRequester(): HasMany

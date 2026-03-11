@@ -70,7 +70,8 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
             });
         }
 
-        return $query->latest('overtime_date')
+        return $query->orderByDesc('created_at')
+            ->orderByDesc('overtime_date')
             ->paginate($filters['per_page'] ?? 15)
             ->appends($filters);
     }
@@ -103,7 +104,7 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
             $query->whereYear('overtime_date', $filters['year']);
         }
 
-        return $query->latest('overtime_date')->get();
+        return $query->orderByDesc('created_at')->orderByDesc('overtime_date')->get();
     }
 
     public function getPendingRequests(): Collection
@@ -113,7 +114,8 @@ class OvertimeRequestRepository implements OvertimeRequestRepositoryInterface
                 'worker.shiftOverrides.shift',
                 'worker.activeWorkerShift.shift'
             ])
-            ->latest('overtime_date')
+            ->orderByDesc('created_at')
+            ->orderByDesc('overtime_date')
             ->get();
     }
 

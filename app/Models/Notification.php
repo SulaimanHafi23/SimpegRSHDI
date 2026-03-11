@@ -6,16 +6,16 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Notifications\DatabaseNotification;
 
-class Notification extends Model
+class Notification extends DatabaseNotification
 {
     use HasFactory, HasUuids;
 
     protected $fillable = [
-        'user_id',
+        'notifiable_type',
+        'notifiable_id',
         'type',
-        'title',
-        'message',
         'data',
         'read_at',
     ];
@@ -30,7 +30,22 @@ class Notification extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'notifiable_id');
+    }
+
+    public function getUserIdAttribute(): ?string
+    {
+        return $this->notifiable_id;
+    }
+
+    public function getTitleAttribute(): ?string
+    {
+        return $this->data['title'] ?? null;
+    }
+
+    public function getMessageAttribute(): ?string
+    {
+        return $this->data['message'] ?? null;
     }
 
     /**

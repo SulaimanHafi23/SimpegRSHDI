@@ -5,6 +5,7 @@ namespace App\Repositories\Notification;
 use App\DTOs\NotificationDTO;
 use App\Models\Notification;
 use App\Repositories\Contracts\Notification\NotificationRepositoryInterface;
+use App\Models\User;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,8 @@ class NotificationRepository implements NotificationRepositoryInterface
         $query = $this->model->query()->with('user')->orderBy('created_at', 'desc');
 
         if (isset($filters['user_id'])) {
-            $query->where('user_id', $filters['user_id']);
+            $query->where('notifiable_type', User::class)
+                ->where('notifiable_id', $filters['user_id']);
         }
 
         if (isset($filters['type'])) {
@@ -69,7 +71,8 @@ class NotificationRepository implements NotificationRepositoryInterface
             return new LengthAwarePaginator([], 0, $perPage);
         }
         $query = $this->model->query()
-            ->where('user_id', $userId)
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $userId)
             ->orderBy('created_at', 'desc');
 
         if (isset($filters['is_read'])) {
@@ -91,7 +94,8 @@ class NotificationRepository implements NotificationRepositoryInterface
             return collect([]);
         }
         return $this->model->query()
-            ->where('user_id', $userId)
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $userId)
             ->whereNull('read_at')
             ->orderBy('created_at', 'desc')
             ->limit(10)
@@ -106,7 +110,8 @@ class NotificationRepository implements NotificationRepositoryInterface
         }
 
         return $this->model->query()
-            ->where('user_id', $userId)
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $userId)
             ->whereNull('read_at')
             ->count();
     }
@@ -169,7 +174,8 @@ class NotificationRepository implements NotificationRepositoryInterface
         }
 
         return $this->model->query()
-            ->where('user_id', $userId)
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $userId)
             ->whereNull('read_at')
             ->update(['read_at' => now()]);
     }

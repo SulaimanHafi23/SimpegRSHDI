@@ -22,18 +22,16 @@
                     @php
                         $worker = auth()->user()->worker ?? null;
                         $user = auth()->user();
-                        $avatarUrl = null;
-                        if ($worker && ($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url)) {
-                            $avatarUrl = Storage::url($worker->photo_url);
-                        } elseif (($user->photo ?? false) && Storage::disk('public')->exists($user->photo)) {
-                            $avatarUrl = Storage::url($user->photo);
-                        } else {
-                            $nameForAvatar = $worker->name ?? $user->username ?? $user->email ?? $user->name ?? '';
-                            $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($nameForAvatar);
-                        }
+                        $nameForAvatar = $worker->name ?? $user->username ?? $user->email ?? $user->name ?? '';
+                        $avatarUrl = ($worker && ($worker->photo_url ?? false))
+                            ? asset('storage/' . ltrim((string) $worker->photo_url, '/'))
+                            : (($user->photo ?? false)
+                                ? asset('storage/' . ltrim((string) $user->photo, '/'))
+                                : 'https://ui-avatars.com/api/?name=' . urlencode($nameForAvatar));
                     @endphp
                     <img src="{{ $avatarUrl }}"
                          alt="Avatar"
+                         onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($nameForAvatar) }}';"
                          class="w-8 h-8 border-2 border-yellow-400 rounded-full sm:h-10 sm:w-10">
                     <div class="hidden text-left sm:block">
                         <p class="text-sm font-semibold">{{ auth()->user()->name ?? auth()->user()->email }}</p>

@@ -247,6 +247,72 @@
             </div>
         </div>
 
+        {{-- Section 5: Data Payroll --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div class="flex items-center gap-2.5 mb-5">
+                <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-indigo-600" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-2.21 0-4 .895-4 2s1.79 2 4 2 4 .895 4 2-1.79 2-4 2m0-10V6m0 12v-2m8-6a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h2 class="text-sm sm:text-base font-semibold text-gray-800">Data Payroll & Pangkat</h2>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                    <label for="payroll_category" class="block text-sm font-medium text-gray-700 mb-1.5">Kategori Penggajian</label>
+                    <select name="payroll_category" id="payroll_category"
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('payroll_category') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                        <option value="">-- Pilih Kategori --</option>
+                        <option value="asn" {{ old('payroll_category') == 'asn' ? 'selected' : '' }}>ASN</option>
+                        <option value="pppk" {{ old('payroll_category') == 'pppk' ? 'selected' : '' }}>PPPK</option>
+                        <option value="non_asn" {{ old('payroll_category') == 'non_asn' ? 'selected' : '' }}>Non-ASN</option>
+                        <option value="outsourced" {{ old('payroll_category') == 'outsourced' ? 'selected' : '' }}>Outsourcing / Pihak Ketiga</option>
+                    </select>
+                    @error('payroll_category')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="base_salary" class="block text-sm font-medium text-gray-700 mb-1.5">Gaji Pokok</label>
+                    <input type="number" name="base_salary" id="base_salary" min="0" step="1000" value="{{ old('base_salary') }}"
+                           placeholder="Contoh: 3500000"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('base_salary') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('base_salary')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="rank" class="block text-sm font-medium text-gray-700 mb-1.5">Pangkat</label>
+                    <input type="text" name="rank" id="rank" value="{{ old('rank') }}"
+                           placeholder="Contoh: Penata Muda"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('rank') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('rank')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <div>
+                    <label for="rank_level" class="block text-sm font-medium text-gray-700 mb-1.5">Golongan</label>
+                    <input type="text" name="rank_level" id="rank_level" value="{{ old('rank_level') }}"
+                           placeholder="Contoh: III/a"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('rank_level') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('rank_level')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label for="outsourced_vendor" class="block text-sm font-medium text-gray-700 mb-1.5">Vendor Outsourcing (Opsional)</label>
+                    <input type="text" name="outsourced_vendor" id="outsourced_vendor" value="{{ old('outsourced_vendor') }}"
+                           placeholder="Nama vendor untuk pegawai outsourcing"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('outsourced_vendor') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('outsourced_vendor')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+
+                <div class="sm:col-span-2">
+                    <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                        <input type="checkbox" name="auto_sync_salary_components" value="1" {{ old('auto_sync_salary_components') ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                        Sinkronisasi komponen gaji default otomatis berdasarkan kategori payroll
+                    </label>
+                </div>
+            </div>
+        </div>
+
         {{-- Action Buttons --}}
         <div class="flex flex-col-reverse sm:flex-row gap-3 pt-1 pb-2">
             <a href="{{ route('admin.workers.index') }}"

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -40,6 +41,8 @@ use App\Http\Controllers\Master\ReligionController;
 use App\Http\Controllers\Master\LeaveTypeController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Payroll\PayrollController;
+use App\Http\Controllers\Promotion\PromotionController;
 
 // Dashboard Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -53,6 +56,8 @@ use App\Http\Controllers\Employee\OvertimeController as EmployeeOvertimeControll
 use App\Http\Controllers\Employee\BusinessTripController as EmployeeBusinessTripController;
 use App\Http\Controllers\Employee\DocumentController as EmployeeDocumentController;
 use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
+use App\Http\Controllers\Employee\PayrollController as EmployeePayrollController;
+use App\Http\Controllers\Employee\PromotionController as EmployeePromotionController;
 
 // Approval controllers
 use App\Http\Controllers\Approval\BusinessTripApprovalController;
@@ -108,7 +113,7 @@ Route::middleware('auth')->get('/api/world-time', function () {
             ]);
         }
     } catch (\Exception $e) {
-        \Log::warning('World Time API failed, using server time', ['error' => $e->getMessage()]);
+        Log::warning('World Time API failed, using server time', ['error' => $e->getMessage()]);
     }
 
     // Fallback: Use server time with correct timezone
@@ -232,6 +237,19 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\Employee\NotificationController::class, 'destroy'])->name('destroy');
         });
 
+        // Payroll for employees
+        Route::prefix('payrolls')->name('payrolls.')->group(function () {
+            Route::get('/', [EmployeePayrollController::class, 'index'])->name('index');
+            Route::get('/{id}', [EmployeePayrollController::class, 'show'])->name('show');
+            Route::get('/{id}/slip-pdf', [EmployeePayrollController::class, 'downloadSlipPdf'])->name('slip-pdf');
+        });
+
+        // Promotion history for employees
+        Route::prefix('promotions')->name('promotions.')->group(function () {
+            Route::get('/', [EmployeePromotionController::class, 'index'])->name('index');
+            Route::get('/{id}', [EmployeePromotionController::class, 'show'])->name('show');
+        });
+
         // Calendar for employees
         Route::prefix('calendar')->name('calendar.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('index');
@@ -322,6 +340,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [WorkerController::class, 'index'])->name('index');
         Route::get('/create', [WorkerController::class, 'create'])->name('create');
         Route::get('/export', [WorkerController::class, 'export'])->name('export');
+        Route::get('/{id}/salary-components', [WorkerController::class, 'manageSalaryComponents'])->name('salary-components.edit');
+        Route::put('/{id}/salary-components', [WorkerController::class, 'updateSalaryComponents'])->name('salary-components.update');
+        Route::post('/{id}/salary-components/apply-default', [WorkerController::class, 'applyDefaultSalaryComponents'])->name('salary-components.apply-default');
         Route::middleware('role:Super Admin|HR')->group(function () {
             Route::get('/template', [WorkerController::class, 'downloadTemplate'])->name('template');
             Route::post('/import', [WorkerController::class, 'import'])->name('import');
@@ -438,6 +459,26 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/bulk-approve', [OvertimeRequestController::class, 'bulkApprove'])->name('bulk-approve');
     });
 
+    // ========== PAYROLL MANAGEMENT ==========
+    Route::prefix('payrolls')->name('admin.payrolls.')->middleware('role_or_permission:Super Admin|HR|Manager|payroll.manage|payroll.view')->group(function () {
+        Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::get('/generate', [PayrollController::class, 'generateForm'])->name('generate');
+        Route::post('/generate', [PayrollController::class, 'generate'])->name('generate.store');
+        Route::get('/{periodId}', [PayrollController::class, 'show'])->name('show');
+        Route::post('/{periodId}/mark-paid', [PayrollController::class, 'markPaid'])->name('mark-paid');
+        Route::get('/slips/{payrollId}.pdf', [PayrollController::class, 'downloadSlipPdf'])->name('slip-pdf');
+    });
+
+    // ========== PROMOTION MANAGEMENT ==========
+    Route::prefix('promotions')->name('admin.promotions.')->middleware('role_or_permission:Super Admin|HR|Manager|promotion.manage|promotion.view')->group(function () {
+        Route::get('/', [PromotionController::class, 'index'])->name('index');
+        Route::get('/create', [PromotionController::class, 'create'])->name('create');
+        Route::post('/', [PromotionController::class, 'store'])->name('store');
+        Route::get('/{id}', [PromotionController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [PromotionController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [PromotionController::class, 'reject'])->name('reject');
+    });
+
     // ========== WORKER DOCUMENT MANAGEMENT ==========
     Route::prefix('worker-documents')->name('admin.worker-documents.')->group(function () {
         Route::get('/', [WorkerDocumentController::class, 'index'])->name('index');
@@ -514,9 +555,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
 
 // ========== API ROUTES ==========
 Route::prefix('api')->middleware(['auth'])->group(function () {
-    Route::get('/workers/{workerId}/future-shifts', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getFutureShifts']);
+    Route::get('/workers/{workerId}/future-shifts', [WorkerShiftApiController::class, 'getFutureShifts']);
     // Returns shift start/end time for a worker on a given date — used by overtime forms
-    Route::get('/workers/{workerId}/shift-time', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getShiftTime']);
+    Route::get('/workers/{workerId}/shift-time', [WorkerShiftApiController::class, 'getShiftTime']);
 });
 
 // ========== FALLBACK ROUTE ==========

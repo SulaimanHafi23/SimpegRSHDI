@@ -34,6 +34,7 @@ class WorkerSeeder extends Seeder
         $usedNips = Worker::pluck('nip')->map(fn ($value) => strtoupper((string) $value))->flip()->all();
         $usedEmails = Worker::pluck('email')->map(fn ($value) => strtolower((string) $value))->flip()->all();
         $usedPhones = Worker::pluck('phone_number')->map(fn ($value) => (string) $value)->flip()->all();
+        $usedDepartmentCodes = Department::pluck('code')->map(fn ($value) => strtoupper((string) $value))->flip()->all();
 
         foreach ($rows as $index => $row) {
             $name = trim((string) ($row['name'] ?? ''));
@@ -44,12 +45,17 @@ class WorkerSeeder extends Seeder
             $genderName = $this->normalizeGender($row['gender'] ?? null);
             $religionName = $this->normalizeReligion($row['religion'] ?? null);
             $departmentName = $this->normalizeDepartment($row['department'] ?? null);
+            $departmentCode = $this->ensureUnique($this->makeDepartmentCode($departmentName), $usedDepartmentCodes, true);
 
             $gender = Gender::firstOrCreate(['name' => $genderName], ['is_active' => true]);
             $religion = Religion::firstOrCreate(['name' => $religionName], ['is_active' => true]);
             $department = Department::firstOrCreate(
                 ['name' => $departmentName],
-                ['description' => 'Generated from worker seed data', 'is_active' => true]
+                [
+                    'code' => $departmentCode,
+                    'description' => 'Generated from worker seed data',
+                    'is_active' => true,
+                ]
             );
 
             $baseNip = $this->normalizeNip($row['nip'] ?? null);
@@ -81,6 +87,23 @@ class WorkerSeeder extends Seeder
                 ? $row['status']
                 : 'active';
 
+            $payrollCategory = match ($employmentStatus) {
+                'permanent' => 'asn',
+                'internship' => 'non_asn',
+                default => (str_contains(strtolower($departmentName), 'outsource') ? 'outsourced' : 'pppk'),
+            };
+
+            $baseSalary = match ($payrollCategory) {
+                'asn' => 4500000,
+                'pppk' => 3800000,
+                'outsourced' => 2800000,
+                default => 3000000,
+            };
+
+            $rank = $payrollCategory === 'asn' ? 'Penata Muda' : null;
+            $rankLevel = $payrollCategory === 'asn' ? 'III/a' : null;
+            $outsourcedVendor = $payrollCategory === 'outsourced' ? 'Vendor Pihak Ketiga' : null;
+
             $worker = Worker::where('nip', $nip)->first();
 
             $payload = [
@@ -96,6 +119,11 @@ class WorkerSeeder extends Seeder
                 'department_id' => $department->id,
                 'hire_date' => $hireDate,
                 'employment_status' => $employmentStatus,
+                'payroll_category' => $payrollCategory,
+                'base_salary' => $baseSalary,
+                'rank' => $rank,
+                'rank_level' => $rankLevel,
+                'outsourced_vendor' => $outsourcedVendor,
                 'status' => $status,
             ];
 
@@ -215,6 +243,18 @@ class WorkerSeeder extends Seeder
         }
 
         return 'Administrasi';
+    }
+
+    private function makeDepartmentCode(string $departmentName): string
+    {
+        $slug = strtoupper((string) preg_replace('/[^A-Za-z0-9]+/', '_', $departmentName));
+        $slug = trim($slug, '_');
+
+        if ($slug === '') {
+            return 'DEPT';
+        }
+
+        return substr($slug, 0, 20);
     }
 
     private function ensureUnique(string $baseValue, array &$used, bool $upper = false): string
