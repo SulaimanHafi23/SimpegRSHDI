@@ -95,22 +95,6 @@
             </div>
 
             <!-- Overtime Status -->
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
-                <div class="text-center">
-                    <div class="text-sm text-purple-700 mb-2">Lembur</div>
-                    <div class="text-2xl mb-2">💪</div>
-                    <div class="font-bold text-purple-800">
-                        @if($attendance->overtime_hours > 0)
-                            {{ $attendance->overtime_hours }} Jam
-                        @else
-                            Tidak Ada
-                        @endif
-                    </div>
-                    @if($attendance->overtime_hours > 0)
-                        <div class="text-xs text-purple-600 mt-1">Kerja Extra</div>
-                    @endif
-                </div>
-            </div>
         </div>
     </div>
 
@@ -352,7 +336,6 @@
                         $score = 100;
                         if(abs($attendance->late_minutes) > 0) $score -= min(50, abs($attendance->late_minutes) * 2);
                         if($attendance->is_early_leave) $score -= min(30, $attendance->early_leave_minutes);
-                        if($attendance->overtime_hours > 0) $score += min(20, $attendance->overtime_hours * 5);
                         $score = max(0, min(100, $score));
                     @endphp
                     <div class="text-3xl mb-2">
@@ -476,7 +459,6 @@
                                 $score = 100;
                                 if(abs($attendance->late_minutes) > 0) $score -= min(50, abs($attendance->late_minutes) * 2);
                                 if($attendance->is_early_leave) $score -= min(30, $attendance->early_leave_minutes);
-                                if($attendance->overtime_hours > 0) $score += min(20, $attendance->overtime_hours * 5);
                                 $score = max(0, min(100, $score));
                             @endphp
                             <div class="text-xs text-gray-600 mb-2">Skor Kehadiran</div>

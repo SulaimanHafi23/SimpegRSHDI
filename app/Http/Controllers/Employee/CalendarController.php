@@ -6,15 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Holiday;
 use App\Models\BusinessTrip;
 use App\Services\Leave\LeaveRequestService;
-use App\Services\Overtime\OvertimeRequestService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class CalendarController extends Controller
 {
     public function __construct(
-        protected LeaveRequestService $leaveService,
-        protected OvertimeRequestService $overtimeService
+        protected LeaveRequestService $leaveService
     ) {}
 
     /**
@@ -42,13 +40,6 @@ class CalendarController extends Controller
 
         // Get leave requests
         $leaves = $this->leaveService->getAll([
-            'worker_id' => $workerId,
-            'start_date' => $start,
-            'end_date' => $end,
-        ]);
-
-        // Get overtime requests
-        $overtimes = $this->overtimeService->getAll([
             'worker_id' => $workerId,
             'start_date' => $start,
             'end_date' => $end,
@@ -83,21 +74,6 @@ class CalendarController extends Controller
                 'color' => $this->getLeaveColor($leave->status),
                 'description' => $leave->reason,
                 'days' => $leave->total_days,
-            ];
-        }
-
-        // Process overtimes
-        foreach ($overtimes as $overtime) {
-            $events[] = [
-                'id' => 'overtime-' . $overtime->id,
-                'type' => 'overtime',
-                'title' => 'Lembur',
-                'start' => $overtime->overtime_date . 'T' . $overtime->start_time,
-                'end' => $overtime->overtime_date . 'T' . $overtime->end_time,
-                'status' => $overtime->status,
-                'color' => $this->getOvertimeColor($overtime->status),
-                'description' => $overtime->description,
-                'hours' => $overtime->total_hours,
             ];
         }
 
@@ -141,19 +117,6 @@ class CalendarController extends Controller
     {
         return match($status) {
             'approved' => '#10b981', // green
-            'pending' => '#f59e0b', // amber
-            'rejected' => '#ef4444', // red
-            default => '#6b7280', // gray
-        };
-    }
-
-    /**
-     * Get color based on overtime status
-     */
-    private function getOvertimeColor(string $status): string
-    {
-        return match($status) {
-            'approved' => '#3b82f6', // blue
             'pending' => '#f59e0b', // amber
             'rejected' => '#ef4444', // red
             default => '#6b7280', // gray

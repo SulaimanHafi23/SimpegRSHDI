@@ -6,10 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
-use App\Models\OvertimeRequest;
 use App\Models\ShiftSwapRequest;
 use App\Services\Attendance\AttendanceService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -74,12 +72,6 @@ class ManagerDashboardController extends Controller
             })
             ->count();
 
-        $pendingOvertimes = OvertimeRequest::where('status', 'pending')
-            ->whereHas('worker', function ($query) use ($departmentId) {
-                $query->where('department_id', $departmentId);
-            })
-            ->count();
-
         $pendingShiftSwaps = ShiftSwapRequest::where('status', 'pending')
             ->where(function ($query) use ($departmentId) {
                 $query->whereHas('requester', function ($q) use ($departmentId) {
@@ -93,16 +85,6 @@ class ManagerDashboardController extends Controller
 
         // ========== RECENT LEAVE REQUESTS ==========
         $recentLeaves = LeaveRequest::with(['worker', 'leaveType'])
-            ->where('status', 'pending')
-            ->whereHas('worker', function ($query) use ($departmentId) {
-                $query->where('department_id', $departmentId);
-            })
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // ========== RECENT OVERTIME REQUESTS ==========
-        $recentOvertimes = OvertimeRequest::with('worker')
             ->where('status', 'pending')
             ->whereHas('worker', function ($query) use ($departmentId) {
                 $query->where('department_id', $departmentId);
@@ -200,10 +182,8 @@ class ManagerDashboardController extends Controller
             'departmentAbsentToday',
             'attendanceRate',
             'pendingLeaves',
-            'pendingOvertimes',
             'pendingShiftSwaps',
             'recentLeaves',
-            'recentOvertimes',
             'recentShiftSwaps',
             'attendanceChart',
             'topPerformers',

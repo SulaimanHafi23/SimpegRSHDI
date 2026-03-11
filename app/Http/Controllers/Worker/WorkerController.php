@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Worker;
 
-use App\DTOs\WorkerDTO;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -15,7 +14,6 @@ use App\Services\Master\DepartmentService;
 use App\Services\Role\RoleService;
 use App\Models\Department;
 use App\Models\Worker;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WorkersExport;
 use App\Exports\WorkersTemplateExport;
@@ -83,23 +81,11 @@ class WorkerController extends Controller
             ]);
             $attendanceThisMonth = $attendances->count();
 
-            // Total overtime (approved only)
-            $overtimeService = app(\App\Services\Overtime\OvertimeRequestService::class);
-            $overtimes = $overtimeService->getByWorkerId($worker->id, ['status' => 'approved']);
-            $totalOvertime = $overtimes->sum('total_hours');
-
             // Recent Leave Requests (last 5)
             $leaveService = app(\App\Services\Leave\LeaveRequestService::class);
             $leaveRequests = $leaveService->getByWorkerId($worker->id, [
                 'per_page' => 5,
                 'sort' => 'start_date',
-                'order' => 'desc',
-            ]);
-
-            // Recent Overtime Requests (last 5)
-            $overtimeRequests = $overtimeService->getByWorkerId($worker->id, [
-                'per_page' => 5,
-                'sort' => 'overtime_date',
                 'order' => 'desc',
             ]);
 
@@ -110,9 +96,7 @@ class WorkerController extends Controller
             return view('admin.workers.show', compact(
                 'worker',
                 'attendanceThisMonth',
-                'totalOvertime',
                 'leaveRequests',
-                'overtimeRequests',
                 'shiftHistories'
             ));
         } catch (\Exception $e) {

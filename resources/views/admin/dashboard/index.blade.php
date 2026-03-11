@@ -73,7 +73,7 @@
     @endif
 
     {{-- Statistics Cards --}}
-    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         <x-stats-card
             title="Total Pegawai"
             :value="$statistics['total_workers'] ?? 0"
@@ -96,17 +96,10 @@
             icon="fas fa-calendar-times"
             color="yellow"
             trend="Menunggu Approval" />
-
-        <x-stats-card
-            title="Permohonan Lembur"
-            :value="$statistics['pending_overtimes'] ?? 0"
-            icon="fas fa-business-time"
-            color="purple"
-            trend="Menunggu Approval" />
     </div>
 
     {{-- Charts Row --}}
-    <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-1">
         {{-- Attendance Chart --}}
         <x-card title="Grafik Kehadiran Minggu Ini">
             <x-slot:header>
@@ -219,61 +212,6 @@
             @endif
         </x-card>
 
-        {{-- Recent Overtime Requests --}}
-        <x-card>
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-lg font-bold text-gray-800 flex items-center">
-                    <i class="mr-2 text-purple-600 fas fa-clock"></i>
-                    Pengajuan Lembur Terbaru
-                </h3>
-                <a href="{{ route('admin.overtime.index') }}" class="text-sm font-medium text-green-600 hover:text-green-700">
-                    Lihat Semua <i class="ml-1 fas fa-arrow-right"></i>
-                </a>
-            </div>
-
-            @if(isset($recentOvertimes) && count($recentOvertimes) > 0)
-                <div class="space-y-3">
-                    @foreach($recentOvertimes as $overtime)
-                        <div class="flex items-center justify-between p-4 transition duration-200 rounded-lg bg-gray-50 hover:bg-gray-100">
-                            <div class="flex items-center space-x-3">
-                                @if($overtime->worker->photo_url ?? false)
-                                    <img src="{{ Storage::url($overtime->worker->photo_url) }}"
-                                         alt="{{ $overtime->worker->name }}"
-                                         class="w-10 h-10 rounded-full object-cover">
-                                @else
-                                    <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                                        <span class="text-purple-600 font-semibold">{{ substr($overtime->worker->name, 0, 1) }}</span>
-                                    </div>
-                                @endif
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">{{ $overtime->worker->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $overtime->duration ?? '-' }} jam</p>
-                                </div>
-                            </div>
-                            @if($overtime->status == 'approved')
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                                <i class="fas fa-check-circle mr-1"></i>Disetujui
-                            </span>
-                            @elseif($overtime->status == 'rejected')
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                                <i class="fas fa-times-circle mr-1"></i>Ditolak
-                            </span>
-                            @else
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                <i class="fas fa-clock mr-1"></i>Pending
-                            </span>
-                            @endif
-                            <!-- <x-badge variant="warning">{{ $overtime->status ?? '-' }}</x-badge> -->
-                        </div>
-                    @endforeach
-                </div>
-            @else
-                <x-empty-state
-                    icon="fas fa-clock"
-                    title="Belum ada pengajuan lembur"
-                    description="Pengajuan lembur terbaru akan ditampilkan di sini" />
-            @endif
-        </x-card>
     </div>
 
     {{-- Quick Actions --}}

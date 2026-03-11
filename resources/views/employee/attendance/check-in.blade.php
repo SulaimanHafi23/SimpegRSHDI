@@ -338,11 +338,12 @@ const ACC_THRESHOLD = {{ config('attendance.max_accuracy', 300) }}; // meters
 let map, userMarker, officeCircle;
 
 // Reject extremely coarse fixes (usually IP/cell fallback) and request better samples.
-const HARD_REJECT_ACCURACY = 2000; // meters
+const HARD_REJECT_ACCURACY = 5000; // meters
 
 function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = ACC_THRESHOLD) {
     return new Promise((resolve, reject) => {
         let bestPosition = null;
+        let coarseFallbackPosition = null;
         let watchId = null;
         let finished = false;
 
@@ -364,7 +365,16 @@ function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = ACC_THRESH
             const accuracy = Number(position?.coords?.accuracy ?? 0);
 
             // Ignore clearly unusable coordinates and keep waiting.
-            if (!Number.isFinite(accuracy) || accuracy <= 0 || accuracy > HARD_REJECT_ACCURACY) {
+            if (!Number.isFinite(accuracy) || accuracy <= 0) {
+                return;
+            }
+
+            // Keep best available sample as last-resort fallback.
+            if (!coarseFallbackPosition || accuracy < coarseFallbackPosition.coords.accuracy) {
+                coarseFallbackPosition = position;
+            }
+
+            if (accuracy > HARD_REJECT_ACCURACY) {
                 return;
             }
 
@@ -398,6 +408,8 @@ function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = ACC_THRESH
         setTimeout(() => {
             if (bestPosition) {
                 finish(bestPosition);
+            } else if (coarseFallbackPosition) {
+                finish(coarseFallbackPosition);
             } else {
                 finish(null, { code: 3, message: 'TIMEOUT' });
             }
@@ -408,16 +420,25 @@ function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = ACC_THRESH
 // Get geolocation
 async function getLocation(retryCount = 0) {
     const statusDiv = document.getElementById('locationStatus');
+    const submit = document.getElementById('btn-checkin');
 
     if (!navigator.geolocation) {
         statusDiv.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-1"></i>Browser Anda tidak mendukung geolocation';
         return;
     }
 
+    // Reset stale values so each retry uses fresh coordinates only.
+    document.getElementById('latitude').value = '';
+    document.getElementById('longitude').value = '';
+    document.getElementById('accuracy').value = '';
+    document.getElementById('accuracyInfo').textContent = 'Akurasi: -';
+    submit.disabled = true;
+    submit.classList.add('opacity-50','cursor-not-allowed');
+
     statusDiv.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengambil sampel GPS terbaik...';
 
     try {
-        const position = await getBestAvailablePosition(18000, ACC_THRESHOLD);
+        const position = await getBestAvailablePosition(22000, ACC_THRESHOLD);
             const latitude = position.coords.latitude;
             const longitude = position.coords.longitude;
             const accuracy = position.coords.accuracy;
@@ -432,7 +453,6 @@ async function getLocation(retryCount = 0) {
             updateUserMarker(latitude, longitude, accuracy);
 
             // Enforce accuracy threshold only for present status
-            const submit = document.getElementById('btn-checkin');
             const statusValue = document.getElementById('status')?.value || 'present';
             if (statusValue === 'present' && accuracy && accuracy > ACC_THRESHOLD) {
                 submit.disabled = true;
@@ -470,6 +490,13 @@ async function getLocation(retryCount = 0) {
                 }
             })();
     } catch (error) {
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('accuracy').value = '';
+            document.getElementById('accuracyInfo').textContent = 'Akurasi: -';
+            submit.disabled = true;
+            submit.classList.add('opacity-50','cursor-not-allowed');
+
             let errorMsg = 'Gagal mendapatkan lokasi';
             switch(error.code) {
                 case error.PERMISSION_DENIED:

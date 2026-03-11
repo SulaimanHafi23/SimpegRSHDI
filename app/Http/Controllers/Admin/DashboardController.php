@@ -6,11 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
-use App\Models\OvertimeRequest;
-use App\Services\Overtime\OvertimeRequestService;
 use App\Services\Attendance\AttendanceService;
 use App\Traits\DepartmentFilterable;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -18,18 +15,15 @@ class DashboardController extends Controller
 {
     use DepartmentFilterable;
 
-    protected OvertimeRequestService $overtimeRequestService;
     protected AttendanceService $attendanceService;
 
     public function __construct(
-        OvertimeRequestService $overtimeRequestService,
         AttendanceService $attendanceService
     )
     {
         $this->middleware('auth');
         $this->middleware('permission:dashboard.admin');
 
-        $this->overtimeRequestService = $overtimeRequestService;
         $this->attendanceService = $attendanceService;
     }
 
@@ -102,25 +96,10 @@ class DashboardController extends Controller
         $approvedLeaves = $scopeLeave(LeaveRequest::where('status', 'approved'))->count();
         $rejectedLeaves = $scopeLeave(LeaveRequest::where('status', 'rejected'))->count();
 
-        // Overtime Requests Statistics
-        $totalOvertimeRequests = $departmentId
-            ? OvertimeRequest::whereHas('worker', fn($q) => $q->where('department_id', $departmentId))->count()
-            : OvertimeRequest::count();
-    $pendingOvertimes = $this->overtimeRequestService->getAll(['status' => 'pending', 'department_id' => $departmentId, 'per_page' => 9999])->total();
-    $approvedOvertimes = $this->overtimeRequestService->getAll(['status' => 'approved', 'department_id' => $departmentId, 'per_page' => 9999])->total();
-    $rejectedOvertimes = $this->overtimeRequestService->getAll(['status' => 'rejected', 'department_id' => $departmentId, 'per_page' => 9999])->total();
-
         // ========== RECENT ACTIVITIES ==========
 
         // Recent Leave Requests
         $recentLeaves = LeaveRequest::with(['worker', 'leaveType'])
-            ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Recent Overtime Requests
-        $recentOvertimes = OvertimeRequest::with(['worker'])
             ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
             ->latest()
             ->take(5)
@@ -169,7 +148,6 @@ class DashboardController extends Controller
             'present_today' => $todayPresent,
             'attendance_rate' => $totalWorkers > 0 ? round(($todayPresent / max(1, $totalWorkers)) * 100, 1) : 0,
             'pending_leaves' => $pendingLeaves,
-            'pending_overtimes' => $pendingOvertimes,
         ];
 
         // Attendance chart for the last 7 days — single batch query
@@ -230,15 +208,8 @@ class DashboardController extends Controller
             'approvedLeaves',
             'rejectedLeaves',
 
-            // Overtimes
-            'totalOvertimeRequests',
-            'pendingOvertimes',
-            'approvedOvertimes',
-            'rejectedOvertimes',
-
             // Recent Activities
             'recentLeaves',
-            'recentOvertimes',
             'todayAbsences',
 
             // Charts
@@ -376,14 +347,12 @@ class DashboardController extends Controller
     public function getPendingApprovalsCount()
     {
         $departmentId = $this->getManagerDepartmentFilter();
-        $pendingOvertimes = $this->overtimeRequestService->getAll(['status' => 'pending', 'department_id' => $departmentId, 'per_page' => 9999])->total();
         $pendingLeaves = LeaveRequest::where('status', 'pending')
             ->when($departmentId, fn($q) => $q->whereHas('worker', fn($w) => $w->where('department_id', $departmentId)))
             ->count();
         $count = [
             'leaves' => $pendingLeaves,
-            'overtimes' => $pendingOvertimes,
-            'total' => $pendingLeaves + $pendingOvertimes,
+            'total' => $pendingLeaves,
         ];
 
         return response()->json($count);

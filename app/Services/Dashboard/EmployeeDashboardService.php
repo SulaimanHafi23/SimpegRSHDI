@@ -4,8 +4,6 @@ namespace App\Services\Dashboard;
 
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
-use App\Models\OvertimeRequest;
-use App\Models\Worker;
 use Carbon\Carbon;
 
 class EmployeeDashboardService
@@ -59,7 +57,7 @@ class EmployeeDashboardService
         $attendances = Attendance::where('worker_id', $workerId)
             ->whereBetween('attendance_date', [$startDate, $endDate])
             ->get()
-            ->keyBy(fn($a) => $a->attendance_date->format('Y-m-d'));
+            ->keyBy(fn($a) => Carbon::parse($a->attendance_date)->format('Y-m-d'));
 
         $labels = [];
         $data = [];
@@ -95,31 +93,6 @@ class EmployeeDashboardService
             'approved' => (clone $query)->where('status', 'approved')->count(),
             'rejected' => (clone $query)->where('status', 'rejected')->count(),
             'remaining_days' => max(0, 12 - $usedDays),
-        ];
-    }
-
-    /**
-     * Get overtime summary
-     */
-    public function getOvertimeSummary(string $workerId, string $period = 'month')
-    {
-        $query = OvertimeRequest::where('worker_id', $workerId);
-
-        switch ($period) {
-            case 'month':
-                $query->whereMonth('overtime_date', now()->month)
-                      ->whereYear('overtime_date', now()->year);
-                break;
-            case 'year':
-                $query->whereYear('overtime_date', now()->year);
-                break;
-        }
-
-        return [
-            'total_requests' => (clone $query)->count(),
-            'approved' => (clone $query)->where('status', 'approved')->count(),
-            'pending' => (clone $query)->where('status', 'pending')->count(),
-            'total_hours' => (clone $query)->where('status', 'approved')->sum('total_hours'),
         ];
     }
 

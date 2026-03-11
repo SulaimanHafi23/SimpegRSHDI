@@ -8,31 +8,43 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 
     <!-- Header -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
-        <div class="flex items-center justify-between">
-            <div>
-                <h1 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fas fa-sign-out-alt text-red-600"></i>
-                    Konfirmasi Check Out
-                </h1>
-                <p class="text-sm text-gray-600 mt-1">Selesaikan sesi absensi Anda dengan mengonfirmasi check-out</p>
-            </div>
-            <a href="{{ route('employee.attendance.index') }}"
-               class="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                <span class="hidden sm:inline">Kembali</span>
-            </a>
-        </div>
+    <div class="mb-4 sm:mb-6">
+        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Check Out Absensi</h1>
+        <p class="text-sm sm:text-base text-gray-600 mt-1">Selesaikan sesi kehadiran Anda hari ini</p>
     </div>
 
     <!-- Session Info -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
+    <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-6">
         @php
             $effectiveShift = $attendanceShiftInfo['shift'] ?? null;
             $effectiveSchedule = $attendanceShiftInfo['schedule'] ?? null;
             $shiftSource = $attendanceShiftInfo['source'] ?? 'none';
         @endphp
-        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 sm:p-6 border-b border-gray-200">
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center">
+            <div class="text-xs sm:text-sm text-gray-600 mb-1">Sesi Absensi</div>
+            <div class="text-lg sm:text-xl font-bold text-blue-700">{{ \Carbon\Carbon::parse($attendance->attendance_date)->format('l, d M Y') }}</div>
+            <div class="text-xs sm:text-sm text-gray-600 mt-1">Check-in: {{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}</div>
+        </div>
+
+        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-blue-500 text-lg sm:text-xl mt-0.5"></i>
+                </div>
+                <div class="ml-2 sm:ml-3">
+                    <h3 class="text-xs sm:text-sm font-semibold text-gray-800 mb-2">Cara Check Out:</h3>
+                    <ol class="text-xs sm:text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                        <li>Pilih lokasi check-out</li>
+                        <li>Pastikan GPS berhasil didapatkan</li>
+                        <li>Pastikan posisi berada dalam radius lokasi</li>
+                        <li>Ambil foto bukti (opsional)</li>
+                        <li>Klik "Konfirmasi Check Out"</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-0 sm:p-0">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <div class="text-sm text-gray-600 mb-1">Sesi Absensi</div>
@@ -60,42 +72,6 @@
                     <div class="text-sm text-gray-600">Selamat bekerja,</div>
                     <div class="font-semibold text-gray-800">{{ auth()->user()->name }}</div>
                     <div class="text-xs text-gray-500 mt-1">{{ auth()->user()->worker->employee_id ?? '' }}</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Instructions -->
-        <div class="bg-gradient-to-r from-amber-50 to-orange-50 p-4 sm:p-6 border-b border-gray-200">
-            <div class="flex items-start gap-3">
-                <div class="flex-shrink-0 mt-1">
-                    <div class="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                        <i class="fas fa-info-circle text-amber-600"></i>
-                    </div>
-                </div>
-                <div class="flex-1">
-                    <h3 class="text-sm font-semibold text-gray-800 mb-3">Panduan Check Out:</h3>
-                    <ol class="text-sm text-gray-700 space-y-2">
-                        <li class="flex items-start gap-2">
-                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                            <span>Pilih lokasi checkout dari dropdown yang tersedia</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                            <span>Sistem akan otomatis mendapatkan koordinat GPS Anda</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                            <span>Pastikan Anda berada dalam radius lokasi yang dipilih</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">4</span>
-                            <span>Upload foto (opsional) dan tambahkan catatan jika diperlukan</span>
-                        </li>
-                        <li class="flex items-start gap-2">
-                            <span class="flex-shrink-0 w-5 h-5 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center text-xs font-bold">5</span>
-                            <span>Klik "Konfirmasi Check Out" untuk menyelesaikan</span>
-                        </li>
-                    </ol>
                 </div>
             </div>
         </div>
@@ -246,17 +222,15 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="space-y-3">
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <button type="submit" id="btn-submit"
-                                class="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                                class="w-full sm:flex-1 px-4 sm:px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md transition duration-150">
                             <i class="fas fa-sign-out-alt"></i>
                             Konfirmasi Check Out
                         </button>
-
                         <a href="{{ route('employee.attendance.index') }}"
-                           class="block text-center text-sm text-gray-600 hover:text-gray-800 hover:underline transition-colors">
-                            <i class="fas fa-times mr-1"></i>
-                            Batal Check Out
+                           class="w-full sm:w-auto px-4 sm:px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm sm:text-base font-semibold rounded-lg transition duration-150 text-center">
+                            Batal
                         </a>
                     </div>
 
@@ -286,11 +260,12 @@
 <script>
     let map, userMarker, officeCircle;
 
-    const HARD_REJECT_ACCURACY = 2000; // meters
+    const HARD_REJECT_ACCURACY = 5000; // meters
 
     function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = {{ config('attendance.max_accuracy', 300) }}) {
         return new Promise((resolve, reject) => {
             let bestPosition = null;
+            let coarseFallbackPosition = null;
             let watchId = null;
             let finished = false;
 
@@ -310,7 +285,17 @@
             const onSuccess = (position) => {
                 const accuracy = Number(position?.coords?.accuracy ?? 0);
 
-                if (!Number.isFinite(accuracy) || accuracy <= 0 || accuracy > HARD_REJECT_ACCURACY) {
+                if (!Number.isFinite(accuracy) || accuracy <= 0) {
+                    return;
+                }
+
+                // Keep the best coarse result as last-resort fallback.
+                if (!coarseFallbackPosition || accuracy < coarseFallbackPosition.coords.accuracy) {
+                    coarseFallbackPosition = position;
+                }
+
+                // Ignore extremely coarse results for primary acceptance.
+                if (accuracy > HARD_REJECT_ACCURACY) {
                     return;
                 }
 
@@ -331,7 +316,7 @@
 
             watchId = navigator.geolocation.watchPosition(onSuccess, onError, {
                 enableHighAccuracy: true,
-                timeout: 10000,
+                timeout: 15000,
                 maximumAge: 0,
             });
 
@@ -344,6 +329,8 @@
             setTimeout(() => {
                 if (bestPosition) {
                     finish(bestPosition);
+                } else if (coarseFallbackPosition) {
+                    finish(coarseFallbackPosition);
                 } else {
                     finish(null, { code: 3, message: 'TIMEOUT' });
                 }
@@ -415,16 +402,29 @@
         initMap();
         const ACC_THRESHOLD = {{ config('attendance.max_accuracy', 300) }}; // meters
 
+        function resetLocationInputs() {
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+            document.getElementById('accuracy').value = '';
+            document.getElementById('accuracyInfo').innerHTML = '<i class="fas fa-crosshairs mr-1"></i>Akurasi: -';
+            const submit = document.getElementById('btn-submit');
+            submit.disabled = true;
+            submit.classList.add('opacity-50', 'cursor-not-allowed');
+        }
+
         async function refreshBestLocation() {
             if (!('geolocation' in navigator)) {
                 document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Browser tidak mendukung Geolocation';
                 return;
             }
 
+            resetLocationInputs();
+            document.getElementById('insideBadge').classList.add('hidden');
+
             document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Mengambil beberapa sampel GPS...';
 
             try {
-                const position = await getBestAvailablePosition(18000, ACC_THRESHOLD);
+                const position = await getBestAvailablePosition(22000, ACC_THRESHOLD);
                 updateLocation(position);
             } catch (error) {
                 handleLocationError(error);
@@ -475,6 +475,7 @@
         }
 
         function handleLocationError(error) {
+            resetLocationInputs();
             let message = '';
             switch(error.code) {
                 case error.PERMISSION_DENIED:

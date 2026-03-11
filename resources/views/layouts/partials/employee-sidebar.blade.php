@@ -1,5 +1,5 @@
 {{-- filepath: resources/views/layouts/partials/employee-sidebar.blade.php --}}
-<aside x-data="{ openMenu: '{{ request()->routeIs('employee.attendance.*', 'employee.shifts.*', 'employee.shift-swaps.*') ? 'attendance' : (request()->routeIs('employee.leaves.*', 'employee.overtimes.*', 'employee.business-trips.*') ? 'requests' : (request()->routeIs('employee.documents.*', 'employee.calendar.*') ? 'hr' : '')) }}' }" 
+<aside x-data="{ openMenu: '{{ request()->routeIs('employee.attendance.*', 'employee.shifts.*', 'employee.shift-swaps.*') ? 'attendance' : (request()->routeIs('employee.leaves.*', 'employee.business-trips.*') ? 'requests' : (request()->routeIs('employee.documents.*', 'employee.calendar.*') ? 'hr' : '')) }}' }" 
     class="fixed top-16 lg:top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0" 
        id="employee-sidebar">
     
@@ -96,12 +96,6 @@
                    class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.leaves.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
                     <i class="fas fa-calendar-times text-xs {{ request()->routeIs('employee.leaves.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Cuti Saya</span>
-                </a>
-
-                <a href="{{ route('employee.overtimes.index') }}" 
-                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.overtimes.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
-                    <i class="fas fa-clock text-xs {{ request()->routeIs('employee.overtimes.*') ? 'text-white' : '' }}"></i>
-                    <span class="text-sm">Lembur Saya</span>
                 </a>
 
                 <a href="{{ route('employee.business-trips.index') }}" 

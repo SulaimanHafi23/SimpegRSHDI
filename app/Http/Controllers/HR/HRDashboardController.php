@@ -6,10 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
-use App\Models\OvertimeRequest;
 use App\Models\WorkerDocument;
 use App\Services\Attendance\AttendanceService;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -76,25 +74,6 @@ class HRDashboardController extends Controller
 
         // Recent Leave Requests
         $recentLeaves = LeaveRequest::with(['worker', 'leaveType'])
-            ->where('status', 'pending')
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // ========== OVERTIME REQUESTS ==========
-        $pendingOvertimes = OvertimeRequest::where('status', 'pending')->count();
-        $approvedOvertimesThisMonth = OvertimeRequest::where('status', 'approved')
-            ->whereMonth('overtime_date', now()->month)
-            ->whereYear('overtime_date', now()->year)
-            ->count();
-
-        $totalOvertimeHours = OvertimeRequest::where('status', 'approved')
-            ->whereMonth('overtime_date', now()->month)
-            ->whereYear('overtime_date', now()->year)
-            ->sum('total_hours');
-
-        // Recent Overtime Requests
-        $recentOvertimes = OvertimeRequest::with('worker')
             ->where('status', 'pending')
             ->latest()
             ->take(5)
@@ -199,10 +178,6 @@ class HRDashboardController extends Controller
             'pendingLeaves',
             'approvedLeavesThisMonth',
             'recentLeaves',
-            'pendingOvertimes',
-            'approvedOvertimesThisMonth',
-            'totalOvertimeHours',
-            'recentOvertimes',
             'pendingDocuments',
             'verifiedDocumentsThisMonth',
             'attendanceChart',

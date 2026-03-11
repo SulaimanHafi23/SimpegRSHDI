@@ -24,7 +24,7 @@
         openMenu: '{{
             request()->routeIs('admin.master.*') ? 'master' :
             (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*') ? 'management' :
-            (request()->routeIs('admin.leave.*', 'admin.overtime.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' :
+            (request()->routeIs('admin.leave.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' :
             (request()->routeIs('reports.*') ? 'reports' :
             (request()->routeIs('admin.roles.*', 'admin.users.*', 'admin.holidays.*', 'admin.audit-logs.*') ? 'settings' : ''))))
         }}'
@@ -165,12 +165,6 @@
                     @if(isset($pendingLeaves) && $pendingLeaves > 0)
                         <span class="ml-auto bg-yellow-400 text-green-900 text-xs font-bold px-2 py-1 rounded-full">{{ $pendingLeaves }}</span>
                     @endif
-                </a>
-                @endif
-                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('overtime.manage'))
-                <a href="{{ route('admin.overtime.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-clock w-4"></i>
-                    <span>Lembur</span>
                 </a>
                 @endif
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('shift-swap.manage'))

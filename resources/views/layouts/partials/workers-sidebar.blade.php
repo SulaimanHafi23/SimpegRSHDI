@@ -46,12 +46,6 @@
                 <span>Cuti</span>
             </a>
 
-            <a href="{{ route('workers.overtimes.index') }}"
-               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.overtimes*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
-                <i class="fas fa-clock w-5 text-center"></i>
-                <span>Lembur</span>
-            </a>
-
             <a href="{{ route('workers.documents') }}"
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.documents') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
                 <i class="fas fa-file-alt w-5 text-center"></i>

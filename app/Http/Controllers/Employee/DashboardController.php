@@ -7,7 +7,6 @@ use App\Services\Worker\WorkerService;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Leave\LeaveRequestService;
 use App\Services\Dashboard\EmployeeDashboardService;
-use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -45,9 +44,6 @@ class DashboardController extends Controller
         // Get leave summary
         $leaveSummary = $this->dashboardService->getLeaveSummary($worker->id);
 
-        // Get overtime summary
-        $overtimeSummary = $this->dashboardService->getOvertimeSummary($worker->id, 'month');
-
         // Get recent activities
         $recentActivities = $this->dashboardService->getRecentActivities($worker->id, 5);
 
@@ -73,7 +69,6 @@ class DashboardController extends Controller
             'attendanceSummary',
             'attendanceChart',
             'leaveSummary',
-            'overtimeSummary',
             'recentActivities',
             'upcomingLeaves',
             'recentLeaves',

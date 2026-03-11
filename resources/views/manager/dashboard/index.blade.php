@@ -129,20 +129,6 @@
                         <span class="text-2xl font-bold text-blue-600">{{ $pendingLeaves }}</span>
                     </a>
 
-                          <a href="{{ route('admin.overtime.index') }}"
-                       class="flex items-center justify-between p-4 bg-purple-50 hover:bg-purple-100 rounded-lg transition group">
-                        <div class="flex items-center">
-                            <div class="bg-purple-500 rounded-lg p-3 group-hover:scale-110 transition">
-                                <i class="fas fa-clock text-white"></i>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-700">Lembur</p>
-                                <p class="text-xs text-gray-500">Pengajuan lembur pending</p>
-                            </div>
-                        </div>
-                        <span class="text-2xl font-bold text-purple-600">{{ $pendingOvertimes }}</span>
-                    </a>
-
                     <a href="#"
                        class="flex items-center justify-between p-4 bg-green-50 hover:bg-green-100 rounded-lg transition group">
                         <div class="flex items-center">
@@ -276,85 +262,6 @@
         </div>
     </x-card>
 
-    <!-- Recent Overtime Requests -->
-    <x-card>
-        <x-slot:header>
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-900">Pengajuan Lembur Terbaru</h3>
-                <a href="{{ route('admin.overtime.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                    Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
-                </a>
-            </div>
-        </x-slot:header>
-        {{-- Mobile cards --}}
-        <div class="md:hidden divide-y divide-gray-200">
-            @forelse($recentOvertimes as $overtime)
-            <div class="p-4 hover:bg-gray-50">
-                <div class="flex items-center justify-between mb-2">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900">{{ $overtime->worker->name }}</p>
-                        <p class="text-xs text-gray-500">{{ $overtime->worker->department->name ?? '-' }}</p>
-                    </div>
-                    <a href="{{ route('admin.overtime.show', $overtime->id) }}" class="text-blue-600 text-sm font-medium">Review <i class="fas fa-arrow-right ml-1"></i></a>
-                </div>
-                <div class="flex flex-wrap gap-2 text-xs">
-                    <span class="text-gray-600"><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}</span>
-                    <span class="text-gray-600"><i class="fas fa-clock mr-1"></i>{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</span>
-                    <span class="font-semibold text-gray-900">{{ number_format($overtime->total_hours, 1) }} jam</span>
-                </div>
-            </div>
-            @empty
-            <div class="p-8 text-center text-gray-500">Tidak ada pengajuan lembur pending</div>
-            @endforelse
-        </div>
-        {{-- Desktop table --}}
-        <div class="hidden md:block overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pegawai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Jam</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Jam</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($recentOvertimes as $overtime)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4">
-                            <div class="text-sm font-medium text-gray-900">{{ $overtime->worker->name }}</div>
-                            <div class="text-sm text-gray-500">{{ $overtime->worker->department->name ?? '-' }}</div>
-                        </td>
-                        <td class="px-6 py-4 text-sm">
-                            {{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} -
-                            {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
-                        </td>
-                        <td class="px-6 py-4 text-sm">
-                            <span class="font-semibold text-gray-900">{{ number_format($overtime->total_hours, 1) }}</span> jam
-                        </td>
-                        <td class="px-6 py-4 text-right">
-                                     <a href="{{ route('admin.overtime.show', $overtime->id) }}"
-                               class="text-blue-600 hover:text-blue-900 font-medium text-sm">
-                                Review <i class="fas fa-arrow-right ml-1"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">
-                            Tidak ada pengajuan lembur pending
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </x-card>
-
     <!-- Recent Shift Swap Requests -->
     @if($recentShiftSwaps->count() > 0)
     <div class="bg-white rounded-lg shadow">
@@ -443,17 +350,6 @@
                     class="w-full justify-center">
                     <span class="hidden sm:inline">Approval Cuti</span>
                     <span class="sm:hidden">Cuti</span>
-                </x-button>
-            @endif
-
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('overtime.approve'))
-                <x-button
-                    variant="purple"
-                    icon="fas fa-clock"
-                    onclick="window.location.href='{{ route('admin.overtime.index') }}'"
-                    class="w-full justify-center">
-                    <span class="hidden sm:inline">Approval Lembur</span>
-                    <span class="sm:hidden">Lembur</span>
                 </x-button>
             @endif
 

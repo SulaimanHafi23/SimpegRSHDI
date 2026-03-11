@@ -11,7 +11,7 @@
                 <i class="fas fa-calendar-alt mr-3 text-green-600"></i>
                 Kalender Saya
             </h1>
-            <p class="mt-1 text-sm text-gray-600">Lihat jadwal cuti, lembur, dan perjalanan dinas Anda</p>
+            <p class="mt-1 text-sm text-gray-600">Lihat jadwal cuti dan perjalanan dinas Anda</p>
         </div>
     </div>
 
@@ -26,10 +26,6 @@
             <div class="flex items-center space-x-2">
                 <div class="w-4 h-4 rounded" style="background-color: #10b981;"></div>
                 <span class="text-sm text-gray-600">Cuti Disetujui</span>
-            </div>
-            <div class="flex items-center space-x-2">
-                <div class="w-4 h-4 rounded" style="background-color: #3b82f6;"></div>
-                <span class="text-sm text-gray-600">Lembur Disetujui</span>
             </div>
             <div class="flex items-center space-x-2">
                 <div class="w-4 h-4 rounded" style="background-color: #8b5cf6;"></div>
@@ -140,12 +136,6 @@
                             <p class="text-xs text-gray-500">
                                 <i class="fas fa-calendar-day mr-1"></i>
                                 <span x-text="event.days"></span> hari
-                            </p>
-                        </template>
-                        <template x-if="event.type === 'overtime'">
-                            <p class="text-xs text-gray-500">
-                                <i class="fas fa-clock mr-1"></i>
-                                <span x-text="event.hours"></span> jam
                             </p>
                         </template>
                         <template x-if="event.type === 'business-trip'">

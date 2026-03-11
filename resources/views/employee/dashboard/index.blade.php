@@ -22,7 +22,7 @@
 <div class="space-y-4 pb-6" x-data="{
     period: 'month',
     showStats: true
-}"
+}">
     <!-- Welcome Card dengan Info Pegawai -->
     <div class="bg-gradient-to-br from-green-600 via-green-700 to-green-800 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden">
         <!-- Background Pattern -->
@@ -135,7 +135,7 @@
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4" x-show="showStats" x-transition>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" x-show="showStats" x-transition>
         <div class="bg-white rounded-xl shadow-lg p-5 stat-card">
             <div class="flex items-center justify-between">
                 <div>
@@ -195,23 +195,6 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-lg p-5 stat-card">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-600 text-sm mb-1">Lembur</p>
-                    <h3 class="text-2xl md:text-3xl font-bold text-purple-600">{{ $overtimeSummary['total_requests'] ?? 0 }}</h3>
-                    <p class="text-gray-500 text-xs mt-2">{{ number_format($overtimeSummary['total_hours'] ?? 0, 1) }} jam</p>
-                    <div class="mt-2">
-                        <span class="text-xs text-purple-600 font-medium">
-                            <i class="fas fa-hourglass-half"></i> Total bulan ini
-                        </span>
-                    </div>
-                </div>
-                <div class="bg-purple-100 p-4 rounded-full">
-                    <i class="fas fa-business-time text-purple-600 text-2xl"></i>
-                </div>
-            </div>
-        </div>
     </div>
 
     <!-- Leave Balance/Quota Section -->
@@ -324,13 +307,6 @@
                 <span class="text-xs font-medium text-gray-700 text-center">Ajukan Cuti</span>
             </a>
 
-            <a href="{{ route('employee.overtimes.create') }}" class="flex flex-col items-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg hover:shadow-md transition duration-300">
-                <div class="bg-purple-500 text-white p-3 rounded-full mb-2">
-                    <i class="fas fa-clock text-xl"></i>
-                </div>
-                <span class="text-xs font-medium text-gray-700 text-center">Ajukan Lembur</span>
-            </a>
-
             <a href="{{ route('employee.documents.index') }}" class="flex flex-col items-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg hover:shadow-md transition duration-300">
                 <div class="bg-green-500 text-white p-3 rounded-full mb-2">
                     <i class="fas fa-file-alt text-xl"></i>
@@ -382,10 +358,6 @@
                         @elseif($activity['type'] === 'leave')
                             <div class="bg-blue-100 text-blue-600 p-2 rounded-full">
                                 <i class="fas fa-calendar-times text-sm"></i>
-                            </div>
-                        @elseif($activity['type'] === 'overtime')
-                            <div class="bg-purple-100 text-purple-600 p-2 rounded-full">
-                                <i class="fas fa-clock text-sm"></i>
                             </div>
                         @endif
                     </div>

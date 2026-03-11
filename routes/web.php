@@ -23,7 +23,6 @@ use App\Http\Controllers\ShiftOverride\ShiftOverrideController;
 use App\Http\Controllers\Leave\LeaveRequestController;
 
 // ========== OVERTIME CONTROLLER ==========
-use App\Http\Controllers\Overtime\OvertimeRequestController;
 
 // ========== DOCUMENT CONTROLLER ==========
 use App\Http\Controllers\WorkerDocument\WorkerDocumentController;
@@ -48,7 +47,6 @@ use App\Http\Controllers\Employee\DashboardController as EmployeeDashboardContro
 use App\Http\Controllers\Employee\AttendanceController as EmployeeAttendanceController;
 use App\Http\Controllers\Employee\ShiftController as EmployeeShiftController;
 use App\Http\Controllers\Employee\LeaveController as EmployeeLeaveController;
-use App\Http\Controllers\Employee\OvertimeController as EmployeeOvertimeController;
 use App\Http\Controllers\Employee\BusinessTripController as EmployeeBusinessTripController;
 use App\Http\Controllers\Employee\DocumentController as EmployeeDocumentController;
 use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
@@ -59,12 +57,8 @@ use App\Http\Controllers\Approval\BusinessTripApprovalController;
 // Profile Controller
 use App\Http\Controllers\ProfileController;
 
-// API Controllers
-use App\Http\Controllers\Api\WorkerShiftApiController;
-
 // Approval Controllers
 use App\Http\Controllers\Approval\LeaveApprovalController;
-use App\Http\Controllers\Approval\OvertimeApprovalController;
 use App\Http\Controllers\Approval\DocumentApprovalController;
 
 // Report Controller
@@ -182,17 +176,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::delete('/{id}', [EmployeeLeaveController::class, 'cancel'])->name('cancel');
         });
 
-        // Overtime requests for employees
-        Route::prefix('overtimes')->name('overtimes.')->group(function () {
-            Route::get('/', [EmployeeOvertimeController::class, 'index'])->name('index');
-            Route::get('/export', [EmployeeOvertimeController::class, 'export'])->name('export');
-            Route::get('/export-pdf', [EmployeeOvertimeController::class, 'exportPdf'])->name('export-pdf');
-            Route::get('/create', [EmployeeOvertimeController::class, 'create'])->name('create');
-            Route::post('/', [EmployeeOvertimeController::class, 'store'])->name('store');
-            Route::get('/{id}', [EmployeeOvertimeController::class, 'show'])->name('show');
-            Route::delete('/{id}', [EmployeeOvertimeController::class, 'cancel'])->name('cancel');
-        });
-
         // Business Trip requests for employees
         Route::prefix('business-trips')->name('business-trips.')->group(function () {
             Route::get('/', [EmployeeBusinessTripController::class, 'index'])->name('index');
@@ -269,13 +252,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::post('/{id}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
         });
-        // Overtime Approvals
-        Route::prefix('overtimes')->name('overtimes.')->group(function () {
-            Route::get('/', [OvertimeApprovalController::class, 'index'])->name('index');
-            Route::get('/{id}', [OvertimeApprovalController::class, 'show'])->name('show');
-            Route::post('/{id}/approve', [OvertimeApprovalController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [OvertimeApprovalController::class, 'reject'])->name('reject');
-        });
         // Document Approvals
         Route::prefix('documents')->name('documents.')->group(function () {
             Route::get('/', [DocumentApprovalController::class, 'index'])->name('index');
@@ -298,13 +274,11 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::middleware('role:Super Admin|HR|Manager')->prefix('reports')->name('reports.')->group(function () {
         Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
         Route::get('/leaves', [ReportController::class, 'leaves'])->name('leaves');
-        Route::get('/overtimes', [ReportController::class, 'overtimes'])->name('overtimes');
         Route::get('/worker-documents', [ReportController::class, 'workerDocuments'])->name('worker-documents');
 
         // Export routes with format support (pdf, excel, csv)
         Route::get('/attendance/export', [ReportController::class, 'exportAttendance'])->name('attendance.export');
         Route::get('/leaves/export', [ReportController::class, 'exportLeaves'])->name('leaves.export');
-        Route::get('/overtimes/export', [ReportController::class, 'exportOvertimes'])->name('overtimes.export');
         Route::get('/worker-documents/export', [ReportController::class, 'exportWorkerDocuments'])->name('worker-documents.export');
     });
 
@@ -422,21 +396,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/worker/{workerId}/balance', [LeaveRequestController::class, 'workerLeaveBalance'])->name('worker-balance');
     });
 
-    // ========== OVERTIME MANAGEMENT ==========
-    Route::prefix('overtimes')->name('admin.overtime.')->group(function () {
-        Route::get('/', [OvertimeRequestController::class, 'index'])->name('index');
-        Route::get('/export', [OvertimeRequestController::class, 'export'])->name('export');
-        Route::get('/create', [OvertimeRequestController::class, 'create'])->name('create');
-        Route::post('/', [OvertimeRequestController::class, 'store'])->name('store');
-        Route::get('/{id}', [OvertimeRequestController::class, 'show'])->name('show')->whereUuid('id');
-        Route::get('/{id}/edit', [OvertimeRequestController::class, 'edit'])->name('edit')->whereUuid('id');
-        Route::put('/{id}', [OvertimeRequestController::class, 'update'])->name('update')->whereUuid('id');
-        Route::delete('/{id}', [OvertimeRequestController::class, 'destroy'])->name('destroy')->whereUuid('id');
-        Route::post('/{id}/approve', [OvertimeRequestController::class, 'approve'])->name('approve')->whereUuid('id');
-        Route::post('/{id}/reject', [OvertimeRequestController::class, 'reject'])->name('reject')->whereUuid('id');
-        Route::post('/bulk-approve', [OvertimeRequestController::class, 'bulkApprove'])->name('bulk-approve');
-    });
-
     // ========== WORKER DOCUMENT MANAGEMENT ==========
     Route::prefix('worker-documents')->name('admin.worker-documents.')->group(function () {
         Route::get('/', [WorkerDocumentController::class, 'index'])->name('index');
@@ -507,7 +466,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
 // ========== API ROUTES ==========
 Route::prefix('api')->middleware(['auth'])->group(function () {
     Route::get('/workers/{workerId}/future-shifts', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getFutureShifts']);
-    // Returns shift start/end time for a worker on a given date — used by overtime forms
+    // Returns shift start/end time for a worker on a given date
     Route::get('/workers/{workerId}/shift-time', [\App\Http\Controllers\Api\WorkerShiftApiController::class, 'getShiftTime']);
 });
 

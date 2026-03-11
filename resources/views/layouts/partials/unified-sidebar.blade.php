@@ -273,14 +273,6 @@
             <span class="text-sm {{ request()->routeIs('employee.leaves.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Cuti Saya</span>
         </a>
 
-        <a href="{{ route('employee.overtimes.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.overtimes.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.overtimes.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-clock text-xs {{ request()->routeIs('employee.overtimes.*') ? 'text-white' : 'text-cyan-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('employee.overtimes.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur Saya</span>
-        </a>
-
         <a href="{{ route('employee.business-trips.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.business-trips.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.business-trips.*') ? 'bg-white/20' : 'bg-cyan-500/20' }} rounded-lg flex-shrink-0">
@@ -291,7 +283,7 @@
         @endif
 
         <!-- Approval Section - Admin/HR/Manager -->
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve') || auth()->user()->can('overtime.manage') || auth()->user()->can('overtime.approve') || auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve') || auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve') || auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve') || auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
 
         <!-- PERSETUJUAN Label -->
         <div class="pt-3 pb-1.5 px-3">
@@ -311,16 +303,6 @@
             @if(isset($pendingLeaves) && $pendingLeaves > 0)
                 <span class="ml-auto bg-yellow-400 text-green-900 text-xs font-bold px-2 py-0.5 rounded-full">{{ $pendingLeaves }}</span>
             @endif
-        </a>
-        @endif
-
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->hasRole('Manager') || auth()->user()->can('overtime.manage') || auth()->user()->can('overtime.approve'))
-        <a href="{{ route('admin.overtime.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.overtime.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.overtime.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-clock text-xs {{ request()->routeIs('admin.overtime.*') ? 'text-white' : 'text-orange-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('admin.overtime.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lembur</span>
         </a>
         @endif
 

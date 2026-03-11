@@ -127,7 +127,6 @@
             return {
                 open: false,
                 pendingLeaves: [],
-                pendingOvertimes: [],
                 pendingDocuments: [],
                 totalPending: 0,
 
@@ -151,24 +150,6 @@
                             this.pendingLeaves = [];
                         });
 
-                    // Load pending overtimes
-                    fetch('/overtimes?status=pending&per_page=5')
-                        .then(response => response.ok ? response.json() : Promise.reject('Failed'))
-                        .then(data => {
-                            if (data.data) {
-                                this.pendingOvertimes = data.data.map(ot => ({
-                                    id: ot.id,
-                                    worker_name: ot.worker?.name || '-',
-                                    total_hours: ot.total_hours || 0,
-                                    date: ot.overtime_date || ot.date || '-'
-                                }));
-                                this.updateTotal();
-                            }
-                        })
-                        .catch(() => {
-                            this.pendingOvertimes = [];
-                        });
-
                     // Load pending documents
                     fetch('/worker-documents?status=pending&per_page=5')
                         .then(response => response.ok ? response.json() : Promise.reject('Failed'))
@@ -190,7 +171,6 @@
 
                 updateTotal() {
                     this.totalPending = this.pendingLeaves.length +
-                                       this.pendingOvertimes.length +
                                        this.pendingDocuments.length;
                 }
             };

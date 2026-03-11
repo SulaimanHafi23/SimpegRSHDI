@@ -1,5 +1,16 @@
 {{-- filepath: resources/views/layouts/partials/admin-navbar.blade.php --}}
 <header class="sticky top-0 z-30 text-white shadow-lg bg-gradient-to-r from-green-600 to-green-700">
+    @php
+        $workerName = auth()->check() ? (auth()->user()->worker->name ?? null) : null;
+        $userName = auth()->check()
+            ? (auth()->user()->name ?? auth()->user()->username ?? auth()->user()->email ?? 'User')
+            : 'User';
+        $displayName = $workerName ?: $userName;
+
+        $navTitle = 'Hi, ' . $displayName . ' 👋';
+        $navDescription = now()->locale('en')->translatedFormat('l, d F Y') . ',';
+    @endphp
+
     <div class="px-4 py-4">
         <div class="flex items-center justify-between">
             <!-- Mobile Menu Button -->
@@ -9,8 +20,8 @@
 
             <!-- Page Title -->
             <div class="flex-1">
-                <h2 class="text-lg font-bold sm:text-xl lg:text-2xl">@yield('page-title', 'Dashboard')</h2>
-                <p class="hidden text-xs text-yellow-100 sm:block sm:text-sm">@yield('page-description', 'Welcome back!')</p>
+                <h2 class="text-lg font-bold sm:text-xl lg:text-2xl">{{ $navTitle }}</h2>
+                <p class="hidden text-xs text-yellow-100 sm:block sm:text-sm">{{ $navDescription }}</p>
             </div>
 
             <!-- Right Side -->
@@ -23,10 +34,10 @@
                         $worker = auth()->user()->worker ?? null;
                         $user = auth()->user();
                         $avatarUrl = null;
-                        if ($worker && ($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url)) {
-                            $avatarUrl = Storage::url($worker->photo_url);
-                        } elseif (($user->photo ?? false) && Storage::disk('public')->exists($user->photo)) {
-                            $avatarUrl = Storage::url($user->photo);
+                        if ($worker && ($worker->photo_url ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($worker->photo_url)) {
+                            $avatarUrl = \Illuminate\Support\Facades\Storage::url($worker->photo_url);
+                        } elseif (($user->photo ?? false) && \Illuminate\Support\Facades\Storage::disk('public')->exists($user->photo)) {
+                            $avatarUrl = \Illuminate\Support\Facades\Storage::url($user->photo);
                         } else {
                             $nameForAvatar = $worker->name ?? $user->username ?? $user->email ?? $user->name ?? '';
                             $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($nameForAvatar);

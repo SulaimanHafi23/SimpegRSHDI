@@ -216,12 +216,6 @@
                         {{ $pendingLeaves }}
                     </span>
                 </a>
-                <a href="{{ route('admin.overtime.index') }}" class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition">
-                    <span class="text-gray-600">Lembur</span>
-                    <span class="font-bold text-purple-600 bg-purple-100 px-3 py-1 rounded-full text-sm">
-                        {{ $pendingOvertimes }}
-                    </span>
-                </a>
                 <a href="{{ route('approvals.documents.index') }}" class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition">
                     <span class="text-gray-600">Dokumen</span>
                     <span class="font-bold text-green-600 bg-green-100 px-3 py-1 rounded-full text-sm">
@@ -243,14 +237,6 @@
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600 text-sm">Cuti Disetujui</span>
                     <span class="font-bold text-gray-900">{{ $approvedLeavesThisMonth }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600 text-sm">Lembur Disetujui</span>
-                    <span class="font-bold text-gray-900">{{ $approvedOvertimesThisMonth }}</span>
-                </div>
-                <div class="flex items-center justify-between">
-                    <span class="text-gray-600 text-sm">Total Jam Lembur</span>
-                    <span class="font-bold text-gray-900">{{ number_format($totalOvertimeHours, 1) }} jam</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <span class="text-gray-600 text-sm">Dokumen Verified</span>
@@ -365,89 +351,6 @@
                     <tr>
                         <td colspan="6" class="px-6 py-8 text-center text-gray-500">
                             Tidak ada pengajuan cuti pending
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Recent Overtime Requests -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-gray-900">Pengajuan Lembur Terbaru</h3>
-            <a href="{{ route('approvals.overtimes.index') }}" class="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
-            </a>
-        </div>
-        {{-- Mobile cards --}}
-        <div class="md:hidden divide-y divide-gray-200">
-            @forelse($recentOvertimes as $overtime)
-            <div class="p-4 hover:bg-gray-50">
-                <div class="flex items-center justify-between mb-2">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-900">{{ $overtime->worker->name }}</p>
-                        <p class="text-xs text-gray-500">{{ $overtime->worker->nip }}</p>
-                    </div>
-                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                </div>
-                <div class="flex flex-wrap gap-2 text-xs mb-2">
-                    <span class="text-gray-600"><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}</span>
-                    <span class="text-gray-600"><i class="fas fa-clock mr-1"></i>{{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}</span>
-                    <span class="font-semibold text-gray-900">{{ number_format($overtime->total_hours, 1) }} jam</span>
-                </div>
-                <a href="{{ route('approvals.overtimes.show', $overtime->id) }}" class="text-blue-600 text-xs font-medium">Review <i class="fas fa-arrow-right ml-1"></i></a>
-            </div>
-            @empty
-            <div class="p-8 text-center text-gray-500">Tidak ada pengajuan lembur pending</div>
-            @endforelse
-        </div>
-        {{-- Desktop table --}}
-        <div class="hidden md:block overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pegawai</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jam</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Jam</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($recentOvertimes as $overtime)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900">{{ $overtime->worker->name }}</div>
-                            <div class="text-sm text-gray-500">{{ $overtime->worker->nip }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($overtime->date)->format('d M Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                            {{ \Carbon\Carbon::parse($overtime->start_time)->format('H:i') }} -
-                            {{ \Carbon\Carbon::parse($overtime->end_time)->format('H:i') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ number_format($overtime->total_hours, 1) }} jam
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Pending
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <a href="{{ route('approvals.overtimes.show', $overtime->id) }}" class="text-blue-600 hover:text-blue-900">
-                                Review
-                            </a>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            Tidak ada pengajuan lembur pending
                         </td>
                     </tr>
                     @endforelse
