@@ -56,7 +56,7 @@ class ShiftSwapNotification extends Notification implements ShouldQueue
             $mailMessage->action('Review Permintaan', $url);
         }
 
-        $mailMessage->line('Terima kasih menggunakan sistem SIMPEG RSUD Haji Darlan Ismail.');
+        $mailMessage->line('Terima kasih menggunakan sistem SIDIA - Sistem Informasi Darlan Ismail dan Absensi.');
 
         return $mailMessage;
     }
@@ -98,7 +98,7 @@ class ShiftSwapNotification extends Notification implements ShouldQueue
 
     protected function getSubject(): string
     {
-        return '[SIMPEG] ' . $this->getTitle();
+        return '[SIDIA] ' . $this->getTitle();
     }
 
     protected function getMessage(): string

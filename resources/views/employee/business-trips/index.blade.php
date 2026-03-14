@@ -117,7 +117,7 @@
                     <div>
                         <p class="text-xs text-gray-500">Tujuan</p>
                         <p class="font-semibold text-gray-900">{{ $trip->destination }}</p>
-                        <p class="text-sm text-gray-700">{{ Str::limit($trip->purpose, 80) }}</p>
+                        <p class="text-sm text-gray-700">{{ \Illuminate\Support\Str::limit($trip->purpose, 80) }}</p>
                     </div>
                     @if($trip->status === 'pending')
                         <span class="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800"><i class="fas fa-clock mr-1"></i>Pending</span>
@@ -137,7 +137,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-500">Durasi</p>
-                        <p class="font-medium">{{ $trip->start_date->diffInDays($trip->end_date) + 1 }} hari</p>
+                        <p class="font-medium">{{ $trip->duration_label }}</p>
                     </div>
                     <div>
                         <p class="text-xs text-gray-500">Estimasi Biaya</p>
@@ -180,16 +180,13 @@
                     <tr class="hover:bg-gray-50 transition">
                         <td class="px-6 py-4">
                             <div class="text-sm font-medium text-gray-900">{{ $trip->destination }}</div>
-                            <div class="text-sm text-gray-500">{{ Str::limit($trip->purpose, 50) }}</div>
+                            <div class="text-sm text-gray-500">{{ \Illuminate\Support\Str::limit($trip->purpose, 50) }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             {{ $trip->start_date->format('d M Y') }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="text-sm font-semibold text-gray-900">
-                                {{ $trip->start_date->diffInDays($trip->end_date) + 1 }}
-                            </span>
-                            <span class="text-xs text-gray-500">hari</span>
+                            <span class="text-sm font-semibold text-gray-900">{{ $trip->duration_label }}</span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                             Rp {{ number_format($trip->estimated_cost ?? 0, 0, ',', '.') }}

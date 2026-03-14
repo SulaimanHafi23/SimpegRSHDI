@@ -330,7 +330,7 @@
     @endif
 
     <div class="footer">
-        <p>Laporan ini digenerate secara otomatis oleh Sistem SIMPEG RSHDI</p>
+        <p>Laporan ini digenerate secara otomatis oleh SIDIA - Sistem Informasi Darlan Ismail dan Absensi</p>
         <p>Dicetak pada: {{ now()->translatedFormat('l, d F Y - H:i:s') }} WIB</p>
     </div>
 </body>

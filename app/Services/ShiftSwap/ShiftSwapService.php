@@ -13,7 +13,6 @@ use App\Notifications\ShiftSwapNotification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 
 class ShiftSwapService
 {
@@ -41,7 +40,6 @@ class ShiftSwapService
             // Here we will not block if the effective_from is in the past, but you can refine later
         }
 
-        // Determine if manager approval is required (only for cross-department swaps)
         $requiresManager = false;
 
         // Validate swap dates
@@ -54,9 +52,8 @@ class ShiftSwapService
                 throw new \Exception('Target worker tidak ditemukan.');
             }
 
-            // Check if cross-department swap (requires manager/HR approval)
             if ($requester->department_id !== $targetWorker->department_id) {
-                $requiresManager = true;
+                throw new \Exception('Tukar shift hanya dapat dilakukan dengan pegawai dari departemen yang sama.');
             }
         }
 
@@ -111,7 +108,7 @@ class ShiftSwapService
                     'requester_name' => $requester->name,
                     'target_worker_id' => $targetWorker?->id,
                     'target_worker_name' => $targetWorker?->name,
-                    'requires_manager_approval' => $requiresManager,
+                    'requires_manager_approval' => false,
                 ]
             );
 
@@ -119,7 +116,7 @@ class ShiftSwapService
                 'swap_id' => $swap->id,
                 'requester_id' => $requester->id,
                 'target_worker_id' => $targetWorker?->id,
-                'requires_manager_approval' => $requiresManager,
+                'requires_manager_approval' => false,
             ]);
 
             // Send notification to target worker
@@ -196,9 +193,16 @@ class ShiftSwapService
      */
     public function getOpenRequests(string $excludeWorkerId)
     {
+        $worker = Worker::find($excludeWorkerId);
+
         return ShiftSwapRequest::whereNull('target_worker_id')
             ->where('requester_id', '!=', $excludeWorkerId)
             ->where('status', 'pending')
+            ->when($worker?->department_id, function ($query) use ($worker) {
+                $query->whereHas('requester', function ($requesterQuery) use ($worker) {
+                    $requesterQuery->where('department_id', $worker->department_id);
+                });
+            })
             ->orderByDesc('created_at')
             ->with(['requester.department', 'requesterShift.shift'])
             ->get();
@@ -224,23 +228,19 @@ class ShiftSwapService
     }
 
     /**
-     * Return available workers for swap (include all departments)
+     * Return available workers for swap within the same department.
      */
     public function getAvailableWorkersForSwap(string $workerId)
     {
         $worker = Worker::find($workerId);
         if (!$worker) {
-            return Worker::with('department')
-                ->where('id', '!=', $workerId)
-                ->where('status', 'active')
-                ->orderBy('name')
-                ->get();
+            return collect();
         }
 
         return Worker::with('department')
             ->where('id', '!=', $workerId)
             ->where('status', 'active')
-            ->orderByRaw("CASE WHEN department_id = ? THEN 0 ELSE 1 END", [$worker->department_id])
+            ->where('department_id', $worker->department_id)
             ->orderBy('name')
             ->get();
     }
@@ -485,28 +485,11 @@ class ShiftSwapService
      */
     protected function validateRoleMatch(Worker $requester, Worker $targetWorker): void
     {
-        // Check if workers are in same department
         if ($requester->department_id === $targetWorker->department_id) {
-            // Same department, likely compatible
             return;
         }
 
-        // Cross-department swaps already require manager approval
-        // Additional check: ensure both workers exist and are active
-        if (!$requester->user || !$requester->user->is_active) {
-            throw new \Exception('Data pekerja requester tidak valid atau tidak aktif.');
-        }
-
-        if (!$targetWorker->user || !$targetWorker->user->is_active) {
-            throw new \Exception('Target worker tidak aktif.');
-        }
-
-        Log::info('Role match validation passed (cross-department requires manager approval)', [
-            'requester_id' => $requester->id,
-            'requester_dept' => $requester->department_id,
-            'target_id' => $targetWorker->id,
-            'target_dept' => $targetWorker->department_id,
-        ]);
+        throw new \Exception('Tukar shift lintas departemen tidak diperbolehkan.');
     }
 
     /**
@@ -540,6 +523,13 @@ class ShiftSwapService
             throw new \Exception('Shift yang dipilih tidak valid.');
         }
 
+        $requester = $swap->requester;
+        $acceptingWorker = Worker::findOrFail($workerId);
+
+        if (!$requester || $requester->department_id !== $acceptingWorker->department_id) {
+            throw new \Exception('Open request hanya dapat diterima oleh pegawai dari departemen yang sama.');
+        }
+
         DB::beginTransaction();
         try {
             $oldStatus = $swap->status;
@@ -547,8 +537,8 @@ class ShiftSwapService
             // Update swap request with target worker info
             $swap->target_worker_id = $workerId;
             $swap->target_shift_id = $targetShiftId;
-            $swap->status = 'awaiting_approval'; // Always requires manager approval
-            $swap->requires_manager_approval = true;
+            $swap->status = 'accepted';
+            $swap->requires_manager_approval = false;
             $swap->save();
 
             // Audit log
@@ -562,6 +552,7 @@ class ShiftSwapService
                 metadata: [
                     'target_worker_id' => $workerId,
                     'target_shift_id' => $targetShiftId,
+                    'requires_manager_approval' => false,
                 ]
             );
 
@@ -569,6 +560,7 @@ class ShiftSwapService
                 'swap_id' => $swapId,
                 'target_worker_id' => $workerId,
                 'target_shift_id' => $targetShiftId,
+                'requires_manager_approval' => false,
             ]);
 
             // Notify requester
@@ -576,22 +568,9 @@ class ShiftSwapService
                 $swap->requester->user->notify(new ShiftSwapNotification($swap, 'open_request_accepted'));
             }
 
-            // Notify managers for approval
-            $department = $swap->requester->department;
-            if ($department) {
-                $managers = \App\Models\User::whereHas('worker', function($q) use ($department) {
-                    $q->where('department_id', $department->id);
-                })->whereHas('roles', function($q) {
-                    $q->where('name', 'Manager');
-                })->get();
-
-                foreach ($managers as $manager) {
-                    $manager->notify(new ShiftSwapNotification($swap, 'manager_approval_needed'));
-                }
-            }
-
             DB::commit();
-            return $swap;
+
+            return $this->executeSwap($swapId, auth()->id());
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to accept open request', [

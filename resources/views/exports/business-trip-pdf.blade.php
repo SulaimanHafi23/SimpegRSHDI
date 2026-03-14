@@ -29,11 +29,12 @@
             <th width="14%">Pegawai</th>
             <th width="10%">Tanggal Mulai</th>
             <th width="10%">Tanggal Selesai</th>
-            <th width="6%" class="text-center">Durasi</th>
-            <th width="16%">Tujuan</th>
-            <th width="10%">Status</th>
-            <th width="12%">Disetujui Oleh</th>
-            <th width="18%">Keperluan</th>
+            <th width="8%" class="text-center">Durasi</th>
+            <th width="14%">Tujuan</th>
+            <th width="12%">Estimasi Biaya</th>
+            <th width="9%">Status</th>
+            <th width="11%">Disetujui Oleh</th>
+            <th width="16%">Keperluan</th>
         </tr>
     </thead>
     <tbody>
@@ -46,8 +47,9 @@
             </td>
             <td>{{ \Carbon\Carbon::parse($trip->start_date)->translatedFormat('d M Y') }}</td>
             <td>{{ \Carbon\Carbon::parse($trip->end_date)->translatedFormat('d M Y') }}</td>
-            <td class="text-center">{{ $trip->start_date && $trip->end_date ? $trip->start_date->diffInDays($trip->end_date) + 1 : '-' }} hari</td>
+            <td class="text-center">{{ $trip->duration_label }}</td>
             <td>{{ $trip->destination }}</td>
+            <td>Rp {{ number_format($trip->estimated_cost ?? 0, 0, ',', '.') }}</td>
             <td>
                 @php
                     $statusClass = match($trip->status) {
@@ -71,7 +73,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="9" class="text-center" style="padding: 20px; color: #666;">
+            <td colspan="10" class="text-center" style="padding: 20px; color: #666;">
                 Tidak ada data perjalanan dinas
             </td>
         </tr>
@@ -87,8 +89,12 @@
     <p style="margin: 5px 0; font-size: 10px;">Menunggu: {{ $trips->where('status', 'pending')->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Ditolak: {{ $trips->where('status', 'rejected')->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Dibatalkan: {{ $trips->where('status', 'cancelled')->count() }}</p>
-    @php $totalDays = $trips->where('status', 'approved')->sum(fn($t) => $t->start_date && $t->end_date ? $t->start_date->diffInDays($t->end_date) + 1 : 0); @endphp
-    <p style="margin: 5px 0; font-size: 10px;">Total Hari Perjalanan: {{ $totalDays }} hari</p>
+    @php
+        $totalDays = $trips->where('status', 'approved')->sum(fn($t) => (float) $t->duration_value);
+        $totalEstimatedCost = $trips->sum('estimated_cost');
+    @endphp
+    <p style="margin: 5px 0; font-size: 10px;">Total Hari Perjalanan: {{ rtrim(rtrim(number_format($totalDays, 1, '.', ''), '0'), '.') }} hari</p>
+    <p style="margin: 5px 0; font-size: 10px;">Total Estimasi Biaya: Rp {{ number_format($totalEstimatedCost, 0, ',', '.') }}</p>
 </div>
 @endif
 @endsection

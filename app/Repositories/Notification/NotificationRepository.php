@@ -4,6 +4,7 @@ namespace App\Repositories\Notification;
 
 use App\DTOs\NotificationDTO;
 use App\Models\Notification;
+use App\Models\User;
 use App\Repositories\Contracts\Notification\NotificationRepositoryInterface;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -25,7 +26,7 @@ class NotificationRepository implements NotificationRepositoryInterface
         $query = $this->model->query()->with('user')->orderBy('created_at', 'desc');
 
         if (isset($filters['user_id'])) {
-            $query->where('user_id', $filters['user_id']);
+            $this->applyUserScope($query, $filters['user_id']);
         }
 
         if (isset($filters['type'])) {
@@ -68,9 +69,8 @@ class NotificationRepository implements NotificationRepositoryInterface
             $perPage = $filters['per_page'] ?? 15;
             return new LengthAwarePaginator([], 0, $perPage);
         }
-        $query = $this->model->query()
-            ->where('user_id', $userId)
-            ->orderBy('created_at', 'desc');
+        $query = $this->model->query()->orderBy('created_at', 'desc');
+        $this->applyUserScope($query, $userId);
 
         if (isset($filters['is_read'])) {
             if ($filters['is_read']) {
@@ -90,9 +90,10 @@ class NotificationRepository implements NotificationRepositoryInterface
             Log::warning('Notifications table does not exist. getUnreadByUserId returning empty collection.');
             return collect([]);
         }
-        return $this->model->query()
-            ->where('user_id', $userId)
-            ->whereNull('read_at')
+        $query = $this->model->query()->whereNull('read_at');
+        $this->applyUserScope($query, $userId);
+
+        return $query
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -105,10 +106,10 @@ class NotificationRepository implements NotificationRepositoryInterface
             return 0;
         }
 
-        return $this->model->query()
-            ->where('user_id', $userId)
-            ->whereNull('read_at')
-            ->count();
+        $query = $this->model->query()->whereNull('read_at');
+        $this->applyUserScope($query, $userId);
+
+        return $query->count();
     }
 
     public function create(NotificationDTO $dto)
@@ -118,7 +119,7 @@ class NotificationRepository implements NotificationRepositoryInterface
             return null;
         }
 
-        return $this->model->create($dto->toArray());
+        return $this->model->create($this->normalizePayload($dto));
     }
 
     public function update(string $id, NotificationDTO $dto)
@@ -129,7 +130,7 @@ class NotificationRepository implements NotificationRepositoryInterface
         }
 
         $notification = $this->getById($id);
-        $notification->update($dto->toArray());
+        $notification->update($this->normalizePayload($dto, true));
         return $notification->fresh();
     }
 
@@ -168,9 +169,78 @@ class NotificationRepository implements NotificationRepositoryInterface
             return false;
         }
 
-        return $this->model->query()
-            ->where('user_id', $userId)
-            ->whereNull('read_at')
+        $query = $this->model->query()->whereNull('read_at');
+        $this->applyUserScope($query, $userId);
+
+        return $query
             ->update(['read_at' => now()]);
+    }
+
+    protected function applyUserScope($query, string $userId): void
+    {
+        if (Schema::hasColumn('notifications', 'user_id')) {
+            $query->where('user_id', $userId);
+            return;
+        }
+
+        if (Schema::hasColumn('notifications', 'notifiable_id')) {
+            $query->where('notifiable_id', $userId);
+
+            if (Schema::hasColumn('notifications', 'notifiable_type')) {
+                $query->where('notifiable_type', User::class);
+            }
+
+            return;
+        }
+
+        // Keep queries safe if schema is unexpected.
+        $query->whereRaw('1 = 0');
+    }
+
+    protected function normalizePayload(NotificationDTO $dto, bool $isUpdate = false): array
+    {
+        $payload = [];
+
+        if (!$isUpdate && $dto->id !== null && Schema::hasColumn('notifications', 'id')) {
+            $payload['id'] = $dto->id;
+        }
+
+        if (Schema::hasColumn('notifications', 'user_id')) {
+            $payload['user_id'] = $dto->user_id;
+        }
+
+        if (Schema::hasColumn('notifications', 'type')) {
+            $payload['type'] = $dto->type;
+        }
+
+        if (Schema::hasColumn('notifications', 'title')) {
+            $payload['title'] = $dto->title;
+        }
+
+        if (Schema::hasColumn('notifications', 'message')) {
+            $payload['message'] = $dto->message;
+        }
+
+        if (Schema::hasColumn('notifications', 'notifiable_type')) {
+            $payload['notifiable_type'] = User::class;
+        }
+
+        if (Schema::hasColumn('notifications', 'notifiable_id')) {
+            $payload['notifiable_id'] = $dto->user_id;
+        }
+
+        if (Schema::hasColumn('notifications', 'data')) {
+            $payload['data'] = [
+                'title' => $dto->title,
+                'message' => $dto->message,
+                'payload' => $dto->data ?? [],
+            ];
+        }
+
+        if ($dto->read_at !== null && Schema::hasColumn('notifications', 'read_at')) {
+            $payload['read_at'] = $dto->read_at;
+        }
+
+        return $payload;
     }
 }

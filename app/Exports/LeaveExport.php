@@ -8,9 +8,10 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithTitle;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class LeaveExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class LeaveExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithTitle
 {
     protected $filters;
 
@@ -139,6 +140,11 @@ class LeaveExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         }
 
         return [];
+    }
+
+    public function title(): string
+    {
+        return 'Detail Cuti';
     }
 
     protected function getStatusLabel($status)

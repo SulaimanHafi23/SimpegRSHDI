@@ -24,6 +24,7 @@ class WorkerDocumentController extends Controller
     {
         $filters = [
             'worker_id' => $request->worker_id,
+            'worker_name' => trim((string) $request->get('worker_name', '')),
             'document_type_id' => $request->document_type_id,
             'status' => $request->status,
             'per_page' => $request->per_page ?? 15,
@@ -92,8 +93,20 @@ class WorkerDocumentController extends Controller
             $workersWithDocStats = $workersWithDocStats->where('id', $filters['worker_id']);
         }
 
+        // Apply worker name filter (case-insensitive)
+        if (!empty($filters['worker_name'])) {
+            $keyword = mb_strtolower($filters['worker_name']);
+            $workersWithDocStats = $workersWithDocStats->filter(function ($worker) use ($keyword) {
+                $name = mb_strtolower((string) ($worker->name ?? ''));
+                return str_contains($name, $keyword);
+            });
+        }
+
         // Paginate manually
-        $perPage = $filters['per_page'];
+        $perPage = (int) ($filters['per_page'] ?? 15);
+        if (!in_array($perPage, [5, 10, 15, 25, 50], true)) {
+            $perPage = 15;
+        }
         $currentPage = $request->get('page', 1);
         $workersWithDocStats = new \Illuminate\Pagination\LengthAwarePaginator(
             $workersWithDocStats->forPage($currentPage, $perPage),

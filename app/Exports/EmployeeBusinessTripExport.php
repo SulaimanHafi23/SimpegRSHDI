@@ -2,17 +2,20 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Illuminate\Support\Collection;
 
-class EmployeeBusinessTripExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize
+class EmployeeBusinessTripExport implements FromCollection, WithHeadings, WithMapping, WithStyles, ShouldAutoSize, WithColumnFormatting, WithEvents
 {
-    protected $trips;
+    protected Collection $trips;
     protected $worker;
 
     public function __construct(Collection $trips, $worker)
@@ -34,7 +37,7 @@ class EmployeeBusinessTripExport implements FromCollection, WithHeadings, WithMa
             'Keperluan',
             'Tanggal Mulai',
             'Tanggal Selesai',
-            'Durasi (Hari)',
+            'Durasi',
             'Estimasi Biaya',
             'Status',
         ];
@@ -45,18 +48,14 @@ class EmployeeBusinessTripExport implements FromCollection, WithHeadings, WithMa
         static $no = 0;
         $no++;
 
-        $duration = $trip->start_date && $trip->end_date
-            ? $trip->start_date->diffInDays($trip->end_date) + 1
-            : '-';
-
         return [
             $no,
             $trip->destination ?? '-',
             $trip->purpose ?? '-',
             $trip->start_date?->format('d/m/Y') ?? '-',
             $trip->end_date?->format('d/m/Y') ?? '-',
-            $duration,
-            $trip->estimated_cost ? 'Rp ' . number_format($trip->estimated_cost, 0, ',', '.') : '-',
+            $trip->duration_label,
+            (float) ($trip->estimated_cost ?? 0),
             $this->getStatusLabel($trip->status),
         ];
     }
@@ -99,6 +98,35 @@ class EmployeeBusinessTripExport implements FromCollection, WithHeadings, WithMa
         }
 
         return [];
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'G' => '"Rp" #,##0',
+        ];
+    }
+
+    public function registerEvents(): array
+    {
+        return [
+            AfterSheet::class => function (AfterSheet $event) {
+                $totalRow = $this->trips->count() + 3;
+                $sheet = $event->sheet;
+
+                $sheet->setCellValue('F' . $totalRow, 'Total Estimasi Biaya');
+                $sheet->setCellValue('G' . $totalRow, (float) $this->trips->sum('estimated_cost'));
+
+                $sheet->getStyle('F' . $totalRow . ':G' . $totalRow)->applyFromArray([
+                    'font' => ['bold' => true],
+                    'fill' => [
+                        'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => 'EDE9FE'],
+                    ],
+                ]);
+                $sheet->getStyle('G' . $totalRow)->getNumberFormat()->setFormatCode('"Rp" #,##0');
+            },
+        ];
     }
 
     protected function getStatusLabel($status)

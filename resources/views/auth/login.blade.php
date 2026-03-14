@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login - {{ config('app.name') }}</title>
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-rs.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ asset('images/logo-rs.png') }}">
+
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
@@ -15,17 +19,73 @@
 
     <!-- Tailwind CSS -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        :root {
+            --green-dark: #0a3d1f;
+            --green-main: #155a2e;
+            --green-mid: #1e7a3e;
+            --green-light: #28a04f;
+            --gold: #f5a623;
+            --gold-light: #ffd166;
+        }
+
+        .sidia-right-overlay {
+            background: linear-gradient(135deg, rgba(248, 253, 250, 0.36), rgba(226, 243, 234, 0.30), rgba(205, 232, 218, 0.26));
+            backdrop-filter: blur(2px);
+        }
+
+        .sidia-login-card {
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid rgba(151, 199, 171, 0.35);
+            box-shadow: 0 20px 44px rgba(26, 87, 57, 0.16);
+        }
+
+        .sidia-input {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(134, 181, 153, 0.4);
+            color: #1f3d2c;
+        }
+
+        .sidia-input::placeholder {
+            color: rgba(52, 87, 67, 0.45);
+        }
+
+        .sidia-input:focus {
+            border-color: var(--green-light);
+            box-shadow: 0 0 0 3px rgba(40, 160, 79, 0.2);
+            outline: none;
+        }
+
+        .sidia-gold-btn {
+            background: linear-gradient(135deg, var(--gold), #d97706);
+            color: #1a1a1a;
+        }
+
+        .sidia-gold-btn:hover {
+            filter: brightness(1.03);
+            box-shadow: 0 12px 28px rgba(245, 166, 35, 0.35);
+        }
+
+        .sidia-soft-dark {
+            color: #2f5f45;
+        }
+
+        .sidia-soft-muted {
+            color: rgba(47, 95, 69, 0.7);
+        }
+    </style>
 </head>
-<body class="font-sans antialiased">
+<body class="font-sans antialiased bg-[#eef7f1]">
     <div class="min-h-screen flex">
 
         <!-- LEFT SIDE - Branding & Image (GREEN & YELLOW THEME) -->
-        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-green-600 via-green-700 to-green-900 relative overflow-hidden">
+        <div class="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-[#0a3d1f] via-[#155a2e] to-[#1e7a3e] relative overflow-hidden">
             <!-- Animated Background -->
             <div class="absolute inset-0 overflow-hidden pointer-events-none opacity-20">
-                <div class="absolute -top-40 -right-40 w-96 h-96 bg-yellow-300 rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
-                <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
-                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-400 rounded-full mix-blend-overlay filter blur-3xl animate-pulse" style="animation-delay: 4s;"></div>
+                <div class="absolute -top-40 -right-40 w-96 h-96 bg-[#ffd166] rounded-full mix-blend-overlay filter blur-3xl animate-pulse"></div>
+                <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-[#6ee7b7] rounded-full mix-blend-overlay filter blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#34d399] rounded-full mix-blend-overlay filter blur-3xl animate-pulse" style="animation-delay: 4s;"></div>
             </div>
 
             <!-- Content -->
@@ -37,8 +97,8 @@
                             <img src="{{ asset('images/logo-rs.png') }}" alt="RSUD Logo" class="h-full w-full object-cover">
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold">SIMPEG RSUD</h1>
-                            <p class="text-sm text-yellow-100">Haji Darlan Ismail</p>
+                            <h1 class="text-2xl font-bold">SIDIA</h1>
+                            <p class="text-sm text-[#d1fae5]">Sistem Informasi Darlan Ismail dan Absensi</p>
                         </div>
                     </div>
                 </div>
@@ -47,8 +107,8 @@
                 <div class="space-y-8">
                     <!-- Hospital Image/Illustration -->
                     <div class="relative">
-                        <div class="p-8 rounded-2xl border-2 border-yellow-300/30 backdrop-blur-xl shadow-xl bg-white/10">
-                            <div class="aspect-video bg-white/10 rounded-xl flex items-center justify-center overflow-hidden ring-2 ring-yellow-400/20">
+                        <div class="p-8 rounded-2xl border-2 border-[#ffd166]/30 backdrop-blur-xl shadow-xl bg-white/10">
+                            <div class="aspect-video bg-white/10 rounded-xl flex items-center justify-center overflow-hidden ring-2 ring-[#ffd166]/25">
                                 <!-- Replace with actual hospital image -->
                                 <img
                                     src="{{ asset('images/login.jpeg') }}"
@@ -58,8 +118,8 @@
                                 >
                                 <!-- Fallback Icon -->
                                 <div class="hidden flex-col items-center justify-center space-y-4">
-                                    <i class="fas fa-hospital text-6xl text-yellow-100/60"></i>
-                                    <p class="text-lg font-semibold text-yellow-50/80">RSUD Haji Darlan Ismail</p>
+                                    <i class="fas fa-hospital text-6xl text-[#ffd166]/75"></i>
+                                    <p class="text-lg font-semibold text-[#fef3c7]">RSUD Haji Darlan Ismail</p>
                                 </div>
                             </div>
                         </div>
@@ -68,10 +128,10 @@
                     <!-- Info Cards -->
                     <div class="space-y-4">
                         <h2 class="text-3xl font-bold leading-tight">
-                            SIMPEG RSUD<br>
-                            <span class="text-yellow-300">Haji Darlan Ismail</span>
+                            SIDIA<br>
+                            <span class="text-[#ffd166]">Sistem Informasi Darlan Ismail dan Absensi</span>
                         </h2>
-                        <p class="text-lg text-green-100">
+                        <p class="text-lg text-[#d1fae5]">
                             Manajemen Data Pegawai, Kehadiran, dan Administrasi Kepegawaian
                         </p>
                     </div>
@@ -80,12 +140,12 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="flex items-center justify-between text-sm text-green-100/60">
+                <div class="flex items-center justify-between text-sm text-[#a7f3d0]/70">
                     <p>&copy; {{ date('Y') }} RSUD Haji Darlan Ismail</p>
                     <div class="flex items-center space-x-4">
-                        <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Privacy</span>
+                        <!-- <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Privacy</span>
                         <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Terms</span>
-                        <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Help</span>
+                        <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Help</span> -->
                     </div>
                 </div>
             </div>
@@ -94,43 +154,37 @@
         <!-- RIGHT SIDE - Login Form with Background Image -->
         <div class="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative overflow-hidden">
             <!-- Background Image with Opacity -->
-            <div class="absolute inset-0 z-0">
+            <div class="absolute inset-0 z-0 bg-[#0e2b1c]">
                 <img
                     src="{{ asset('images/hospital.jpg') }}"
                     alt="Background"
-                    class="w-full h-full object-cover"
+                    class="w-full h-full object-contain object-center"
                     onerror="this.style.display='none';"
                 >
                 <!-- Overlay untuk transparansi & blur -->
-                <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-gray-15/90 to-white/65 backdrop-blur-sm"></div>
-            </div>
-
-            <!-- Animated Background Decoration (Tetap ada untuk fallback) -->
-            <div class="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                <div class="absolute top-0 right-0 w-96 h-96 bg-green-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-                <div class="absolute bottom-0 left-0 w-96 h-96 bg-yellow-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style="animation-delay: 2s;"></div>
+                <div class="absolute inset-0 sidia-right-overlay"></div>
             </div>
 
             <!-- Login Card -->
             <div class="w-full max-w-md relative z-10">
                 <!-- Mobile Logo (Hidden on Desktop) -->
                 <div class="lg:hidden text-center mb-8">
-                    <div class="inline-flex h-16 w-16 bg-gradient-to-br from-green-600 to-green-800 rounded-xl items-center justify-center shadow-lg mb-4 overflow-hidden">
+                    <div class="inline-flex h-16 w-16 bg-gradient-to-br from-[#155a2e] to-[#0a3d1f] rounded-xl items-center justify-center shadow-lg mb-4 overflow-hidden">
                         <img src="{{ asset('images/logo-rs.png') }}" alt="RSUD Logo" class="h-full w-full object-cover">
                     </div>
-                    <h1 class="text-xl font-bold text-gray-900">SIMPEG RSUD</h1>
-                    <p class="text-sm text-gray-600">Haji Darlan Ismail</p>
+                    <h1 class="text-xl font-bold text-white">SIDIA</h1>
+                    <p class="text-sm text-[#d1fae5]">Sistem Informasi Darlan Ismail dan Absensi</p>
                 </div>
 
-                <div class="p-6 sm:p-8 shadow-2xl rounded-xl border-t-4 border-green-600 backdrop-blur-lg bg-white/95">
+                <div class="p-6 sm:p-8 rounded-xl border-t-4 border-[#28a04f] backdrop-blur-lg sidia-login-card text-[#1f3d2c]">
                     <!-- Header with Logo -->
                     <div class="flex items-center gap-4 mb-8">
                         <div class="flex-shrink-0">
                             <img src="{{ asset('images/logo-rs.png') }}" alt="RSUD Logo" class="h-16 w-16 rounded-lg shadow-md object-cover">
                         </div>
                         <div class="flex-grow">
-                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Masuk SIMPEG</h2>
-                            <p class="text-sm sm:text-base text-gray-600">RSUD Haji Darlan Ismail</p>
+                            <h2 class="text-2xl sm:text-3xl font-bold text-[#1b4d33]">Masuk SIDIA</h2>
+                            <p class="text-sm sm:text-base sidia-soft-muted">RSUD Haji Darlan Ismail</p>
                         </div>
                     </div>
 
@@ -166,8 +220,8 @@
 
                         <!-- Email/Username Field -->
                         <div>
-                            <label for="login" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-id-card text-green-600 mr-1"></i>
+                            <label for="login" class="block text-sm font-medium sidia-soft-dark mb-2">
+                                <i class="fas fa-id-card text-[#3d9a69] mr-1"></i>
                                 Email / Username
                             </label>
                             <div class="relative">
@@ -176,7 +230,7 @@
                                     name="login"
                                     id="login"
                                     value="{{ old('login') }}"
-                                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white/90 transition duration-200 @error('login') border-red-500 @enderror"
+                                    class="w-full px-4 py-3 rounded-lg transition duration-200 sidia-input @error('login') border-red-500 @enderror"
                                     placeholder="Masukkan Email atau Username"
                                     required
                                     autofocus
@@ -192,8 +246,8 @@
 
                         <!-- Password Field -->
                         <div>
-                            <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                                <i class="fas fa-lock text-green-600 mr-1"></i>
+                            <label for="password" class="block text-sm font-medium sidia-soft-dark mb-2">
+                                <i class="fas fa-lock text-[#3d9a69] mr-1"></i>
                                 Kata Sandi
                             </label>
                             <div class="relative">
@@ -201,14 +255,14 @@
                                     type="password"
                                     name="password"
                                     id="password"
-                                    class="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white/90 transition duration-200 @error('password') border-red-500 @enderror"
+                                    class="w-full px-4 py-3 pr-12 rounded-lg transition duration-200 sidia-input @error('password') border-red-500 @enderror"
                                     placeholder="Masukkan kata sandi"
                                     required
                                 >
                                 <button
                                     type="button"
                                     onclick="togglePassword()"
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-green-600 transition duration-200"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#5f8f73] hover:text-[#2f855a] transition duration-200"
                                 >
                                     <i class="fas fa-eye" id="toggleIcon"></i>
                                 </button>
@@ -224,16 +278,16 @@
                         <!-- Remember Me & Forgot Password -->
                         <div class="flex items-center justify-between">
                             <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" name="remember_me" class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded cursor-pointer">
-                                <span class="ml-2 text-sm text-gray-600">Ingat saya</span>
+                                <input type="checkbox" name="remember_me" class="h-4 w-4 text-[#28a04f] focus:ring-[#28a04f] border-[#7cb495] rounded cursor-pointer bg-transparent">
+                                <span class="ml-2 text-sm sidia-soft-dark">Ingat saya</span>
                             </label>
-                            <a href="{{ route('password.request') }}" class="text-sm text-green-600 hover:text-green-700 font-medium transition duration-200">
+                            <a href="{{ route('password.request') }}" class="text-sm text-[#2f6a4b] hover:text-[#2f6a4b] font-medium transition duration-200">
                                 Lupa Kata Sandi?
                             </a>
                         </div>
 
                         <!-- Submit Button -->
-                        <button type="submit" class="w-full py-3 text-base group bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg shadow-md hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 active:scale-95">
+                        <button type="submit" class="w-full py-3 text-base group font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-[#f5a623] focus:ring-offset-2 focus:ring-offset-[#0a3d1f] transition-all duration-300 active:scale-95 sidia-gold-btn">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Masuk
                         </button>
@@ -242,30 +296,30 @@
                     <!-- Divider -->
                     <div class="relative my-6">
                         <div class="absolute inset-0 flex items-center">
-                            <div class="w-full border-t border-gray-300"></div>
+                            <div class="w-full border-t border-[#bad7c7]"></div>
                         </div>
-                        <!-- <div class="relative flex justify-center text-sm">
-                            <span class="px-2 bg-white text-gray-500">Akun Demo</span>
-                        </div> -->
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-2 bg-[#f2fbf5] text-[#2f6a4b]">Data Dummy</span>
+                        </div>
                     </div>
 
-                    <!-- Demo Info -->
-                    <!-- <div class="bg-green-50 border border-green-200 rounded-lg p-4 text-sm">
-                        <p class="font-semibold text-green-800 mb-2">
+                    <!-- Demo Info
+                    <div class="bg-[#0d2b17]/80 border border-[#34d399]/25 rounded-lg p-4 text-sm">
+                        <p class="font-semibold text-[#6ee7b7] mb-2">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Akun Super Admin:
+                            Data Dummy (contoh tampilan):
                         </p>
-                        <div class="space-y-1 text-green-700">
-                            <p><strong>Email:</strong> superadmin@example.com</p>
-                            <p><strong>Kata Sandi:</strong> password</p>
+                        <div class="space-y-1 sidia-soft-dark">
+                            <p><strong>Admin:</strong> admin.dummy@sidia.test / dummy123</p>
+                            <p><strong>Pegawai:</strong> leny.r@sidia.test / dummy123</p>
                         </div>
                     </div> -->
                 </div>
 
                 <!-- Footer Links -->
-                <div class="text-center mt-6 text-sm text-gray-600 backdrop-blur-sm bg-white/50 px-4 py-2 rounded-lg">
-                    <p>Perlu bantuan? <span class="text-green-600 hover:text-green-700 font-semibold cursor-pointer">Hubungi Dukungan</span></p>
-                </div>
+                <!-- <div class="text-center mt-6 text-sm sidia-soft-dark backdrop-blur-sm bg-[#0d2b17]/65 border border-[#a7f3d0]/20 px-4 py-2 rounded-lg">
+                    <p>Perlu bantuan? <span class="text-[#ffd166] hover:text-[#f5a623] font-semibold cursor-pointer">Hubungi Dukungan</span></p>
+                </div> -->
             </div>
         </div>
     </div>

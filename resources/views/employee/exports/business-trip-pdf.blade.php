@@ -144,8 +144,12 @@
             <span class="summary-item">Disetujui: {{ $trips->where('status', 'approved')->count() }}</span>
             <span class="summary-item">Ditolak: {{ $trips->where('status', 'rejected')->count() }}</span>
             <span class="summary-item">Dibatalkan: {{ $trips->where('status', 'cancelled')->count() }}</span>
-            @php $totalDays = $trips->where('status', 'approved')->sum(fn($t) => $t->start_date && $t->end_date ? $t->start_date->diffInDays($t->end_date) + 1 : 0); @endphp
-            <span class="summary-item">Total Hari (Disetujui): {{ $totalDays }} hari</span>
+            @php
+                $totalDays = $trips->where('status', 'approved')->sum(fn($t) => (float) $t->duration_value);
+                $totalEstimatedCost = $trips->sum('estimated_cost');
+            @endphp
+            <span class="summary-item">Total Hari (Disetujui): {{ rtrim(rtrim(number_format($totalDays, 1, '.', ''), '0'), '.') }} hari</span>
+            <span class="summary-item">Total Estimasi: Rp {{ number_format($totalEstimatedCost, 0, ',', '.') }}</span>
         </div>
     </div>
 
@@ -170,7 +174,7 @@
                 <td style="font-size: 8px;">{{ \Illuminate\Support\Str::limit($trip->purpose, 80) ?? '-' }}</td>
                 <td>{{ $trip->start_date?->translatedFormat('d M Y') ?? '-' }}</td>
                 <td>{{ $trip->end_date?->translatedFormat('d M Y') ?? '-' }}</td>
-                <td class="text-center">{{ $trip->start_date && $trip->end_date ? $trip->start_date->diffInDays($trip->end_date) + 1 : '-' }} hari</td>
+                <td class="text-center">{{ $trip->duration_label }}</td>
                 <td class="text-right">{{ $trip->estimated_cost ? 'Rp ' . number_format($trip->estimated_cost, 0, ',', '.') : '-' }}</td>
                 <td>
                     @php

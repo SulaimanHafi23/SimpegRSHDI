@@ -2,14 +2,15 @@
 
 namespace App\Services\Worker;
 
-use App\DTOs\WorkerDTO;
 use App\DTOs\UserDTO;
-use App\Repositories\Contracts\Worker\WorkerRepositoryInterface;
+use App\DTOs\WorkerDTO;
+use App\Models\User;
 use App\Repositories\Contracts\User\UserRepositoryInterface;
+use App\Repositories\Contracts\Worker\WorkerRepositoryInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
-use Illuminate\Support\Facades\Hash;
 
 class WorkerService
 {
@@ -61,7 +62,7 @@ class WorkerService
             }
 
             // Check if email already exists
-            if ($this->workerRepository->getByEmail($data['email'])) {
+            if ($this->workerRepository->getByEmail($data['email']) || $this->userRepository->getByEmail($data['email'])) {
                 throw new \Exception('Email already exists.');
             }
 
@@ -124,6 +125,17 @@ class WorkerService
         try {
             $worker = $this->workerRepository->getById($id);
 
+            if (!empty($data['email']) && $data['email'] !== $worker->email) {
+                $existingWorker = $this->workerRepository->getByEmail($data['email']);
+                $existingUser = User::where('email', $data['email'])
+                    ->where('worker_id', '!=', $worker->id)
+                    ->first();
+
+                if (($existingWorker && $existingWorker->id !== $worker->id) || $existingUser) {
+                    throw new \Exception('Email already exists.');
+                }
+            }
+
             // Handle photo upload
             if (isset($data['photo'])) {
                 // Delete old photo
@@ -140,6 +152,10 @@ class WorkerService
 
             $dto = WorkerDTO::fromRequest($data);
             $updated = $this->workerRepository->update($id, $dto);
+
+            if (!empty($data['email']) && $worker->user && $worker->user->email !== $updated->email) {
+                $worker->user->update(['email' => $updated->email]);
+            }
 
             DB::commit();
             return $updated;

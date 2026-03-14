@@ -51,10 +51,10 @@
                     </div>
 
                     <h2 class="mt-6 text-4xl font-extrabold text-gray-900">
-                        {{ config('app.name', 'SIMPEGRS HDI') }}
+                        {{ config('app.name', 'SIDIA') }}
                     </h2>
                     <p class="mt-2 text-sm text-gray-600 font-medium">
-                        Sistem Informasi Manajemen Pegawai
+                        Sistem Informasi Darlan Ismail dan Absensi
                     </p>
 
                     <!-- Decorative Line -->

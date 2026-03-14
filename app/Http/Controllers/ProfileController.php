@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\DTOs\UserDTO;
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\UpdateProfileRequest;
 use App\Services\User\UserService;
 use App\Services\Worker\WorkerService;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Intervention\Image\ImageManagerStatic as Image;
 
@@ -108,20 +105,22 @@ class ProfileController extends Controller
             }
         }
 
-        // Update user
-        $this->userService->update($user->id, $userData);
+        try {
+            $this->userService->update($user->id, $userData);
 
-        // If user has worker data, update worker info (name/phone/address)
-        if ($user->worker_id && ($request->has('name') || $request->has('phone') || $request->has('address'))) {
-            $workerData = array_filter([
-                'name' => $request->name,
-                'phone_number' => $request->phone ?? $request->phone_number ?? null,
-                'address' => $request->address,
-            ]);
+            if ($user->worker_id && ($request->has('name') || $request->has('phone') || $request->has('address'))) {
+                $workerData = array_filter([
+                    'name' => $request->name,
+                    'phone_number' => $request->phone ?? $request->phone_number ?? null,
+                    'address' => $request->address,
+                ]);
 
-            if (!empty($workerData)) {
-                $this->workerService->update($user->worker_id, $workerData);
+                if (!empty($workerData)) {
+                    $this->workerService->update($user->worker_id, $workerData);
+                }
             }
+        } catch (\Exception $e) {
+            return back()->withErrors(['email' => $e->getMessage()])->withInput();
         }
 
         return redirect()

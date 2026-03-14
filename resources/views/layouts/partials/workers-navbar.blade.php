@@ -16,7 +16,7 @@
                             <i class="fas fa-hospital text-green-700 text-xl"></i>
                         </div>
                         <div>
-                            <h1 class="text-lg font-bold">SIMPEG RSHDI</h1>
+                            <h1 class="text-lg font-bold">SIDIA</h1>
                             <p class="text-xs text-yellow-100">Portal Pegawai</p>
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                         <i class="fas fa-hospital text-green-700 text-xl"></i>
                     </div>
                     <div>
-                        <h2 class="text-lg font-bold">SIMPEG</h2>
+                        <h2 class="text-lg font-bold">SIDIA</h2>
                         <p class="text-xs text-yellow-100">Portal Pegawai</p>
                     </div>
                 </div>

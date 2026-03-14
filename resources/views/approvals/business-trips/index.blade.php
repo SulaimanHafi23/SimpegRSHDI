@@ -138,7 +138,7 @@
 
                         <x-table.cell>
                             <div class="font-medium text-gray-900">{{ $trip->destination ?? '-' }}</div>
-                            <div class="text-sm text-gray-500">{{ Str::limit($trip->purpose ?? '', 40) }}</div>
+                            <div class="text-sm text-gray-500">{{ \Illuminate\Support\Str::limit($trip->purpose ?? '', 40) }}</div>
                         </x-table.cell>
 
                         <x-table.cell>
@@ -146,7 +146,7 @@
                             <div class="text-xs text-gray-500">s/d {{ \Carbon\Carbon::parse($trip->end_date)->format('d M Y') }}</div>
                         </x-table.cell>
 
-                        <x-table.cell>{{ \Carbon\Carbon::parse($trip->start_date)->diffInDays(\Carbon\Carbon::parse($trip->end_date)) + 1 }} hari</x-table.cell>
+                        <x-table.cell>{{ $trip->duration_label }}</x-table.cell>
 
                         <x-table.cell>
                             @php

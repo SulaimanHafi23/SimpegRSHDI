@@ -119,9 +119,7 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Durasi</label>
-                            <p class="text-lg font-semibold text-gray-900">
-                                {{ $trip->start_date->diffInDays($trip->end_date) + 1 }} hari
-                            </p>
+                            <p class="text-lg font-semibold text-gray-900">{{ $trip->duration_label }}</p>
                         </div>
 
                         <div>
@@ -148,6 +146,11 @@
                         </div>
 
                         <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Sesi</label>
+                            <p class="text-base font-semibold text-gray-900">{{ $trip->half_day_session_label ?? 'Full Day' }}</p>
+                        </div>
+
+                        <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
                             @if($trip->status === 'pending')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold">
@@ -168,10 +171,27 @@
                             @endif
                         </div>
 
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Transportasi</label>
+                            <p class="text-base font-semibold text-gray-900">{{ $trip->transportation ?? '-' }}</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Akomodasi</label>
+                            <p class="text-base font-semibold text-gray-900">{{ $trip->accommodation ?? '-' }}</p>
+                        </div>
+
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-500 mb-1">Tujuan Perjalanan</label>
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                                 <p class="text-gray-700 leading-relaxed">{{ $trip->purpose }}</p>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Catatan</label>
+                            <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                                <p class="text-gray-700 leading-relaxed">{{ $trip->notes ?: '-' }}</p>
                             </div>
                         </div>
                     </div>

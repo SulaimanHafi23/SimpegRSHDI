@@ -25,8 +25,8 @@
                     <img src="{{ asset('images/logo-rs.png') }}" alt="RSUD Logo" class="h-full w-full object-cover"
                          onerror="this.style.display='none'; this.parentElement.innerHTML='<i class=\'fas fa-hospital text-white text-2xl\'></i>';">
                 </div>
-                <h1 class="text-xl font-bold text-gray-900">SIMPEG RSUD</h1>
-                <p class="text-sm text-gray-600">Haji Darlan Ismail</p>
+                <h1 class="text-xl font-bold text-gray-900">SIDIA</h1>
+                <p class="text-sm text-gray-600">Sistem Informasi Darlan Ismail dan Absensi</p>
             </div>
 
             <div class="p-6 sm:p-8 shadow-2xl rounded-xl border-t-4 border-green-600 backdrop-blur-lg bg-white/95">

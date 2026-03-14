@@ -102,6 +102,37 @@
                 </div>
             </div>
 
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3">
+                <div>
+                    <label for="trip_duration_type" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Tipe Durasi <span class="text-red-500">*</span>
+                    </label>
+                    <select name="trip_duration_type" id="trip_duration_type"
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm sm:text-base @error('trip_duration_type') border-red-400 bg-red-50 @enderror"
+                            required>
+                        <option value="full_day" {{ old('trip_duration_type', 'full_day') == 'full_day' ? 'selected' : '' }}>Full Day</option>
+                        <option value="half_day" {{ old('trip_duration_type') == 'half_day' ? 'selected' : '' }}>Setengah Hari</option>
+                    </select>
+                    @error('trip_duration_type')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+                <div id="halfDaySessionWrapper" class="{{ old('trip_duration_type') === 'half_day' ? '' : 'hidden' }}">
+                    <label for="half_day_session" class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Sesi Setengah Hari <span class="text-red-500">*</span>
+                    </label>
+                    <select name="half_day_session" id="half_day_session"
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm sm:text-base @error('half_day_session') border-red-400 bg-red-50 @enderror">
+                        <option value="">-- Pilih Sesi --</option>
+                        <option value="pagi" {{ old('half_day_session') == 'pagi' ? 'selected' : '' }}>Pagi</option>
+                        <option value="siang" {{ old('half_day_session') == 'siang' ? 'selected' : '' }}>Siang</option>
+                    </select>
+                    @error('half_day_session')
+                        <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
             <div id="tripDayCounter" class="hidden items-center gap-2 px-3 sm:px-4 py-2.5 bg-blue-50 rounded-xl border border-blue-200">
                 <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -245,16 +276,47 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var startDateInput = document.getElementById('start_date');
-    var endDateInput   = document.getElementById('end_date');
-    var counter        = document.getElementById('tripDayCounter');
-    var countText      = document.getElementById('tripDayCount');
-    var costInput      = document.getElementById('estimated_cost');
-    var costDisplay    = document.getElementById('costDisplay');
+    var endDateInput = document.getElementById('end_date');
+    var tripDurationTypeInput = document.getElementById('trip_duration_type');
+    var halfDaySessionInput = document.getElementById('half_day_session');
+    var halfDaySessionWrapper = document.getElementById('halfDaySessionWrapper');
+    var counter = document.getElementById('tripDayCounter');
+    var countText = document.getElementById('tripDayCount');
+    var costInput = document.getElementById('estimated_cost');
+    var costDisplay = document.getElementById('costDisplay');
+
+    function isHalfDay() {
+        return tripDurationTypeInput.value === 'half_day';
+    }
+
+    function syncHalfDayState() {
+        if (isHalfDay()) {
+            halfDaySessionWrapper.classList.remove('hidden');
+            endDateInput.value = startDateInput.value;
+            endDateInput.readOnly = true;
+            endDateInput.classList.add('cursor-not-allowed', 'bg-gray-100');
+        } else {
+            halfDaySessionWrapper.classList.add('hidden');
+            halfDaySessionInput.value = '';
+            endDateInput.readOnly = false;
+            endDateInput.classList.remove('cursor-not-allowed', 'bg-gray-100');
+        }
+
+        updateDateCounter();
+    }
 
     function updateDateCounter() {
         if (startDateInput.value && endDateInput.value) {
+            if (isHalfDay()) {
+                var sessionLabel = halfDaySessionInput.value ? ' (' + halfDaySessionInput.options[halfDaySessionInput.selectedIndex].text + ')' : '';
+                countText.textContent = '0.5 hari' + sessionLabel;
+                counter.classList.remove('hidden');
+                counter.classList.add('flex');
+                return;
+            }
+
             var start = new Date(startDateInput.value);
-            var end   = new Date(endDateInput.value);
+            var end = new Date(endDateInput.value);
             if (end >= start) {
                 var days = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
                 countText.textContent = days + ' hari';
@@ -263,20 +325,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
         }
+
         counter.classList.add('hidden');
         counter.classList.remove('flex');
     }
 
     startDateInput.addEventListener('change', function () {
         endDateInput.min = this.value;
-        if (endDateInput.value && new Date(endDateInput.value) < new Date(this.value)) endDateInput.value = '';
+        if (isHalfDay()) {
+            endDateInput.value = this.value;
+        } else if (endDateInput.value && new Date(endDateInput.value) < new Date(this.value)) {
+            endDateInput.value = '';
+        }
         updateDateCounter();
     });
+
     endDateInput.addEventListener('change', updateDateCounter);
-    updateDateCounter();
+    tripDurationTypeInput.addEventListener('change', syncHalfDayState);
+    halfDaySessionInput.addEventListener('change', updateDateCounter);
+    syncHalfDayState();
 
     costInput.addEventListener('input', function () {
-        var val = parseInt(this.value);
+        var val = parseInt(this.value, 10);
         if (!isNaN(val) && val > 0) {
             costDisplay.textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
             costDisplay.classList.remove('hidden');
@@ -284,10 +354,14 @@ document.addEventListener('DOMContentLoaded', function () {
             costDisplay.classList.add('hidden');
         }
     });
-    if (costInput.value) costInput.dispatchEvent(new Event('input'));
+    if (costInput.value) {
+        costInput.dispatchEvent(new Event('input'));
+    }
 
     var purpose = document.getElementById('purpose');
-    if (purpose && purpose.value) updatePurposeCounter(purpose);
+    if (purpose && purpose.value) {
+        updatePurposeCounter(purpose);
+    }
 
     document.getElementById('tripForm').addEventListener('submit', function (e) {
         var purposeVal = purpose.value.trim();
@@ -296,30 +370,50 @@ document.addEventListener('DOMContentLoaded', function () {
             purpose.focus();
             purpose.classList.add('border-red-400', 'bg-red-50');
             var hint = document.getElementById('purposeHint');
-            if (hint) { hint.textContent = 'Minimal 50 karakter. Saat ini: ' + purposeVal.length; hint.classList.add('text-red-500'); hint.classList.remove('text-gray-400'); }
+            if (hint) {
+                hint.textContent = 'Minimal 50 karakter. Saat ini: ' + purposeVal.length;
+                hint.classList.add('text-red-500');
+                hint.classList.remove('text-gray-400');
+            }
             return;
         }
+
+        if (isHalfDay()) {
+            endDateInput.value = startDateInput.value;
+        }
+
         var btn = document.getElementById('submitBtn');
         btn.disabled = true;
         btn.innerHTML = '<svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Memproses...';
-        setTimeout(function() { btn.disabled = false; btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Ajukan Permohonan'; }, 4000);
+        setTimeout(function () {
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Ajukan Permohonan';
+        }, 4000);
     });
 });
 
 function updatePurposeCounter(el) {
-    var count   = el.value.length;
+    var count = el.value.length;
     var countEl = document.getElementById('purposeCount');
-    var hintEl  = document.getElementById('purposeHint');
+    var hintEl = document.getElementById('purposeHint');
     countEl.textContent = count + ' / 50';
     if (count >= 50) {
         countEl.classList.add('text-emerald-600');
         countEl.classList.remove('text-gray-400', 'text-red-500');
-        if (hintEl) { hintEl.textContent = 'Sudah memenuhi minimal karakter'; hintEl.classList.add('text-emerald-600'); hintEl.classList.remove('text-gray-400', 'text-red-500'); }
+        if (hintEl) {
+            hintEl.textContent = 'Sudah memenuhi minimal karakter';
+            hintEl.classList.add('text-emerald-600');
+            hintEl.classList.remove('text-gray-400', 'text-red-500');
+        }
         el.classList.remove('border-red-400', 'bg-red-50');
     } else {
         countEl.classList.remove('text-emerald-600', 'text-red-500');
         countEl.classList.add('text-gray-400');
-        if (hintEl) { hintEl.textContent = 'Minimal 50 karakter'; hintEl.classList.remove('text-emerald-600', 'text-red-500'); hintEl.classList.add('text-gray-400'); }
+        if (hintEl) {
+            hintEl.textContent = 'Minimal 50 karakter';
+            hintEl.classList.remove('text-emerald-600', 'text-red-500');
+            hintEl.classList.add('text-gray-400');
+        }
     }
 }
 </script>

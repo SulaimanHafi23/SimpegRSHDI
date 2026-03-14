@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\Employee;
 
+use App\Exports\EmployeeBusinessTripExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BusinessTrip\BusinessTripRequest;
-use App\Exports\EmployeeBusinessTripExport;
 use App\Models\BusinessTrip;
+use App\Models\User;
+use App\Services\Notification\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
 class BusinessTripController extends Controller
 {
-    public function __construct()
-    {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {
         $this->middleware('auth');
     }
 
@@ -61,8 +64,14 @@ class BusinessTripController extends Controller
         $data['status'] = 'pending';
         $data['id'] = \Str::uuid()->toString();
 
+        if (($data['trip_duration_type'] ?? 'full_day') === 'half_day') {
+            $data['end_date'] = $data['start_date'];
+        }
+
         try {
-            BusinessTrip::create($data);
+            $trip = BusinessTrip::create($data);
+            $this->notifyApprovers($trip);
+
             return redirect()->route('employee.business-trips.index')->with('success', 'Permohonan perjalanan dinas berhasil diajukan.');
         } catch (\Exception $e) {
             return back()->withInput()->with('error', 'Gagal membuat permohonan: ' . $e->getMessage());
@@ -150,5 +159,52 @@ class BusinessTripController extends Controller
         $pdf->setPaper('a4', 'landscape');
 
         return $pdf->download('Perjalanan_Dinas_' . $worker->name . '_' . now()->format('YmdHis') . '.pdf');
+    }
+
+    protected function notifyApprovers(BusinessTrip $trip): void
+    {
+        $trip->loadMissing('worker.department');
+
+        $departmentId = $trip->worker?->department_id;
+
+        $recipients = User::query()
+            ->where('is_active', true)
+            ->where(function ($query) use ($departmentId) {
+                $query->whereHas('roles', function ($roleQuery) {
+                    $roleQuery->whereIn('name', ['HR', 'Super Admin']);
+                });
+
+                if ($departmentId) {
+                    $query->orWhere(function ($managerQuery) use ($departmentId) {
+                        $managerQuery->whereHas('roles', function ($roleQuery) {
+                            $roleQuery->where('name', 'Manager');
+                        })->whereHas('worker', function ($workerQuery) use ($departmentId) {
+                            $workerQuery->where('department_id', $departmentId);
+                        });
+                    });
+                }
+            })
+            ->get()
+            ->unique('id');
+
+        foreach ($recipients as $recipient) {
+            $this->notificationService->create([
+                'user_id' => $recipient->id,
+                'type' => 'business_trip_submitted',
+                'title' => 'Pengajuan Perjalanan Dinas Baru',
+                'message' => sprintf(
+                    '%s mengajukan perjalanan dinas ke %s pada %s.',
+                    $trip->worker->name ?? 'Pegawai',
+                    $trip->destination,
+                    $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->translatedFormat('d M Y') : '-'
+                ),
+                'data' => [
+                    'business_trip_id' => $trip->id,
+                    'worker_id' => $trip->worker_id,
+                    'type' => 'business_trip',
+                    'action' => 'submitted',
+                ],
+            ]);
+        }
     }
 }

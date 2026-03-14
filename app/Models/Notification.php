@@ -13,6 +13,8 @@ class Notification extends Model
 
     protected $fillable = [
         'user_id',
+        'notifiable_type',
+        'notifiable_id',
         'type',
         'title',
         'message',
@@ -65,5 +67,28 @@ class Notification extends Model
     public function scopeRead($query)
     {
         return $query->whereNotNull('read_at');
+    }
+
+    public function getTitleAttribute($value): string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+
+        return $this->data['title'] ?? 'Notifikasi';
+    }
+
+    public function getMessageAttribute($value): string
+    {
+        if (!empty($value)) {
+            return $value;
+        }
+
+        return $this->data['message'] ?? '-';
+    }
+
+    public function getIsReadAttribute(): bool
+    {
+        return $this->read_at !== null;
     }
 }

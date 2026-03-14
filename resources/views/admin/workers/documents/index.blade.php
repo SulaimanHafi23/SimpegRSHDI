@@ -111,17 +111,16 @@
                  x-collapse
                  class="border-t border-gray-200">
                 <form method="GET" action="{{ route('admin.worker-documents.index') }}" class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Pegawai</label>
-                            <select name="worker_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Semua Pegawai</option>
-                                @foreach($workers as $worker)
-                                    <option value="{{ $worker->id }}" {{ ($filters['worker_id'] ?? '') == $worker->id ? 'selected' : '' }}>
-                                        {{ $worker->name }}
-                                    </option>
-                                @endforeach
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nama Pegawai</label>
+                            <input
+                                type="text"
+                                name="worker_name"
+                                value="{{ $filters['worker_name'] ?? '' }}"
+                                placeholder="Cari nama pegawai..."
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                            >
                         </div>
 
                         <div>
@@ -143,6 +142,17 @@
                                 <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Menunggu</option>
                                 <option value="verified" {{ ($filters['status'] ?? '') === 'verified' ? 'selected' : '' }}>Terverifikasi</option>
                                 <option value="rejected" {{ ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tampilkan</label>
+                            <select name="per_page" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500">
+                                @foreach([5, 10, 15, 25, 50] as $size)
+                                    <option value="{{ $size }}" {{ (int)($filters['per_page'] ?? 15) === $size ? 'selected' : '' }}>
+                                        {{ $size }} data
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -345,9 +355,17 @@
             </table>
         </div>
 
-        {{-- Pagination --}}
-        <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
-            {{ $workersWithDocStats->links() }}
+    </div>
+
+    {{-- Pagination (visible on mobile + desktop) --}}
+    <div class="bg-white px-4 py-3 border border-gray-200 rounded-lg shadow-sm sm:px-6">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-xs sm:text-sm text-gray-600">
+                Menampilkan {{ $workersWithDocStats->firstItem() ?? 0 }} - {{ $workersWithDocStats->lastItem() ?? 0 }} dari {{ $workersWithDocStats->total() }} data
+            </p>
+            <div class="overflow-x-auto">
+                {{ $workersWithDocStats->links() }}
+            </div>
         </div>
     </div>
 

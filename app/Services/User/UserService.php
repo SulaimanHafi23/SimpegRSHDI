@@ -3,6 +3,7 @@
 namespace App\Services\User;
 
 use App\DTOs\UserDTO;
+use App\Models\Worker;
 use App\Repositories\Contracts\User\UserRepositoryInterface;
 use Illuminate\Support\Facades\Hash;
 
@@ -41,6 +42,18 @@ class UserService
             }
         }
 
+        if (!empty($data['email'])) {
+            $workerEmailConflict = Worker::where('email', $data['email'])
+                ->when(!empty($data['worker_id']), function ($query) use ($data) {
+                    $query->where('id', '!=', $data['worker_id']);
+                })
+                ->exists();
+
+            if ($workerEmailConflict) {
+                throw new \Exception('Email already exists.');
+            }
+        }
+
         // Hash password
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -59,6 +72,21 @@ class UserService
 
     public function update(string $id, array $data)
     {
+        $existingUser = $this->userRepository->getById($id);
+
+        if (!empty($data['email']) && $data['email'] !== $existingUser?->email) {
+            $emailOwner = $this->userRepository->getByEmail($data['email']);
+            $workerEmailConflict = Worker::where('email', $data['email'])
+                ->when($existingUser?->worker_id, function ($query) use ($existingUser) {
+                    $query->where('id', '!=', $existingUser->worker_id);
+                })
+                ->exists();
+
+            if (($emailOwner && $emailOwner->id !== $id) || $workerEmailConflict) {
+                throw new \Exception('Email already exists.');
+            }
+        }
+
         // Hash password if provided
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -71,6 +99,10 @@ class UserService
 
         $dto = UserDTO::fromRequest($data);
         $user = $this->userRepository->update($id, $dto);
+
+        if (!empty($data['email']) && $existingUser?->worker && $existingUser->worker->email !== $user->email) {
+            $existingUser->worker->update(['email' => $user->email]);
+        }
 
         // Update roles if provided
         if (isset($data['roles'])) {

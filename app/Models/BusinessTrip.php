@@ -14,7 +14,22 @@ class BusinessTrip extends Model
     protected $table = 'business_trips';
 
     protected $fillable = [
-        'worker_id', 'destination', 'purpose', 'start_date', 'end_date', 'estimated_cost', 'status', 'approved_by', 'approved_at', 'rejection_reason', 'itinerary'
+        'worker_id',
+        'destination',
+        'purpose',
+        'start_date',
+        'end_date',
+        'trip_duration_type',
+        'half_day_session',
+        'transportation',
+        'accommodation',
+        'notes',
+        'estimated_cost',
+        'status',
+        'approved_by',
+        'approved_at',
+        'rejection_reason',
+        'itinerary',
     ];
 
     protected $casts = [
@@ -33,5 +48,38 @@ class BusinessTrip extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function getHalfDaySessionLabelAttribute(): ?string
+    {
+        return match ($this->half_day_session) {
+            'pagi' => 'Pagi',
+            'siang' => 'Siang',
+            default => null,
+        };
+    }
+
+    public function getDurationValueAttribute(): float|int
+    {
+        if ($this->trip_duration_type === 'half_day') {
+            return 0.5;
+        }
+
+        if (!$this->start_date || !$this->end_date) {
+            return 0;
+        }
+
+        return \Carbon\Carbon::parse($this->start_date)->diffInDays(\Carbon\Carbon::parse($this->end_date)) + 1;
+    }
+
+    public function getDurationLabelAttribute(): string
+    {
+        if ($this->trip_duration_type === 'half_day') {
+            $session = $this->half_day_session_label ? ' (' . $this->half_day_session_label . ')' : '';
+
+            return '0.5 hari' . $session;
+        }
+
+        return $this->duration_value . ' hari';
     }
 }

@@ -259,7 +259,7 @@ class LeaveRequestController extends Controller
 
                 default:
                     return \Maatwebsite\Excel\Facades\Excel::download(
-                        new \App\Exports\LeaveExport($filters),
+                        new \App\Exports\LeaveRecapExport($filters),
                         $filename . '.xlsx'
                     );
             }

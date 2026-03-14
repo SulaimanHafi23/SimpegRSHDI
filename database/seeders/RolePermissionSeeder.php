@@ -183,10 +183,6 @@ class RolePermissionSeeder extends Seeder
             // Dashboard
             'dashboard.admin',
 
-            // View Access to Master Data
-            'department.manage',  // Can view departments for filtering
-            'shift.manage',       // Can view shifts for scheduling
-
             // Worker & Attendance - View Only
             'worker.manage',      // Can view worker lists
             'attendance.manage',  // Can view attendance records

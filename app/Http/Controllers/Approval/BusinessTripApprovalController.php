@@ -3,17 +3,19 @@
 namespace App\Http\Controllers\Approval;
 
 use App\Http\Controllers\Controller;
-use App\Traits\DepartmentFilterable;
 use App\Models\BusinessTrip;
 use App\Models\Worker;
+use App\Services\Notification\NotificationService;
+use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 
 class BusinessTripApprovalController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct()
-    {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {
         $this->middleware('auth');
         $this->middleware('role:Manager|HR|Super Admin');
     }
@@ -120,6 +122,13 @@ class BusinessTripApprovalController extends Controller
             'approved_at' => now(),
         ]);
 
+        if ($trip->worker?->user) {
+            $this->notificationService->notifyBusinessTripApproved($trip->worker->user->id, [
+                'id' => $trip->id,
+                'destination' => $trip->destination,
+            ]);
+        }
+
         return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas disetujui.');
     }
 
@@ -140,6 +149,13 @@ class BusinessTripApprovalController extends Controller
             'approved_at' => now(),
             'rejection_reason' => $request->rejection_reason,
         ]);
+
+        if ($trip->worker?->user) {
+            $this->notificationService->notifyBusinessTripRejected($trip->worker->user->id, [
+                'id' => $trip->id,
+                'destination' => $trip->destination,
+            ], $request->rejection_reason);
+        }
 
         return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas ditolak.');
     }

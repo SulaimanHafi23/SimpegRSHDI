@@ -5,8 +5,9 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Services\Worker\WorkerService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
@@ -51,17 +52,23 @@ class ProfileController extends Controller
         }
 
         $request->validate([
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => [
+                'required',
+                'email',
+                Rule::unique('users', 'email')->ignore($user->id),
+                Rule::unique('workers', 'email')->ignore($worker->id),
+            ],
             'phone_number' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
-            // Update user email
             $user->update([
                 'email' => $request->email,
             ]);
+
+            $worker->email = $request->email;
 
             // Handle photo upload
             if ($request->hasFile('photo')) {

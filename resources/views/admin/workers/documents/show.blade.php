@@ -26,8 +26,8 @@
 
                 @if($fileExists)
                     @if(in_array(strtolower($ext), ['pdf']))
-                        <div class="w-full h-[700px]">
-                            <iframe src="{{ $disk->url($filePath) }}" class="w-full h-full border rounded" frameborder="0"></iframe>
+                        <div class="w-full min-h-[75vh] sm:min-h-[85vh] lg:min-h-[1100px]">
+                            <iframe src="{{ $disk->url($filePath) }}#view=FitH" class="w-full h-full border rounded" frameborder="0"></iframe>
                         </div>
                     @elseif(in_array(strtolower($ext), ['jpg','jpeg','png','gif']))
                         <img src="{{ $disk->url($filePath) }}" alt="{{ $document->file_name }}" class="w-full rounded">

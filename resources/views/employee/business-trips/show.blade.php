@@ -104,9 +104,7 @@
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Durasi</p>
-                    <p class="text-sm sm:text-base font-medium text-gray-800">
-                        {{ $trip->start_date->diffInDays($trip->end_date) + 1 }} hari
-                    </p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">{{ $trip->duration_label }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Tanggal Mulai</p>
@@ -125,6 +123,18 @@
                     <p class="text-sm sm:text-base font-semibold text-blue-700">
                         Rp {{ number_format($trip->estimated_cost ?? 0, 0, ',', '.') }}
                     </p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Sesi</p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">{{ $trip->half_day_session_label ?? 'Full Day' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Transportasi</p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">{{ $trip->transportation ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Akomodasi</p>
+                    <p class="text-sm sm:text-base font-medium text-gray-800">{{ $trip->accommodation ?? '-' }}</p>
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Diajukan Pada</p>
@@ -152,6 +162,22 @@
                 <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ $trip->purpose }}</p>
             </div>
         </div>
+
+        @if($trip->notes)
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div class="flex items-center gap-2.5 mb-4">
+                <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+                <h2 class="text-sm sm:text-base font-semibold text-gray-800">Catatan Tambahan</h2>
+            </div>
+            <div class="bg-gray-50 rounded-xl p-3 sm:p-4 border border-gray-100">
+                <p class="text-sm text-gray-700 whitespace-pre-line leading-relaxed">{{ $trip->notes }}</p>
+            </div>
+        </div>
+        @endif
 
         {{-- Cancel Button --}}
         @if($trip->status === 'pending')

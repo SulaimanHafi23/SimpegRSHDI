@@ -7,7 +7,7 @@
     {{-- Page Header --}}
     <x-page-header
         title="Dashboard Admin"
-        description="Selamat datang di SIMPEGRS RSUD Haji Darjlan Ismail"
+        description="Selamat datang di SIDIA - Sistem Informasi Darlan Ismail dan Absensi"
         icon="fas fa-tachometer-alt" />
 
     {{-- Pending Checkouts Alert --}}

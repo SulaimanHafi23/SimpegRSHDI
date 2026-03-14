@@ -175,8 +175,8 @@
 
                 <!-- Camera Preview -->
                 <div class="relative mb-3">
-                    <video id="camera-preview" class="w-full rounded-lg border border-gray-300 bg-gray-900" style="display: none; max-height: 300px;" autoplay playsinline></video>
-                    <canvas id="photo-canvas" class="w-full rounded-lg border border-gray-300" style="display: none; max-height: 300px;"></canvas>
+                    <video id="camera-preview" class="w-auto max-w-full h-auto mx-auto rounded-lg border border-gray-300 bg-gray-900" style="display: none; max-height: 300px; object-fit: contain;" autoplay playsinline></video>
+                    <canvas id="photo-canvas" class="w-auto max-w-full h-auto mx-auto rounded-lg border border-gray-300" style="display: none; max-height: 300px; object-fit: contain;"></canvas>
                     <div id="camera-placeholder" class="w-full h-40 sm:h-48 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center">
                         <i class="fas fa-camera text-gray-400 text-3xl sm:text-4xl mb-2"></i>
                         <p class="text-xs sm:text-sm text-gray-500 text-center px-2">Klik tombol untuk mengambil foto</p>
@@ -745,6 +745,13 @@ function capturePhoto() {
 
     // Draw video frame to canvas
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Keep preview proportional so the captured image is not stretched in UI
+    canvas.style.width = 'auto';
+    canvas.style.maxWidth = '100%';
+    canvas.style.height = 'auto';
+    canvas.style.maxHeight = '300px';
+    canvas.style.objectFit = 'contain';
 
     // Convert canvas to base64
     capturedPhoto = canvas.toDataURL('image/jpeg', 0.8);

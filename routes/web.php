@@ -66,8 +66,25 @@ use App\Http\Controllers\Report\ReportController;
 
 // ========== AUTH ROUTES ==========
 Route::get('/', function () {
-    return redirect()->route('login');
-});
+    if (auth()->check()) {
+        $user = auth()->user();
+
+        if ($user->hasRole('Manager')) {
+            return redirect()->route('manager.dashboard');
+        }
+
+        if ($user->hasRole('HR')) {
+            return redirect()->route('hr.dashboard');
+        }
+
+        if ($user->hasRole('Employee')) {
+            return redirect()->route('employee.dashboard');
+        }
+
+        return redirect()->route('admin.dashboard');
+    }
+    return view('welcome');
+})->name('home');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
@@ -243,6 +260,16 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::put('/password', [ProfileController::class, 'updatePassword'])->name('update-password');
     });
 
+    // ========== GLOBAL NOTIFICATIONS ==========
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('index');
+        Route::get('/unread', [\App\Http\Controllers\NotificationController::class, 'unread'])->name('unread');
+        Route::get('/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('unread-count');
+        Route::post('/{id}/mark-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/mark-all-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('destroy');
+    });
+
     // ========== APPROVAL ROUTES ==========
     Route::prefix('approvals')->name('approvals.')->middleware('role:Manager|HR|Super Admin')->group(function () {
         // Leave Approvals
@@ -416,7 +443,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== MASTER DATA MANAGEMENT ==========
-    Route::prefix('master')->name('admin.master.')->middleware(['role:Super Admin|HR'])->group(function () {
+    Route::prefix('master')->name('admin.master.')->middleware(['role_or_permission:Super Admin|HR|department.manage|shift.manage|religion.manage|gender.manage|location.manage|leave-type.manage|document-type.manage|department-document-type.manage'])->group(function () {
 
         // Departments (Pengganti Positions)
         Route::resource('departments', DepartmentController::class);
