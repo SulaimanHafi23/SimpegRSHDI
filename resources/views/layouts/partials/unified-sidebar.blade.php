@@ -1,10 +1,14 @@
 {{-- filepath: resources/views/layouts/partials/unified-sidebar.blade.php --}}
 @if(auth()->check())
-<aside class="fixed top-0 left-0 z-50 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 flex flex-col"
+<aside class="fixed top-0 left-0 z-50 w-64 h-screen text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 flex flex-col overflow-hidden"
+    style="background:linear-gradient(160deg,#0a3d1f 0%,#0d2b17 100%)"
     id="unified-sidebar">
 
+    <!-- Gold radial glow top-right (matches landing page) -->
+    <div class="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-30" style="background:radial-gradient(circle,#f5a623 0%,transparent 70%);filter:blur(40px)"></div>
+
     <!-- Modern Header with Glassmorphism -->
-    <div class="relative p-5 bg-white/10 backdrop-blur-md border-b border-white/20 flex-shrink-0">
+    <div class="relative p-5 border-b border-[#f5a623]/20 flex-shrink-0" style="background:rgba(245,166,35,0.06);backdrop-filter:blur(12px)">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="relative flex-shrink-0">

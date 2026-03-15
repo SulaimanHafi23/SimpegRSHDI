@@ -2,7 +2,7 @@
 
 ## Gambaran Umum
 
-Sistem SIMPEG memiliki fitur manajemen hari libur yang memungkinkan Anda untuk:
+Sistem SIDIA (Sistem Informasi Darlan Ismail dan Absensi) memiliki fitur manajemen hari libur yang memungkinkan Anda untuk:
 - 📅 Menambah/mengedit/menghapus hari libur nasional dan cuti bersama
 - 📝 Input hari libur untuk tahun-tahun mendatang secara bulk
 - 🤖 Auto-generate hari libur berdasarkan kalender nasional

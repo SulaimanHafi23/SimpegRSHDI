@@ -60,7 +60,7 @@ return [
 
 ## Fitur yang Akan Tersedia
 
-Setelah integrasi aktif, sistem SIMPEG dapat:
+Setelah integrasi aktif, sistem SIDIA (Sistem Informasi Darlan Ismail dan Absensi) dapat:
 
 1. **Sinkronisasi Jadwal Shift** - Jadwal shift pegawai otomatis masuk ke Google Calendar
 2. **Reminder Cuti** - Pengajuan cuti yang disetujui otomatis membuat event di calendar

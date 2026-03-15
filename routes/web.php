@@ -86,6 +86,10 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::view('/privacy', 'public.privacy')->name('public.privacy');
+Route::view('/terms', 'public.terms')->name('public.terms');
+Route::view('/help', 'public.help')->name('public.help');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:5,1')->name('login.post');

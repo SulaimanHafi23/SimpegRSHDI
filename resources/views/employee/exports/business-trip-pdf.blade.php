@@ -206,7 +206,7 @@
     </table>
 
     <div class="footer">
-        <p>Dokumen ini dicetak secara otomatis oleh Sistem SIMPEG RSHDI</p>
+        <p>Dokumen ini dicetak secara otomatis oleh SIDIA - Sistem Informasi Darlan Ismail dan Absensi</p>
         <p>{{ now()->translatedFormat('d F Y H:i:s') }} WITA</p>
     </div>
 </body>

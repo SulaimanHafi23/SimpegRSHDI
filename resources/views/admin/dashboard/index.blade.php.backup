@@ -3,7 +3,7 @@
 
 @section('title', 'Dashboard Admin')
 @section('page-title', 'Dashboard Admin')
-@section('page-description', 'Selamat datang di SIMPEGRS RSUD Haji Darlan Ismail')
+@section('page-description', 'Selamat datang di SIDIA - Sistem Informasi Darlan Ismail dan Absensi')
 
 @section('content')
 <div class="space-y-6">

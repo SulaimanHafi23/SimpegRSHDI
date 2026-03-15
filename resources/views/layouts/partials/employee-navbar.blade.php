@@ -1,9 +1,9 @@
 {{-- filepath: resources/views/layouts/partials/employee-navbar.blade.php --}}
-<header class="sticky top-0 z-30 text-white shadow-lg bg-gradient-to-r from-green-600 to-green-700">
+<header class="sticky top-0 z-30 text-white shadow-2xl border-b border-[#f5a623]/25" style="background:linear-gradient(135deg,#0a3d1f 0%,#155a2e 100%)">
     <div class="px-4 py-4">
         <div class="flex items-center justify-between">
             <!-- Mobile Menu Button -->
-            <button onclick="toggleUnifiedSidebar()" class="p-2 mr-3 transition duration-200 rounded-lg lg:hidden hover:bg-green-500">
+            <button onclick="toggleUnifiedSidebar()" class="p-2 mr-3 transition duration-200 rounded-lg lg:hidden hover:bg-[#1e7a3e]">
                 <i class="text-xl fas fa-bars"></i>
             </button>
 
@@ -50,7 +50,7 @@
                          x-transition:leave-end="opacity-0 translate-y-1"
                          class="absolute right-0 top-12 z-50 w-80 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
                         <!-- Header -->
-                        <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-green-600 to-green-700">
+                        <div class="flex items-center justify-between px-4 py-3" style="background:linear-gradient(135deg,#0a3d1f 0%,#155a2e 100%)">
                             <span class="text-sm font-semibold text-white">Notifikasi</span>
                             @if($notificationCount > 0)
                                 <span class="text-xs text-green-100">{{ $notificationCount }} belum dibaca</span>

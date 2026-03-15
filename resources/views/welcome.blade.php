@@ -1100,13 +1100,14 @@
             </div>
         </div>
         <div class="footer-copy">
-            &copy; {{ date('Y') }} RSUD Haji Darlan Ismail. All rights reserved.
+            &copy; {{ date('Y') }} Muhammad Sulaiman Hafi &amp; Muhammad Hafidl Badali x RSUD HDI. All rights reserved.
         </div>
-        <!-- <div class="footer-links">
-            <a href="#">Pendaftaran Akun</a>
-            <a href="#">Panduan Pengguna</a>
-            <a href="#">Hubungi Dukungan</a>
-        </div> -->
+        <div class="footer-links">
+            <a href="{{ route('login') }}">Masuk</a>
+            <a href="{{ route('public.privacy') }}">Privacy</a>
+            <a href="{{ route('public.terms') }}">Terms</a>
+            <a href="{{ route('public.help') }}">Help</a>
+        </div>
     </div>
 </footer>
 

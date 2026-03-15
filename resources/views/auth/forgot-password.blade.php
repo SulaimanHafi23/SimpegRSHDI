@@ -43,6 +43,31 @@
             background: rgba(255, 255, 255, 0.92);
             border: 1px solid rgba(151, 199, 171, 0.35);
             box-shadow: 0 20px 44px rgba(26, 87, 57, 0.16);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .forgot-card::before {
+            content: '';
+            position: absolute;
+            inset: -30% auto auto -20%;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(245, 166, 35, 0.34) 0%, rgba(245, 166, 35, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .forgot-card > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .forgot-gold-glow {
+            box-shadow:
+                0 24px 56px rgba(26, 87, 57, 0.2),
+                0 0 0 1px rgba(245, 166, 35, 0.18),
+                0 0 38px rgba(245, 166, 35, 0.24);
         }
 
         .forgot-input {
@@ -89,7 +114,7 @@
                 <p class="text-sm text-[#d1fae5]">Sistem Informasi Darlan Ismail dan Absensi</p>
             </div>
 
-            <div class="p-6 sm:p-8 shadow-2xl rounded-xl border-t-4 border-[#28a04f] backdrop-blur-lg forgot-card">
+            <div class="p-6 sm:p-8 shadow-2xl rounded-xl border-t-4 border-[#28a04f] backdrop-blur-lg forgot-card forgot-gold-glow">
                 {{-- Header Icon --}}
                 <div class="text-center mb-6">
                     <div class="inline-flex items-center justify-center h-16 w-16 bg-green-100 rounded-full mb-4">
@@ -183,7 +208,14 @@
 
             {{-- Footer --}}
             <div class="text-center mt-6 text-sm text-[#a7f3d0]">
-                <p>&copy; {{ date('Y') }} RSUD Haji Darlan Ismail. All rights reserved.</p>
+                <p>&copy; {{ date('Y') }} Muhammad Sulaiman Hafi &amp; Muhammad Hafidl Badali x RSUD HDI. All rights reserved.</p>
+                <div class="mt-3 flex items-center justify-center gap-4 text-xs text-[#d1fae5]">
+                    <a href="{{ route('public.privacy') }}" class="hover:text-[#ffd166] transition duration-200">Privacy</a>
+                    <span>•</span>
+                    <a href="{{ route('public.terms') }}" class="hover:text-[#ffd166] transition duration-200">Terms</a>
+                    <span>•</span>
+                    <a href="{{ route('public.help') }}" class="hover:text-[#ffd166] transition duration-200">Help</a>
+                </div>
             </div>
         </div>
     </div>

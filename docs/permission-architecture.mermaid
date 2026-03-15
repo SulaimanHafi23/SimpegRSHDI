@@ -1,6 +1,6 @@
 ```mermaid
 ---
-title: SIMPEGRS Permission System Architecture
+title: SIDIA Permission System Architecture
 ---
 flowchart TB
     %% Define styles
@@ -13,19 +13,19 @@ flowchart TB
     classDef action fill:#ec4899,stroke:#db2777,color:#fff
 
     %% Main System
-    START["🔐 SIMPEGRS<br/>Permission System"]:::superadmin
-    
+    START["🔐 SIDIA<br/>Permission System"]:::superadmin
+
     %% Four Main Roles
     START --> SA["👑 Super Admin<br/>42 Permissions<br/>ALL ACCESS"]:::superadmin
     START --> HR["👔 HR<br/>23 Permissions<br/>Management & Config"]:::hr
     START --> MGR["📊 Manager<br/>16 Permissions<br/>Oversight & Approval"]:::manager
     START --> EMP["👤 Employee<br/>15 Permissions<br/>Personal Access"]:::employee
-    
+
     %% Super Admin Access
     SA --> SA_DASH["✅ Dashboard Admin"]:::dashboard
     SA --> SA_ALL["✅ ALL Modules<br/>✅ ALL Actions"]:::action
     SA --> SA_ROLE["✅ Role Management<br/>✅ User Management"]:::module
-    
+
     %% HR Access
     HR --> HR_DASH["✅ Dashboard Admin"]:::dashboard
     HR --> HR_MASTER["Master Data<br/>✅ Religion, Gender<br/>✅ Department, Location<br/>✅ Shift, Leave Type<br/>✅ Document Type<br/>✅ Holiday"]:::module
@@ -33,14 +33,14 @@ flowchart TB
     HR --> HR_APPROVE["Approvals<br/>✅ Leave Manage/Approve<br/>✅ Overtime Manage/Approve<br/>✅ Business Trip"]:::action
     HR --> HR_REPORT["Reports<br/>✅ View All<br/>✅ Export"]:::module
     HR --> HR_USER["✅ User Management<br/>❌ No Role Management"]:::module
-    
+
     %% Manager Access
     MGR --> MGR_DASH["✅ Dashboard Admin"]:::dashboard
     MGR --> MGR_VIEW["View Access<br/>✅ Workers<br/>✅ Attendance<br/>✅ Departments<br/>✅ Shifts"]:::module
     MGR --> MGR_SCHEDULE["✅ Schedule Management"]:::module
     MGR --> MGR_APPROVE["Approval Authority<br/>✅ Leave<br/>✅ Overtime<br/>✅ Shift Swap<br/>✅ Business Trip"]:::action
     MGR --> MGR_REPORT["Reports<br/>✅ View<br/>✅ Export"]:::module
-    
+
     %% Employee Access
     EMP --> EMP_DASH["✅ Dashboard Employee"]:::dashboard
     EMP --> EMP_PROFILE["Personal Data<br/>✅ View Profile<br/>✅ View Documents"]:::module
@@ -49,7 +49,7 @@ flowchart TB
     EMP --> EMP_REQUEST["Submit Requests<br/>✅ Leave<br/>✅ Overtime<br/>✅ Shift Swap<br/>✅ Business Trip"]:::action
     EMP --> EMP_VIEW["View Own Requests<br/>✅ All Request History"]:::module
     EMP --> EMP_REPORT["✅ Personal Reports"]:::module
-    
+
     %% Legend
     subgraph LEGEND["📋 Legend"]
         direction LR

@@ -461,7 +461,7 @@
         <div class="worker-info">
             <div class="worker-name">👤 {{ $worker->name }}</div>
             <div class="worker-meta">
-                NIP: {{ $worker->nip ?? '-' }} &nbsp;|&nbsp; 
+                NIP: {{ $worker->nip ?? '-' }} &nbsp;|&nbsp;
                 Departemen: {{ $worker->department->name ?? '-' }} &nbsp;|&nbsp;
                 Shift: {{ $worker->shift->name ?? ($worker->workerShifts->first()?->shift?->name ?? 'Default') }}
             </div>
@@ -641,9 +641,9 @@
 
     <!-- Footer -->
     <div class="footer">
-        <div class="footer-logo">RS HAJI DARJAD IBRAHIM - SIMPEG</div>
-        <div>Dokumen ini digenerate secara otomatis oleh sistem pada {{ now()->format('d F Y H:i:s') }}</div>
-        <div style="margin-top: 5px; font-size: 8px;">© {{ date('Y') }} RS Haji Darjad Ibrahim. All rights reserved.</div>
+        <div class="footer-logo">RS HAJI DARJAD IBRAHIM - SIDIA</div>
+        <div>Dokumen ini digenerate secara otomatis oleh SIDIA - Sistem Informasi Darlan Ismail dan Absensi pada {{ now()->format('d F Y H:i:s') }}</div>
+        <div style="margin-top: 5px; font-size: 8px;">© {{ date('Y') }} Muhammad Sulaiman Hafi &amp; Muhammad Hafidl Badali x RSUD HDI. All rights reserved.</div>
     </div>
 </body>
 </html>

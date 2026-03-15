@@ -24,7 +24,7 @@
 </head>
 <body class="font-sans antialiased">
     <!-- Background Pattern -->
-    <div class="min-h-screen bg-gradient-to-br from-primary-50 via-blue-50 to-indigo-100 relative overflow-hidden">
+    <div class="min-h-screen bg-linear-to-br from-primary-50 via-blue-50 to-indigo-100 relative overflow-hidden">
         <!-- Animated Background Shapes -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-40 -right-40 w-80 h-80 bg-primary-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse-slow"></div>
@@ -40,7 +40,7 @@
                     <div class="inline-flex items-center justify-center">
                         <div class="relative">
                             <!-- Main Logo Circle -->
-                            <div class="h-20 w-20 bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform duration-300">
+                            <div class="h-20 w-20 bg-linear-to-br from-primary-600 to-primary-800 rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 transition-transform duration-300">
                                 <svg class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                 </svg>
@@ -59,8 +59,8 @@
 
                     <!-- Decorative Line -->
                     <div class="flex items-center justify-center mt-4">
-                        <div class="h-1 w-12 bg-gradient-to-r from-primary-600 to-primary-400 rounded-full"></div>
-                        <div class="h-1 w-12 bg-gradient-to-r from-primary-400 to-primary-200 rounded-full ml-1"></div>
+                        <div class="h-1 w-12 bg-linear-to-r from-primary-600 to-primary-400 rounded-full"></div>
+                        <div class="h-1 w-12 bg-linear-to-r from-primary-400 to-primary-200 rounded-full ml-1"></div>
                     </div>
                 </div>
 
@@ -77,14 +77,14 @@
                 <!-- Footer -->
                 <div class="text-center space-y-2 animate-fade-in">
                     <p class="text-sm text-gray-600">
-                        &copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.
+                        &copy; {{ date('Y') }} Muhammad Sulaiman Hafi &amp; Muhammad Hafidl Badali x RSUD HDI. All rights reserved.
                     </p>
                     <div class="flex items-center justify-center space-x-4 text-xs text-gray-500">
-                        <a href="#" class="hover:text-primary-600 transition duration-200">Privacy Policy</a>
+                        <a href="{{ route('public.privacy') }}" class="hover:text-primary-600 transition duration-200">Privacy Policy</a>
                         <span>•</span>
-                        <a href="#" class="hover:text-primary-600 transition duration-200">Terms of Service</a>
+                        <a href="{{ route('public.terms') }}" class="hover:text-primary-600 transition duration-200">Terms of Service</a>
                         <span>•</span>
-                        <a href="#" class="hover:text-primary-600 transition duration-200">Support</a>
+                        <a href="{{ route('public.help') }}" class="hover:text-primary-600 transition duration-200">Help</a>
                     </div>
                 </div>
             </div>

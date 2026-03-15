@@ -87,6 +87,31 @@
             background: rgba(255, 255, 255, 0.92);
             border: 1px solid rgba(151, 199, 171, 0.35);
             box-shadow: 0 20px 44px rgba(26, 87, 57, 0.16);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidia-login-card::before {
+            content: '';
+            position: absolute;
+            inset: -30% auto auto -20%;
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle, rgba(245, 166, 35, 0.34) 0%, rgba(245, 166, 35, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .sidia-gold-glow {
+            box-shadow:
+                0 24px 56px rgba(26, 87, 57, 0.2),
+                0 0 0 1px rgba(245, 166, 35, 0.18),
+                0 0 38px rgba(245, 166, 35, 0.22);
+        }
+
+        .sidia-login-card > * {
+            position: relative;
+            z-index: 1;
         }
 
         .sidia-input {
@@ -148,8 +173,8 @@
                             <img src="{{ asset('images/logo-rs.png') }}" alt="RSUD Logo" class="h-full w-full object-cover">
                         </div>
                         <div>
-                            <h1 class="text-2xl font-bold">SIMPEG RSUD</h1>
-                            <p class="text-sm text-yellow-100">Haji Darlan Ismail</p>
+                            <h1 class="text-2xl font-bold">SIDIA</h1>
+                            <p class="text-sm text-yellow-100">Sistem Informasi Darlan Ismail dan Absensi</p>
                         </div>
                     </div>
                 </div>
@@ -179,8 +204,8 @@
                     <!-- Info Cards -->
                     <div class="space-y-4">
                         <h2 class="text-3xl font-bold leading-tight">
-                            SIMPEG RSUD<br>
-                            <span class="text-yellow-300">Haji Darlan Ismail</span>
+                            SIDIA<br>
+                            <span class="text-yellow-300">Sistem Informasi Darlan Ismail dan Absensi</span>
                         </h2>
                         <p class="text-lg text-green-100">
                             Manajemen Data Pegawai, Kehadiran, dan Administrasi Kepegawaian
@@ -192,11 +217,11 @@
 
                 <!-- Footer -->
                 <div class="flex items-center justify-between text-sm text-green-100/60">
-                    <p>&copy; {{ date('Y') }} RSUD Haji Darlan Ismail</p>
+                    <p>&copy; {{ date('Y') }} Muhammad Sulaiman Hafi &amp; Muhammad Hafidl Badali x RSUD HDI. All rights reserved.</p>
                     <div class="flex items-center space-x-4">
-                        <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Privacy</span>
-                        <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Terms</span>
-                        <span class="hover:text-yellow-300 transition duration-200 cursor-pointer">Help</span>
+                        <a href="{{ route('public.privacy') }}" class="hover:text-yellow-300 transition duration-200">Privacy</a>
+                        <a href="{{ route('public.terms') }}" class="hover:text-yellow-300 transition duration-200">Terms</a>
+                        <a href="{{ route('public.help') }}" class="hover:text-yellow-300 transition duration-200">Help</a>
                     </div>
                 </div>
             </div>
@@ -231,19 +256,19 @@
                     <div class="inline-flex h-16 w-16 bg-linear-to-br from-[#155a2e] to-[#0a3d1f] rounded-xl items-center justify-center shadow-lg mb-4 overflow-hidden">
                         <img src="{{ asset('images/logo-rs.png') }}" alt="RSUD Logo" class="h-full w-full object-cover">
                     </div>
-                    <h1 class="text-xl font-bold text-gray-900">SIMPEG RSUD</h1>
-                    <p class="text-sm text-gray-600">Haji Darlan Ismail</p>
+                    <h1 class="text-xl font-bold text-gray-900">SIDIA</h1>
+                    <p class="text-sm text-gray-600">Sistem Informasi Darlan Ismail dan Absensi</p>
                 </div>
 
-                <div class="p-6 sm:p-8 shadow-2xl rounded-xl border-t-4 border-[#28a04f] sidia-login-card">
+                <div class="p-6 sm:p-8 shadow-2xl rounded-xl border-t-4 border-[#28a04f] sidia-login-card sidia-gold-glow">
                     <!-- Header with Logo -->
                         <div class="flex items-center gap-4 mb-8">
                         <div class="shrink-0">
                             <img src="{{ asset('images/logo-rs.png') }}" alt="RSUD Logo" class="h-16 w-16 rounded-lg shadow-md object-cover">
                         </div>
                         <div class="grow">
-                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Masuk SIMPEG</h2>
-                            <p class="text-sm sm:text-base text-gray-600">RSUD Haji Darlan Ismail</p>
+                            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900">Masuk SIDIA</h2>
+                            <p class="text-sm sm:text-base text-gray-600">Sistem Informasi Darlan Ismail dan Absensi</p>
                         </div>
                     </div>
 
@@ -377,7 +402,7 @@
 
                 <!-- Footer Links -->
                 <div class="text-center mt-6 text-sm px-4 py-2 rounded-lg sidia-support">
-                    <p>Perlu bantuan? <span class="text-green-600 hover:text-green-700 font-semibold cursor-pointer">Hubungi Dukungan</span></p>
+                    <p>Perlu bantuan? <a href="{{ route('public.help') }}" class="text-green-600 hover:text-green-700 font-semibold">Buka Help Center</a></p>
                 </div>
             </div>
         </div>

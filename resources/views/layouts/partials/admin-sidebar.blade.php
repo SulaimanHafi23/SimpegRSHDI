@@ -1,7 +1,9 @@
 {{-- filepath: resources/views/layouts/partials/admin-sidebar.blade.php --}}
-<aside class="fixed top-0 left-0 z-40 w-64 h-screen bg-gradient-to-b from-green-700 via-green-800 to-green-900 text-white flex flex-col shadow-2xl transition-transform -translate-x-full lg:translate-x-0" id="admin-sidebar">
+<aside class="fixed top-0 left-0 z-40 w-64 h-screen text-white flex flex-col shadow-2xl transition-transform -translate-x-full lg:translate-x-0 overflow-hidden" style="background:linear-gradient(160deg,#0a3d1f 0%,#0d2b17 100%)" id="admin-sidebar">
+    <!-- Gold radial glow -->
+    <div class="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full opacity-30" style="background:radial-gradient(circle,#f5a623 0%,transparent 70%);filter:blur(40px)"></div>
     <!-- Logo -->
-    <div class="p-6 border-b border-green-600">
+    <div class="relative p-6 border-b border-[#f5a623]/20" style="background:rgba(245,166,35,0.06);backdrop-filter:blur(12px)">
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <div class="h-10 w-10 bg-white rounded-lg flex items-center justify-center">

@@ -664,4 +664,4 @@ Untuk pertanyaan atau dukungan teknis:
 
 **Version**: 1.0.0  
 **Last Updated**: January 2, 2026  
-**Author**: SIMPEG Development Team
+**Author**: SIDIA Development Team

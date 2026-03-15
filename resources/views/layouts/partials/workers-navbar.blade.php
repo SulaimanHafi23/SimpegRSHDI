@@ -1,11 +1,11 @@
 {{-- filepath: resources/views/layouts/partials/workers-navbar.blade.php --}}
-<header class="bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg fixed top-0 left-0 right-0 z-40">
+<header class="text-white shadow-2xl border-b border-[#f5a623]/25 fixed top-0 left-0 right-0 z-40" style="background:linear-gradient(135deg,#0a3d1f 0%,#155a2e 100%)">
     <div class="px-4 lg:px-6 py-3 lg:py-4">
         <div class="flex items-center justify-between">
             <!-- Left Section -->
             <div class="flex items-center space-x-4">
                 <!-- Mobile Menu Toggle (hidden on desktop) -->
-                <button id="mobile-menu-toggle" class="lg:hidden p-2 hover:bg-green-500 rounded-lg transition duration-200">
+                <button id="mobile-menu-toggle" class="lg:hidden p-2 hover:bg-[#1e7a3e] rounded-lg transition duration-200">
                     <i class="fas fa-bars text-xl"></i>
                 </button>
 
@@ -39,7 +39,7 @@
 
                 <!-- User Menu Dropdown (Desktop) -->
                 <div class="hidden lg:block relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="flex items-center space-x-2 p-2 hover:bg-green-500 rounded-lg transition duration-200">
+                    <button @click="open = !open" class="flex items-center space-x-2 p-2 hover:bg-[#1e7a3e] rounded-lg transition duration-200">
                         @if(auth()->user()->photo)
                             <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}"
                                  class="w-8 h-8 rounded-full object-cover border-2 border-yellow-300">
@@ -78,40 +78,40 @@
 <div id="mobile-sidebar-overlay" class="fixed inset-0 backdrop-blur-sm bg-white/30 z-40 lg:hidden hidden"></div>
 
 <!-- Mobile Sidebar -->
-<aside id="mobile-sidebar" class="fixed left-0 top-0 h-screen w-64 bg-white shadow-lg z-50 transform -translate-x-full transition-transform duration-300 lg:hidden">
+<aside id="mobile-sidebar" class="fixed left-0 top-0 h-screen w-64 shadow-2xl z-50 transform -translate-x-full transition-transform duration-300 lg:hidden" style="background:linear-gradient(160deg,#0a3d1f 0%,#0d2b17 100%)">
     <div class="flex flex-col h-full">
         <!-- Header -->
-        <div class="p-4 bg-gradient-to-r from-green-600 to-green-700 text-white">
+        <div class="p-4 text-white" style="background:linear-gradient(135deg,#0a3d1f 0%,#155a2e 100%)">
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 bg-yellow-400 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-hospital text-green-700 text-xl"></i>
+                    <div class="w-10 h-10 bg-[#f5a623] rounded-lg flex items-center justify-center shadow-lg">
+                        <i class="fas fa-hospital text-[#0a3d1f] text-xl"></i>
                     </div>
                     <div>
                         <h2 class="text-lg font-bold">SIDIA</h2>
-                        <p class="text-xs text-yellow-100">Portal Pegawai</p>
+                        <p class="text-xs text-[#a7f3d0]">Portal Pegawai</p>
                     </div>
                 </div>
-                <button id="mobile-sidebar-close" class="p-2 hover:bg-green-500 rounded-lg transition">
+                <button id="mobile-sidebar-close" class="p-2 hover:bg-[#1e7a3e] rounded-lg transition">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
         </div>
 
         <!-- User Info -->
-        <div class="p-4 border-b border-gray-200">
+        <div class="p-4 border-b border-[#f5a623]/20" style="background:rgba(245,166,35,0.06)">
             <div class="flex items-center space-x-3">
                 @if(auth()->user()->photo)
                     <img src="{{ asset(auth()->user()->photo) }}" alt="{{ auth()->user()->name }}"
-                         class="w-12 h-12 rounded-full object-cover border-2 border-green-500">
+                         class="w-12 h-12 rounded-full object-cover border-2 border-[#f5a623]">
                 @else
-                    <div class="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white text-lg font-bold">
+                    <div class="w-12 h-12 rounded-full bg-[#28a04f] flex items-center justify-center text-white text-lg font-bold border-2 border-[#f5a623]/40">
                         {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                     </div>
                 @endif
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-semibold text-gray-900 truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-xs text-gray-500 truncate">{{ auth()->user()->worker->department->name ?? 'Pegawai' }}</p>
+                    <p class="text-sm font-semibold text-white truncate">{{ auth()->user()->name }}</p>
+                    <p class="text-xs text-[#a7f3d0] truncate">{{ auth()->user()->worker->department->name ?? 'Pegawai' }}</p>
                 </div>
             </div>
         </div>
@@ -119,49 +119,55 @@
         <!-- Navigation Menu -->
         <nav class="flex-1 overflow-y-auto p-4 space-y-1">
             <a href="{{ route('workers.dashboard') }}"
-               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.dashboard') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('workers.dashboard') ? 'text-[#1a1a1a] font-semibold shadow-lg' : 'text-[#d1fae5] hover:bg-white/10 hover:text-white' }}"
+               @if(request()->routeIs('workers.dashboard')) style="background:linear-gradient(135deg,#f5a623,#d97706)" @endif>
                 <i class="fas fa-home w-5 text-center"></i>
                 <span>Dashboard</span>
             </a>
 
             <a href="{{ route('workers.attendance.index') }}"
-               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.attendance*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('workers.attendance*') ? 'text-[#1a1a1a] font-semibold shadow-lg' : 'text-[#d1fae5] hover:bg-white/10 hover:text-white' }}"
+               @if(request()->routeIs('workers.attendance*')) style="background:linear-gradient(135deg,#f5a623,#d97706)" @endif>
                 <i class="fas fa-camera w-5 text-center"></i>
                 <span>Absensi</span>
             </a>
 
             <a href="{{ route('workers.schedule') }}"
-               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.schedule') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('workers.schedule') ? 'text-[#1a1a1a] font-semibold shadow-lg' : 'text-[#d1fae5] hover:bg-white/10 hover:text-white' }}"
+               @if(request()->routeIs('workers.schedule')) style="background:linear-gradient(135deg,#f5a623,#d97706)" @endif>
                 <i class="fas fa-calendar-alt w-5 text-center"></i>
                 <span>Jadwal Shift</span>
             </a>
 
             <a href="{{ route('workers.leaves.index') }}"
-               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.leaves*') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('workers.leaves*') ? 'text-[#1a1a1a] font-semibold shadow-lg' : 'text-[#d1fae5] hover:bg-white/10 hover:text-white' }}"
+               @if(request()->routeIs('workers.leaves*')) style="background:linear-gradient(135deg,#f5a623,#d97706)" @endif>
                 <i class="fas fa-calendar-plus w-5 text-center"></i>
                 <span>Cuti</span>
             </a>
 
             <a href="{{ route('workers.documents') }}"
-               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.documents') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('workers.documents') ? 'text-[#1a1a1a] font-semibold shadow-lg' : 'text-[#d1fae5] hover:bg-white/10 hover:text-white' }}"
+               @if(request()->routeIs('workers.documents')) style="background:linear-gradient(135deg,#f5a623,#d97706)" @endif>
                 <i class="fas fa-file-alt w-5 text-center"></i>
                 <span>Dokumen</span>
             </a>
 
-            <div class="border-t border-gray-200 my-2"></div>
+            <div class="border-t border-white/15 my-2"></div>
 
             <a href="{{ route('workers.profile') }}"
-               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition {{ request()->routeIs('workers.profile') ? 'bg-green-50 text-green-700 font-semibold' : 'text-gray-700 hover:bg-gray-50' }}">
+               class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('workers.profile') ? 'text-[#1a1a1a] font-semibold shadow-lg' : 'text-[#d1fae5] hover:bg-white/10 hover:text-white' }}"
+               @if(request()->routeIs('workers.profile')) style="background:linear-gradient(135deg,#f5a623,#d97706)" @endif>
                 <i class="fas fa-user w-5 text-center"></i>
                 <span>Profile</span>
             </a>
         </nav>
 
         <!-- Logout Button -->
-        <div class="p-4 border-t border-gray-200">
+        <div class="p-4 border-t border-white/15">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition">
+                <button type="submit" class="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-red-300 hover:bg-red-500/20 hover:text-red-200 transition">
                     <i class="fas fa-sign-out-alt w-5 text-center"></i>
                     <span>Logout</span>
                 </button>

@@ -237,10 +237,10 @@
         <table style="width: 100%; border: none;">
             <tr>
                 <td style="width: 50%; text-align: left; border: none;">
-                    <p>Dokumen ini digenerate otomatis oleh sistem SIMPEG</p>
+                    <p>Dokumen ini digenerate otomatis oleh SIDIA - Sistem Informasi Darlan Ismail dan Absensi</p>
                 </td>
                 <td style="width: 50%; text-align: right; border: none;">
-                    <p>© {{ date('Y') }} RS Haji Darlan Ismail</p>
+                    <p>© {{ date('Y') }} Muhammad Sulaiman Hafi &amp; Muhammad Hafidl Badali x RSUD HDI. All rights reserved.</p>
                 </td>
             </tr>
         </table>
