@@ -2,8 +2,12 @@
 
 namespace App\Services\Worker;
 
-use App\DTOs\UserDTO;
 use App\DTOs\WorkerDTO;
+use App\DTOs\UserDTO;
+use App\Models\AuditLog;
+use App\Models\SalaryComponent;
+use App\Models\Worker as WorkerModel;
+use App\Models\WorkerSalaryComponent;
 use App\Models\User;
 use App\Repositories\Contracts\User\UserRepositoryInterface;
 use App\Repositories\Contracts\Worker\WorkerRepositoryInterface;
@@ -73,6 +77,15 @@ class WorkerService
 
             $workerDTO = WorkerDTO::fromRequest($data);
             $worker = $this->workerRepository->create($workerDTO);
+
+            // Sync default salary components based on payroll category.
+            if (!empty($data['payroll_category'])) {
+                $this->syncDefaultSalaryComponents(
+                    $worker->id,
+                    (string) $data['payroll_category'],
+                    'auto_category_sync'
+                );
+            }
 
             // Create user account if requested
             if ($data['create_user_account'] ?? false) {
@@ -155,6 +168,25 @@ class WorkerService
 
             if (!empty($data['email']) && $worker->user && $worker->user->email !== $updated->email) {
                 $worker->user->update(['email' => $updated->email]);
+            }
+
+            // Sync defaults when category changed or explicitly requested.
+            if (!empty($data['payroll_category'])) {
+                $shouldSync = !empty($data['auto_sync_salary_components']);
+
+                if (!$shouldSync) {
+                    $originalCategory = (string) ($worker->payroll_category ?? '');
+                    $newCategory = (string) $data['payroll_category'];
+                    $shouldSync = $originalCategory !== $newCategory;
+                }
+
+                if ($shouldSync) {
+                    $this->syncDefaultSalaryComponents(
+                        $id,
+                        (string) $data['payroll_category'],
+                        'auto_category_sync'
+                    );
+                }
             }
 
             DB::commit();
@@ -246,5 +278,120 @@ class WorkerService
 
         // Fallback: store original uploaded file
         return $photo->storeAs('worker-photos', $filename, 'public');
+    }
+
+    public function syncDefaultSalaryComponents(string $workerId, string $payrollCategory, string $source = 'auto_category_sync'): void
+    {
+        $worker = WorkerModel::query()->find($workerId);
+
+        $oldAssignments = WorkerSalaryComponent::query()
+            ->with('salaryComponent')
+            ->where('worker_id', $workerId)
+            ->where('is_active', true)
+            ->get()
+            ->map(fn (WorkerSalaryComponent $assignment) => [
+                'code' => $assignment->salaryComponent?->code,
+                'calculation_type' => $assignment->calculation_type,
+                'amount' => (float) $assignment->amount,
+            ])
+            ->filter(fn (array $assignment) => !empty($assignment['code']))
+            ->values()
+            ->all();
+
+        $components = SalaryComponent::query()->active()->get()->keyBy('code');
+
+        WorkerSalaryComponent::query()
+            ->where('worker_id', $workerId)
+            ->update(['is_active' => false]);
+
+        if ($payrollCategory === 'outsourced') {
+            return;
+        }
+
+        $assignments = $this->defaultAssignmentsByPayrollCategory($payrollCategory);
+        foreach ($assignments as $code => $config) {
+            $component = $components->get($code);
+            if (!$component) {
+                continue;
+            }
+
+            WorkerSalaryComponent::query()->updateOrCreate(
+                [
+                    'worker_id' => $workerId,
+                    'salary_component_id' => $component->id,
+                ],
+                [
+                    'calculation_type' => $config['calculation_type'],
+                    'amount' => $config['amount'],
+                    'is_active' => true,
+                    'notes' => 'Auto synced from payroll category change: ' . $payrollCategory,
+                ]
+            );
+        }
+
+        $newAssignments = WorkerSalaryComponent::query()
+            ->with('salaryComponent')
+            ->where('worker_id', $workerId)
+            ->where('is_active', true)
+            ->get()
+            ->map(fn (WorkerSalaryComponent $assignment) => [
+                'code' => $assignment->salaryComponent?->code,
+                'calculation_type' => $assignment->calculation_type,
+                'amount' => (float) $assignment->amount,
+            ])
+            ->filter(fn (array $assignment) => !empty($assignment['code']))
+            ->values()
+            ->all();
+
+        if ($worker && ($oldAssignments !== $newAssignments)) {
+            AuditLog::log(
+                action: 'worker_payroll_components_synced',
+                description: 'Sinkronisasi komponen payroll otomatis untuk kategori ' . $payrollCategory,
+                auditable: $worker,
+                oldValues: ['salary_components' => $oldAssignments],
+                newValues: [
+                    'payroll_category' => $payrollCategory,
+                    'salary_components' => $newAssignments,
+                    'source' => $source,
+                ],
+            );
+        }
+    }
+
+    private function defaultAssignmentsByPayrollCategory(string $payrollCategory): array
+    {
+        return match ($payrollCategory) {
+            'asn' => [
+                'ALLOWANCE_POSITION' => ['calculation_type' => 'percentage', 'amount' => 7],
+                'ALLOWANCE_HEALTH' => ['calculation_type' => 'fixed', 'amount' => 225000],
+                'TAX_PPH21' => ['calculation_type' => 'percentage', 'amount' => 5],
+                'BPJS_KESEHATAN' => ['calculation_type' => 'percentage', 'amount' => 1],
+                'BPJS_KETENAGAKERJAAN' => ['calculation_type' => 'percentage', 'amount' => 2],
+                'LATE_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
+            ],
+
+            'pppk' => [
+                'ALLOWANCE_POSITION' => ['calculation_type' => 'percentage', 'amount' => 4],
+                'ALLOWANCE_HEALTH' => ['calculation_type' => 'fixed', 'amount' => 150000],
+                'ALLOWANCE_MEAL' => ['calculation_type' => 'percentage', 'amount' => 4],
+                'OVERTIME' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'TAX_PPH21' => ['calculation_type' => 'percentage', 'amount' => 5],
+                'BPJS_KESEHATAN' => ['calculation_type' => 'percentage', 'amount' => 1],
+                'BPJS_KETENAGAKERJAAN' => ['calculation_type' => 'percentage', 'amount' => 2],
+                'ABSENT_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'LATE_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
+            ],
+
+            default => [
+                'ALLOWANCE_TRANSPORT' => ['calculation_type' => 'percentage', 'amount' => 8],
+                'ALLOWANCE_MEAL' => ['calculation_type' => 'percentage', 'amount' => 5],
+                'ALLOWANCE_POSITION' => ['calculation_type' => 'percentage', 'amount' => 3],
+                'OVERTIME' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'ABSENT_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'LATE_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'TAX_PPH21' => ['calculation_type' => 'percentage', 'amount' => 5],
+                'BPJS_KESEHATAN' => ['calculation_type' => 'percentage', 'amount' => 1],
+            ],
+        };
     }
 }

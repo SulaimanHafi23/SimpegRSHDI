@@ -6,6 +6,7 @@ use App\Traits\Auditable;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SalaryComponent extends Model
@@ -48,5 +49,10 @@ class SalaryComponent extends Model
     public function scopeDeductions($query)
     {
         return $query->where('type', 'deduction');
+    }
+
+    public function workerAssignments(): HasMany
+    {
+        return $this->hasMany(WorkerSalaryComponent::class);
     }
 }

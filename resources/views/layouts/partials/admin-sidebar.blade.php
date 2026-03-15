@@ -25,7 +25,7 @@
     <nav class="flex-1 px-4 py-6 space-y-1 overflow-y-auto" x-data="{
         openMenu: '{{
             request()->routeIs('admin.master.*') ? 'master' :
-            (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*') ? 'managerial' :
+            (request()->routeIs('admin.workers.*', 'admin.attendance.*', 'admin.worker-shifts.*', 'admin.worker-documents.*', 'admin.payrolls.*', 'admin.promotions.*') ? 'managerial' :
             (request()->routeIs('admin.leave.*', 'approvals.*', 'manager.shift-swap-approvals.*') ? 'approval' :
             (request()->routeIs('admin.roles.*', 'admin.users.*', 'admin.holidays.*', 'admin.audit-logs.*') ? 'admin' : '')))
         }}'
@@ -129,6 +129,16 @@
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker-document.manage'))
                 <a href="{{ route('admin.worker-documents.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.worker-documents.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
                     <i class="fas fa-folder-open w-4"></i><span>Berkas Pegawai</span>
+                </a>
+                @endif
+                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('payroll.manage') || auth()->user()->can('payroll.view'))
+                <a href="{{ route('admin.payrolls.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.payrolls.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-file-invoice-dollar w-4"></i><span>Payroll</span>
+                </a>
+                @endif
+                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('promotion.manage') || auth()->user()->can('promotion.view'))
+                <a href="{{ route('admin.promotions.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.promotions.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                    <i class="fas fa-arrow-trend-up w-4"></i><span>Promosi & Pangkat</span>
                 </a>
                 @endif
             </div>

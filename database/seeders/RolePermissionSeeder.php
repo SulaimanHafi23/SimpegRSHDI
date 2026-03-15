@@ -53,6 +53,11 @@ class RolePermissionSeeder extends Seeder
             'schedule.view',           // View own schedule only
             'worker-document.manage',  // Manage all worker documents
             'worker-document.view',    // View own documents only
+            'salary.manage',           // Manage worker salary components
+            'payroll.manage',          // Manage payroll periods and slips
+            'payroll.view',            // View payroll data
+            'promotion.manage',        // Manage promotion requests and approvals
+            'promotion.view',          // View promotion history
 
             // Leave Management
             'leave.manage',      // Full CRUD + approve/reject all leave requests
@@ -144,6 +149,11 @@ class RolePermissionSeeder extends Seeder
             'attendance.manage',
             'schedule.manage',
             'worker-document.manage',
+            'salary.manage',
+            'payroll.manage',
+            'payroll.view',
+            'promotion.manage',
+            'promotion.view',
 
             // Leave & Overtime - Manage & Approve
             'leave.manage',
@@ -202,6 +212,10 @@ class RolePermissionSeeder extends Seeder
             'shift-swap.approve',
             'shift-swap.view',
             'worker-document.manage', // Manage worker documents
+            'payroll.manage',
+            'payroll.view',
+            'promotion.manage',
+            'promotion.view',
 
             // Holiday management
             'holiday.manage',
@@ -237,6 +251,8 @@ class RolePermissionSeeder extends Seeder
             // Personal Profile & Documents
             'worker.view',              // View own profile
             'worker-document.view',     // View own documents
+            'payroll.view',             // View own payroll slips
+            'promotion.view',           // View own promotion history
 
             // Attendance
             'attendance.checkin',       // Can check in/out

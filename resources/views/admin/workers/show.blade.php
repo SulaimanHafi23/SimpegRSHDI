@@ -21,6 +21,14 @@
             @endif
             @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
                 <x-button
+                    variant="primary"
+                    icon="fas fa-wallet"
+                    onclick="window.location.href='{{ route('admin.workers.salary-components.edit', $worker->id ?? 1) }}'">
+                    Komponen Gaji
+                </x-button>
+            @endif
+            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
+                <x-button
                     variant="danger"
                     icon="fas fa-trash"
                     onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()">
@@ -194,6 +202,22 @@
                             $statusBadge = $statusBadges[$worker->status ?? 'active'] ?? ['variant' => 'secondary', 'label' => '-'];
                         @endphp
                         <x-badge :variant="$statusBadge['variant']">{{ $statusBadge['label'] }}</x-badge>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Kategori Payroll</p>
+                        <p class="font-semibold text-gray-900 uppercase">{{ $worker->payroll_category ?? '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Gaji Pokok</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->base_salary ? 'Rp ' . number_format($worker->base_salary, 0, ',', '.') : '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Pangkat / Level</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->rank ?? '-' }}{{ $worker->rank_level ? ' / ' . $worker->rank_level : '' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Vendor Outsourcing</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->outsourced_vendor ?? '-' }}</p>
                     </div>
                 </div>
             </x-card>

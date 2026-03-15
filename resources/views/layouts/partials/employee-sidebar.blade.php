@@ -1,5 +1,5 @@
 {{-- filepath: resources/views/layouts/partials/employee-sidebar.blade.php --}}
-<aside x-data="{ openMenu: '{{ request()->routeIs('employee.attendance.*', 'employee.shifts.*', 'employee.shift-swaps.*') ? 'attendance' : (request()->routeIs('employee.leaves.*', 'employee.business-trips.*') ? 'requests' : (request()->routeIs('employee.documents.*', 'employee.calendar.*') ? 'hr' : '')) }}' }"
+<aside x-data="{ openMenu: '{{ request()->routeIs('employee.attendance.*', 'employee.shifts.*', 'employee.shift-swaps.*') ? 'attendance' : (request()->routeIs('employee.leaves.*', 'employee.business-trips.*') ? 'requests' : (request()->routeIs('employee.documents.*', 'employee.calendar.*', 'employee.payrolls.*', 'employee.promotions.*') ? 'hr' : '')) }}' }"
     class="fixed top-16 lg:top-0 left-0 z-40 w-64 h-screen text-white shadow-2xl transition-transform -translate-x-full lg:translate-x-0 overflow-hidden"
     style="background:linear-gradient(160deg,#0a3d1f 0%,#0d2b17 100%)"
        id="employee-sidebar">
@@ -137,6 +137,18 @@
                    class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
                     <i class="fas fa-calendar-day text-xs {{ request()->routeIs('employee.calendar.*') ? 'text-white' : '' }}"></i>
                     <span class="text-sm">Kalender</span>
+                </a>
+
+                <a href="{{ route('employee.payrolls.index') }}"
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.payrolls.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-wallet text-xs {{ request()->routeIs('employee.payrolls.*') ? 'text-white' : '' }}"></i>
+                    <span class="text-sm">Slip Gaji</span>
+                </a>
+
+                <a href="{{ route('employee.promotions.index') }}"
+                   class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.promotions.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 text-white font-medium' : 'text-green-200 hover:bg-white/5 hover:text-white' }} transition-all duration-200">
+                    <i class="fas fa-medal text-xs {{ request()->routeIs('employee.promotions.*') ? 'text-white' : '' }}"></i>
+                    <span class="text-sm">Riwayat Pangkat</span>
                 </a>
             </div>
         </div>

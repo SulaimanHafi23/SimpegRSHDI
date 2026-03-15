@@ -209,6 +209,24 @@
             <span class="text-sm {{ request()->routeIs('admin.worker-documents.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Berkas Pegawai</span>
         </a>
         @endif
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('payroll.manage') || auth()->user()->can('payroll.view'))
+        <a href="{{ route('admin.payrolls.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.payrolls.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.payrolls.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-file-invoice-dollar text-xs {{ request()->routeIs('admin.payrolls.*') ? 'text-white' : 'text-blue-300' }}"></i>
+            </div>
+            <span class="text-sm {{ request()->routeIs('admin.payrolls.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Payroll</span>
+        </a>
+        @endif
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('promotion.manage') || auth()->user()->can('promotion.view'))
+        <a href="{{ route('admin.promotions.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.promotions.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.promotions.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-arrow-trend-up text-xs {{ request()->routeIs('admin.promotions.*') ? 'text-white' : 'text-blue-300' }}"></i>
+            </div>
+            <span class="text-sm {{ request()->routeIs('admin.promotions.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Promosi & Pangkat</span>
+        </a>
+        @endif
 
         @endif
 
@@ -324,6 +342,24 @@
             </div>
             <span class="text-sm {{ request()->routeIs('employee.calendar.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Kalender</span>
         </a>
+        @if(auth()->user()->can('payroll.view') || auth()->user()->can('payroll.manage'))
+        <a href="{{ route('employee.payrolls.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.payrolls.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.payrolls.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-wallet text-xs {{ request()->routeIs('employee.payrolls.*') ? 'text-white' : 'text-green-300' }}"></i>
+            </div>
+            <span class="text-sm {{ request()->routeIs('employee.payrolls.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Slip Gaji</span>
+        </a>
+        @endif
+        @if(auth()->user()->can('promotion.view') || auth()->user()->can('promotion.manage'))
+        <a href="{{ route('employee.promotions.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.promotions.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.promotions.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-medal text-xs {{ request()->routeIs('employee.promotions.*') ? 'text-white' : 'text-green-300' }}"></i>
+            </div>
+            <span class="text-sm {{ request()->routeIs('employee.promotions.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Riwayat Pangkat</span>
+        </a>
+        @endif
 
         {{-- Profil --}}
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('profile.view'))

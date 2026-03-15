@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 // Auto checkout workers who forgot to checkout, runs every hour
 Schedule::command('attendance:auto-checkout --hours=3')->hourly();
+Schedule::command('notifications:send-holiday-notifications --type=upcoming')->dailyAt('08:00');
+Schedule::command('notifications:send-holiday-notifications --type=reminder')->dailyAt('18:00');

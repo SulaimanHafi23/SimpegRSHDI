@@ -236,6 +236,42 @@
                     </select>
                     @error('status')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
                 </div>
+                <div>
+                    <label for="payroll_category" class="block text-sm font-medium text-gray-700 mb-1.5">Kategori Payroll</label>
+                    <select name="payroll_category" id="payroll_category"
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('payroll_category') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                        <option value="">-- Pilih Kategori Payroll --</option>
+                        <option value="asn" {{ old('payroll_category') == 'asn' ? 'selected' : '' }}>ASN</option>
+                        <option value="pppk" {{ old('payroll_category') == 'pppk' ? 'selected' : '' }}>PPPK</option>
+                        <option value="non_asn" {{ old('payroll_category') == 'non_asn' ? 'selected' : '' }}>Non ASN</option>
+                        <option value="outsourced" {{ old('payroll_category') == 'outsourced' ? 'selected' : '' }}>Outsourcing</option>
+                    </select>
+                    @error('payroll_category')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="base_salary" class="block text-sm font-medium text-gray-700 mb-1.5">Gaji Pokok</label>
+                    <input type="number" name="base_salary" id="base_salary" min="0" step="0.01" value="{{ old('base_salary') }}" placeholder="Masukkan gaji pokok"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('base_salary') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('base_salary')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="rank" class="block text-sm font-medium text-gray-700 mb-1.5">Pangkat / Jabatan</label>
+                    <input type="text" name="rank" id="rank" value="{{ old('rank') }}" placeholder="Contoh: Penata Muda / Staff Senior"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('rank') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('rank')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="rank_level" class="block text-sm font-medium text-gray-700 mb-1.5">Golongan / Level</label>
+                    <input type="text" name="rank_level" id="rank_level" value="{{ old('rank_level') }}" placeholder="Contoh: III/a"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('rank_level') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('rank_level')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div class="sm:col-span-2">
+                    <label for="outsourced_vendor" class="block text-sm font-medium text-gray-700 mb-1.5">Vendor Outsourcing</label>
+                    <input type="text" name="outsourced_vendor" id="outsourced_vendor" value="{{ old('outsourced_vendor') }}" placeholder="Isi jika pegawai berasal dari vendor outsourcing"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('outsourced_vendor') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('outsourced_vendor')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
                 <div class="sm:col-span-2">
                     <label for="resign_date" class="block text-sm font-medium text-gray-700 mb-1.5">
                         Tanggal Resign <span class="ml-1 text-xs font-normal text-gray-400">(Opsional)</span>
@@ -243,6 +279,12 @@
                     <input type="date" name="resign_date" id="resign_date" value="{{ old('resign_date') }}"
                            class="w-full sm:w-1/2 px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('resign_date') border-red-400 bg-red-50 @else border-gray-200 @enderror">
                     @error('resign_date')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="inline-flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        <input type="checkbox" name="auto_sync_salary_components" value="1" {{ old('auto_sync_salary_components', '1') ? 'checked' : '' }} class="h-4 w-4 rounded border-amber-300 text-amber-600 focus:ring-amber-500">
+                        <span>Sinkronkan komponen gaji default berdasarkan kategori payroll setelah simpan.</span>
+                    </label>
                 </div>
             </div>
         </div>

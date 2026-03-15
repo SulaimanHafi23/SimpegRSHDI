@@ -13,7 +13,9 @@ use App\Services\Master\ReligionService;
 use App\Services\Master\DepartmentService;
 use App\Services\Role\RoleService;
 use App\Models\Department;
+use App\Models\SalaryComponent;
 use App\Models\Worker;
+use App\Models\WorkerSalaryComponent;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WorkersExport;
 use App\Exports\WorkersTemplateExport;
@@ -409,5 +411,81 @@ class WorkerController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    public function manageSalaryComponents(string $id)
+    {
+        $this->authorizePermission('worker.manage');
+
+        $worker = $this->service->getById($id);
+        $allComponents = SalaryComponent::query()->active()->orderBy('type')->orderBy('name')->get();
+        $assignments = WorkerSalaryComponent::query()
+            ->with('salaryComponent')
+            ->where('worker_id', $worker->id)
+            ->get();
+
+        $lastSyncLog = $worker->auditLogs()
+            ->where('action', 'worker_payroll_components_synced')
+            ->latest('created_at')
+            ->first();
+
+        return view('admin.workers.salary-components', compact('worker', 'allComponents', 'assignments', 'lastSyncLog'));
+    }
+
+    public function updateSalaryComponents(Request $request, string $id)
+    {
+        $this->authorizePermission('worker.manage');
+
+        $worker = $this->service->getById($id);
+        $payload = $request->validate([
+            'components' => 'nullable|array',
+            'components.*.enabled' => 'nullable|in:1',
+            'components.*.calculation_type' => 'nullable|in:fixed,percentage',
+            'components.*.amount' => 'nullable|numeric|min:0',
+        ]);
+
+        $components = $payload['components'] ?? [];
+
+        WorkerSalaryComponent::query()
+            ->where('worker_id', $worker->id)
+            ->update(['is_active' => false]);
+
+        foreach ($components as $componentId => $cfg) {
+            if (empty($cfg['enabled'])) {
+                continue;
+            }
+
+            WorkerSalaryComponent::query()->updateOrCreate(
+                [
+                    'worker_id' => $worker->id,
+                    'salary_component_id' => $componentId,
+                ],
+                [
+                    'calculation_type' => $cfg['calculation_type'] ?? 'fixed',
+                    'amount' => $cfg['amount'] ?? 0,
+                    'is_active' => true,
+                    'notes' => 'Manual update from worker salary components form',
+                ]
+            );
+        }
+
+        return redirect()
+            ->route('admin.workers.salary-components.edit', $worker->id)
+            ->with('success', 'Komponen gaji berhasil diperbarui.');
+    }
+
+    public function applyDefaultSalaryComponents(string $id)
+    {
+        $this->authorizePermission('worker.manage');
+
+        $worker = $this->service->getById($id);
+
+        if (!$worker->payroll_category) {
+            return back()->with('error', 'Kategori payroll belum diisi.');
+        }
+
+        $this->service->syncDefaultSalaryComponents($worker->id, (string) $worker->payroll_category, 'manual_apply_default');
+
+        return back()->with('success', 'Komponen gaji default berhasil diterapkan untuk kategori ' . strtoupper((string) $worker->payroll_category) . '.');
     }
 }

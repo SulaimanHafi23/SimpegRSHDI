@@ -49,7 +49,11 @@ use App\Http\Controllers\Employee\ShiftController as EmployeeShiftController;
 use App\Http\Controllers\Employee\LeaveController as EmployeeLeaveController;
 use App\Http\Controllers\Employee\BusinessTripController as EmployeeBusinessTripController;
 use App\Http\Controllers\Employee\DocumentController as EmployeeDocumentController;
+use App\Http\Controllers\Employee\PayrollController as EmployeePayrollController;
+use App\Http\Controllers\Employee\PromotionController as EmployeePromotionController;
 use App\Http\Controllers\Employee\ProfileController as EmployeeProfileController;
+use App\Http\Controllers\Payroll\PayrollController;
+use App\Http\Controllers\Promotion\PromotionController;
 
 // Approval controllers
 use App\Http\Controllers\Approval\BusinessTripApprovalController;
@@ -235,6 +239,19 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\Employee\NotificationController::class, 'destroy'])->name('destroy');
         });
 
+        // Payroll for employees
+        Route::prefix('payrolls')->name('payrolls.')->group(function () {
+            Route::get('/', [EmployeePayrollController::class, 'index'])->name('index');
+            Route::get('/{id}', [EmployeePayrollController::class, 'show'])->name('show');
+            Route::get('/{id}/slip-pdf', [EmployeePayrollController::class, 'downloadSlipPdf'])->name('slip-pdf');
+        });
+
+        // Promotion history for employees
+        Route::prefix('promotions')->name('promotions.')->group(function () {
+            Route::get('/', [EmployeePromotionController::class, 'index'])->name('index');
+            Route::get('/{id}', [EmployeePromotionController::class, 'show'])->name('show');
+        });
+
         // Calendar for employees
         Route::prefix('calendar')->name('calendar.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('index');
@@ -326,6 +343,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [WorkerController::class, 'index'])->name('index');
         Route::get('/create', [WorkerController::class, 'create'])->name('create');
         Route::get('/export', [WorkerController::class, 'export'])->name('export');
+        Route::get('/{id}/salary-components', [WorkerController::class, 'manageSalaryComponents'])->name('salary-components.edit');
+        Route::put('/{id}/salary-components', [WorkerController::class, 'updateSalaryComponents'])->name('salary-components.update');
+        Route::post('/{id}/salary-components/apply-default', [WorkerController::class, 'applyDefaultSalaryComponents'])->name('salary-components.apply-default');
         Route::middleware('role:Super Admin|HR')->group(function () {
             Route::get('/template', [WorkerController::class, 'downloadTemplate'])->name('template');
             Route::post('/import', [WorkerController::class, 'import'])->name('import');
@@ -425,6 +445,26 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/{id}/reject', [LeaveRequestController::class, 'reject'])->name('reject');
         Route::post('/{id}/cancel', [LeaveRequestController::class, 'cancel'])->name('cancel');
         Route::get('/worker/{workerId}/balance', [LeaveRequestController::class, 'workerLeaveBalance'])->name('worker-balance');
+    });
+
+    // ========== PAYROLL MANAGEMENT ==========
+    Route::prefix('payrolls')->name('admin.payrolls.')->middleware('role_or_permission:Super Admin|HR|Manager|payroll.manage|payroll.view')->group(function () {
+        Route::get('/', [PayrollController::class, 'index'])->name('index');
+        Route::get('/generate', [PayrollController::class, 'generateForm'])->name('generate');
+        Route::post('/generate', [PayrollController::class, 'generate'])->name('generate.store');
+        Route::get('/{periodId}', [PayrollController::class, 'show'])->name('show');
+        Route::post('/{periodId}/mark-paid', [PayrollController::class, 'markPaid'])->name('mark-paid');
+        Route::get('/slips/{payrollId}.pdf', [PayrollController::class, 'downloadSlipPdf'])->name('slip-pdf');
+    });
+
+    // ========== PROMOTION MANAGEMENT ==========
+    Route::prefix('promotions')->name('admin.promotions.')->middleware('role_or_permission:Super Admin|HR|Manager|promotion.manage|promotion.view')->group(function () {
+        Route::get('/', [PromotionController::class, 'index'])->name('index');
+        Route::get('/create', [PromotionController::class, 'create'])->name('create');
+        Route::post('/', [PromotionController::class, 'store'])->name('store');
+        Route::get('/{id}', [PromotionController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [PromotionController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [PromotionController::class, 'reject'])->name('reject');
     });
 
     // ========== WORKER DOCUMENT MANAGEMENT ==========

@@ -207,6 +207,50 @@
                     help="Kosongkan jika pegawai masih aktif" />
 
                 <x-form.select
+                    name="payroll_category"
+                    label="Kategori Payroll"
+                    :error="$errors->first('payroll_category')">
+                    <option value="">Pilih Kategori Payroll</option>
+                    <option value="asn" {{ old('payroll_category', $worker->payroll_category ?? '') == 'asn' ? 'selected' : '' }}>ASN</option>
+                    <option value="pppk" {{ old('payroll_category', $worker->payroll_category ?? '') == 'pppk' ? 'selected' : '' }}>PPPK</option>
+                    <option value="non_asn" {{ old('payroll_category', $worker->payroll_category ?? '') == 'non_asn' ? 'selected' : '' }}>Non ASN</option>
+                    <option value="outsourced" {{ old('payroll_category', $worker->payroll_category ?? '') == 'outsourced' ? 'selected' : '' }}>Outsourcing</option>
+                </x-form.select>
+
+                <x-form.input
+                    name="base_salary"
+                    label="Gaji Pokok"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    :value="old('base_salary', $worker->base_salary ?? '')"
+                    :error="$errors->first('base_salary')"
+                    placeholder="Masukkan gaji pokok" />
+
+                <x-form.input
+                    name="rank"
+                    label="Pangkat / Jabatan"
+                    :value="old('rank', $worker->rank ?? '')"
+                    :error="$errors->first('rank')"
+                    placeholder="Contoh: Penata Muda / Staff Senior" />
+
+                <x-form.input
+                    name="rank_level"
+                    label="Golongan / Level"
+                    :value="old('rank_level', $worker->rank_level ?? '')"
+                    :error="$errors->first('rank_level')"
+                    placeholder="Contoh: III/a" />
+
+                <div class="sm:col-span-2">
+                    <x-form.input
+                        name="outsourced_vendor"
+                        label="Vendor Outsourcing"
+                        :value="old('outsourced_vendor', $worker->outsourced_vendor ?? '')"
+                        :error="$errors->first('outsourced_vendor')"
+                        placeholder="Isi jika pegawai berasal dari vendor outsourcing" />
+                </div>
+
+                <x-form.select
                     name="status"
                     label="Status"
                     required
@@ -216,6 +260,13 @@
                     <option value="inactive" {{ old('status', $worker->status ?? '') == 'inactive' ? 'selected' : '' }}>Non-Aktif</option>
                     <option value="resigned" {{ old('status', $worker->status ?? '') == 'resigned' ? 'selected' : '' }}>Resign</option>
                 </x-form.select>
+
+                <div class="sm:col-span-2">
+                    <label class="inline-flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">
+                        <input type="checkbox" name="auto_sync_salary_components" value="1" {{ old('auto_sync_salary_components') ? 'checked' : '' }} class="h-4 w-4 rounded border-green-300 text-green-600 focus:ring-green-500">
+                        <span>Sinkronkan ulang komponen gaji default sesuai kategori payroll saat update.</span>
+                    </label>
+                </div>
             </div>
         </x-card>
 
