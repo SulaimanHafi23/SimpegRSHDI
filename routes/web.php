@@ -38,6 +38,7 @@ use App\Http\Controllers\Master\ReligionController;
 use App\Http\Controllers\Master\LeaveTypeController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\DocumentTemplateController;
 
 // Dashboard Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
@@ -486,7 +487,20 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/{id}/download', [WorkerDocumentController::class, 'download'])->name('download');
     });
 
-    // ========== MASTER DATA MANAGEMENT ==========
+    // ========== DOCUMENT TEMPLATE MANAGEMENT ==========
+    Route::prefix('document-templates')->name('admin.document-templates.')->middleware('role_or_permission:Super Admin|HR|document.manage')->group(function () {
+        Route::get('/', [DocumentTemplateController::class, 'index'])->name('index');
+        Route::get('/create', [DocumentTemplateController::class, 'create'])->name('create');
+        Route::post('/', [DocumentTemplateController::class, 'store'])->name('store');
+        Route::get('/{template}', [DocumentTemplateController::class, 'show'])->name('show');
+        Route::get('/{template}/edit', [DocumentTemplateController::class, 'edit'])->name('edit');
+        Route::put('/{template}', [DocumentTemplateController::class, 'update'])->name('update');
+        Route::delete('/{template}', [DocumentTemplateController::class, 'destroy'])->name('destroy');
+        Route::get('/{template}/download', [DocumentTemplateController::class, 'download'])->name('download');
+        // AJAX: Get available templates for a document type
+        Route::get('/api/list-by-type', [DocumentTemplateController::class, 'getTemplatesForDocument'])->name('api.list-by-type');
+    });
+
     Route::prefix('master')->name('admin.master.')->middleware(['role_or_permission:Super Admin|HR|department.manage|shift.manage|religion.manage|gender.manage|location.manage|leave-type.manage|document-type.manage|department-document-type.manage'])->group(function () {
 
         // Departments (Pengganti Positions)

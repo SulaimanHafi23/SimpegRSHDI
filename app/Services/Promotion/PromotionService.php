@@ -7,12 +7,17 @@ use App\Models\PromotionHistory;
 use App\Models\PromotionRequest;
 use App\Models\Worker;
 use App\Notifications\PromotionStatusNotification;
+use App\Services\Worker\WorkerEmploymentEligibilityService;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PromotionService
 {
+    public function __construct(
+        private readonly WorkerEmploymentEligibilityService $eligibilityService
+    ) {}
+
     public function getAll(array $filters = []): LengthAwarePaginator
     {
         $query = PromotionRequest::query()->with(['worker.department']);
@@ -46,6 +51,19 @@ class PromotionService
     {
         $worker = Worker::findOrFail($data['worker_id']);
 
+        if (!$this->eligibilityService->canReceivePromotion($worker)) {
+            throw new \RuntimeException('Kategori pegawai ini tidak memenuhi syarat untuk proses kepangkatan.');
+        }
+
+        $promotionEligibility = $this->eligibilityService->evaluateProcess(
+            $worker,
+            WorkerEmploymentEligibilityService::PROCESS_PROMOTION
+        );
+
+        if (!$promotionEligibility['eligible']) {
+            throw new \RuntimeException($promotionEligibility['message']);
+        }
+
         $request = PromotionRequest::create([
             'worker_id'            => $worker->id,
             'promotion_type'       => $data['promotion_type'] ?? 'kenaikan_pangkat',
@@ -74,6 +92,20 @@ class PromotionService
     {
         if ($request->status !== 'pending') {
             throw new \RuntimeException('Hanya pengajuan berstatus pending yang dapat disetujui.');
+        }
+
+        $worker = $request->worker;
+        if (!$worker || !$this->eligibilityService->canReceivePromotion($worker)) {
+            throw new \RuntimeException('Kategori pegawai ini tidak memenuhi syarat untuk approval kepangkatan.');
+        }
+
+        $promotionEligibility = $this->eligibilityService->evaluateProcess(
+            $worker,
+            WorkerEmploymentEligibilityService::PROCESS_PROMOTION
+        );
+
+        if (!$promotionEligibility['eligible']) {
+            throw new \RuntimeException($promotionEligibility['message']);
         }
 
         DB::transaction(function () use ($request, $notes) {

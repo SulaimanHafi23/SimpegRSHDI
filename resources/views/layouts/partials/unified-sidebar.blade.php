@@ -146,10 +146,10 @@
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.document-types.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
                 <i class="fas fa-file-alt text-xs {{ request()->routeIs('admin.master.document-types.*') ? 'text-white' : 'text-yellow-300' }}"></i>
             </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.document-types.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jenis Dokumen</span>
+            <span class="text-sm {{ request()->routeIs('admin.master.document-types.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Tipe Dokumen & Aturan</span>
         </a>
         @endif
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('department-document-type.manage'))
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('document-type.manage'))
         <a href="{{ route('admin.master.department-document-types.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">

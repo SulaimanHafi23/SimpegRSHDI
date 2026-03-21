@@ -97,7 +97,7 @@
                     name="birth_date"
                     label="Tanggal Lahir"
                     type="date"
-                    :value="old('birth_date', $worker->birth_date?->format('Y-m-d') ?? '')"
+                    :value="old('birth_date', $worker->birth_date ? date('Y-m-d', strtotime((string) $worker->birth_date)) : '')"
                     required
                     max="{{ date('Y-m-d', strtotime('-1 day')) }}"
                     :error="$errors->first('birth_date')" />
@@ -194,7 +194,7 @@
                     name="hire_date"
                     label="Tanggal Masuk"
                     type="date"
-                    :value="old('hire_date', $worker->hire_date?->format('Y-m-d') ?? '')"
+                    :value="old('hire_date', $worker->hire_date ? date('Y-m-d', strtotime((string) $worker->hire_date)) : '')"
                     required
                     :error="$errors->first('hire_date')" />
 
@@ -202,7 +202,7 @@
                     name="resign_date"
                     label="Tanggal Resign (Opsional)"
                     type="date"
-                    :value="old('resign_date', $worker->resign_date?->format('Y-m-d') ?? '')"
+                    :value="old('resign_date', $worker->resign_date ? date('Y-m-d', strtotime((string) $worker->resign_date)) : '')"
                     :error="$errors->first('resign_date')"
                     help="Kosongkan jika pegawai masih aktif" />
 
@@ -213,9 +213,20 @@
                     <option value="">Pilih Kategori Payroll</option>
                     <option value="asn" {{ old('payroll_category', $worker->payroll_category ?? '') == 'asn' ? 'selected' : '' }}>ASN</option>
                     <option value="pppk" {{ old('payroll_category', $worker->payroll_category ?? '') == 'pppk' ? 'selected' : '' }}>PPPK</option>
+                    <option value="pppk_paruh_waktu" {{ old('payroll_category', $worker->payroll_category ?? '') == 'pppk_paruh_waktu' ? 'selected' : '' }}>PPPK Paruh Waktu</option>
                     <option value="non_asn" {{ old('payroll_category', $worker->payroll_category ?? '') == 'non_asn' ? 'selected' : '' }}>Non ASN</option>
                     <option value="outsourced" {{ old('payroll_category', $worker->payroll_category ?? '') == 'outsourced' ? 'selected' : '' }}>Outsourcing</option>
                 </x-form.select>
+
+                <div id="payrollPaymentTypeWrapper" class="sm:col-span-2">
+                    <x-form.select
+                        name="payroll_payment_type"
+                        label="Mode Pembayaran Payroll"
+                        :error="$errors->first('payroll_payment_type')">
+                        <option value="individual" {{ old('payroll_payment_type', $worker->payroll_payment_type ?? 'individual') == 'individual' ? 'selected' : '' }}>Payroll Individu</option>
+                        <option value="vendor_invoice" {{ old('payroll_payment_type', $worker->payroll_payment_type ?? '') == 'vendor_invoice' ? 'selected' : '' }}>Invoice Vendor</option>
+                    </x-form.select>
+                </div>
 
                 <x-form.input
                     name="base_salary"
@@ -248,6 +259,36 @@
                         :value="old('outsourced_vendor', $worker->outsourced_vendor ?? '')"
                         :error="$errors->first('outsourced_vendor')"
                         placeholder="Isi jika pegawai berasal dari vendor outsourcing" />
+                </div>
+
+                <div id="weeklyWorkHoursWrapper">
+                    <x-form.input
+                        name="weekly_work_hours"
+                        label="Jam Kerja per Minggu"
+                        type="number"
+                        min="1"
+                        max="40"
+                        :value="old('weekly_work_hours', $worker->weekly_work_hours ?? 20)"
+                        :error="$errors->first('weekly_work_hours')"
+                        placeholder="Contoh: 20" />
+                </div>
+
+                <div id="outsourcedContractStartWrapper">
+                    <x-form.input
+                        name="outsourced_contract_start"
+                        label="Mulai Kontrak Outsourcing"
+                        type="date"
+                        :value="old('outsourced_contract_start', $worker->outsourced_contract_start ? date('Y-m-d', strtotime((string) $worker->outsourced_contract_start)) : '')"
+                        :error="$errors->first('outsourced_contract_start')" />
+                </div>
+
+                <div id="outsourcedContractEndWrapper">
+                    <x-form.input
+                        name="outsourced_contract_end"
+                        label="Akhir Kontrak Outsourcing"
+                        type="date"
+                        :value="old('outsourced_contract_end', $worker->outsourced_contract_end ? date('Y-m-d', strtotime((string) $worker->outsourced_contract_end)) : '')"
+                        :error="$errors->first('outsourced_contract_end')" />
                 </div>
 
                 <x-form.select
@@ -291,6 +332,22 @@
 
 @push('scripts')
 <script>
+    function togglePayrollSections() {
+        const category = document.getElementById('payroll_category')?.value || '';
+
+        ['payrollPaymentTypeWrapper', 'outsourcedContractStartWrapper', 'outsourcedContractEndWrapper']
+            .forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.style.display = category === 'outsourced' ? '' : 'none';
+            });
+
+        const partTime = document.getElementById('weeklyWorkHoursWrapper');
+        if (partTime) {
+            partTime.style.display = category === 'pppk_paruh_waktu' ? '' : 'none';
+        }
+    }
+
     function previewWorkerPhoto(input) {
         const file = input.files && input.files[0];
         const preview = document.getElementById('worker-photo-preview');
@@ -406,6 +463,15 @@
             }
         });
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const category = document.getElementById('payroll_category');
+        if (category) {
+            category.addEventListener('change', togglePayrollSections);
+        }
+
+        togglePayrollSections();
+    });
 </script>
 @endpush
 @endsection

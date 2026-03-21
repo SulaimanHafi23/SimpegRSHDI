@@ -219,6 +219,22 @@
                         <p class="text-sm text-gray-600">Vendor Outsourcing</p>
                         <p class="font-semibold text-gray-900">{{ $worker->outsourced_vendor ?? '-' }}</p>
                     </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Mode Pembayaran Payroll</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->payroll_payment_type === 'vendor_invoice' ? 'Invoice Vendor' : 'Payroll Individu' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Jam Kerja per Minggu</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->weekly_work_hours ? $worker->weekly_work_hours . ' jam' : '-' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Periode Kontrak Outsourcing</p>
+                        <p class="font-semibold text-gray-900">
+                            {{ $worker->outsourced_contract_start?->format('d/m/Y') ?? '-' }}
+                            -
+                            {{ $worker->outsourced_contract_end?->format('d/m/Y') ?? '-' }}
+                        </p>
+                    </div>
                 </div>
             </x-card>
 

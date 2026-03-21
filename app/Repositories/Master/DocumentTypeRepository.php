@@ -29,19 +29,22 @@ class DocumentTypeRepository implements DocumentTypeRepositoryInterface
             $query->where('is_required', $filters['is_required']);
         }
 
-        if (isset($filters['has_expiry'])) {
-            $query->where('has_expiry', $filters['has_expiry']);
+        if (!empty($filters['employment_category'])) {
+            $query->where('employment_category', $filters['employment_category']);
+        }
+
+        if (!empty($filters['process_type'])) {
+            $query->where('process_type', $filters['process_type']);
         }
 
         if (!empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
                 $q->where('name', 'like', "%{$filters['search']}%")
-                    ->orWhere('code', 'like', "%{$filters['search']}%")
                     ->orWhere('description', 'like', "%{$filters['search']}%");
             });
         }
 
-        return $query->latest()->paginate($filters['per_page'] ?? 15);
+        return $query->latest()->paginate($filters['per_page'] ?? 15)->withQueryString();
     }
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
@@ -125,7 +128,6 @@ class DocumentTypeRepository implements DocumentTypeRepositoryInterface
         return $this->model->withCount('workerDocuments')
             ->where(function ($query) use ($keyword) {
                 $query->where('name', 'like', "%{$keyword}%")
-                    ->orWhere('code', 'like', "%{$keyword}%")
                     ->orWhere('description', 'like', "%{$keyword}%");
             })
             ->latest()

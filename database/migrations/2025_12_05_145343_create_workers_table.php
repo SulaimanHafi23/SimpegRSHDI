@@ -26,6 +26,15 @@ return new class extends Migration
             $table->date('hire_date');
             $table->date('resign_date')->nullable();
             $table->enum('employment_status', ['permanent', 'contract', 'internship'])->default('contract');
+            $table->enum('payroll_category', ['asn', 'pppk', 'pppk_paruh_waktu', 'non_asn', 'outsourced'])->default('non_asn');
+            $table->enum('payroll_payment_type', ['individual', 'vendor_invoice'])->default('individual');
+            $table->decimal('base_salary', 15, 2)->default(0);
+            $table->string('rank', 50)->nullable();
+            $table->string('rank_level', 20)->nullable();
+            $table->unsignedSmallInteger('weekly_work_hours')->nullable();
+            $table->string('outsourced_vendor', 150)->nullable();
+            $table->date('outsourced_contract_start')->nullable();
+            $table->date('outsourced_contract_end')->nullable();
             $table->enum('status', ['active', 'inactive', 'resigned'])->default('active');
             $table->string('photo_url')->nullable();
             $table->timestamps();

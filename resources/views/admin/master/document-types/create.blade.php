@@ -56,6 +56,46 @@
                 @enderror
             </div>
 
+            <div class="border rounded-lg p-4 bg-blue-50">
+                <h3 class="text-sm font-semibold text-blue-900 mb-4">Pengaturan Aturan Pemberkasan</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="employment_category" class="block text-sm font-medium text-gray-700 mb-2">Kategori Pegawai <span class="text-red-500">*</span></label>
+                        <select name="employment_category" id="employment_category" class="w-full px-3 py-2 border rounded-lg" required>
+                            @foreach($employmentCategories as $key => $label)
+                                <option value="{{ $key }}" {{ old('employment_category', 'all') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="process_type" class="block text-sm font-medium text-gray-700 mb-2">Proses <span class="text-red-500">*</span></label>
+                        <select name="process_type" id="process_type" class="w-full px-3 py-2 border rounded-lg" required>
+                            @foreach($processTypes as $key => $label)
+                                <option value="{{ $key }}" {{ old('process_type', 'onboarding') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="source_document_type_id" class="block text-sm font-medium text-gray-700 mb-2">Dokumen Referensi</label>
+                        <select name="source_document_type_id" id="source_document_type_id" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Dokumen ini adalah dokumen utama</option>
+                            @foreach($baseDocumentTypes as $baseDoc)
+                                <option value="{{ $baseDoc->id }}" {{ old('source_document_type_id') === $baseDoc->id ? 'selected' : '' }}>{{ $baseDoc->name }}</option>
+                            @endforeach
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">Pilih jika ini adalah aturan turunan dari dokumen utama.</p>
+                    </div>
+                    <div>
+                        <label for="expiration_buffer_days" class="block text-sm font-medium text-gray-700 mb-2">Buffer Kadaluarsa (hari)</label>
+                        <input type="number" name="expiration_buffer_days" id="expiration_buffer_days" min="0" max="365" value="{{ old('expiration_buffer_days', 0) }}" class="w-full px-3 py-2 border rounded-lg" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="requirement_notes" class="block text-sm font-medium text-gray-700 mb-2">Catatan Aturan</label>
+                        <textarea name="requirement_notes" id="requirement_notes" rows="2" class="w-full px-3 py-2 border rounded-lg">{{ old('requirement_notes') }}</textarea>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Format File -->
                 <div>
@@ -175,6 +215,10 @@
             </div>
 
             <div class="flex items-center space-x-3">
+                <label class="flex items-center space-x-2">
+                    <input type="checkbox" name="is_required" value="1" {{ old('is_required', true) ? 'checked' : '' }} class="rounded">
+                    <span class="text-sm text-gray-700">Wajib untuk kombinasi kategori & proses ini</span>
+                </label>
                 <label class="flex items-center space-x-2">
                     <input type="checkbox" name="is_active" value="1" {{ old('is_active', true) ? 'checked' : '' }} class="rounded">
                     <span class="text-sm text-gray-700">Aktif</span>

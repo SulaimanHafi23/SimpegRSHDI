@@ -5,6 +5,7 @@ namespace App\Http\Controllers\WorkerDocument;
 use App\Http\Controllers\Controller;
 use App\Services\WorkerDocument\WorkerDocumentService;
 use App\Services\Worker\WorkerService;
+use App\Services\Worker\WorkerEmploymentEligibilityService;
 use App\Services\Master\DocumentTypeService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
@@ -17,6 +18,7 @@ class WorkerDocumentController extends Controller
     public function __construct(
         protected WorkerDocumentService $workerDocumentService,
         protected WorkerService $workerService,
+        protected WorkerEmploymentEligibilityService $workerEmploymentEligibilityService,
         protected DocumentTypeService $documentTypeService
     ) {}
 
@@ -39,22 +41,13 @@ class WorkerDocumentController extends Controller
         // Eager-load workerDocuments to avoid N+1
         $workers->load('workerDocuments');
 
-        // Pre-fetch required document type counts per department (1 query)
-        $universalCount = \App\Models\DocumentType::where('is_active', true)
-            ->where('is_universal', true)
-            ->count();
-
-        // Get department-specific counts in a single query
-        $deptDocCounts = \Illuminate\Support\Facades\DB::table('department_document_type')
-            ->join('document_types', 'department_document_type.document_type_id', '=', 'document_types.id')
-            ->where('document_types.is_active', true)
-            ->where('document_types.is_universal', false)
-            ->selectRaw('department_document_type.department_id, COUNT(*) as cnt')
-            ->groupBy('department_document_type.department_id')
-            ->pluck('cnt', 'department_id');
-
-        $workersWithDocStats = $workers->map(function($worker) use ($filters, $universalCount, $deptDocCounts) {
-            $totalRequired = $universalCount + ($deptDocCounts->get($worker->department_id, 0));
+        $workersWithDocStats = $workers->map(function($worker) use ($filters) {
+            $onboardingEligibility = $this->workerEmploymentEligibilityService->evaluateProcess(
+                $worker,
+                WorkerEmploymentEligibilityService::PROCESS_ONBOARDING
+            );
+            $totalRequired = (int) ($onboardingEligibility['required_count'] ?? 0);
+            $validRequired = (int) ($onboardingEligibility['valid_count'] ?? 0);
 
             // Use the already-loaded relation instead of extra queries
             $docs = $worker->workerDocuments;
@@ -76,7 +69,7 @@ class WorkerDocumentController extends Controller
 
             // Calculate completion percentage
             $completionPercentage = $totalRequired > 0
-                ? round(($verifiedCount / $totalRequired) * 100, 1)
+                ? round(($validRequired / $totalRequired) * 100, 1)
                 : 0;
 
             $worker->totalRequired = $totalRequired;
@@ -134,14 +127,32 @@ class WorkerDocumentController extends Controller
             $worker = $this->workerService->getById($selectedWorkerId);
 
             if ($worker) {
+                $requiredEmploymentDocTypeIds = \App\Models\DocumentType::query()
+                    ->where('process_type', WorkerEmploymentEligibilityService::PROCESS_ONBOARDING)
+                    ->where('is_active', true)
+                    ->where('is_required', true)
+                    ->whereIn('employment_category', [
+                        WorkerEmploymentEligibilityService::CATEGORY_ALL,
+                        $this->workerEmploymentEligibilityService->normalizeCategory($worker->payroll_category),
+                    ])
+                    ->get(['id', 'source_document_type_id'])
+                    ->map(fn($item) => $item->source_document_type_id ?: $item->id)
+                    ->unique()
+                    ->values()
+                    ->values();
+
                 $documentTypes = \App\Models\DocumentType::where('is_active', true)
-                    ->where(function ($builder) use ($worker) {
+                    ->where(function ($builder) use ($worker, $requiredEmploymentDocTypeIds) {
                         $builder->where('is_universal', true);
 
                         if ($worker->department_id) {
                             $builder->orWhereHas('departments', function ($inner) use ($worker) {
                                 $inner->where('departments.id', $worker->department_id);
                             });
+                        }
+
+                        if ($requiredEmploymentDocTypeIds->isNotEmpty()) {
+                            $builder->orWhereIn('id', $requiredEmploymentDocTypeIds->all());
                         }
                     })
                     ->orderBy('name')
@@ -239,14 +250,32 @@ class WorkerDocumentController extends Controller
             return response()->json(['data' => []]);
         }
 
+        $requiredEmploymentDocTypeIds = \App\Models\DocumentType::query()
+            ->where('process_type', WorkerEmploymentEligibilityService::PROCESS_ONBOARDING)
+            ->where('is_active', true)
+            ->where('is_required', true)
+            ->whereIn('employment_category', [
+                WorkerEmploymentEligibilityService::CATEGORY_ALL,
+                $this->workerEmploymentEligibilityService->normalizeCategory($worker->payroll_category),
+            ])
+            ->get(['id', 'source_document_type_id'])
+            ->map(fn($item) => $item->source_document_type_id ?: $item->id)
+            ->unique()
+            ->values()
+            ->values();
+
         $query = \App\Models\DocumentType::where('is_active', true)
-            ->where(function ($builder) use ($worker) {
+            ->where(function ($builder) use ($worker, $requiredEmploymentDocTypeIds) {
                 $builder->where('is_universal', true);
 
                 if ($worker->department_id) {
                     $builder->orWhereHas('departments', function ($inner) use ($worker) {
                         $inner->where('departments.id', $worker->department_id);
                     });
+                }
+
+                if ($requiredEmploymentDocTypeIds->isNotEmpty()) {
+                    $builder->orWhereIn('id', $requiredEmploymentDocTypeIds->all());
                 }
             })
             ->orderBy('name');

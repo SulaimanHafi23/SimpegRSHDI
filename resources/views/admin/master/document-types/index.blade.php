@@ -6,22 +6,45 @@
 <div class="space-y-6">
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Data Tipe Dokumen</h1>
-            <p class="text-sm sm:text-base text-gray-600 mt-1">Kelola tipe dokumen pegawai</p>
+            <h1 class="text-xl sm:text-2xl font-bold text-gray-900">Tipe Dokumen & Aturan Pemberkasan</h1>
+            <p class="text-sm sm:text-base text-gray-600 mt-1">Kelola dokumen beserta aturan kategori dan proses</p>
         </div>
         <a href="{{ route('admin.master.document-types.create') }}"
            class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg shadow">
-            <i class="fas fa-plus mr-2"></i>Tambah Tipe Dokumen
+            <i class="fas fa-plus mr-2"></i>Tambah Dokumen/Aturan
         </a>
     </div>
 
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
-        <form method="GET" action="{{ route('admin.master.document-types.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari tipe dokumen..."
-                   class="md:col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+        <form method="GET" action="{{ route('admin.master.document-types.index') }}" class="grid grid-cols-1 md:grid-cols-6 gap-3">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari dokumen..."
+                   class="md:col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
+
+            <select name="employment_category" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="">Semua Kategori</option>
+                @foreach($employmentCategories as $key => $label)
+                    <option value="{{ $key }}" {{ request('employment_category') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+
+            <select name="process_type" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="">Semua Proses</option>
+                @foreach($processTypes as $key => $label)
+                    <option value="{{ $key }}" {{ request('process_type') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+
+            <select name="per_page" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <option value="15" {{ request('per_page', '15') === '15' ? 'selected' : '' }}>15 / halaman</option>
+                <option value="25" {{ request('per_page') === '25' ? 'selected' : '' }}>25 / halaman</option>
+                <option value="50" {{ request('per_page') === '50' ? 'selected' : '' }}>50 / halaman</option>
+                <option value="100" {{ request('per_page') === '100' ? 'selected' : '' }}>100 / halaman</option>
+                <option value="all" {{ request('per_page') === 'all' ? 'selected' : '' }}>Tampilkan Semua</option>
+            </select>
+
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm">
-                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Filter</span>
+                    <i class="fas fa-search mr-1"></i><span class="hidden sm:inline">Terapkan</span>
                 </button>
                 <a href="{{ route('admin.master.document-types.index') }}" class="flex-1 px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-sm text-center">
                     <i class="fas fa-redo mr-1"></i><span class="hidden sm:inline">Reset</span>
@@ -36,6 +59,7 @@
             <thead class="bg-gray-50">
                 <tr>
                     <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nama Dokumen</th>
+                    <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Kategori/Proses</th>
                     <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Status</th>
                     <th class="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
                 </tr>
@@ -50,10 +74,19 @@
                             </div>
                             <div class="ml-3 sm:ml-4">
                                 <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $docType->name }}</div>
+                                <div class="text-[11px] text-gray-500 mt-1">
+                                    {{ $docType->employment_category_label ?? '-' }} - {{ $docType->process_type_label ?? '-' }}
+                                </div>
                                 <div class="text-xs md:hidden mt-1">
                                     <x-status-pill :active="$docType->is_active" size="xs" />
                                 </div>
                             </div>
+                        </div>
+                    </td>
+                    <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm hidden lg:table-cell">
+                        <div class="flex flex-wrap gap-1">
+                            <span class="px-2 py-1 rounded bg-blue-100 text-blue-700 text-xs">{{ $docType->employment_category_label ?? '-' }}</span>
+                            <span class="px-2 py-1 rounded bg-amber-100 text-amber-700 text-xs">{{ $docType->process_type_label ?? '-' }}</span>
                         </div>
                     </td>
                     <td class="px-3 sm:px-6 py-4 text-xs sm:text-sm hidden md:table-cell">
@@ -79,7 +112,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="3" class="px-6 py-12 text-center">
+                    <td colspan="4" class="px-6 py-12 text-center">
                         <i class="fas fa-inbox text-gray-400 text-5xl mb-4"></i>
                         <p class="text-gray-500">Tidak ada data</p>
                     </td>

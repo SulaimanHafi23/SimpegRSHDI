@@ -243,6 +243,7 @@
                         <option value="">-- Pilih Kategori Payroll --</option>
                         <option value="asn" {{ old('payroll_category') == 'asn' ? 'selected' : '' }}>ASN</option>
                         <option value="pppk" {{ old('payroll_category') == 'pppk' ? 'selected' : '' }}>PPPK</option>
+                        <option value="pppk_paruh_waktu" {{ old('payroll_category') == 'pppk_paruh_waktu' ? 'selected' : '' }}>PPPK Paruh Waktu</option>
                         <option value="non_asn" {{ old('payroll_category') == 'non_asn' ? 'selected' : '' }}>Non ASN</option>
                         <option value="outsourced" {{ old('payroll_category') == 'outsourced' ? 'selected' : '' }}>Outsourcing</option>
                     </select>
@@ -271,6 +272,33 @@
                     <input type="text" name="outsourced_vendor" id="outsourced_vendor" value="{{ old('outsourced_vendor') }}" placeholder="Isi jika pegawai berasal dari vendor outsourcing"
                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('outsourced_vendor') border-red-400 bg-red-50 @else border-gray-200 @enderror">
                     @error('outsourced_vendor')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div id="payrollPaymentTypeWrapper" class="sm:col-span-2">
+                    <label for="payroll_payment_type" class="block text-sm font-medium text-gray-700 mb-1.5">Mode Pembayaran Payroll</label>
+                    <select name="payroll_payment_type" id="payroll_payment_type"
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('payroll_payment_type') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                        <option value="individual" {{ old('payroll_payment_type', 'individual') == 'individual' ? 'selected' : '' }}>Payroll Individu</option>
+                        <option value="vendor_invoice" {{ old('payroll_payment_type') == 'vendor_invoice' ? 'selected' : '' }}>Invoice Vendor</option>
+                    </select>
+                    @error('payroll_payment_type')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div id="weeklyWorkHoursWrapper">
+                    <label for="weekly_work_hours" class="block text-sm font-medium text-gray-700 mb-1.5">Jam Kerja per Minggu</label>
+                    <input type="number" name="weekly_work_hours" id="weekly_work_hours" min="1" max="40" value="{{ old('weekly_work_hours', 20) }}" placeholder="Contoh: 20"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('weekly_work_hours') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('weekly_work_hours')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div id="outsourcedContractStartWrapper">
+                    <label for="outsourced_contract_start" class="block text-sm font-medium text-gray-700 mb-1.5">Mulai Kontrak Outsourcing</label>
+                    <input type="date" name="outsourced_contract_start" id="outsourced_contract_start" value="{{ old('outsourced_contract_start') }}"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('outsourced_contract_start') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('outsourced_contract_start')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                </div>
+                <div id="outsourcedContractEndWrapper">
+                    <label for="outsourced_contract_end" class="block text-sm font-medium text-gray-700 mb-1.5">Akhir Kontrak Outsourcing</label>
+                    <input type="date" name="outsourced_contract_end" id="outsourced_contract_end" value="{{ old('outsourced_contract_end') }}"
+                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-amber-500 focus:border-transparent transition text-sm sm:text-base @error('outsourced_contract_end') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    @error('outsourced_contract_end')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
                 </div>
                 <div class="sm:col-span-2">
                     <label for="resign_date" class="block text-sm font-medium text-gray-700 mb-1.5">
@@ -311,6 +339,27 @@
 
 @push('scripts')
 <script>
+function togglePayrollSections() {
+    const category = document.getElementById('payroll_category')?.value || '';
+
+    const outsourcedOnlyIds = [
+        'payrollPaymentTypeWrapper',
+        'outsourcedContractStartWrapper',
+        'outsourcedContractEndWrapper',
+    ];
+
+    outsourcedOnlyIds.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.display = category === 'outsourced' ? '' : 'none';
+    });
+
+    const partTimeWrapper = document.getElementById('weeklyWorkHoursWrapper');
+    if (partTimeWrapper) {
+        partTimeWrapper.style.display = category === 'pppk_paruh_waktu' ? '' : 'none';
+    }
+}
+
 function handlePhotoSelect(input) {
     const uploadText       = document.getElementById('uploadText');
     const uploadSelected   = document.getElementById('uploadSelected');
@@ -318,6 +367,15 @@ function handlePhotoSelect(input) {
     const photoPlaceholder = document.getElementById('photoPlaceholder');
     const photoImg         = document.getElementById('photoImg');
 
+
+document.addEventListener('DOMContentLoaded', function () {
+    const payrollCategory = document.getElementById('payroll_category');
+    if (payrollCategory) {
+        payrollCategory.addEventListener('change', togglePayrollSections);
+    }
+
+    togglePayrollSections();
+});
     if (input.files && input.files[0]) {
         const file = input.files[0];
         uploadText.classList.add('hidden');

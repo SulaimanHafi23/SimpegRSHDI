@@ -35,10 +35,14 @@ class Worker extends Model
         'resign_date',
         'employment_status',
         'payroll_category',
+        'payroll_payment_type',
         'base_salary',
         'rank',
         'rank_level',
+        'weekly_work_hours',
         'outsourced_vendor',
+        'outsourced_contract_start',
+        'outsourced_contract_end',
         'status',
         'photo_url',
     ];
@@ -48,7 +52,20 @@ class Worker extends Model
         'hire_date' => 'date',
         'resign_date' => 'date',
         'base_salary' => 'decimal:2',
+        'weekly_work_hours' => 'integer',
+        'outsourced_contract_start' => 'date',
+        'outsourced_contract_end' => 'date',
     ];
+
+    public function isOutsourced(): bool
+    {
+        return $this->payroll_category === 'outsourced';
+    }
+
+    public function isPartTimePppk(): bool
+    {
+        return $this->payroll_category === 'pppk_paruh_waktu';
+    }
 
     // Relationships
     public function gender(): BelongsTo

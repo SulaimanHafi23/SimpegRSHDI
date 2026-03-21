@@ -7,6 +7,7 @@ use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
 use App\Services\Attendance\AttendanceService;
+use App\Services\Dashboard\WorkerEligibilityDashboardService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -16,15 +17,18 @@ class DashboardController extends Controller
     use DepartmentFilterable;
 
     protected AttendanceService $attendanceService;
+    protected WorkerEligibilityDashboardService $eligibilityService;
 
     public function __construct(
-        AttendanceService $attendanceService
+        AttendanceService $attendanceService,
+        WorkerEligibilityDashboardService $eligibilityService
     )
     {
         $this->middleware('auth');
         $this->middleware('permission:dashboard.admin');
 
         $this->attendanceService = $attendanceService;
+        $this->eligibilityService = $eligibilityService;
     }
 
     public function index()
@@ -139,6 +143,14 @@ class DashboardController extends Controller
         // Get workers who need to checkout (shift ended but still no checkout)
         $pendingCheckouts = $this->attendanceService->getPendingCheckouts();
 
+        // ========== EMPLOYMENT ELIGIBILITY STATUS ==========
+
+        $eligibilitySummary = $this->eligibilityService->getEligibilitySummary($departmentId);
+        $promotionBlockedWorkers = $this->eligibilityService->getPromotionBlockedWorkers($departmentId);
+        $payrollHoldWorkers = $this->eligibilityService->getPayrollHoldWorkers($departmentId);
+        $expiringDocuments = $this->eligibilityService->getExpiringDocuments(30, $departmentId);
+        $workersByCategory = $this->eligibilityService->getWorkersByCategory($departmentId);
+
         // ========== PREPARE VIEW DATA SHAPES EXPECTED BY BLADE ==========
 
         // Statistics array expected by the view
@@ -222,7 +234,14 @@ class DashboardController extends Controller
             'upcomingLeaves',
 
             // Pending Checkouts
-            'pendingCheckouts'
+            'pendingCheckouts',
+
+            // Employment Eligibility
+            'eligibilitySummary',
+            'promotionBlockedWorkers',
+            'payrollHoldWorkers',
+            'expiringDocuments',
+            'workersByCategory'
         ));
     }
 

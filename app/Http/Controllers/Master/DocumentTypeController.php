@@ -5,6 +5,7 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
+use App\Models\DocumentType;
 use App\Services\Master\DocumentTypeService;
 use App\DTOs\Master\DocumentTypeDTO;
 use Illuminate\Http\Request;
@@ -23,30 +24,56 @@ class DocumentTypeController extends Controller
 
     public function index(Request $request)
     {
+        $perPageInput = (string) ($request->per_page ?? '15');
+        $perPage = $perPageInput === 'all'
+            ? DocumentType::query()->count()
+            : (int) $perPageInput;
+
+        if ($perPage <= 0) {
+            $perPage = 15;
+        }
+
         $filters = [
             'search' => $request->search,
-            'per_page' => $request->per_page ?? 15,
+            'employment_category' => $request->employment_category,
+            'process_type' => $request->process_type,
+            'per_page' => $perPage,
         ];
 
         $documentTypes = $this->documentTypeService->getAll($filters);
+        $employmentCategories = DocumentType::getEmploymentCategories();
+        $processTypes = DocumentType::getProcessTypes();
 
-        return view('admin.master.document-types.index', compact('documentTypes'));
+        return view('admin.master.document-types.index', compact('documentTypes', 'employmentCategories', 'processTypes'));
     }
 
     public function create()
     {
-        return view('admin.master.document-types.create');
+        $employmentCategories = DocumentType::getEmploymentCategories();
+        $processTypes = DocumentType::getProcessTypes();
+        $baseDocumentTypes = DocumentType::query()
+            ->whereNull('source_document_type_id')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        return view('admin.master.document-types.create', compact('employmentCategories', 'processTypes', 'baseDocumentTypes'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:document_types,name',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'file_format' => 'nullable|string',
             'file_formats' => 'nullable|array',
             'file_formats.*' => 'nullable|string|in:pdf,jpg,jpeg,png,doc,docx',
             'max_file_size' => 'nullable|integer|min:1',
+            'employment_category' => 'required|string|in:all,asn,pppk,pppk_paruh_waktu,non_asn,outsourced',
+            'process_type' => 'required|string|in:onboarding,promotion,payroll,contract_extension',
+            'expiration_buffer_days' => 'nullable|integer|min:0|max:365',
+            'requirement_notes' => 'nullable|string',
+            'source_document_type_id' => 'nullable|uuid|exists:document_types,id',
+            'is_required' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -91,7 +118,15 @@ class DocumentTypeController extends Controller
     {
         try {
             $documentType = $this->documentTypeService->findById($id);
-            return view('admin.master.document-types.edit', compact('documentType'));
+            $employmentCategories = DocumentType::getEmploymentCategories();
+            $processTypes = DocumentType::getProcessTypes();
+            $baseDocumentTypes = DocumentType::query()
+                ->whereNull('source_document_type_id')
+                ->where('id', '!=', $id)
+                ->orderBy('name')
+                ->get(['id', 'name']);
+
+            return view('admin.master.document-types.edit', compact('documentType', 'employmentCategories', 'processTypes', 'baseDocumentTypes'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.master.document-types.index')
@@ -102,12 +137,18 @@ class DocumentTypeController extends Controller
     public function update(Request $request, string $id)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:document_types,name,' . $id,
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'file_format' => 'nullable|string',
             'file_formats' => 'nullable|array',
             'file_formats.*' => 'nullable|string|in:pdf,jpg,jpeg,png,doc,docx',
             'max_file_size' => 'nullable|integer|min:1',
+            'employment_category' => 'required|string|in:all,asn,pppk,pppk_paruh_waktu,non_asn,outsourced',
+            'process_type' => 'required|string|in:onboarding,promotion,payroll,contract_extension',
+            'expiration_buffer_days' => 'nullable|integer|min:0|max:365',
+            'requirement_notes' => 'nullable|string',
+            'source_document_type_id' => 'nullable|uuid|exists:document_types,id',
+            'is_required' => 'nullable|boolean',
             'is_active' => 'nullable|boolean',
         ]);
 

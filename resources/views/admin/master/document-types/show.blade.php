@@ -47,7 +47,12 @@
 
             <div>
                 <p class="text-sm font-medium text-gray-500 mb-1">Kategori</p>
-                <p class="text-base text-gray-900">Dokumen Pegawai</p>
+                <p class="text-base text-gray-900">{{ $documentType->employment_category_label ?? '-' }}</p>
+            </div>
+
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Proses</p>
+                <p class="text-base text-gray-900">{{ $documentType->process_type_label ?? '-' }}</p>
             </div>
 
             <div>
@@ -66,6 +71,21 @@
             <div>
                 <p class="text-sm font-medium text-gray-500 mb-1">Ukuran Maks (KB)</p>
                 <p class="text-base text-gray-900">{{ $documentType->max_file_size ? $documentType->max_file_size . ' KB' : '-' }}</p>
+            </div>
+
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Buffer Kadaluarsa</p>
+                <p class="text-base text-gray-900">{{ (int) ($documentType->expiration_buffer_days ?? 0) }} hari</p>
+            </div>
+
+            <div>
+                <p class="text-sm font-medium text-gray-500 mb-1">Sifat Aturan</p>
+                <p class="text-base text-gray-900">{{ $documentType->is_required ? 'Wajib' : 'Opsional' }}</p>
+            </div>
+
+            <div class="md:col-span-2">
+                <p class="text-sm font-medium text-gray-500 mb-1">Catatan Aturan</p>
+                <p class="text-base text-gray-900">{{ $documentType->requirement_notes ?: '-' }}</p>
             </div>
 
             <div>

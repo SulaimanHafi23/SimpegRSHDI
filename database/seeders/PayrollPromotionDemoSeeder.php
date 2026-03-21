@@ -25,11 +25,12 @@ class PayrollPromotionDemoSeeder extends Seeder
         }
 
         // Assign payroll_category and base_salary to workers
-        $categories = ['non_asn', 'asn', 'pppk', 'non_asn', 'outsourced'];
+        $categories = ['non_asn', 'asn', 'pppk', 'pppk_paruh_waktu', 'outsourced'];
         $baseSalaries = [
             'asn'        => 4500000,
             'pppk'       => 3800000,
             'non_asn'    => 3000000,
+            'pppk_paruh_waktu' => 2500000,
             'outsourced' => 2800000,
         ];
 

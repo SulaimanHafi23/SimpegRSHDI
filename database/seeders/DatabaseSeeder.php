@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             ShiftDayTimeSeeder::class,
             DocumentTypeSeeder::class,
             DepartmentDocumentTypeSeeder::class, // Maps documents to departments
+            EmploymentDocumentRequirementSeeder::class,
             LeaveTypeSeeder::class,
             HolidaySeeder::class,
         ]);

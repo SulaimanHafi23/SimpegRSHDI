@@ -20,10 +20,14 @@ class WorkerDTO
         public readonly ?string $resign_date,
         public readonly ?string $employment_status,
         public readonly ?string $payroll_category,
+        public readonly ?string $payroll_payment_type,
         public readonly ?string $base_salary,
         public readonly ?string $rank,
         public readonly ?string $rank_level,
+        public readonly ?string $weekly_work_hours,
         public readonly ?string $outsourced_vendor,
+        public readonly ?string $outsourced_contract_start,
+        public readonly ?string $outsourced_contract_end,
         public readonly ?string $status,
         public readonly ?string $photo_url,
     ) {}
@@ -46,10 +50,14 @@ class WorkerDTO
             resign_date: $data['resign_date'] ?? null,
             employment_status: $data['employment_status'] ?? null,
             payroll_category: $data['payroll_category'] ?? null,
+            payroll_payment_type: $data['payroll_payment_type'] ?? null,
             base_salary: isset($data['base_salary']) ? (string) $data['base_salary'] : null,
             rank: $data['rank'] ?? null,
             rank_level: $data['rank_level'] ?? null,
+            weekly_work_hours: isset($data['weekly_work_hours']) ? (string) $data['weekly_work_hours'] : null,
             outsourced_vendor: $data['outsourced_vendor'] ?? null,
+            outsourced_contract_start: $data['outsourced_contract_start'] ?? null,
+            outsourced_contract_end: $data['outsourced_contract_end'] ?? null,
             status: $data['status'] ?? null,
             photo_url: $data['photo_url'] ?? null,
         );
@@ -57,7 +65,7 @@ class WorkerDTO
 
     public function toArray(): array
     {
-        return array_filter([
+        return [
             'id' => $this->id,
             'nip' => $this->nip,
             'name' => $this->name,
@@ -73,12 +81,16 @@ class WorkerDTO
             'resign_date' => $this->resign_date,
             'employment_status' => $this->employment_status,
             'payroll_category' => $this->payroll_category,
+            'payroll_payment_type' => $this->payroll_payment_type,
             'base_salary' => $this->base_salary,
             'rank' => $this->rank,
             'rank_level' => $this->rank_level,
+            'weekly_work_hours' => $this->weekly_work_hours,
             'outsourced_vendor' => $this->outsourced_vendor,
+            'outsourced_contract_start' => $this->outsourced_contract_start,
+            'outsourced_contract_end' => $this->outsourced_contract_end,
             'status' => $this->status,
             'photo_url' => $this->photo_url,
-        ], fn($value) => $value !== null && $value !== '');
+        ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Master;
 
 use App\DTOs\Master\DocumentTypeDTO;
+use App\Models\DocumentType;
 use App\Repositories\Contracts\Master\DocumentTypeRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -92,9 +93,15 @@ class DocumentTypeService
         try {
             DB::beginTransaction();
 
-            // Check if name already exists
-            if ($this->repository->getByName($dto->name)) {
-                throw new \Exception('Nama tipe dokumen sudah digunakan');
+            $duplicate = DocumentType::query()
+                ->where('name', $dto->name)
+                ->where('employment_category', $dto->employment_category)
+                ->where('process_type', $dto->process_type)
+                ->where('source_document_type_id', $dto->source_document_type_id)
+                ->exists();
+
+            if ($duplicate) {
+                throw new \Exception('Kombinasi nama dokumen, kategori pegawai, dan proses sudah ada');
             }
 
             // Note: migration does not include a `code` column; skip code uniqueness check
@@ -130,10 +137,16 @@ class DocumentTypeService
 
             $documentType = $this->findById($id);
 
-            // Check if name already exists (except current)
-            $existingByName = $this->repository->getByName($dto->name);
-            if ($existingByName && $existingByName->id !== $id) {
-                throw new \Exception('Nama tipe dokumen sudah digunakan');
+            $duplicate = DocumentType::query()
+                ->where('name', $dto->name)
+                ->where('employment_category', $dto->employment_category)
+                ->where('process_type', $dto->process_type)
+                ->where('source_document_type_id', $dto->source_document_type_id)
+                ->where('id', '!=', $id)
+                ->exists();
+
+            if ($duplicate) {
+                throw new \Exception('Kombinasi nama dokumen, kategori pegawai, dan proses sudah ada');
             }
 
             // No code uniqueness check: document_types table has no `code` column in this schema

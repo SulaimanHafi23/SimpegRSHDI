@@ -21,6 +21,7 @@ class WorkerService
     public function __construct(
         protected WorkerRepositoryInterface $workerRepository,
         protected UserRepositoryInterface $userRepository,
+        protected WorkerEmploymentEligibilityService $eligibilityService,
     ) {}
 
     public function getAll(array $filters = [])
@@ -74,6 +75,8 @@ class WorkerService
             if (isset($data['photo'])) {
                 $data['photo_url'] = $this->savePhoto($data['photo'], $data['nip']);
             }
+
+            $data = $this->normalizeWorkerPayload($data);
 
             $workerDTO = WorkerDTO::fromRequest($data);
             $worker = $this->workerRepository->create($workerDTO);
@@ -158,10 +161,37 @@ class WorkerService
                 $data['photo_url'] = $this->savePhoto($data['photo'], $worker->nip);
             }
 
-            // Remove empty values to prevent overwriting with empty strings
-            $data = array_filter($data, function($value) {
-                return $value !== '' && $value !== null && $value !== [];
-            });
+            $data = $this->normalizeWorkerPayload($data, $worker);
+            $data = $this->sanitizeUpdatePayload($data);
+
+            $persistedSnapshot = [
+                'nip' => $worker->nip,
+                'name' => $worker->name,
+                'email' => $worker->email,
+                'phone_number' => $worker->phone_number,
+                'address' => $worker->address,
+                'birth_date' => optional($worker->birth_date)->format('Y-m-d'),
+                'birth_place' => $worker->birth_place,
+                'gender_id' => $worker->gender_id,
+                'religion_id' => $worker->religion_id,
+                'department_id' => $worker->department_id,
+                'hire_date' => optional($worker->hire_date)->format('Y-m-d'),
+                'resign_date' => optional($worker->resign_date)->format('Y-m-d'),
+                'employment_status' => $worker->employment_status,
+                'payroll_category' => $worker->payroll_category,
+                'payroll_payment_type' => $worker->payroll_payment_type,
+                'base_salary' => $worker->base_salary,
+                'rank' => $worker->rank,
+                'rank_level' => $worker->rank_level,
+                'weekly_work_hours' => $worker->weekly_work_hours,
+                'outsourced_vendor' => $worker->outsourced_vendor,
+                'outsourced_contract_start' => optional($worker->outsourced_contract_start)->format('Y-m-d'),
+                'outsourced_contract_end' => optional($worker->outsourced_contract_end)->format('Y-m-d'),
+                'status' => $worker->status,
+                'photo_url' => $worker->photo_url,
+            ];
+
+            $data = array_merge($persistedSnapshot, $data);
 
             $dto = WorkerDTO::fromRequest($data);
             $updated = $this->workerRepository->update($id, $dto);
@@ -382,6 +412,14 @@ class WorkerService
                 'LATE_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
             ],
 
+            'pppk_paruh_waktu' => [
+                'ALLOWANCE_MEAL' => ['calculation_type' => 'percentage', 'amount' => 2],
+                'OVERTIME' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'ABSENT_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'LATE_DEDUCTION' => ['calculation_type' => 'fixed', 'amount' => 0],
+                'BPJS_KESEHATAN' => ['calculation_type' => 'percentage', 'amount' => 1],
+            ],
+
             default => [
                 'ALLOWANCE_TRANSPORT' => ['calculation_type' => 'percentage', 'amount' => 8],
                 'ALLOWANCE_MEAL' => ['calculation_type' => 'percentage', 'amount' => 5],
@@ -393,5 +431,62 @@ class WorkerService
                 'BPJS_KESEHATAN' => ['calculation_type' => 'percentage', 'amount' => 1],
             ],
         };
+    }
+
+    private function normalizeWorkerPayload(array $data, ?object $existingWorker = null): array
+    {
+        $category = $this->eligibilityService->normalizeCategory(
+            $data['payroll_category'] ?? ($existingWorker->payroll_category ?? null)
+        );
+
+        $data['payroll_category'] = $category;
+
+        if ($category === WorkerEmploymentEligibilityService::CATEGORY_OUTSOURCED) {
+            $data['payroll_payment_type'] = $data['payroll_payment_type'] ?? ($existingWorker->payroll_payment_type ?? 'vendor_invoice');
+            $data['payroll_payment_type'] = $data['payroll_payment_type'] === 'individual' ? 'individual' : 'vendor_invoice';
+        } else {
+            $data['payroll_payment_type'] = 'individual';
+            $data['outsourced_vendor'] = null;
+            $data['outsourced_contract_start'] = null;
+            $data['outsourced_contract_end'] = null;
+        }
+
+        if ($category === WorkerEmploymentEligibilityService::CATEGORY_PPPK_PART_TIME) {
+            if (empty($data['weekly_work_hours']) && empty($existingWorker?->weekly_work_hours)) {
+                $data['weekly_work_hours'] = 20;
+            }
+        } else {
+            $data['weekly_work_hours'] = null;
+        }
+
+        return $data;
+    }
+
+    private function sanitizeUpdatePayload(array $data): array
+    {
+        $nullableFields = [
+            'photo_url',
+            'resign_date',
+            'rank',
+            'rank_level',
+            'weekly_work_hours',
+            'outsourced_vendor',
+            'outsourced_contract_start',
+            'outsourced_contract_end',
+        ];
+
+        foreach ($nullableFields as $field) {
+            if (array_key_exists($field, $data) && $data[$field] === '') {
+                $data[$field] = null;
+            }
+        }
+
+        return array_filter($data, function ($value, $key) use ($nullableFields) {
+            if (in_array($key, $nullableFields, true)) {
+                return true;
+            }
+
+            return $value !== '' && $value !== null && $value !== [];
+        }, ARRAY_FILTER_USE_BOTH);
     }
 }

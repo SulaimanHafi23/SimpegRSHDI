@@ -6,13 +6,18 @@ use App\Models\AuditLog;
 use App\Models\Payroll;
 use App\Models\PayrollPeriod;
 use App\Models\Worker;
-use App\Models\WorkerSalaryComponent;
 use App\Notifications\PayrollPaidNotification;
+use App\Services\Worker\WorkerEmploymentEligibilityService;
+use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 class PayrollService
 {
+    public function __construct(
+        private readonly WorkerEmploymentEligibilityService $eligibilityService
+    ) {}
+
     public function getAllPeriods(array $filters = []): LengthAwarePaginator
     {
         $query = PayrollPeriod::query()->withCount('payrolls');
@@ -78,9 +83,88 @@ class PayrollService
         return $count;
     }
 
-    public function generateWorkerPayroll(PayrollPeriod $period, Worker $worker): Payroll
+    public function generateWorkerPayroll(PayrollPeriod $period, $worker): Payroll
     {
+        if (!$worker instanceof Worker) {
+            $worker = Worker::query()->findOrFail($worker->id ?? null);
+        }
+
+        $category = $this->eligibilityService->normalizeCategory($worker->payroll_category);
+        $paymentMode = $this->eligibilityService->resolvePayrollPaymentMode($worker);
+
+        if ($category === WorkerEmploymentEligibilityService::CATEGORY_OUTSOURCED && $paymentMode === 'vendor_invoice') {
+            return Payroll::updateOrCreate(
+                [
+                    'payroll_period_id' => $period->id,
+                    'worker_id' => $worker->id,
+                ],
+                [
+                    'base_salary' => 0,
+                    'total_earnings' => 0,
+                    'total_deductions' => 0,
+                    'net_salary' => 0,
+                    'components' => [
+                        [
+                            'code' => 'VENDOR_INVOICE',
+                            'name' => 'Pembayaran melalui invoice vendor',
+                            'type' => 'info',
+                            'calculation_type' => 'fixed',
+                            'rate' => 0,
+                            'amount' => 0,
+                        ],
+                    ],
+                    'status' => 'finalized',
+                    'notes' => 'Gaji individu dilewati: tenaga outsourcing dibayarkan melalui invoice vendor.',
+                ]
+            );
+        }
+
+        $payrollEligibility = $this->eligibilityService->evaluateProcess(
+            $worker,
+            WorkerEmploymentEligibilityService::PROCESS_PAYROLL
+        );
+
+        if (!$payrollEligibility['eligible']) {
+            return Payroll::updateOrCreate(
+                [
+                    'payroll_period_id' => $period->id,
+                    'worker_id' => $worker->id,
+                ],
+                [
+                    'base_salary' => 0,
+                    'total_earnings' => 0,
+                    'total_deductions' => 0,
+                    'net_salary' => 0,
+                    'components' => [
+                        [
+                            'code' => 'PAYROLL_HOLD',
+                            'name' => 'Payroll ditahan',
+                            'type' => 'info',
+                            'calculation_type' => 'fixed',
+                            'rate' => 0,
+                            'amount' => 0,
+                            'reason' => $payrollEligibility['message'],
+                        ],
+                    ],
+                    'status' => 'draft',
+                    'notes' => $payrollEligibility['message'],
+                ]
+            );
+        }
+
         $baseSalary = (float) ($worker->base_salary ?? 0);
+
+        if ($category === WorkerEmploymentEligibilityService::CATEGORY_PPPK_PART_TIME) {
+            $hourRatio = $this->eligibilityService->partTimeProrationRatio($worker);
+            $attendanceRatio = $this->eligibilityService->attendanceRatioForPeriod(
+                $worker,
+                Carbon::parse((string) $period->start_date),
+                Carbon::parse((string) $period->end_date),
+            );
+
+            $baseSalary = round($baseSalary * $hourRatio * $attendanceRatio, 2);
+        }
+
         $earnings   = [];
         $deductions = [];
 
@@ -111,6 +195,18 @@ class PayrollService
         $totalEarnings   = array_sum(array_column($earnings, 'amount'));
         $totalDeductions = array_sum(array_column($deductions, 'amount'));
         $netSalary       = $baseSalary + $totalEarnings - $totalDeductions;
+
+        if ($category === WorkerEmploymentEligibilityService::CATEGORY_PPPK_PART_TIME) {
+            $earnings[] = [
+                'code' => 'PART_TIME_PRORATION_INFO',
+                'name' => 'Prorata PPPK Paruh Waktu',
+                'type' => 'info',
+                'calculation_type' => 'fixed',
+                'rate' => 0,
+                'amount' => 0,
+                'weekly_work_hours' => (int) ($worker->weekly_work_hours ?? 20),
+            ];
+        }
 
         return Payroll::updateOrCreate(
             [

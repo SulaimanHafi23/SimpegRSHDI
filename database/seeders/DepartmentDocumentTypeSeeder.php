@@ -17,9 +17,12 @@ class DepartmentDocumentTypeSeeder extends Seeder
     {
         $this->command->info('📋 Starting DepartmentDocumentTypeSeeder...');
 
-        // Get all departments and document types
+        // Get all departments and base document types (non-rule rows)
         $departments = Department::all()->keyBy('code');
-        $documentTypes = DocumentType::all()->keyBy('name');
+        $documentTypes = DocumentType::query()
+            ->whereNull('source_document_type_id')
+            ->get()
+            ->keyBy('name');
 
         // Define document requirements per department
         $departmentDocuments = [

@@ -55,6 +55,7 @@ class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
                     'gender_id' => $gender?->id,
                     'religion_id' => $religion?->id,
                     'employment_status' => $this->parseEmploymentStatus($row['status_kepegawaian'] ?? 'Kontrak'),
+                    'payroll_category' => $this->parsePayrollCategory($row['kategori_payroll'] ?? null),
                     'status' => 'active',
                     'hire_date' => $this->parseDate($row['tanggal_bergabung'] ?? now()),
                 ]);
@@ -113,9 +114,21 @@ class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
         return match(true) {
             str_contains($status, 'tetap') => 'permanent',
             str_contains($status, 'kontrak') => 'contract',
-            str_contains($status, 'percobaan') => 'probation',
-            str_contains($status, 'magang') => 'intern',
+            str_contains($status, 'magang') => 'internship',
             default => 'contract'
+        };
+    }
+
+    protected function parsePayrollCategory($category): string
+    {
+        $category = strtolower(trim((string) $category));
+
+        return match (true) {
+            str_contains($category, 'asn') => 'asn',
+            str_contains($category, 'pppk paruh') => 'pppk_paruh_waktu',
+            str_contains($category, 'pppk') => 'pppk',
+            str_contains($category, 'outsource') => 'outsourced',
+            default => 'non_asn',
         };
     }
 
