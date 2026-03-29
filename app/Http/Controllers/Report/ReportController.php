@@ -10,7 +10,6 @@ use App\Services\WorkerDocument\WorkerDocumentService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use App\Models\Worker;
-use App\Models\Location;
 use App\Models\DocumentType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
@@ -56,7 +55,6 @@ class ReportController extends Controller
             'date_from' => $startDate,
             'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
-            'location_id' => $request->input('location_id'),
             'department_id' => $this->getManagerDepartmentFilter(),
             'month' => $month,
             'year' => $year,
@@ -68,7 +66,6 @@ class ReportController extends Controller
         $workers = Worker::select('id', 'name')
             ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
             ->orderBy('name')->get();
-        $locations = Location::select('id', 'name')->orderBy('name')->get();
 
         if ($request->query('export') === 'csv') {
             $collection = $attendances instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($attendances->items()) : $attendances;
@@ -87,7 +84,7 @@ class ReportController extends Controller
                         $row->attendance_date?->format('Y-m-d') ?? '-',
                         $row->check_in?->format('Y-m-d H:i:s') ?? '-',
                         $row->check_out?->format('Y-m-d H:i:s') ?? '-',
-                        $row->location?->name ?? '-',
+                        config('attendance.location.name', '-'),
                         $row->status ?? '-',
                         $row->is_late ? 'Yes' : 'No',
                         $row->late_minutes ?? 0,
@@ -100,7 +97,7 @@ class ReportController extends Controller
             return response()->stream($callback, 200, $headers);
         }
 
-        return view('admin.reports.attendance', compact('attendances', 'filters', 'workers', 'locations'));
+        return view('admin.reports.attendance', compact('attendances', 'filters', 'workers'));
     }
 
     public function leaves(Request $request)
@@ -330,7 +327,6 @@ class ReportController extends Controller
             'date_from' => $startDate,
             'date_to' => $endDate,
             'worker_id' => $request->input('worker_id'),
-            'location_id' => $request->input('location_id'),
             'department_id' => $departmentFilter,
             'status' => $request->input('status'),
             'search' => $request->input('search'),

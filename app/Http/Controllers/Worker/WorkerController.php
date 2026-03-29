@@ -6,10 +6,7 @@ use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Worker\WorkerRequest;
-use App\Services\Master\GenderService;
 use App\Services\Worker\WorkerService;
-use App\Services\Master\LocationService;
-use App\Services\Master\ReligionService;
 use App\Services\Master\DepartmentService;
 use App\Services\Role\RoleService;
 use App\Models\Department;
@@ -26,9 +23,6 @@ class WorkerController extends Controller
 
     public function __construct(
         private readonly WorkerService $service,
-        private readonly ReligionService $religionService,
-        private readonly GenderService $genderService,
-        private readonly LocationService $locationService,
         private readonly DepartmentService $departmentService,
         private readonly RoleService $roleService
     ) {
@@ -44,7 +38,6 @@ class WorkerController extends Controller
 
         $filters = [
             'search' => $request->input('search'),
-            'location_id' => $request->input('location_id'),
             'status' => $request->input('status'),
             'employment_status' => $request->input('employment_status'),
             // Manager's department is always forced — cannot be overridden via request
@@ -53,11 +46,10 @@ class WorkerController extends Controller
         ];
 
     $workers = $this->service->getAll($filters);
-    $locations = $this->locationService->getAll();
     $departments = $this->departmentService->getAllActive();
     $roles = $this->roleService->getAll();
 
-    return view('admin.workers.index', compact('workers', 'locations', 'departments', 'filters', 'roles'));
+    return view('admin.workers.index', compact('workers', 'departments', 'filters', 'roles'));
     }
 
     public function show(string $id)
@@ -207,11 +199,9 @@ class WorkerController extends Controller
     {
         $this->authorizePermission('worker.manage');
 
-        $genders = $this->genderService->getAllActive();
-        $religions = $this->religionService->getAllActive();
         $departments = $this->departmentService->getAllActive();
 
-        return view('admin.workers.create', compact('genders', 'religions', 'departments'));
+        return view('admin.workers.create', compact('departments'));
     }
 
     public function store(WorkerRequest $request)
@@ -237,13 +227,9 @@ class WorkerController extends Controller
 
         try {
             $worker = $this->service->getById($id);
-            $genders = $this->genderService->getAllActive();
-            $religions = $this->religionService->getAllActive();
             $departments = $this->departmentService->getAllActive();
 
-            // dd($worker, $genders, $religions, $departments);
-
-            return view('admin.workers.edit', compact('worker', 'genders', 'religions', 'departments'));
+            return view('admin.workers.edit', compact('worker', 'departments'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.workers.index')
@@ -317,7 +303,7 @@ class WorkerController extends Controller
             $filename = 'data-pegawai-' . now()->format('Y-m-d-His');
 
             if ($format === 'pdf') {
-                $query = Worker::with(['department', 'gender', 'religion']);
+                $query = Worker::with(['department']);
 
                 if (!empty($filters['status'])) {
                     $query->where('status', $filters['status']);

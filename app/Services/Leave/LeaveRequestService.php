@@ -50,12 +50,10 @@ class LeaveRequestService
         return DB::transaction(function () use ($data) {
         $leaveType = $this->leaveTypeRepository->getById($data['leave_type_id']);
 
-        // Calculate total days if not provided
-        if (!isset($data['total_days'])) {
-            $startDate = \Carbon\Carbon::parse($data['start_date']);
-            $endDate = \Carbon\Carbon::parse($data['end_date']);
-            $data['total_days'] = $startDate->diffInDays($endDate) + 1;
-        }
+        // Always calculate on server-side to prevent client-side tampering.
+        $startDate = \Carbon\Carbon::parse($data['start_date']);
+        $endDate = \Carbon\Carbon::parse($data['end_date']);
+        $data['total_days'] = $startDate->diffInDays($endDate) + 1;
 
         // Validate leave balance
         if ($leaveType->max_days_per_year) {
@@ -138,6 +136,13 @@ class LeaveRequestService
         $data = array_filter($data, function($value) {
             return $value !== '' && $value !== null && $value !== [];
         });
+
+        // Recalculate when dates are updated to keep value consistent.
+        if (isset($data['start_date']) && isset($data['end_date'])) {
+            $startDate = \Carbon\Carbon::parse($data['start_date']);
+            $endDate = \Carbon\Carbon::parse($data['end_date']);
+            $data['total_days'] = $startDate->diffInDays($endDate) + 1;
+        }
 
         $dto = LeaveRequestDTO::fromRequest($data);
         return $this->leaveRequestRepository->update($id, $dto);

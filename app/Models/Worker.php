@@ -26,8 +26,8 @@ class Worker extends Model
         'address',
         'birth_date',
         'birth_place',
-        'gender_id',
-        'religion_id',
+        'gender',
+        'religion',
         'department_id',
         'shift_id',
         'hire_date',
@@ -41,19 +41,11 @@ class Worker extends Model
         'birth_date' => 'date',
         'hire_date' => 'date',
         'resign_date' => 'date',
+        'gender' => 'string',
+        'religion' => 'string',
     ];
 
     // Relationships
-    public function gender(): BelongsTo
-    {
-        return $this->belongsTo(Gender::class);
-    }
-
-    public function religion(): BelongsTo
-    {
-        return $this->belongsTo(Religion::class);
-    }
-
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
@@ -99,11 +91,6 @@ class Worker extends Model
         return $this->hasMany(LeaveRequest::class);
     }
 
-    public function overtimeRequests(): HasMany
-    {
-        return $this->hasMany(OvertimeRequest::class);
-    }
-
     public function shiftSwapRequestsAsRequester(): HasMany
     {
         return $this->hasMany(ShiftSwapRequest::class, 'requester_id');
@@ -112,11 +99,6 @@ class Worker extends Model
     public function shiftSwapRequestsAsTarget(): HasMany
     {
         return $this->hasMany(ShiftSwapRequest::class, 'target_worker_id');
-    }
-
-    public function offDayExceptions(): HasMany
-    {
-        return $this->hasMany(WorkerOffDayException::class);
     }
 
     public function offDays(): HasMany
@@ -180,17 +162,7 @@ class Worker extends Model
      */
     public function isOffDay(\DateTime $date): bool
     {
-        // Check exceptions first (single or recurring)
-        if (WorkerOffDayException::isOffDay($this->id, $date)) {
-            return true;
-        }
-
-        // Check pattern-based off-days
-        if (WorkerOffDay::isOffDayByPattern($this->id, $date)) {
-            return true;
-        }
-
-        return false;
+        return WorkerOffDay::isOffDay($this->id, $date);
     }
 
     /**

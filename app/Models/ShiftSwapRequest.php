@@ -21,7 +21,6 @@ class ShiftSwapRequest extends Model
         'requester_shift_id',
         'target_shift_id',
         'swap_type',
-        'swap_date',
         'swap_start_date',
         'swap_end_date',
         'swap_dates',
@@ -32,7 +31,6 @@ class ShiftSwapRequest extends Model
         'reason',
         'metadata',
         'requested_at',
-        'expires_at',
         'executed_by',
         'executed_at',
     ];
@@ -41,14 +39,32 @@ class ShiftSwapRequest extends Model
         'requires_manager_approval' => 'boolean',
         'metadata' => 'array',
         'swap_dates' => 'array',
-        'swap_date' => 'date',
         'swap_start_date' => 'date',
         'swap_end_date' => 'date',
         'requested_at' => 'datetime',
-        'expires_at' => 'datetime',
         'manager_approved_at' => 'datetime',
         'executed_at' => 'datetime',
     ];
+
+    // Backward compatibility: legacy code may still read/write swap_date.
+    public function getSwapDateAttribute()
+    {
+        if ($this->swap_type !== 'single_date') {
+            return null;
+        }
+
+        return $this->swap_start_date;
+    }
+
+    public function setSwapDateAttribute($value): void
+    {
+        if (!$value) {
+            return;
+        }
+
+        $this->attributes['swap_start_date'] = $value;
+        $this->attributes['swap_end_date'] = $value;
+    }
 
     public function requester(): BelongsTo
     {

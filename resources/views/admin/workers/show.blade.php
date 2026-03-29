@@ -121,11 +121,11 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-600">Jenis Kelamin</p>
-                        <p class="font-semibold text-gray-900">{{ $worker->gender->name ?? '-' }}</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->gender ?? '-' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-600">Agama</p>
-                        <p class="font-semibold text-gray-900">{{ $worker->religion->name ?? '-' }}</p>
+                        <p class="font-semibold text-gray-900">{{ $worker->religion ?? '-' }}</p>
                     </div>
                     <div class="md:col-span-2">
                         <p class="text-sm text-gray-600">Alamat</p>

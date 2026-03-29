@@ -106,7 +106,7 @@
                             @endif
                         </x-table.cell>
 
-                        <x-table.cell>{{ $attendance->location->name ?? '-' }}</x-table.cell>
+                        <x-table.cell>{{ config('attendance.location.name', '-') }}</x-table.cell>
 
                         <x-table.cell>
                             @php

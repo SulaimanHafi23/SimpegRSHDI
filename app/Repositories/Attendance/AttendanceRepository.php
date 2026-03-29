@@ -21,8 +21,7 @@ class AttendanceRepository implements AttendanceRepositoryInterface
             'worker.shift',
             'worker.workerShifts.shift',
             'worker.shiftOverrides.shift',
-            'shift',
-            'location'
+            'shift'
         ]);
 
         if (!empty($filters['worker_id'])) {
@@ -71,9 +70,6 @@ class AttendanceRepository implements AttendanceRepositoryInterface
                   ->orWhereRaw('LOWER(status) LIKE ?', ['%' . $search . '%'])
                   ->orWhereRaw('LOWER(check_in) LIKE ?', ['%' . $search . '%'])
                   ->orWhereRaw('LOWER(check_out) LIKE ?', ['%' . $search . '%'])
-                  ->orWhereHas('location', function($q) use ($search) {
-                      $q->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%']);
-                  })
                   ->orWhereHas('worker', function($q) use ($search) {
                       $q->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%'])
                         ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $search . '%'])
@@ -89,14 +85,14 @@ class AttendanceRepository implements AttendanceRepositoryInterface
 
     public function getById(string $id): ?object
     {
-        return $this->model->with(['worker', 'shift', 'location', 'photos'])
+        return $this->model->with(['worker', 'shift', 'photos'])
             ->find($id);
     }
 
     public function getByWorkerId(string $workerId, array $filters = []): Collection
     {
         $query = $this->model->where('worker_id', $workerId)
-            ->with(['shift', 'location']);
+            ->with(['shift']);
 
         if (!empty($filters['month'])) {
             $query->whereMonth('attendance_date', $filters['month']);
@@ -120,7 +116,7 @@ class AttendanceRepository implements AttendanceRepositoryInterface
     {
         return $this->model->where('worker_id', $workerId)
             ->where('attendance_date', $date)
-            ->with(['shift', 'location', 'photos'])
+            ->with(['shift', 'photos'])
             ->first();
     }
 
@@ -172,8 +168,7 @@ class AttendanceRepository implements AttendanceRepositoryInterface
             'worker.shift',
             'worker.workerShifts.shift',
             'worker.shiftOverrides.shift',
-            'shift',
-            'location'
+            'shift'
         ])->where('worker_id', $workerId)
           ->whereBetween('attendance_date', [$dateFrom, $dateTo]);
 

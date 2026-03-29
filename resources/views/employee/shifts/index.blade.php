@@ -393,37 +393,35 @@ function shiftCalendar() {
             this.modalDate = el.dataset.dateLabel || '';
 
             if (isHoliday && hasShift) {
-                // Hari libur tapi departemen standby - tetap kerja
                 this.modalTitle = '🏥 Libur Nasional - Tetap Bertugas';
                 const start = el.dataset.start || '';
                 const end = el.dataset.end || '';
                 this.modalShiftTime = start && end ? `${start} - ${end}` : '';
-                const shiftName = el.dataset.shiftName || 'Shift';
-                this.modalNote = (el.dataset.holidayName || 'Libur Nasional') + '. Departemen Anda tetap bertugas pada hari libur. Jadwal: ' + shiftName + '.';
+                this.modalNote = el.dataset.holidayName || 'Libur Nasional';
             } else if (isHoliday) {
                 this.modalTitle = '🇮🇩 Libur Nasional';
                 this.modalShiftTime = '';
-                this.modalNote = (el.dataset.holidayName || 'Libur Nasional') + '. Anda tidak perlu melakukan absensi pada hari ini.';
+                this.modalNote = el.dataset.holidayName || 'Libur Nasional';
             } else if (isOffDay) {
                 this.modalTitle = '🏖️ Libur Kerja (Off-day)';
                 this.modalShiftTime = '';
-                this.modalNote = 'Hari ini ditandai sebagai libur kerja pribadi Anda berdasarkan pengaturan jadwal.';
+                this.modalNote = 'Off-day';
             } else if (isLeave) {
                 this.modalTitle = '📝 Cuti/Izin/Sakit';
                 this.modalShiftTime = '';
-                this.modalNote = 'Status hari ini: ' + (el.dataset.leaveType || 'Cuti') + '.';
+                this.modalNote = el.dataset.leaveType || 'Cuti';
             } else if (hasShift) {
                 this.modalTitle = el.dataset.shiftName || 'Jadwal Kerja';
                 const start = el.dataset.start || '';
                 const end = el.dataset.end || '';
                 this.modalShiftTime = start && end ? `${start} - ${end}` : '';
                 this.modalNote = el.dataset.isOverride === '1'
-                    ? 'Jadwal ini merupakan override khusus untuk hari ini.'
-                    : 'Anda dijadwalkan bekerja pada hari ini.';
+                    ? 'Override'
+                    : 'Hari kerja';
             } else {
                 this.modalTitle = 'Libur';
                 this.modalShiftTime = '';
-                this.modalNote = 'Anda tidak memiliki jadwal kerja pada hari ini.';
+                this.modalNote = 'Tidak ada jadwal kerja';
             }
 
             this.showModal = true;

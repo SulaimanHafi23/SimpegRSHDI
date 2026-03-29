@@ -38,10 +38,10 @@ class EnhancedShiftSwapRequestSeeder extends Seeder
 
         for ($i = 0; $i < $totalRequests; $i++) {
             $status = $this->getRandomStatus($statuses);
-            
+
             // Pick random requester
             $requester = $workers->random();
-            
+
             // Pick target worker (different from requester, 30% null for open request)
             $targetWorker = null;
             if (rand(1, 100) > 30) {
@@ -142,7 +142,8 @@ class EnhancedShiftSwapRequestSeeder extends Seeder
             'target_worker_id' => $targetWorker?->id,
             'requester_shift_id' => $requesterShift->id,
             'target_shift_id' => $targetShift?->id,
-            'swap_date' => $swapDate,
+            'swap_start_date' => $swapDate,
+            'swap_end_date' => $swapDate,
             'reason' => $reasons[array_rand($reasons)],
             'status' => $status,
             'requires_manager_approval' => $requiresManagerApproval,
@@ -161,7 +162,7 @@ class EnhancedShiftSwapRequestSeeder extends Seeder
                 if ($targetWorker) {
                     $data['target_accepted_at'] = $data['created_at']->copy()->addDays(rand(1, 2));
                 }
-                
+
                 // Get manager/HR
                 $approver = \App\Models\User::role(['Manager', 'HR', 'Super Admin'])->inRandomOrder()->first();
                 if ($approver) {

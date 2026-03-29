@@ -88,6 +88,11 @@ class ShiftSwapService
         }
 
         $payload = $dto->toArray();
+        if (($payload['swap_type'] ?? 'single_date') === 'single_date') {
+            $singleDate = $payload['swap_start_date'] ?? $payload['swap_date'] ?? null;
+            $payload['swap_start_date'] = $singleDate;
+            $payload['swap_end_date'] = $singleDate;
+        }
         $payload['status'] = 'pending';
         $payload['requires_manager_approval'] = $requiresManager;
         $payload['requested_at'] = Carbon::now();
@@ -377,8 +382,9 @@ class ShiftSwapService
         $swapDates = [];
         switch ($dto->swap_type ?? 'single_date') {
             case 'single_date':
-                if ($dto->swap_date) {
-                    $swapDates[] = Carbon::parse($dto->swap_date)->format('Y-m-d');
+                $singleDate = $this->resolveSingleSwapDate($dto);
+                if ($singleDate) {
+                    $swapDates[] = Carbon::parse($singleDate)->format('Y-m-d');
                 }
                 break;
             case 'date_range':
@@ -1092,6 +1098,14 @@ class ShiftSwapService
             $dates = [Carbon::parse($swap->metadata['swap_date'])->toDateString()];
         }
 
+        // Legacy fallback: some records may keep single date in swap_dates[0].
+        if (empty($dates) && !empty($swap->swap_dates) && is_array($swap->swap_dates)) {
+            $firstDate = $swap->swap_dates[0] ?? null;
+            if ($firstDate) {
+                $dates = [Carbon::parse($firstDate)->toDateString()];
+            }
+        }
+
         return $dates;
     }
 
@@ -1226,8 +1240,9 @@ class ShiftSwapService
         $swapDates = [];
         switch ($dto->swap_type ?? 'single_date') {
             case 'single_date':
-                if ($dto->swap_date) {
-                    $swapDates[] = Carbon::parse($dto->swap_date)->format('Y-m-d');
+                $singleDate = $this->resolveSingleSwapDate($dto);
+                if ($singleDate) {
+                    $swapDates[] = Carbon::parse($singleDate)->format('Y-m-d');
                 }
                 break;
             case 'date_range':
@@ -1259,11 +1274,17 @@ class ShiftSwapService
             $existingAsRequester = ShiftSwapRequest::where('requester_id', $worker->id)
                 ->whereIn('status', $activeStatuses)
                 ->where(function ($q) use ($dateStr) {
-                    $q->where('swap_date', $dateStr)
-                      ->orWhere(function ($q2) use ($dateStr) {
-                          $q2->where('swap_start_date', '<=', $dateStr)
-                             ->where('swap_end_date', '>=', $dateStr);
-                      });
+                    $q->where(function ($q2) use ($dateStr) {
+                        $q2->where('swap_type', 'single_date')
+                           ->whereDate('swap_start_date', $dateStr);
+                    })->orWhere(function ($q2) use ($dateStr) {
+                        $q2->where('swap_type', 'date_range')
+                           ->whereDate('swap_start_date', '<=', $dateStr)
+                           ->whereDate('swap_end_date', '>=', $dateStr);
+                    })->orWhere(function ($q2) use ($dateStr) {
+                        $q2->where('swap_type', 'recurring')
+                           ->whereJsonContains('swap_dates', $dateStr);
+                    });
                 })
                 ->exists();
 
@@ -1275,11 +1296,17 @@ class ShiftSwapService
             $existingAsTarget = ShiftSwapRequest::where('target_worker_id', $worker->id)
                 ->whereIn('status', $activeStatuses)
                 ->where(function ($q) use ($dateStr) {
-                    $q->where('swap_date', $dateStr)
-                      ->orWhere(function ($q2) use ($dateStr) {
-                          $q2->where('swap_start_date', '<=', $dateStr)
-                             ->where('swap_end_date', '>=', $dateStr);
-                      });
+                    $q->where(function ($q2) use ($dateStr) {
+                        $q2->where('swap_type', 'single_date')
+                           ->whereDate('swap_start_date', $dateStr);
+                    })->orWhere(function ($q2) use ($dateStr) {
+                        $q2->where('swap_type', 'date_range')
+                           ->whereDate('swap_start_date', '<=', $dateStr)
+                           ->whereDate('swap_end_date', '>=', $dateStr);
+                    })->orWhere(function ($q2) use ($dateStr) {
+                        $q2->where('swap_type', 'recurring')
+                           ->whereJsonContains('swap_dates', $dateStr);
+                    });
                 })
                 ->exists();
 
@@ -1299,10 +1326,11 @@ class ShiftSwapService
 
         switch ($dto->swap_type) {
             case 'single_date':
-                if (!$dto->swap_date) {
+                $singleDate = $this->resolveSingleSwapDate($dto);
+                if (!$singleDate) {
                     throw new \Exception('Tanggal tukar shift harus diisi.');
                 }
-                $swapDateTime = Carbon::parse($dto->swap_date)->startOfDay();
+                $swapDateTime = Carbon::parse($singleDate)->startOfDay();
                 $hoursUntilSwap = $now->diffInHours($swapDateTime, false);
 
                 if ($hoursUntilSwap < $minHours) {
@@ -1360,6 +1388,11 @@ class ShiftSwapService
             default:
                 throw new \Exception('Jenis tukar shift tidak valid.');
         }
+    }
+
+    private function resolveSingleSwapDate(ShiftSwapRequestDTO $dto): ?string
+    {
+        return $dto->swap_date ?? $dto->swap_start_date ?? null;
     }
 
     /**

@@ -54,7 +54,7 @@ class PdfExportService
                         'early_leave' => ($attendance->is_early_leave && (int) $attendance->early_leave_minutes > 0)
                             ? ((int) $attendance->early_leave_minutes . ' menit')
                             : '-',
-                        'location' => $attendance->location->name ?? '-',
+                        'location' => config('attendance.location.name', '-'),
                         'notes' => $attendance->notes ?: '-',
                     ];
                 })

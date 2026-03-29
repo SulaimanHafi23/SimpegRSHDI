@@ -352,12 +352,10 @@
                             </div>
 
                             {{-- Location Info --}}
-                            @if($attendance->location)
-                                <div class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded flex items-center">
-                                    <i class="fas fa-map-marker-alt mr-1"></i>
-                                    <span class="truncate flex-1">{{ Str::limit($attendance->location->name, 18) }}</span>
-                                </div>
-                            @endif
+                            <div class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded flex items-center">
+                                <i class="fas fa-map-marker-alt mr-1"></i>
+                                <span class="truncate flex-1">{{ Str::limit(config('attendance.location.name', '-'), 18) }}</span>
+                            </div>
 
                             {{-- Notes/Remarks --}}
                             @if($attendance->notes)

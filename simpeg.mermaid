@@ -4,7 +4,7 @@ config:
 ---
 
 erDiagram
-    %% ===== MASTER =====
+    %% ===== DATA MASTER =====
     religions {
         uuid id PK
         string name
@@ -28,17 +28,6 @@ erDiagram
         boolean is_active
     }
 
-    locations {
-        uuid id PK
-        string name
-        text address
-        decimal latitude
-        decimal longitude
-        integer radius
-        boolean enforce_geofence
-        boolean is_active
-    }
-
     document_types {
         uuid id PK
         string name
@@ -57,7 +46,18 @@ erDiagram
         boolean is_national
     }
 
-    %% ===== WORKFORCE & AUTH =====
+    salary_components {
+        uuid id PK
+        string code UK
+        string name
+        enum type
+        text description
+        boolean is_taxable
+        boolean is_active
+        timestamp deleted_at
+    }
+
+    %% ===== PEGAWAI & AUTENTIKASI =====
     workers {
         uuid id PK
         string nip UK
@@ -67,8 +67,8 @@ erDiagram
         text address
         date birth_date
         string birth_place
-        uuid gender_id FK
-        uuid religion_id FK
+        enum gender
+        enum religion
         uuid department_id FK
         date hire_date
         date resign_date
@@ -89,7 +89,7 @@ erDiagram
         timestamp deleted_at
     }
 
-    %% ===== SPATIE RBAC =====
+    %% ===== HAK AKSES (SPATIE RBAC) =====
     permissions {
         bigint id PK
         string name
@@ -119,7 +119,7 @@ erDiagram
         bigint role_id FK
     }
 
-    %% ===== SCHEDULING =====
+    %% ===== PENJADWALAN =====
     shifts {
         uuid id PK
         string name
@@ -181,22 +181,11 @@ erDiagram
         uuid created_by
     }
 
-    worker_off_day_exceptions {
-        uuid id PK
-        uuid worker_id FK
-        date off_date
-        enum type
-        json recurring_pattern
-        string reason
-        uuid created_by
-    }
-
-    %% ===== ATTENDANCE =====
+    %% ===== ABSENSI =====
     attendances {
         uuid id PK
         uuid worker_id FK
         uuid shift_id FK
-        uuid location_id FK
         date attendance_date
         datetime check_in
         decimal check_in_latitude
@@ -229,7 +218,7 @@ erDiagram
         timestamp taken_at
     }
 
-    %% ===== LEAVE / OVERTIME / TRIP =====
+    %% ===== CUTI / LEMBUR / PERJALANAN DINAS =====
     leave_types {
         uuid id PK
         string name
@@ -279,6 +268,11 @@ erDiagram
         text purpose
         date start_date
         date end_date
+        string trip_duration_type
+        string half_day_session
+        string transportation
+        string accommodation
+        text notes
         decimal estimated_cost
         enum status
         uuid approved_by FK
@@ -288,7 +282,7 @@ erDiagram
         timestamp deleted_at
     }
 
-    %% ===== DOCUMENTS =====
+    %% ===== DOKUMEN =====
     department_document_type {
         uuid id PK
         uuid department_id FK
@@ -311,7 +305,7 @@ erDiagram
         timestamp deleted_at
     }
 
-    %% ===== SHIFT SWAP =====
+    %% ===== TUKAR SHIFT =====
     shift_swap_requests {
         uuid id PK
         uuid requester_id FK
@@ -319,7 +313,6 @@ erDiagram
         uuid requester_shift_id FK
         uuid target_shift_id FK
         string swap_type
-        date swap_date
         date swap_start_date
         date swap_end_date
         json swap_dates
@@ -331,7 +324,6 @@ erDiagram
         json metadata
         uuid executed_by FK
         timestamp requested_at
-        timestamp expires_at
         timestamp executed_at
         timestamp deleted_at
     }
@@ -349,62 +341,81 @@ erDiagram
         string user_agent
     }
 
-    %% ===== RELATIONSHIPS =====
-    genders ||--o{ workers : has
-    religions ||--o{ workers : has
-    departments ||--o{ workers : has
-    departments ||--o{ departments : parent
-    users ||--o{ departments : manager
+    shift_swap_overrides {
+        bigint id PK
+        timestamp created_at
+        timestamp updated_at
+    }
 
-    workers ||--|| users : account
+    %% ===== SISTEM =====
+    audit_logs {
+        uuid id PK
+        uuid user_id FK
+        string user_name
+        string action
+        string auditable_type
+        uuid auditable_id
+        string description
+        json old_values
+        json new_values
+        string ip_address
+        text user_agent
+        string url
+    }
 
-    permissions ||--o{ model_has_permissions : map
-    roles ||--o{ model_has_roles : map
-    permissions ||--o{ role_has_permissions : map
-    roles ||--o{ role_has_permissions : map
+    %% ===== RELASI =====
+    departments ||--o{ workers : memiliki
+    departments o|--o{ departments : induk
+    users o|--o{ departments : manajer
 
-    shifts ||--o{ shift_day_times : daily_time
-    workers ||--o{ worker_shifts : assigned
-    shifts ||--o{ worker_shifts : assigned
-    workers ||--o{ worker_shift_histories : history
-    shifts ||--o{ worker_shift_histories : history
-    users ||--o{ worker_shift_histories : changed_by
+    workers o|--|| users : akun
+
+    permissions ||--o{ model_has_permissions : pemetaan
+    roles ||--o{ model_has_roles : pemetaan
+    permissions ||--o{ role_has_permissions : pemetaan
+    roles ||--o{ role_has_permissions : pemetaan
+
+    shifts ||--o{ shift_day_times : jadwal_harian
+    workers ||--o{ worker_shifts : penugasan
+    shifts o|--o{ worker_shifts : penugasan
+    workers ||--o{ worker_shift_histories : riwayat
+    shifts ||--o{ worker_shift_histories : riwayat
+    users o|--o{ worker_shift_histories : pengubah
     workers ||--o{ shift_overrides : override
     shifts ||--o{ shift_overrides : override
-    users ||--o{ shift_overrides : created_by
-    shift_swap_requests ||--o{ shift_overrides : source
-    workers ||--o{ worker_off_days : off_day
-    workers ||--o{ worker_off_day_exceptions : off_day_exception
+    users ||--o{ shift_overrides : dibuat_oleh
+    shift_swap_requests o|--o{ shift_overrides : sumber
+    workers ||--o{ worker_off_days : hari_libur
 
-    workers ||--o{ attendances : records
-    shifts ||--o{ attendances : shift
-    locations ||--o{ attendances : location
-    users ||--o{ attendances : checkin_admin
-    users ||--o{ attendances : checkout_admin
-    attendances ||--o{ attendance_photos : photos
+    workers ||--o{ attendances : rekaman
+    shifts o|--o{ attendances : shift
+    users o|--o{ attendances : admin_masuk
+    users o|--o{ attendances : admin_keluar
+    attendances ||--o{ attendance_photos : foto
 
-    leave_types ||--o{ leave_requests : type
-    workers ||--o{ leave_requests : requester
-    users ||--o{ leave_requests : approver
+    leave_types ||--o{ leave_requests : jenis
+    workers ||--o{ leave_requests : pemohon
+    users o|--o{ leave_requests : penyetuju
 
-    workers ||--o{ overtime_requests : requester
-    users ||--o{ overtime_requests : approver
+    workers ||--o{ overtime_requests : pemohon
+    users o|--o{ overtime_requests : penyetuju
 
-    workers ||--o{ business_trips : requester
-    users ||--o{ business_trips : approver
+    workers ||--o{ business_trips : pemohon
+    users o|--o{ business_trips : penyetuju
 
-    departments ||--o{ department_document_type : rule
-    document_types ||--o{ department_document_type : rule
-    workers ||--o{ worker_documents : owner
-    document_types ||--o{ worker_documents : type
-    department_document_type ||--o{ worker_documents : requirement
-    users ||--o{ worker_documents : verifier
+    departments ||--o{ department_document_type : aturan
+    document_types ||--o{ department_document_type : aturan
+    workers ||--o{ worker_documents : pemilik
+    document_types ||--o{ worker_documents : jenis
+    department_document_type o|--o{ worker_documents : persyaratan
+    users o|--o{ worker_documents : verifikator
 
-    workers ||--o{ shift_swap_requests : requester
-    workers ||--o{ shift_swap_requests : target
-    worker_shifts ||--o{ shift_swap_requests : requester_shift
-    worker_shifts ||--o{ shift_swap_requests : target_shift
-    users ||--o{ shift_swap_requests : manager
-    users ||--o{ shift_swap_requests : executor
-    shift_swap_requests ||--o{ shift_swap_audit_logs : logs
-    users ||--o{ shift_swap_audit_logs : actor
+    workers ||--o{ shift_swap_requests : pemohon
+    workers o|--o{ shift_swap_requests : target
+    worker_shifts ||--o{ shift_swap_requests : shift_pemohon
+    worker_shifts o|--o{ shift_swap_requests : shift_target
+    users o|--o{ shift_swap_requests : manajer
+    users o|--o{ shift_swap_requests : eksekutor
+    shift_swap_requests ||--o{ shift_swap_audit_logs : log
+    users o|--o{ shift_swap_audit_logs : aktor
+    users o|--o{ audit_logs : aktor

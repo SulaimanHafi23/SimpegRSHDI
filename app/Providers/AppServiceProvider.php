@@ -25,21 +25,6 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            \App\Repositories\Contracts\Master\LocationRepositoryInterface::class,
-            \App\Repositories\Master\LocationRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\GenderRepositoryInterface::class,
-            \App\Repositories\Master\GenderRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\ReligionRepositoryInterface::class,
-            \App\Repositories\Master\ReligionRepository::class
-        );
-
-        $this->app->bind(
             \App\Repositories\Contracts\Master\DocumentTypeRepositoryInterface::class,
             \App\Repositories\Master\DocumentTypeRepository::class
         );

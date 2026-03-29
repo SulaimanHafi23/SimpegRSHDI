@@ -61,7 +61,7 @@
                 <td class="wrap-2"><strong>{{ $item->worker->name ?? '-' }}</strong></td>
                 <td class="text-center nowrap">{{ $item->check_in?->format('H:i') ?? '-' }}</td>
                 <td class="text-center nowrap">{{ $item->check_out?->format('H:i') ?? '-' }}</td>
-                <td class="wrap-2">{{ $item->location->name ?? '-' }}</td>
+                <td class="wrap-2">{{ config('attendance.location.name', '-') }}</td>
                 <td>
                     @php
                         $statusClass = match($item->status) {

@@ -164,12 +164,10 @@
 
                 <x-form.select
                     name="location_id"
-                    label="Lokasi"
-                    required
-                    :error="$errors->first('location_id')">
-                    <option value="">Pilih Lokasi</option>
+                    label="Lokasi Absensi (Otomatis)"
+                    disabled>
                     @php
-                        $singleLocation = $locations->count() === 1 ? $locations->first() : null;
+                        $singleLocation = $locations->first();
                         $defaultLocationId = old('location_id', $singleLocation?->id);
                     @endphp
                     @foreach($locations as $location)

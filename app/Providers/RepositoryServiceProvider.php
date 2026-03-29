@@ -25,7 +25,7 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Contracts\Attendance\AttendanceRepositoryInterface::class,
             \App\Repositories\Attendance\AttendanceRepository::class
         );
-        
+
         $this->app->bind(
             \App\Repositories\Contracts\Attendance\AttendancePhotoRepositoryInterface::class,
             \App\Repositories\Attendance\AttendancePhotoRepository::class
@@ -72,28 +72,10 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Permission\PermissionRepository::class
         );
 
-        // Master - Religion
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\ReligionRepositoryInterface::class,
-            \App\Repositories\Master\ReligionRepository::class
-        );
-
-        // Master - Gender
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\GenderRepositoryInterface::class,
-            \App\Repositories\Master\GenderRepository::class
-        );
-
         // Master - Department
         $this->app->bind(
             \App\Repositories\Contracts\Master\DepartmentRepositoryInterface::class,
             \App\Repositories\Master\DepartmentRepository::class
-        );
-
-        // Master - Location
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\LocationRepositoryInterface::class,
-            \App\Repositories\Master\LocationRepository::class
         );
 
         // Master - Document Type

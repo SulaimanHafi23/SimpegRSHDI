@@ -435,8 +435,8 @@ phpinfo() di browser
                                 @endif
                             </div>
                         </div>
-                        @if($worker->today_attendance && $worker->today_attendance->location)
-                            <p class="text-xs text-gray-500 mt-2"><i class="fas fa-map-marker-alt mr-1"></i>{{ $worker->today_attendance->location->name }}</p>
+                        @if($worker->today_attendance)
+                            <p class="text-xs text-gray-500 mt-2"><i class="fas fa-map-marker-alt mr-1"></i>{{ config('attendance.location.name', '-') }}</p>
                         @endif
                     @endif
                 </div>
@@ -688,12 +688,10 @@ phpinfo() di browser
                                             </div>
                                         @endif
 
-                                        @if($worker->today_attendance->location)
-                                            <div class="text-xs text-gray-500">
-                                                <i class="fas fa-map-marker-alt mr-1"></i>
-                                                {{ $worker->today_attendance->location->name }}
-                                            </div>
-                                        @endif
+                                        <div class="text-xs text-gray-500">
+                                            <i class="fas fa-map-marker-alt mr-1"></i>
+                                            {{ config('attendance.location.name', '-') }}
+                                        </div>
                                     @elseif($worker->attendance_status == 'not_checked_in')
                                         <div class="text-xs text-gray-500 mt-1">
                                             <i class="fas fa-info-circle mr-1"></i>

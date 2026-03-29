@@ -17,25 +17,26 @@ class ShiftSwapRequestDTO
         public readonly ?array $swap_dates = null,
         public readonly ?string $reason = null,
         public readonly ?array $metadata = null,
-        public readonly ?string $expires_at = null,
     ) {}
 
     public static function fromRequest(array $data): self
     {
+        $swapType = $data['swap_type'] ?? 'single_date';
+        $singleDate = $data['swap_start_date'] ?? $data['swap_date'] ?? null;
+
         return new self(
             $data['requester_id'],
             $data['requester_shift_id'],
-            $data['swap_type'] ?? 'single_date',
+            $swapType,
             $data['id'] ?? null,
             $data['target_worker_id'] ?? null,
             $data['target_shift_id'] ?? null,
-            $data['swap_date'] ?? null,
-            $data['swap_start_date'] ?? null,
-            $data['swap_end_date'] ?? null,
+            $singleDate,
+            $swapType === 'single_date' ? $singleDate : ($data['swap_start_date'] ?? null),
+            $swapType === 'single_date' ? $singleDate : ($data['swap_end_date'] ?? null),
             $data['swap_dates'] ?? null,
             $data['reason'] ?? null,
             $data['metadata'] ?? null,
-            $data['expires_at'] ?? null,
         );
     }
 
@@ -54,7 +55,6 @@ class ShiftSwapRequestDTO
             'swap_dates' => $this->swap_dates,
             'reason' => $this->reason,
             'metadata' => $this->metadata,
-            'expires_at' => $this->expires_at,
         ];
     }
 }

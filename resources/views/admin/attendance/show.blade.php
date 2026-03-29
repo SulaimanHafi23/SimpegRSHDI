@@ -15,7 +15,7 @@
             </div>
         <div class="flex space-x-2 w-full sm:w-auto">
             @if(!$attendance->check_out)
-                <button onclick="document.getElementById('checkout-modal').classList.remove('hidden')" 
+                <button onclick="document.getElementById('checkout-modal').classList.remove('hidden')"
                         class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition duration-200 shadow-md">
                     <i class="fas fa-sign-out-alt mr-2"></i>
                     Check Out
@@ -26,7 +26,7 @@
                 Edit
             </a>
             @can('delete-attendance')
-                <button onclick="if(confirm('Yakin ingin menghapus data absensi ini?')) document.getElementById('delete-form').submit()" 
+                <button onclick="if(confirm('Yakin ingin menghapus data absensi ini?')) document.getElementById('delete-form').submit()"
                         class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition duration-200 shadow-md">
                     <i class="fas fa-trash mr-2"></i>
                     Hapus
@@ -42,8 +42,8 @@
             <div class="bg-white rounded-lg shadow-md p-6">
                 <div class="flex flex-col items-center">
                     @if($attendance->worker->photo_url && Storage::disk('public')->exists($attendance->worker->photo_url))
-                        <img src="{{ asset('storage/' . $attendance->worker->photo_url) }}" 
-                             alt="{{ $attendance->worker->name }}" 
+                        <img src="{{ asset('storage/' . $attendance->worker->photo_url) }}"
+                             alt="{{ $attendance->worker->name }}"
                              class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-blue-500 object-cover mb-4">
                     @else
                         <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-blue-500 overflow-hidden bg-gray-100 flex items-center justify-center mb-4">
@@ -52,7 +52,7 @@
                     @endif
                     <h2 class="text-lg sm:text-xl font-bold text-gray-900 text-center mb-2">{{ $attendance->worker->name }}</h2>
                     <p class="text-sm text-gray-600">{{ $attendance->worker->nip }}</p>
-                    
+
                     @php
                         $statusConfig = [
                             'present' => ['bg' => 'bg-green-100', 'text' => 'text-green-800', 'label' => 'Hadir'],
@@ -82,7 +82,7 @@
                     </div>
                     <div class="py-2 border-t">
                         <p class="text-sm text-gray-600">Lokasi</p>
-                        <p class="font-semibold text-gray-900">{{ $attendance->location->name ?? '-' }}</p>
+                        <p class="font-semibold text-gray-900">{{ config('attendance.location.name', '-') }}</p>
                     </div>
                 </div>
             </div>
@@ -156,7 +156,7 @@
                         </span>
                     @endif
                 </h3>
-                
+
                 {{-- Admin Info if by admin --}}
                 @if($attendance->check_in_by_admin && $attendance->checkInAdmin)
                     <div class="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
@@ -191,7 +191,7 @@
                         <p class="font-semibold text-gray-900">{{ $attendance->distance_check_in ?? 0 }} meter</p>
                     </div>
                 </div>
-                
+
                 {{-- Check In Photos --}}
                 @if($attendance->checkInPhoto->count() > 0)
                     <div class="mt-4">
@@ -200,8 +200,8 @@
                             @foreach($attendance->checkInPhoto as $photo)
                                 @if($photo->photo_path && Storage::disk('public')->exists($photo->photo_path))
                                     <div class="relative">
-                                        <img src="{{ asset('storage/' . $photo->photo_path) }}" 
-                                             alt="Check In Photo" 
+                                        <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                             alt="Check In Photo"
                                              class="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-75"
                                              onclick="window.open('{{ asset('storage/' . $photo->photo_path) }}', '_blank')">
                                         @if($attendance->check_in_by_admin)
@@ -232,7 +232,7 @@
                             </span>
                         @endif
                     </h3>
-                    
+
                     {{-- Admin Info if by admin --}}
                     @if($attendance->check_out_by_admin && $attendance->checkOutAdmin)
                         <div class="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
@@ -267,7 +267,7 @@
                             <p class="font-semibold text-gray-900">{{ $attendance->distance_check_out ?? 0 }} meter</p>
                         </div>
                     </div>
-                    
+
                     {{-- Check Out Photos --}}
                     @if($attendance->checkOutPhoto->count() > 0)
                         <div class="mt-4">
@@ -276,8 +276,8 @@
                                 @foreach($attendance->checkOutPhoto as $photo)
                                     @if($photo->photo_path && Storage::disk('public')->exists($photo->photo_path))
                                         <div class="relative">
-                                            <img src="{{ asset('storage/' . $photo->photo_path) }}" 
-                                                 alt="Check Out Photo" 
+                                            <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                                 alt="Check Out Photo"
                                                  class="w-full h-32 object-cover rounded-lg border cursor-pointer hover:opacity-75"
                                                  onclick="window.open('{{ asset('storage/' . $photo->photo_path) }}', '_blank')">
                                             @if($attendance->check_out_by_admin)
@@ -359,15 +359,14 @@
         <form action="{{ route('admin.attendance.check-out', $attendance->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
             @method('PUT')
-            
-            <x-form.select 
-                name="location_id" 
+
+            <x-form.select
+                name="location_id"
                 label="Lokasi"
-                required>
-                <option value="">Pilih Lokasi</option>
+                disabled>
                 @php
                     $singleLocation = $locations->count() === 1 ? $locations->first() : null;
-                    $defaultLocationId = old('location_id', $singleLocation?->id ?? $attendance->location_id);
+                    $defaultLocationId = old('location_id', $singleLocation?->id);
                 @endphp
                 @foreach($locations as $location)
                     <option value="{{ $location->id }}" {{ $defaultLocationId == $location->id ? 'selected' : '' }}>
@@ -377,17 +376,17 @@
             </x-form.select>
 
             <div class="grid grid-cols-2 gap-4" id="checkout-coordinates">
-                <x-form.input 
-                    name="latitude" 
-                    label="Latitude" 
+                <x-form.input
+                    name="latitude"
+                    label="Latitude"
                     type="number"
                     step="any"
                     value="0"
                     required />
 
-                <x-form.input 
-                    name="longitude" 
-                    label="Longitude" 
+                <x-form.input
+                    name="longitude"
+                    label="Longitude"
                     type="number"
                     step="any"
                     value="0"
@@ -401,13 +400,13 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Foto (Opsional)</label>
-                <input type="file" 
-                       name="photo" 
+                <input type="file"
+                       name="photo"
                        accept="image/jpeg,image/jpg,image/png"
                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                        id="checkout-photo-input">
                 <p class="text-xs text-gray-500 mt-1">Format: JPG, JPEG, PNG (Max: 2MB)</p>
-                
+
                 <div id="checkout-photo-preview" class="hidden mt-2">
                     <img src="" alt="Preview" class="max-w-full h-32 rounded-md object-cover">
                 </div>
@@ -425,15 +424,15 @@
             @endif
 
             <div class="flex justify-end gap-3 mt-6">
-                <x-button 
+                <x-button
                     variant="secondary"
                     type="button"
                     onclick="document.getElementById('checkout-modal').classList.add('hidden')">
                     Batal
                 </x-button>
-                <x-button 
+                <x-button
                     id="submit-checkout-btn"
-                    variant="danger" 
+                    variant="danger"
                     icon="fas fa-sign-out-alt"
                     type="submit">
                     Check Out
@@ -450,13 +449,13 @@
     function compressImage(file, maxSizeMB = 0.5) {
         return new Promise((resolve, reject) => {
             const maxSize = maxSizeMB * 1024 * 1024; // Convert to bytes
-            
+
             // If file is already small enough, return as is
             if (file.size <= maxSize) {
                 resolve(file);
                 return;
             }
-            
+
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (event) => {
@@ -466,7 +465,7 @@
                     const canvas = document.createElement('canvas');
                     let width = img.width;
                     let height = img.height;
-                    
+
                     // Calculate new dimensions (max 1200px)
                     const maxDimension = 1200;
                     if (width > height && width > maxDimension) {
@@ -476,13 +475,13 @@
                         width = (width * maxDimension) / height;
                         height = maxDimension;
                     }
-                    
+
                     canvas.width = width;
                     canvas.height = height;
-                    
+
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
-                    
+
                     // Start with quality 0.8 and reduce if needed
                     let quality = 0.8;
                     const tryCompress = () => {
@@ -559,7 +558,7 @@
                 longitude
             );
 
-            const distanceFormatted = distance >= 1000 
+            const distanceFormatted = distance >= 1000
                 ? (distance / 1000).toFixed(2) + ' km'
                 : Math.round(distance) + ' m';
             const radiusFormatted = location.radius >= 1000
@@ -573,7 +572,7 @@
                         <div class="bg-red-50 border border-red-200 rounded-md p-3 mt-3">
                             <p class="text-sm text-red-800">
                                 <i class="fas fa-exclamation-circle mr-1"></i>
-                                <strong>Lokasi Tidak Valid!</strong> Anda berada ${distanceFormatted} dari lokasi <strong>${location.name}</strong>. 
+                                <strong>Lokasi Tidak Valid!</strong> Anda berada ${distanceFormatted} dari lokasi <strong>${location.name}</strong>.
                                 Radius maksimal: ${radiusFormatted}. Check out tidak dapat dilakukan.
                             </p>
                         </div>
@@ -587,7 +586,7 @@
                         <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3 mt-3">
                             <p class="text-sm text-yellow-800">
                                 <i class="fas fa-exclamation-triangle mr-1"></i>
-                                <strong>Peringatan:</strong> Anda berada ${distanceFormatted} dari lokasi <strong>${location.name}</strong>. 
+                                <strong>Peringatan:</strong> Anda berada ${distanceFormatted} dari lokasi <strong>${location.name}</strong>.
                                 Radius maksimal: ${radiusFormatted}. Check out dapat dilakukan tetapi akan dicatat sebagai di luar radius.
                             </p>
                         </div>
@@ -602,7 +601,7 @@
                     <div class="bg-green-50 border border-green-200 rounded-md p-3 mt-3">
                         <p class="text-sm text-green-800">
                             <i class="fas fa-check-circle mr-1"></i>
-                            Lokasi Valid! Anda berada ${distanceFormatted} dari lokasi <strong>${location.name}</strong> 
+                            Lokasi Valid! Anda berada ${distanceFormatted} dari lokasi <strong>${location.name}</strong>
                             (dalam radius ${radiusFormatted}).
                         </p>
                     </div>
@@ -642,7 +641,7 @@
         // Handle photo compression in checkout modal
         const checkoutPhotoInput = document.getElementById('checkout-photo-input');
         const checkoutPhotoPreview = document.getElementById('checkout-photo-preview');
-        
+
         if (checkoutPhotoInput) {
             checkoutPhotoInput.addEventListener('change', async function(e) {
                 const file = e.target.files[0];
@@ -652,11 +651,11 @@
                     }
                     return;
                 }
-                
+
                 const modal = document.getElementById('checkout-modal');
                 const submitBtn = modal.querySelector('button[type="submit"]');
                 const originalBtnHTML = submitBtn ? submitBtn.innerHTML : '';
-                
+
                 try {
                     // Validate file type
                     if (!file.type.match(/^image\/(jpeg|jpg|png)$/i)) {
@@ -664,35 +663,35 @@
                         checkoutPhotoInput.value = '';
                         return;
                     }
-                    
+
                     // Check if file is too large (more than 2MB)
                     if (file.size > 2 * 1024 * 1024) {
                         if (submitBtn) {
                             submitBtn.disabled = true;
                             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengompres foto...';
                         }
-                        
+
                         const compressedFile = await compressImage(file, 0.5);
-                        
+
                         // Validate compressed file
                         if (!compressedFile || compressedFile.size === 0) {
                             throw new Error('File terkompresi tidak valid');
                         }
-                        
+
                         // Create new FileList with compressed file
                         const dataTransfer = new DataTransfer();
                         dataTransfer.items.add(compressedFile);
                         checkoutPhotoInput.files = dataTransfer.files;
-                        
+
                         console.log('Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
                         console.log('Compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
-                        
+
                         if (submitBtn) {
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalBtnHTML;
                         }
                     }
-                    
+
                     // Show preview
                     const reader = new FileReader();
                     reader.onload = function(e) {
@@ -705,7 +704,7 @@
                         }
                     };
                     reader.readAsDataURL(checkoutPhotoInput.files[0]);
-                    
+
                 } catch (error) {
                     console.error('Error compressing image:', error);
                     alert('Gagal mengompres foto. Silakan coba lagi dengan foto yang lebih kecil.');
@@ -720,32 +719,32 @@
                 }
             });
         }
-        
+
         const getLocationBtn = document.getElementById('get-checkout-location');
-        
+
         if (getLocationBtn && navigator.geolocation) {
             getLocationBtn.addEventListener('click', function() {
                 const latInput = document.querySelector('#checkout-coordinates input[name="latitude"]');
                 const lngInput = document.querySelector('#checkout-coordinates input[name="longitude"]');
-                
+
                 // Disable button and show loading
                 getLocationBtn.disabled = true;
                 getLocationBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="ml-2">Mencari lokasi...</span>';
-                
+
                 navigator.geolocation.getCurrentPosition(
                     function(position) {
                         // Success - set coordinates
                         latInput.value = position.coords.latitude;
                         lngInput.value = position.coords.longitude;
-                        
+
                         // Validate location after getting GPS coordinates
                         validateCheckoutLocation();
-                        
+
                         // Update button to success state
                         getLocationBtn.disabled = false;
                         getLocationBtn.className = 'w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors flex items-center justify-center space-x-2 mb-4';
                         getLocationBtn.innerHTML = '<i class="fas fa-check"></i><span class="ml-2">Lokasi Berhasil Didapat!</span>';
-                        
+
                         // Reset button after 2 seconds
                         setTimeout(() => {
                             getLocationBtn.className = 'w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2 mb-4';
@@ -766,9 +765,9 @@
                                 errorMessage = 'Permintaan lokasi timeout.';
                                 break;
                         }
-                        
+
                         alert(errorMessage);
-                        
+
                         // Reset button
                         getLocationBtn.disabled = false;
                         getLocationBtn.className = 'w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors flex items-center justify-center space-x-2 mb-4';

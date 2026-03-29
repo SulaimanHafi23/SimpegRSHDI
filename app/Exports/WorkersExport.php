@@ -21,7 +21,7 @@ class WorkersExport implements FromCollection, WithHeadings, WithMapping, WithSt
 
     public function collection()
     {
-        $query = Worker::with(['department', 'gender', 'religion']);
+        $query = Worker::with(['department']);
 
         // Apply filters
         if (!empty($this->filters['status'])) {
@@ -74,8 +74,8 @@ class WorkersExport implements FromCollection, WithHeadings, WithMapping, WithSt
             $worker->name,
             $worker->email,
             $worker->phone_number,
-            $worker->gender->name ?? '-',
-            $worker->religion->name ?? '-',
+            $worker->gender ?? '-',
+            $worker->religion ?? '-',
             $worker->birth_date ? $worker->birth_date->format('d/m/Y') : '-',
             $worker->address ?? '-',
             $worker->department->name ?? '-',

@@ -8,7 +8,6 @@ class AttendanceDTO
         public readonly ?string $id,
         public readonly string $worker_id,
         public readonly ?string $shift_id,
-        public readonly ?string $location_id,
         public readonly string $attendance_date,
         public readonly ?string $check_in,
         public readonly ?string $check_out,
@@ -38,7 +37,6 @@ class AttendanceDTO
             id: $data['id'] ?? null,
             worker_id: $data['worker_id'],
             shift_id: $data['shift_id'] ?? null,
-            location_id: $data['location_id'] ?? null,
             attendance_date: $data['attendance_date'],
             check_in: $data['check_in'] ?? null,
             check_out: $data['check_out'] ?? null,
@@ -73,7 +71,6 @@ class AttendanceDTO
         return [
             'worker_id' => $this->worker_id,
             'shift_id' => $this->shift_id,
-            'location_id' => $this->location_id,
             'attendance_date' => $this->attendance_date,
             'check_in' => $this->check_in,
             'check_out' => $this->check_out,

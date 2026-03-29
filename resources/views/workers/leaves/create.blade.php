@@ -70,14 +70,11 @@
                         Total Hari Cuti
                     </label>
                     <div class="flex items-center">
-                        <input type="number" name="total_days" id="total_days"
-                               value="{{ old('total_days', 0) }}" readonly
+                        <input type="number" id="total_days"
+                               value="0" readonly
                                class="w-32 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50">
                         <span class="ml-3 text-sm text-gray-600">hari</span>
                     </div>
-                    @error('total_days')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 <!-- Reason -->

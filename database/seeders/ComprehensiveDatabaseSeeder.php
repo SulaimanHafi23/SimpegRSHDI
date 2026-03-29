@@ -28,10 +28,7 @@ class ComprehensiveDatabaseSeeder extends Seeder
         // 1. Master Data (Foundation)
         $this->command->info('1️⃣  Seeding Master Data...');
         $this->call([
-            ReligionSeeder::class,
-            GenderSeeder::class,
             DepartmentSeeder::class,
-            LocationSeeder::class,
             ShiftSeeder::class,
             ShiftDayTimeSeeder::class,
             LeaveTypeSeeder::class,
@@ -176,8 +173,6 @@ class ComprehensiveDatabaseSeeder extends Seeder
         $this->command->table(
             ['Table', 'Count'],
             [
-                ['Religions', DB::table('religions')->count()],
-                ['Genders', DB::table('genders')->count()],
                 ['Departments', DB::table('departments')->count()],
                 ['Locations', DB::table('locations')->count()],
                 ['Shifts', DB::table('shifts')->count()],

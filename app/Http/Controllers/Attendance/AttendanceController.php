@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Traits\DepartmentFilterable;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Worker\WorkerService;
-use App\Services\Master\LocationService;
 use App\Http\Requests\Attendance\AttendanceRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,8 +18,7 @@ class AttendanceController extends Controller
     use DepartmentFilterable;
     public function __construct(
         protected AttendanceService $attendanceService,
-        protected WorkerService $workerService,
-        protected LocationService $locationService
+        protected WorkerService $workerService
     ) {
         $this->middleware(['auth']);
         $this->middleware('permission:attendance.manage');
@@ -52,8 +50,6 @@ class AttendanceController extends Controller
             $workers = $this->workerService->getAllActive();
             $allWorkers = $this->workerService->getAllActive();
         }
-
-        $locations = $this->locationService->getAllActive();
 
         // Load relationships yang diperlukan
         $allWorkers->load([
@@ -264,25 +260,17 @@ class AttendanceController extends Controller
         ];
 
         // Gunakan historyFilters untuk filter form (bukan yang sudah dimodifikasi)
-        return view('admin.attendance.index', compact('attendances', 'workers', 'historyFilters', 'workersWithAttendance', 'locations', 'summary', 'historySummary', 'workerStats', 'statsFilters'));
+        return view('admin.attendance.index', compact('attendances', 'workers', 'historyFilters', 'workersWithAttendance', 'summary', 'historySummary', 'workerStats', 'statsFilters'));
     }
 
     public function create()
     {
         $workers = $this->workerService->getAllActive();
-        $locations = $this->locationService->getAllActive();
-
-        // Format locations for JavaScript validation
-        $locationsData = $locations->mapWithKeys(function($loc) {
-            return [$loc->id => [
-                'id' => $loc->id,
-                'name' => $loc->name,
-                'latitude' => (float)$loc->latitude,
-                'longitude' => (float)$loc->longitude,
-                'radius' => (int)$loc->radius,
-                'enforce_geofence' => (bool)$loc->enforce_geofence
-            ]];
-        });
+        $configuredLocation = $this->getConfiguredLocation();
+        $locations = collect([(object) $configuredLocation]);
+        $locationsData = [
+            $configuredLocation['id'] => $configuredLocation,
+        ];
 
         return view('admin.attendance.create', compact('workers', 'locations', 'locationsData'));
     }
@@ -315,19 +303,11 @@ class AttendanceController extends Controller
                     ->with('error', 'Pegawai ini sudah melakukan check-in hari ini');
             }
 
-            $locations = $this->locationService->getAllActive();
-
-            // Format locations for JavaScript validation
-            $locationsData = $locations->mapWithKeys(function($loc) {
-                return [$loc->id => [
-                    'id' => $loc->id,
-                    'name' => $loc->name,
-                    'latitude' => (float)$loc->latitude,
-                    'longitude' => (float)$loc->longitude,
-                    'radius' => (int)$loc->radius,
-                    'enforce_geofence' => (bool)$loc->enforce_geofence
-                ]];
-            });
+            $configuredLocation = $this->getConfiguredLocation();
+            $locations = collect([(object) $configuredLocation]);
+            $locationsData = [
+                $configuredLocation['id'] => $configuredLocation,
+            ];
 
             // Shift efektif hari ini (termasuk override/tukar shift jika ada)
             $shiftInfo = $worker->resolveShiftForDate($today);
@@ -349,15 +329,13 @@ class AttendanceController extends Controller
     {
         $validated = $request->validate([
             'worker_id' => 'required|uuid|exists:workers,id',
-            'location_id' => 'required|uuid|exists:locations,id',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
-            // Use selected location coordinates to avoid manual lat/lng input errors.
-            $location = $this->locationService->findById($validated['location_id']);
-            $validated['latitude'] = (float) $location->latitude;
-            $validated['longitude'] = (float) $location->longitude;
+            $configuredLocation = $this->getConfiguredLocation();
+            $validated['latitude'] = (float) $configuredLocation['latitude'];
+            $validated['longitude'] = (float) $configuredLocation['longitude'];
 
             // Add admin flag since this is from admin controller
             $validated['by_admin'] = true;
@@ -392,19 +370,11 @@ class AttendanceController extends Controller
                     ->with('error', 'Pegawai ini sudah melakukan check-out');
             }
 
-            $locations = $this->locationService->getAllActive();
-
-            // Format locations for JavaScript validation
-            $locationsData = $locations->mapWithKeys(function($loc) {
-                return [$loc->id => [
-                    'id' => $loc->id,
-                    'name' => $loc->name,
-                    'latitude' => (float)$loc->latitude,
-                    'longitude' => (float)$loc->longitude,
-                    'radius' => (int)$loc->radius,
-                    'enforce_geofence' => (bool)$loc->enforce_geofence
-                ]];
-            });
+            $configuredLocation = $this->getConfiguredLocation();
+            $locations = collect([(object) $configuredLocation]);
+            $locationsData = [
+                $configuredLocation['id'] => $configuredLocation,
+            ];
 
             $attendanceDate = $attendance->attendance_date?->format('Y-m-d') ?? now()->format('Y-m-d');
             $shiftInfo = $attendance->worker
@@ -427,16 +397,14 @@ class AttendanceController extends Controller
     public function checkOut(Request $request, string $id)
     {
         $validated = $request->validate([
-            'location_id' => 'required|uuid|exists:locations,id',
             'admin_checkout_note' => 'nullable|string|max:500',
             'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ]);
 
         try {
-            // Use selected location coordinates to prevent manual lat/lng entry errors.
-            $location = $this->locationService->findById($validated['location_id']);
-            $validated['latitude'] = (float) $location->latitude;
-            $validated['longitude'] = (float) $location->longitude;
+            $configuredLocation = $this->getConfiguredLocation();
+            $validated['latitude'] = (float) $configuredLocation['latitude'];
+            $validated['longitude'] = (float) $configuredLocation['longitude'];
 
             // Add admin flag since this is from admin controller
             $validated['by_admin'] = true;
@@ -492,19 +460,11 @@ class AttendanceController extends Controller
                 ->with('error', 'Data absensi tidak ditemukan');
         }
 
-        $locations = $this->locationService->getAllActive();
-
-        // Format locations for JavaScript validation
-        $locationsData = $locations->mapWithKeys(function($loc) {
-            return [$loc->id => [
-                'id' => $loc->id,
-                'name' => $loc->name,
-                'latitude' => (float)$loc->latitude,
-                'longitude' => (float)$loc->longitude,
-                'radius' => (int)$loc->radius,
-                'enforce_geofence' => (bool)$loc->enforce_geofence
-            ]];
-        });
+        $configuredLocation = $this->getConfiguredLocation();
+        $locations = collect([(object) $configuredLocation]);
+        $locationsData = [
+            $configuredLocation['id'] => $configuredLocation,
+        ];
 
         return view('admin.attendance.show', compact('attendance', 'locations', 'locationsData'));
     }
@@ -513,9 +473,21 @@ class AttendanceController extends Controller
     {
         $attendance = $this->attendanceService->getById($id);
         $workers = $this->workerService->getAllActive();
-        $locations = $this->locationService->getAllActive();
+        $locations = collect([(object) $this->getConfiguredLocation()]);
 
         return view('admin.attendance.edit', compact('attendance', 'workers', 'locations'));
+    }
+
+    private function getConfiguredLocation(): array
+    {
+        return [
+            'id' => 'env-location',
+            'name' => (string) config('attendance.location.name', 'Lokasi Utama'),
+            'latitude' => (float) config('attendance.location.latitude', 0),
+            'longitude' => (float) config('attendance.location.longitude', 0),
+            'radius' => (int) config('attendance.location.radius', 100),
+            'enforce_geofence' => (bool) config('attendance.location.enforce_geofence', true),
+        ];
     }
 
     public function update(AttendanceRequest $request, string $id)
@@ -1384,7 +1356,7 @@ class AttendanceController extends Controller
             }
 
             // Load relationships
-            $attendance->load(['worker', 'location']);
+            $attendance->load(['worker']);
 
             return response()->json([
                 'id' => $attendance->id,
@@ -1395,7 +1367,7 @@ class AttendanceController extends Controller
                 'late_minutes' => $attendance->late_minutes ?? 0,
                 'is_early_leave' => $attendance->is_early_leave ?? false,
                 'early_leave_minutes' => $attendance->early_leave_minutes ?? 0,
-                'location' => $attendance->location ? $attendance->location->name : null,
+                'location' => config('attendance.location.name', null),
                 'notes' => $attendance->notes,
                 'worker' => [
                     'name' => $attendance->worker->name,

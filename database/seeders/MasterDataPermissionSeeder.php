@@ -18,10 +18,7 @@ class MasterDataPermissionSeeder extends Seeder
 
         // Define master data modules
         $modules = [
-            'religion' => 'Agama',
-            'gender' => 'Jenis Kelamin',
             'department' => 'Departemen',
-            'location' => 'Lokasi',
             'shift' => 'Shift',
             'leave-type' => 'Tipe Cuti',
             'document-type' => 'Tipe Dokumen',
@@ -36,14 +33,14 @@ class MasterDataPermissionSeeder extends Seeder
         foreach ($modules as $module => $label) {
             foreach ($actions as $action) {
                 $permissionName = "{$module}.{$action}";
-                
+
                 $permission = Permission::firstOrCreate(
                     ['name' => $permissionName],
                     ['guard_name' => 'web']
                 );
-                
+
                 $permissions[] = $permission;
-                
+
                 $this->command->info("Permission created: {$permissionName}");
             }
         }
@@ -58,17 +55,13 @@ class MasterDataPermissionSeeder extends Seeder
         // Assign view permissions to HR
         $hr = Role::where('name', 'HR')->first();
         if ($hr) {
-            $viewPermissions = Permission::where('name', 'like', '%.view')->get();
             $editPermissions = Permission::whereIn('name', [
-                'religion.view', 'religion.create', 'religion.edit',
-                'gender.view', 'gender.create', 'gender.edit',
                 'department.view', 'department.create', 'department.edit',
-                'location.view', 'location.create', 'location.edit',
                 'shift.view', 'shift.create', 'shift.edit',
                 'leave-type.view', 'leave-type.create', 'leave-type.edit',
                 'document-type.view', 'document-type.create', 'document-type.edit',
             ])->get();
-            
+
             $hr->givePermissionTo($editPermissions);
             $this->command->info("✓ Master data permissions assigned to HR role");
         }

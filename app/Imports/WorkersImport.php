@@ -5,15 +5,12 @@ namespace App\Imports;
 use App\Models\Worker;
 use App\Models\User;
 use App\Models\Department;
-use App\Models\Gender;
-use App\Models\Religion;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmptyRows
 {
@@ -39,8 +36,8 @@ class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
 
             // Find related models
             $department = !empty($row['departemen']) ? Department::where('name', 'LIKE', '%' . $row['departemen'] . '%')->first() : null;
-            $gender = !empty($row['jenis_kelamin']) ? Gender::where('name', 'LIKE', '%' . $row['jenis_kelamin'] . '%')->first() : null;
-            $religion = !empty($row['agama']) ? Religion::where('name', 'LIKE', '%' . $row['agama'] . '%')->first() : null;
+            $gender = $this->normalizeGender($row['jenis_kelamin'] ?? null);
+            $religion = $this->normalizeReligion($row['agama'] ?? null);
 
             return DB::transaction(function () use ($row, $department, $gender, $religion) {
                 // Create worker first
@@ -52,8 +49,8 @@ class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
                     'birth_date' => $this->parseDate($row['tanggal_lahir'] ?? null),
                     'address' => $row['alamat'] ?? null,
                     'department_id' => $department?->id,
-                    'gender_id' => $gender?->id,
-                    'religion_id' => $religion?->id,
+                    'gender' => $gender,
+                    'religion' => $religion,
                     'employment_status' => $this->parseEmploymentStatus($row['status_kepegawaian'] ?? 'Kontrak'),
                     'status' => 'active',
                     'hire_date' => $this->parseDate($row['tanggal_bergabung'] ?? now()),
@@ -116,6 +113,34 @@ class WorkersImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmp
             str_contains($status, 'percobaan') => 'probation',
             str_contains($status, 'magang') => 'intern',
             default => 'contract'
+        };
+    }
+
+    private function normalizeGender($value): string
+    {
+        $gender = strtolower(trim((string) $value));
+        if (str_contains($gender, 'perempuan') || str_contains($gender, 'wanita')) {
+            return 'Perempuan';
+        }
+
+        return 'Laki-laki';
+    }
+
+    private function normalizeReligion($value): string
+    {
+        $religion = strtolower(trim((string) $value));
+        if ($religion === '') {
+            return 'Islam';
+        }
+
+        return match (true) {
+            str_contains($religion, 'kristen') && str_contains($religion, 'katolik') => 'Katolik',
+            str_contains($religion, 'katolik') => 'Katolik',
+            str_contains($religion, 'kristen') => 'Kristen',
+            str_contains($religion, 'hindu') => 'Hindu',
+            str_contains($religion, 'buddha') => 'Buddha',
+            str_contains($religion, 'konghucu') => 'Konghucu',
+            default => 'Islam',
         };
     }
 

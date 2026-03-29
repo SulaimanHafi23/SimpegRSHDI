@@ -29,11 +29,9 @@ class BusinessTrip extends Model
         'approved_by',
         'approved_at',
         'rejection_reason',
-        'itinerary',
     ];
 
     protected $casts = [
-        'itinerary' => 'array',
         'start_date' => 'date',
         'end_date' => 'date',
         'estimated_cost' => 'decimal:2',

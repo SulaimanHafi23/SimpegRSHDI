@@ -318,13 +318,11 @@
                     <div class="text-sm text-purple-700 mb-2 font-medium">Lokasi Absen</div>
                     <div class="text-3xl mb-2">📍</div>
                     <div class="text-lg font-bold text-purple-800">
-                        {{ $attendance->location->name ?? 'Tidak diketahui' }}
+                        {{ config('attendance.location.name', 'Tidak diketahui') }}
                     </div>
-                    @if($attendance->location)
-                        <div class="text-xs text-purple-600 mt-1">
-                            Radius: {{ $attendance->location->radius ?? 0 }}m
-                        </div>
-                    @endif
+                    <div class="text-xs text-purple-600 mt-1">
+                        Radius: {{ config('attendance.location.radius', 0) }}m
+                    </div>
                 </div>
             </div>
 

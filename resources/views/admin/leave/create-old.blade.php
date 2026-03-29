@@ -29,7 +29,7 @@
                         <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                             Pegawai <span class="text-red-500">*</span>
                         </label>
-                        <select name="worker_id" 
+                        <select name="worker_id"
                                 required
                                 class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('worker_id') border-red-500 @enderror">
                             <option value="">Pilih Pegawai</option>
@@ -49,7 +49,7 @@
                         <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                             Jenis Cuti <span class="text-red-500">*</span>
                         </label>
-                        <select name="leave_type" 
+                        <select name="leave_type"
                                 required
                                 class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('leave_type') border-red-500 @enderror">
                             <option value="">Pilih Jenis Cuti</option>
@@ -70,8 +70,8 @@
                             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                                 Tanggal Mulai <span class="text-red-500">*</span>
                             </label>
-                            <input type="date" 
-                                   name="start_date" 
+                            <input type="date"
+                                   name="start_date"
                                    x-model="startDate"
                                    @change="calculateDays"
                                    required
@@ -86,8 +86,8 @@
                             <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                                 Tanggal Selesai <span class="text-red-500">*</span>
                             </label>
-                            <input type="date" 
-                                   name="end_date" 
+                            <input type="date"
+                                   name="end_date"
                                    x-model="endDate"
                                    @change="calculateDays"
                                    required
@@ -104,12 +104,13 @@
                         <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                             Total Hari
                         </label>
-                        <input type="number" 
-                               name="total_days" 
+                        <input type="number"
+                               id="total_days"
                                x-model="totalDays"
                                readonly
                                class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md bg-gray-100"
-                               value="{{ old('total_days') }}">
+                               value="0"
+                               aria-label="Total Hari (otomatis)">
                         <p class="mt-1 text-sm text-gray-500">Akan dihitung otomatis berdasarkan tanggal mulai dan selesai</p>
                     </div>
 
@@ -118,8 +119,8 @@
                         <label class="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                             Alasan Cuti <span class="text-red-500">*</span>
                         </label>
-                        <textarea name="reason" 
-                                  rows="4" 
+                        <textarea name="reason"
+                                  rows="4"
                                   required
                                   class="w-full px-3 sm:px-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500 @error('reason') border-red-500 @enderror"
                                   placeholder="Jelaskan alasan pengajuan cuti...">{{ old('reason') }}</textarea>
@@ -141,9 +142,9 @@
                                 <div class="flex text-sm text-gray-600">
                                     <label for="attachment" class="relative cursor-pointer bg-white rounded-md font-medium text-green-600 hover:text-green-500">
                                         <span>Upload file</span>
-                                        <input id="attachment" 
-                                               name="attachment" 
-                                               type="file" 
+                                        <input id="attachment"
+                                               name="attachment"
+                                               type="file"
                                                class="sr-only"
                                                accept=".pdf,.jpg,.jpeg,.png"
                                                @change="fileName = $event.target.files[0]?.name || ''">
@@ -162,11 +163,11 @@
 
                 <!-- Action Buttons -->
                 <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
-                    <a href="{{ route('admin.leave.index') }}" 
+                    <a href="{{ route('admin.leave.index') }}"
                        class="px-6 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition duration-150">
                         Batal
                     </a>
-                    <button type="submit" 
+                    <button type="submit"
                             class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition duration-150">
                         Ajukan Cuti
                     </button>
@@ -182,7 +183,7 @@ function leaveForm() {
         startDate: '',
         endDate: '',
         totalDays: 0,
-        
+
         calculateDays() {
             if (this.startDate && this.endDate) {
                 const start = new Date(this.startDate);

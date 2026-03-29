@@ -85,7 +85,7 @@
                 <div>
                     <label class="text-sm font-medium text-gray-700">Lokasi Check In</label>
                     <p class="text-base font-semibold text-gray-900 mt-1">
-                        {{ $attendance->location ? $attendance->location->name : 'Tidak ada lokasi' }}
+                        {{ config('attendance.location.name', 'Tidak ada lokasi') }}
                     </p>
                 </div>
 
@@ -130,13 +130,11 @@
 
                 <x-form.select
                     name="location_id"
-                    label="Lokasi"
-                    required
-                    :error="$errors->first('location_id')">
-                    <option value="">Pilih Lokasi</option>
+                    label="Lokasi Absensi (Otomatis)"
+                    disabled>
                     @php
-                        $singleLocation = $locations->count() === 1 ? $locations->first() : null;
-                        $defaultLocationId = old('location_id', $singleLocation?->id ?? $attendance->location_id);
+                        $singleLocation = $locations->first();
+                        $defaultLocationId = old('location_id', $singleLocation?->id);
                     @endphp
                     @foreach($locations as $location)
                         <option value="{{ $location->id }}"

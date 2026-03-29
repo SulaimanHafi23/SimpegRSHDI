@@ -19,7 +19,6 @@ class ShiftSwapAuditLog extends Model
         'new_status',
         'notes',
         'metadata',
-        'ip_address',
         'user_agent',
     ];
 
@@ -57,7 +56,6 @@ class ShiftSwapAuditLog extends Model
             'new_status' => $newStatus,
             'notes' => $notes,
             'metadata' => $metadata,
-            'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
     }

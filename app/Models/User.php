@@ -79,9 +79,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(LeaveRequest::class, 'approved_by');
     }
-
-    public function approvedOvertimeRequests(): HasMany
-    {
-        return $this->hasMany(OvertimeRequest::class, 'approved_by');
-    }
 }

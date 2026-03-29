@@ -80,11 +80,11 @@
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Jenis Kelamin</label>
-                        <p class="text-base font-medium text-gray-800">{{ $worker->gender->name ?? '-' }}</p>
+                        <p class="text-base font-medium text-gray-800">{{ $worker->gender ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Agama</label>
-                        <p class="text-base font-medium text-gray-800">{{ $worker->religion->name ?? '-' }}</p>
+                        <p class="text-base font-medium text-gray-800">{{ $worker->religion ?? '-' }}</p>
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Status Pernikahan</label>
@@ -140,7 +140,7 @@
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Lokasi Kerja</label>
-                        <p class="text-base font-medium text-gray-800">{{ $worker->location->name ?? '-' }}</p>
+                        <p class="text-base font-medium text-gray-800">{{ config('attendance.location.name', '-') }}</p>
                     </div>
                 </div>
             </div>

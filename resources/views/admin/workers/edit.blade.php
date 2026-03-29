@@ -103,29 +103,27 @@
                     :error="$errors->first('birth_date')" />
 
                 <x-form.select
-                    name="gender_id"
+                    name="gender"
                     label="Jenis Kelamin"
                     required
-                    :error="$errors->first('gender_id')">
+                    :error="$errors->first('gender')">
                     <option value="">Pilih Jenis Kelamin</option>
-                    @foreach($genders as $gender)
-                        <option value="{{ $gender->id }}" {{ old('gender_id', $worker->gender_id ?? '') == $gender->id ? 'selected' : '' }}>
-                            {{ $gender->name }}
-                        </option>
-                    @endforeach
+                    <option value="Laki-laki" {{ old('gender', $worker->gender ?? '') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                    <option value="Perempuan" {{ old('gender', $worker->gender ?? '') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                 </x-form.select>
 
                 <x-form.select
-                    name="religion_id"
+                    name="religion"
                     label="Agama"
                     required
-                    :error="$errors->first('religion_id')">
+                    :error="$errors->first('religion')">
                     <option value="">Pilih Agama</option>
-                    @foreach($religions as $religion)
-                        <option value="{{ $religion->id }}" {{ old('religion_id', $worker->religion_id ?? '') == $religion->id ? 'selected' : '' }}>
-                            {{ $religion->name }}
-                        </option>
-                    @endforeach
+                    <option value="Islam" {{ old('religion', $worker->religion ?? '') == 'Islam' ? 'selected' : '' }}>Islam</option>
+                    <option value="Kristen" {{ old('religion', $worker->religion ?? '') == 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                    <option value="Katolik" {{ old('religion', $worker->religion ?? '') == 'Katolik' ? 'selected' : '' }}>Katolik</option>
+                    <option value="Hindu" {{ old('religion', $worker->religion ?? '') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                    <option value="Buddha" {{ old('religion', $worker->religion ?? '') == 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                    <option value="Konghucu" {{ old('religion', $worker->religion ?? '') == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
                 </x-form.select>
 
                 <div class="md:col-span-2">

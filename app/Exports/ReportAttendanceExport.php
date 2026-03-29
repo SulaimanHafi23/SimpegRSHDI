@@ -50,7 +50,7 @@ class ReportAttendanceExport implements FromCollection, WithHeadings, WithMappin
             $attendance->worker->nip ?? '-',
             $attendance->worker->name ?? '-',
             $attendance->shift->name ?? '-',
-            $attendance->location->name ?? '-',
+            config('attendance.location.name', '-'),
             $attendance->check_in?->format('H:i:s') ?? '-',
             $attendance->check_out?->format('H:i:s') ?? '-',
             ucfirst($attendance->status ?? '-'),

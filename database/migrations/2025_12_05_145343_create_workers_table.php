@@ -20,8 +20,8 @@ return new class extends Migration
             $table->text('address')->nullable();
             $table->date('birth_date');
             $table->string('birth_place');
-            $table->foreignUuid('gender_id')->constrained('genders')->cascadeOnDelete();
-            $table->foreignUuid('religion_id')->constrained('religions')->cascadeOnDelete();
+            $table->enum('gender', ['Laki-laki', 'Perempuan']);
+            $table->enum('religion', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu']);
             $table->foreignUuid('department_id')->constrained('departments')->cascadeOnDelete();
             $table->date('hire_date');
             $table->date('resign_date')->nullable();

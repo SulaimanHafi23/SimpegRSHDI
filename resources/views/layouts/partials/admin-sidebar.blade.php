@@ -52,24 +52,9 @@
                    :class="{ 'rotate-180': openMenu === 'master' }"></i>
             </button>
             <div x-show="openMenu === 'master'" x-collapse class="ml-4 mt-2 space-y-1">
-                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('religion.manage'))
-                <a href="{{ route('admin.master.religions.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.master.religions.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-mosque w-4"></i><span>Agama</span>
-                </a>
-                @endif
-                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('gender.manage'))
-                <a href="{{ route('admin.master.genders.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.master.genders.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-venus-mars w-4"></i><span>Jenis Kelamin</span>
-                </a>
-                @endif
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('department.manage'))
                 <a href="{{ route('admin.master.departments.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.master.departments.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
                     <i class="fas fa-building w-4"></i><span>Departemen</span>
-                </a>
-                @endif
-                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('location.manage'))
-                <a href="{{ route('admin.master.locations.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.master.locations.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
-                    <i class="fas fa-map-marker-alt w-4"></i><span>Lokasi</span>
                 </a>
                 @endif
                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('shift.manage'))

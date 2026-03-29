@@ -3,8 +3,6 @@
 namespace Tests\Feature\ShiftSwap;
 
 use App\Models\Department;
-use App\Models\Gender;
-use App\Models\Religion;
 use App\Models\Shift;
 use App\Models\User;
 use App\Models\Worker;
@@ -26,8 +24,6 @@ class ShiftSwapWorkflowTest extends TestCase
     protected Worker $managerWorker;
     protected Department $department;
     protected Department $otherDepartment;
-    protected Gender $gender;
-    protected Religion $religion;
     protected Shift $shift;
     protected WorkerShift $requesterShift;
     protected WorkerShift $targetShift;
@@ -54,9 +50,6 @@ class ShiftSwapWorkflowTest extends TestCase
             'code' => 'DEPT_B',
         ]);
 
-        $this->gender = Gender::firstOrCreate(['name' => 'Laki-laki'], ['is_active' => true]);
-        $this->religion = Religion::firstOrCreate(['name' => 'Islam'], ['is_active' => true]);
-
         // Create shift
         $this->shift = Shift::create([
             'name' => 'Morning Shift',
@@ -72,15 +65,13 @@ class ShiftSwapWorkflowTest extends TestCase
         $this->requesterWorker = $this->createWorker($this->department, 'Requester Worker');
         $this->requesterUser = User::factory()->create([
             'worker_id' => $this->requesterWorker->id,
-            'name' => $this->requesterWorker->name,
         ]);
         $this->requesterUser->assignRole('Employee');
 
-        // Create target worker
-        $this->targetWorker = $this->createWorker($this->otherDepartment, 'Target Worker');
+        // Create target worker (same department as requester based on latest business rule)
+        $this->targetWorker = $this->createWorker($this->department, 'Target Worker');
         $this->targetUser = User::factory()->create([
             'worker_id' => $this->targetWorker->id,
-            'name' => $this->targetWorker->name,
         ]);
         $this->targetUser->assignRole('Employee');
 
@@ -88,7 +79,6 @@ class ShiftSwapWorkflowTest extends TestCase
         $this->managerWorker = $this->createWorker($this->department, 'Manager');
         $this->managerUser = User::factory()->create([
             'worker_id' => $this->managerWorker->id,
-            'name' => $this->managerWorker->name,
         ]);
         $this->managerUser->assignRole('Manager');
 
@@ -168,15 +158,37 @@ class ShiftSwapWorkflowTest extends TestCase
         $response->assertSessionHas('success');
 
         $swap->refresh();
-        // Should be awaiting_approval because cross-department
-        $this->assertEquals('awaiting_approval', $swap->status);
-        $this->assertTrue($swap->requires_manager_approval);
+        // Same department swaps are auto-executed after target acceptance
+        $this->assertEquals('executed', $swap->status);
+        $this->assertFalse($swap->requires_manager_approval);
     }
 
     /** @test */
-    public function manager_can_approve_cross_department_swap()
+    public function cross_department_swap_request_is_rejected()
     {
-        // Create and accept swap
+        // Make target cross-department just for this scenario
+        $this->targetWorker->update(['department_id' => $this->otherDepartment->id]);
+
+        $this->actingAs($this->requesterUser)
+            ->post(route('employee.shift-swaps.store'), [
+                'requester_shift_id' => $this->requesterShift->id,
+                'target_worker_id' => $this->targetWorker->id,
+                'target_shift_id' => $this->targetShift->id,
+                'swap_type' => 'single_date',
+                'swap_date' => Carbon::parse($this->requesterShift->effective_from)->format('Y-m-d'),
+                'reason' => 'Need swap',
+            ]);
+
+        $this->assertDatabaseMissing('shift_swap_requests', [
+            'requester_id' => $this->requesterWorker->id,
+            'target_worker_id' => $this->targetWorker->id,
+        ]);
+    }
+
+    /** @test */
+    public function target_acceptance_auto_executes_swap_and_creates_overrides()
+    {
+        // Create and accept swap (same department: auto-executes)
         $this->actingAs($this->requesterUser)
             ->post(route('employee.shift-swaps.store'), [
                 'requester_shift_id' => $this->requesterShift->id,
@@ -194,54 +206,10 @@ class ShiftSwapWorkflowTest extends TestCase
 
         $swap->refresh();
 
-        // Manager approves
-        $response = $this->actingAs($this->managerUser)
-            ->post(route('manager.shift-swap-approvals.approve', $swap->id), [
-                'notes' => 'Approved by manager',
-            ]);
-
-        $response->assertRedirect(route('manager.shift-swap-approvals.index'));
-        $response->assertSessionHas('success');
-
-        $swap->refresh();
-        $this->assertEquals('executed', $swap->status); // Auto-executed after approval
-        $this->assertEquals($this->managerUser->id, $swap->manager_id);
-        $this->assertNotNull($swap->manager_approved_at);
-    }
-
-    /** @test */
-    public function manager_can_execute_approved_swap()
-    {
-        // Create, accept, and approve swap (which auto-executes)
-        $this->actingAs($this->requesterUser)
-            ->post(route('employee.shift-swaps.store'), [
-                'requester_shift_id' => $this->requesterShift->id,
-                'target_worker_id' => $this->targetWorker->id,
-                'target_shift_id' => $this->targetShift->id,
-                'swap_type' => 'single_date',
-                'swap_date' => Carbon::parse($this->requesterShift->effective_from)->format('Y-m-d'),
-                'reason' => 'Need swap',
-            ]);
-
-        $swap = \App\Models\ShiftSwapRequest::first();
-
-        $this->actingAs($this->targetUser)
-            ->post(route('employee.shift-swaps.accept', $swap->id));
-
-        $swap->refresh();
-
-        // Approve (which auto-executes the swap)
-        $this->actingAs($this->managerUser)
-            ->post(route('manager.shift-swap-approvals.approve', $swap->id), [
-                'notes' => 'Approved',
-            ]);
-
-        $swap->refresh();
-
-        // Verify swap was auto-executed after approval
+        // Verify swap was auto-executed after target acceptance
         $this->assertEquals('executed', $swap->status);
         $this->assertNotNull($swap->executed_at);
-        $this->assertNotNull($swap->manager_approved_at);
+        $this->assertNull($swap->manager_approved_at);
 
         // Verify ShiftOverride records were created
         $this->assertDatabaseHas('shift_overrides', [
@@ -324,16 +292,6 @@ class ShiftSwapWorkflowTest extends TestCase
         $this->actingAs($this->targetUser)
             ->post(route('employee.shift-swaps.accept', $swap->id));
 
-        // Approve
-        $swap->refresh();
-        $this->actingAs($this->managerUser)
-            ->post(route('manager.shift-swap-approvals.approve', $swap->id));
-
-        // Execute
-        $swap->refresh();
-        $this->actingAs($this->managerUser)
-            ->post(route('manager.shift-swap-approvals.execute', $swap->id));
-
         // Check audit logs
         $this->assertDatabaseHas('shift_swap_audit_logs', [
             'shift_swap_request_id' => $swap->id,
@@ -347,17 +305,12 @@ class ShiftSwapWorkflowTest extends TestCase
 
         $this->assertDatabaseHas('shift_swap_audit_logs', [
             'shift_swap_request_id' => $swap->id,
-            'action' => 'approved_by_manager',
-        ]);
-
-        $this->assertDatabaseHas('shift_swap_audit_logs', [
-            'shift_swap_request_id' => $swap->id,
             'action' => 'executed',
         ]);
 
-        // Should have 4 audit log entries
+        // Should have 3 audit log entries (created, accepted, executed)
         $auditCount = \App\Models\ShiftSwapAuditLog::where('shift_swap_request_id', $swap->id)->count();
-        $this->assertEquals(4, $auditCount);
+        $this->assertEquals(3, $auditCount);
     }
 
     private function createWorker(Department $department, string $name): Worker
@@ -372,8 +325,8 @@ class ShiftSwapWorkflowTest extends TestCase
             'address' => 'Feature Test Address ' . $seq,
             'birth_date' => Carbon::now()->subYears(29)->format('Y-m-d'),
             'birth_place' => 'Test City',
-            'gender_id' => $this->gender->id,
-            'religion_id' => $this->religion->id,
+            'gender' => 'Laki-laki',
+            'religion' => 'Islam',
             'department_id' => $department->id,
             'hire_date' => Carbon::now()->subYears(2)->format('Y-m-d'),
             'employment_status' => 'contract',

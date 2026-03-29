@@ -108,7 +108,7 @@
                 @endphp
                 <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
             </td>
-            <td>{{ $attendance->location->name ?? '-' }}</td>
+            <td>{{ config('attendance.location.name', '-') }}</td>
         </tr>
         @empty
         <tr>

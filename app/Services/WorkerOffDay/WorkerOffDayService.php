@@ -3,7 +3,6 @@
 namespace App\Services\WorkerOffDay;
 
 use App\Models\Worker;
-use App\Models\WorkerOffDayException;
 use App\Models\WorkerOffDay;
 use Carbon\Carbon;
 
@@ -70,46 +69,27 @@ class WorkerOffDayService
     public function getOffDayInfo(Worker $worker, $date): ?array
     {
         $date = Carbon::parse($date);
+        $dateStr = $date->format('Y-m-d');
 
-        // Check exception first
-        $exception = $worker->offDayExceptions()
-            ->where(function ($query) use ($date) {
-                $dateStr = $date->format('Y-m-d');
-                $query->where('type', 'single')
-                    ->where('off_date', $dateStr)
-                    ->orWhere(function ($q) use ($dateStr) {
-                        $q->where('type', 'recurring')
-                            ->where('off_date', '<=', $dateStr)
-                            ->where(function ($subQ) use ($dateStr) {
-                                $subQ->whereNull('recurring_pattern->until')
-                                    ->orWhereRaw("JSON_EXTRACT(recurring_pattern, '$.until') >= ?", [$dateStr]);
-                            });
-                    });
-            })
-            ->first();
-
-        if ($exception) {
-            return [
-                'type' => 'exception',
-                'date' => $date->format('Y-m-d'),
-                'exception_type' => $exception->type,
-                'reason' => $exception->reason,
-                'created_at' => $exception->created_at->format('d M Y H:i'),
-            ];
-        }
-
-        // Check pattern
         $offDayPattern = $worker->offDays()
-            ->where('effective_from', '<=', $date->format('Y-m-d'))
-            ->where(function ($query) use ($date) {
+            ->where('effective_from', '<=', $dateStr)
+            ->where(function ($query) use ($dateStr) {
                 $query->whereNull('effective_until')
-                    ->orWhere('effective_until', '>=', $date->format('Y-m-d'));
+                    ->orWhere('effective_until', '>=', $dateStr);
             })
-            ->first();
+            ->orderByDesc('effective_from')
+            ->get()
+            ->first(function ($item) use ($date) {
+                return is_array($item->day_of_week) && in_array($date->dayOfWeek, $item->day_of_week);
+            });
 
-        if ($offDayPattern && in_array($date->dayOfWeek, $offDayPattern->day_of_week)) {
+        if ($offDayPattern) {
+            $isSingleDay = $offDayPattern->effective_until
+                && $offDayPattern->effective_from
+                && $offDayPattern->effective_from->format('Y-m-d') === $offDayPattern->effective_until->format('Y-m-d');
+
             return [
-                'type' => 'pattern',
+                'type' => $isSingleDay ? 'single' : 'recurring',
                 'date' => $date->format('Y-m-d'),
                 'pattern' => $offDayPattern->day_of_week,
                 'reason' => $offDayPattern->reason,
@@ -122,39 +102,19 @@ class WorkerOffDayService
     }
 
     /**
-     * Create single day off exception
+     * Create off-day rule.
+     *
+     * - Recurring: pass day list + effective range
+     * - Single-day: pass one date, method auto-converts to 1-day range rule
      */
-    public function createException(Worker $worker, $date, $reason = null, $userId = null): WorkerOffDayException
-    {
-        return $worker->offDayExceptions()->create([
-            'off_date' => $date,
-            'type' => 'single',
-            'reason' => $reason,
-            'created_by' => $userId,
-        ]);
-    }
-
-    /**
-     * Create recurring off-day exception
-     */
-    public function createRecurringException(Worker $worker, array $daysOfWeek, $until = null, $reason = null, $userId = null): WorkerOffDayException
-    {
-        return $worker->offDayExceptions()->create([
-            'off_date' => now()->toDateString(),
-            'type' => 'recurring',
-            'recurring_pattern' => [
-                'day_of_week' => $daysOfWeek,
-                'until' => $until,
-            ],
-            'reason' => $reason,
-            'created_by' => $userId,
-        ]);
-    }
-
-    /**
-     * Create off-day pattern (rotating off-days)
-     */
-    public function createOffDayPattern(Worker $worker, array $daysOfWeek, $effectiveFrom, $effectiveUntil = null, $reason = null, $userId = null): WorkerOffDay
+    public function createOffDayRule(
+        Worker $worker,
+        array $daysOfWeek,
+        $effectiveFrom,
+        $effectiveUntil = null,
+        $reason = null,
+        $userId = null
+    ): WorkerOffDay
     {
         return $worker->offDays()->create([
             'day_of_week' => $daysOfWeek,
@@ -166,7 +126,15 @@ class WorkerOffDayService
     }
 
     /**
-     * Get all active off-days for worker (exceptions + patterns) in date range
+     * Backward-compatible wrapper.
+     */
+    public function createOffDayPattern(Worker $worker, array $daysOfWeek, $effectiveFrom, $effectiveUntil = null, $reason = null, $userId = null): WorkerOffDay
+    {
+        return $this->createOffDayRule($worker, $daysOfWeek, $effectiveFrom, $effectiveUntil, $reason, $userId);
+    }
+
+    /**
+     * Get all active off-days for worker in date range.
      */
     public function getOffDaysInRange(Worker $worker, $startDate, $endDate): array
     {
@@ -182,14 +150,6 @@ class WorkerOffDayService
         }
 
         return $offDays;
-    }
-
-    /**
-     * Delete exception
-     */
-    public function deleteException($exceptionId): bool
-    {
-        return (bool) WorkerOffDayException::destroy($exceptionId);
     }
 
     /**

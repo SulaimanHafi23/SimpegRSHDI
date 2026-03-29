@@ -91,7 +91,7 @@ class EmployeeAttendanceExport implements FromCollection, WithHeadings, WithMapp
             $status,
             $lateInfo,
             $earlyLeaveInfo,
-            $attendance->location->name ?? '-',
+            config('attendance.location.name', '-'),
             $attendance->notes ?? '-',
         ];
     }

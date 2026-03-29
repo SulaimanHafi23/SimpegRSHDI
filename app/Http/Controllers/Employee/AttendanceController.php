@@ -4,18 +4,14 @@ namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Services\Attendance\AttendanceService;
-use App\Services\Master\LocationService;
 use App\Services\Export\PdfExportService;
 use App\Services\WorkerOffDay\WorkerOffDayService;
-use App\DTOs\AttendanceDTO;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends Controller
 {
     public function __construct(
         protected AttendanceService $attendanceService,
-        protected LocationService $locationService,
         protected PdfExportService $pdfExportService,
         protected WorkerOffDayService $offDayService
     ) {
@@ -290,7 +286,7 @@ class AttendanceController extends Controller
         // Shift efektif hari ini (sudah termasuk tukar shift yang dieksekusi)
         $todayShiftInfo = $worker->resolveShiftForDate($today);
 
-        $locations = $this->locationService->getAllActive();
+        $locations = collect([(object) $this->getConfiguredLocation()]);
 
         return view('employee.attendance.check-in', compact('locations', 'activeBusinessTrip', 'todayShiftInfo'));
     }
@@ -343,7 +339,7 @@ class AttendanceController extends Controller
                 ->with('error', 'Absensi dengan status selain hadir tidak memerlukan check-out.');
         }
 
-        $locations = $this->locationService->getAllActive();
+        $locations = collect([(object) $this->getConfiguredLocation()]);
 
         // Shift yang berlaku pada tanggal attendance (mendukung overnight + tukar shift)
         $attendanceShiftInfo = $worker->resolveShiftForDate($attendance->attendance_date);
@@ -365,7 +361,6 @@ class AttendanceController extends Controller
         }
 
         $validated = $request->validate([
-            'location_id' => 'required|uuid|exists:locations,id',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'required|numeric|min:0',
@@ -424,7 +419,6 @@ class AttendanceController extends Controller
 
             $data = [
                 'worker_id' => $worker->id,
-                'location_id' => $validated['location_id'],
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
                 'accuracy' => $accuracy,
@@ -500,7 +494,6 @@ class AttendanceController extends Controller
         }
 
         $validated = $request->validate([
-            'location_id' => 'required|uuid|exists:locations,id',
             'latitude' => 'required|numeric|between:-90,90',
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'required|numeric|min:0',
@@ -547,7 +540,6 @@ class AttendanceController extends Controller
 
             $data = [
                 'worker_id' => $worker->id,
-                'location_id' => $validated['location_id'],
                 'latitude' => $request->input('latitude'),
                 'longitude' => $request->input('longitude'),
                 'accuracy' => $accuracy,
@@ -975,7 +967,7 @@ class AttendanceController extends Controller
                 $earlyLeaveInfo = ($attendance->is_early_leave && (int) $attendance->early_leave_minutes > 0)
                     ? ((int) $attendance->early_leave_minutes . ' menit')
                     : '-';
-                $locationName = $attendance->location?->name ?? '-';
+                $locationName = $this->getConfiguredLocation()['name'];
                 $notes = $attendance->notes ?: '-';
             } elseif ($leaveRequest) {
                 $leaveName = $leaveRequest->leaveType->name ?? 'Cuti';
@@ -1027,5 +1019,17 @@ class AttendanceController extends Controller
         }
 
         return $rows;
+    }
+
+    private function getConfiguredLocation(): array
+    {
+        return [
+            'id' => 'env-location',
+            'name' => (string) config('attendance.location.name', 'Lokasi Utama'),
+            'latitude' => (float) config('attendance.location.latitude', 0),
+            'longitude' => (float) config('attendance.location.longitude', 0),
+            'radius' => (int) config('attendance.location.radius', 100),
+            'enforce_geofence' => (bool) config('attendance.location.enforce_geofence', true),
+        ];
     }
 }

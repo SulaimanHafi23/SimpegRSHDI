@@ -39,9 +39,9 @@ class WorkerOffDay extends Model
     }
 
     /**
-     * Get active off-day pattern for worker on specific date
+     * Get active off-day rules for worker on specific date.
      */
-    public static function getActivePattern($workerId, $date): ?array
+    public static function getActiveRules($workerId, $date)
     {
         $date = Carbon::parse($date);
 
@@ -52,21 +52,39 @@ class WorkerOffDay extends Model
                     ->orWhere('effective_until', '>=', $date->format('Y-m-d'));
             })
             ->orderByDesc('effective_from')
-            ->first()?->day_of_week;
+            ->get();
     }
 
     /**
-     * Check if date is off-day based on pattern
+     * Check if date is off-day based on worker_off_days entries.
+     *
+     * Single-day off can be represented by setting:
+     * - day_of_week to the date's day
+     * - effective_from == effective_until
      */
-    public static function isOffDayByPattern($workerId, $date): bool
+    public static function isOffDay($workerId, $date): bool
     {
         $date = Carbon::parse($date);
-        $pattern = self::getActivePattern($workerId, $date);
+        $rules = self::getActiveRules($workerId, $date);
 
-        if (!$pattern || !is_array($pattern)) {
+        if ($rules->isEmpty()) {
             return false;
         }
 
-        return in_array($date->dayOfWeek, $pattern);
+        foreach ($rules as $rule) {
+            if (is_array($rule->day_of_week) && in_array($date->dayOfWeek, $rule->day_of_week)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Backward-compatible helper for existing callers.
+     */
+    public static function isOffDayByPattern($workerId, $date): bool
+    {
+        return self::isOffDay($workerId, $date);
     }
 }

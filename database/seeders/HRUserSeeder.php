@@ -5,11 +5,8 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Worker;
 use App\Models\Department;
-use App\Models\Religion;
-use App\Models\Gender;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class HRUserSeeder extends Seeder
 {
@@ -38,10 +35,7 @@ class HRUserSeeder extends Seeder
                       ?? Department::where('name', 'LIKE', '%hr%')->first()
                       ?? Department::first();
 
-        $religion = Religion::where('name', 'Islam')->first() ?? Religion::first();
-        $gender = Gender::where('name', 'Laki-laki')->first() ?? Gender::first();
-
-        if (!$department || !$religion || !$gender) {
+        if (!$department) {
             $this->command->error('❌ Master data belum lengkap! Run master seeders dulu.');
             return;
         }
@@ -57,8 +51,8 @@ class HRUserSeeder extends Seeder
             'birth_place' => 'Sambas',
             'hire_date' => '2020-01-01',
             'department_id' => $department->id,
-            'religion_id' => $religion->id,
-            'gender_id' => $gender->id,
+            'religion' => 'Islam',
+            'gender' => 'Laki-laki',
             'employment_status' => 'permanent',
             'status' => 'active',
         ]);

@@ -51,11 +51,11 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Jenis Kelamin:</span>
-                            <span class="font-medium">{{ auth()->user()->worker->gender->name ?? '-' }}</span>
+                            <span class="font-medium">{{ auth()->user()->worker->gender ?? '-' }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Agama:</span>
-                            <span class="font-medium">{{ auth()->user()->worker->religion->name ?? '-' }}</span>
+                            <span class="font-medium">{{ auth()->user()->worker->religion ?? '-' }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Jabatan:</span>
@@ -63,7 +63,7 @@
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Lokasi:</span>
-                            <span class="font-medium">{{ auth()->user()->worker->location->name ?? '-' }}</span>
+                            <span class="font-medium">{{ config('attendance.location.name', '-') }}</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-600">Status:</span>

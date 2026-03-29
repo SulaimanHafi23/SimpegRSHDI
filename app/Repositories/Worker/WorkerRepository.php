@@ -16,7 +16,7 @@ class WorkerRepository implements WorkerRepositoryInterface
 
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = $this->model->with(['gender', 'religion', 'department', 'user.roles']);
+        $query = $this->model->with(['department', 'user.roles']);
 
         if (!empty($filters['status'])) {
             $query->where('status', $filters['status']);
@@ -45,15 +45,13 @@ class WorkerRepository implements WorkerRepositoryInterface
     public function getAllActive(): Collection
     {
         return $this->model->where('status', 'active')
-            ->with(['gender', 'religion', 'department'])
+            ->with(['department'])
             ->get();
     }
 
     public function getById(string $id): ?object
     {
         return $this->model->with([
-            'gender',
-            'religion',
             'department',
             'user',
             'activeWorkerShift.shift'
@@ -74,7 +72,7 @@ class WorkerRepository implements WorkerRepositoryInterface
     {
         return $this->model->where('department_id', $departmentId)
             ->where('status', 'active')
-            ->with(['gender', 'religion', 'department'])
+            ->with(['department'])
             ->get();
     }
 

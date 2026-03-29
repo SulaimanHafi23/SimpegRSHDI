@@ -22,7 +22,7 @@ class ComprehensiveShiftSwapSeeder extends Seeder
         $workers = Worker::with(['workerShifts.shift', 'user'])->get()->filter(function($worker) {
             return $worker->workerShifts->isNotEmpty();
         });
-        
+
         if ($workers->count() < 2) {
             $this->command->warn('Need at least 2 workers with shifts. Skipping shift swap seeder.');
             return;
@@ -43,7 +43,7 @@ class ComprehensiveShiftSwapSeeder extends Seeder
 
         for ($i = 0; $i < $totalSwaps; $i++) {
             $requestor = $workers->random();
-            
+
             // Cari partner yang berbeda dan punya shift
             $partner = $workers->where('id', '!=', $requestor->id)
                                ->random();
@@ -83,7 +83,7 @@ class ComprehensiveShiftSwapSeeder extends Seeder
     {
         // Random date dalam 2 bulan terakhir atau 1 bulan ke depan
         $baseDate = now()->subDays(rand(0, 60));
-        
+
         // Untuk pending, gunakan tanggal future
         if ($status === 'pending') {
             $baseDate = now()->addDays(rand(3, 30));
@@ -142,7 +142,7 @@ class ComprehensiveShiftSwapSeeder extends Seeder
         if (in_array($status, ['approved', 'awaiting_approval'])) {
             $manager = User::role(['Super Admin', 'HR', 'Manager'])->inRandomOrder()->first();
             $data['manager_id'] = $manager->id ?? null;
-            
+
             if ($status === 'approved') {
                 $data['manager_approved_at'] = $baseDate->copy()->addDays(rand(1, 2));
             }
@@ -153,11 +153,6 @@ class ComprehensiveShiftSwapSeeder extends Seeder
             $executor = User::role(['Super Admin', 'HR'])->inRandomOrder()->first();
             $data['executed_by'] = $executor->id ?? null;
             $data['executed_at'] = $baseDate->copy()->addDays(rand(3, 5));
-        }
-
-        // Set expires_at untuk pending/awaiting
-        if (in_array($status, ['pending', 'awaiting_approval'])) {
-            $data['expires_at'] = $baseDate->copy()->addDays(7);
         }
 
         return ShiftSwapRequest::create($data);

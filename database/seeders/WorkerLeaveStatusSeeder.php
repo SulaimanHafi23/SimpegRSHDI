@@ -2,12 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Worker;
 use App\Models\Department;
-use App\Models\Gender;
-use App\Models\Religion;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
 use Carbon\Carbon;
@@ -24,9 +21,6 @@ class WorkerLeaveStatusSeeder extends Seeder
             ['code' => 'PERAWAT'],
             ['name' => 'Perawat']
         );
-        
-        $gender = Gender::first();
-        $religion = Religion::first();
 
         // Ambil atau buat leave types
         $cutiType = LeaveType::firstOrCreate(
@@ -79,8 +73,8 @@ class WorkerLeaveStatusSeeder extends Seeder
                 'address' => 'Bumi Harapan, Tanah Laut',
                 'birth_date' => '1995-05-15',
                 'birth_place' => 'Banjarmasin',
-                'gender_id' => $gender->id,
-                'religion_id' => $religion->id,
+                'gender' => 'Perempuan',
+                'religion' => 'Islam',
                 'department_id' => $perawatDept->id,
                 'hire_date' => '2020-01-10',
                 'employment_status' => 'permanent',
@@ -90,7 +84,7 @@ class WorkerLeaveStatusSeeder extends Seeder
 
         // Hapus leave request lama untuk Ani jika ada
         LeaveRequest::where('worker_id', $ani->id)->delete();
-        
+
         LeaveRequest::create([
             'worker_id' => $ani->id,
             'leave_type_id' => $cutiType->id,
@@ -112,8 +106,8 @@ class WorkerLeaveStatusSeeder extends Seeder
                 'address' => 'Bumi Makmur, Tanah Laut',
                 'birth_date' => '1993-08-22',
                 'birth_place' => 'Pelaihari',
-                'gender_id' => $gender->id,
-                'religion_id' => $religion->id,
+                'gender' => 'Laki-laki',
+                'religion' => 'Islam',
                 'department_id' => $perawatDept->id,
                 'hire_date' => '2019-03-15',
                 'employment_status' => 'permanent',
@@ -145,8 +139,8 @@ class WorkerLeaveStatusSeeder extends Seeder
                 'address' => 'Bumi Harapan, Tanah Laut',
                 'birth_date' => '1996-03-10',
                 'birth_place' => 'Banjarbaru',
-                'gender_id' => $gender->id,
-                'religion_id' => $religion->id,
+                'gender' => 'Perempuan',
+                'religion' => 'Islam',
                 'department_id' => $perawatDept->id,
                 'hire_date' => '2021-06-01',
                 'employment_status' => 'contract',

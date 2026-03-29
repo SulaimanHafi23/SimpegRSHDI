@@ -77,7 +77,7 @@
              1. DATA MASTER
              Referensi sistem: agama, jenis kelamin, departemen, shift, dll.
         ============================================================ --}}
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('religion.manage') || auth()->user()->can('gender.manage') || auth()->user()->can('department.manage') || auth()->user()->can('location.manage') || auth()->user()->can('shift.manage') || auth()->user()->can('leave-type.manage') || auth()->user()->can('document-type.manage') || auth()->user()->can('department-document-type.manage') || auth()->user()->can('holiday.manage'))
+        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('HR') || auth()->user()->can('department.manage') || auth()->user()->can('shift.manage') || auth()->user()->can('leave-type.manage') || auth()->user()->can('document-type.manage') || auth()->user()->can('department-document-type.manage') || auth()->user()->can('holiday.manage'))
 
         <div class="pt-4 pb-1.5 px-1">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-yellow-500/10 border border-yellow-500/20">
@@ -86,24 +86,6 @@
             </div>
         </div>
 
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('religion.manage'))
-        <a href="{{ route('admin.master.religions.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.religions.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.religions.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-mosque text-xs {{ request()->routeIs('admin.master.religions.*') ? 'text-white' : 'text-yellow-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.religions.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Agama</span>
-        </a>
-        @endif
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('gender.manage'))
-        <a href="{{ route('admin.master.genders.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.genders.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.genders.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-venus-mars text-xs {{ request()->routeIs('admin.master.genders.*') ? 'text-white' : 'text-yellow-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.genders.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jenis Kelamin</span>
-        </a>
-        @endif
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('department.manage'))
         <a href="{{ route('admin.master.departments.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.departments.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
@@ -111,15 +93,6 @@
                 <i class="fas fa-building text-xs {{ request()->routeIs('admin.master.departments.*') ? 'text-white' : 'text-yellow-300' }}"></i>
             </div>
             <span class="text-sm {{ request()->routeIs('admin.master.departments.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Departemen</span>
-        </a>
-        @endif
-        @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('location.manage'))
-        <a href="{{ route('admin.master.locations.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.locations.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.locations.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-map-marker-alt text-xs {{ request()->routeIs('admin.master.locations.*') ? 'text-white' : 'text-yellow-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('admin.master.locations.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Lokasi</span>
         </a>
         @endif
         @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('shift.manage'))

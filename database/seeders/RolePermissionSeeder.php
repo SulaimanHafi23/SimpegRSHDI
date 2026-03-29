@@ -33,10 +33,7 @@ class RolePermissionSeeder extends Seeder
             'dashboard.employee',   // Employee dashboard with personal data only
 
             // Data Master - Configuration & Setup
-            'religion.manage',
-            'gender.manage',
             'department.manage',
-            'location.manage',
             'shift.manage',
             'leave-type.manage',
             'document-type.manage',
@@ -129,10 +126,7 @@ class RolePermissionSeeder extends Seeder
             'dashboard.admin',
 
             // Master Data - Full Configuration Access
-            'religion.manage',
-            'gender.manage',
             'department.manage',
-            'location.manage',
             'shift.manage',
             'leave-type.manage',
             'document-type.manage',

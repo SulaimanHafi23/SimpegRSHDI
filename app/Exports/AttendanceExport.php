@@ -95,7 +95,7 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
             $attendance->worker->nip ?? '-',
             $attendance->worker->name ?? '-',
             $attendance->shift->name ?? '-',
-            $attendance->location->name ?? '-',
+            config('attendance.location.name', '-'),
             $attendance->check_in ? $attendance->check_in->format('H:i:s') : '-',
             $attendance->check_out ? $attendance->check_out->format('H:i:s') : '-',
             $workHours,

@@ -7,7 +7,6 @@ use App\DTOs\AttendancePhotoDTO;
 use App\Repositories\Contracts\Attendance\AttendanceRepositoryInterface;
 use App\Repositories\Contracts\Attendance\AttendancePhotoRepositoryInterface;
 use App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface;
-use App\Repositories\Contracts\Master\LocationRepositoryInterface;
 use App\Repositories\Contracts\Master\ShiftRepositoryInterface;
 use App\Services\WorkerOffDay\WorkerOffDayService;
 use Carbon\Carbon;
@@ -22,7 +21,6 @@ class AttendanceService
         protected AttendanceRepositoryInterface $attendanceRepository,
         protected AttendancePhotoRepositoryInterface $attendancePhotoRepository,
         protected WorkerShiftRepositoryInterface $workerShiftRepository,
-        protected LocationRepositoryInterface $locationRepository,
         protected ShiftRepositoryInterface $shiftRepository,
         protected WorkerOffDayService $offDayService,
     ) {}
@@ -222,11 +220,15 @@ class AttendanceService
                 }
             }
 
-            // Validate location
-            $location = $this->locationRepository->findById($data['location_id']);
-
-            $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
-            $isOutsideRadius = $distance > $location->radius;
+            // Validate against single configured attendance location from ENV.
+            $configuredLocation = $this->getConfiguredLocation();
+            $distance = $this->calculateDistance(
+                $configuredLocation['latitude'],
+                $configuredLocation['longitude'],
+                (float) $data['latitude'],
+                (float) $data['longitude']
+            );
+            $isOutsideRadius = $distance > $configuredLocation['radius'];
 
             // Enforce radius only for 'present' status
             $statusForRadius = $status;
@@ -250,7 +252,6 @@ class AttendanceService
             $attendanceDTO = AttendanceDTO::fromRequest([
                 'worker_id' => $workerId,
                 'shift_id' => $shift->id,
-                'location_id' => $location->id,
                 'attendance_date' => $today,
                 'check_in' => $checkInTime,
                 'check_in_latitude' => $data['latitude'],
@@ -375,9 +376,14 @@ class AttendanceService
                 ]);
             }
 
-            // Validate location
-            $location = $this->locationRepository->findById($data['location_id']);
-            $distance = $location->calculateDistance((float)$data['latitude'], (float)$data['longitude']);
+            // Validate against single configured attendance location from ENV.
+            $configuredLocation = $this->getConfiguredLocation();
+            $distance = $this->calculateDistance(
+                $configuredLocation['latitude'],
+                $configuredLocation['longitude'],
+                (float) $data['latitude'],
+                (float) $data['longitude']
+            );
 
             // Hitung early leave dan overtime
             $isEarlyLeave = $checkOutTime->lessThan($shiftEndDateTime);
@@ -440,7 +446,6 @@ class AttendanceService
                 'id' => $attendance->id,
                 'worker_id' => $attendance->worker_id,
                 'shift_id' => $attendance->shift_id,
-                'location_id' => $attendance->location_id,
                 'attendance_date' => $attendance->attendance_date->format('Y-m-d'),
                 'check_in' => $attendance->check_in?->format('Y-m-d H:i:s'),
                 'check_out' => $checkOutTime->format('Y-m-d H:i:s'),
@@ -459,7 +464,7 @@ class AttendanceService
                 'late_minutes' => $attendance->late_minutes,
                 'is_early_leave' => $isEarlyLeave,
                 'early_leave_minutes' => $earlyLeaveMinutes,
-                'is_outside_radius' => $distance > $location->radius,
+                'is_outside_radius' => $distance > $configuredLocation['radius'],
                 'overtime_minutes' => $overtimeMinutes,
                 'notes' => $combinedNotes,
             ]);
@@ -503,7 +508,6 @@ class AttendanceService
             'id' => $existing->id,
             'worker_id' => $data['worker_id'] ?? $existing->worker_id,
             'shift_id' => $data['shift_id'] ?? $existing->shift_id,
-            'location_id' => $data['location_id'] ?? $existing->location_id,
             'attendance_date' => $data['attendance_date'] ?? $data['date'] ?? $existing->attendance_date?->format('Y-m-d'),
             'check_in' => $this->normalizeDateTime($data['check_in'] ?? $existing->check_in),
             'check_out' => array_key_exists('check_out', $data)
@@ -721,5 +725,45 @@ class AttendanceService
             }
             return $days . ' hari yang lalu';
         }
+    }
+
+    /**
+     * Read single attendance location from config/env.
+     *
+     * @return array{name:string,latitude:float,longitude:float,radius:int,enforce_geofence:bool}
+     */
+    private function getConfiguredLocation(): array
+    {
+        return [
+            'name' => (string) config('attendance.location.name', 'Lokasi Utama'),
+            'latitude' => (float) config('attendance.location.latitude', 0),
+            'longitude' => (float) config('attendance.location.longitude', 0),
+            'radius' => (int) config('attendance.location.radius', 100),
+            'enforce_geofence' => (bool) config('attendance.location.enforce_geofence', true),
+        ];
+    }
+
+    /**
+     * Calculate distance between two coordinates in meters (Haversine).
+     */
+    private function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6371000;
+
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lon1);
+        $latTo = deg2rad($lat2);
+        $lonTo = deg2rad($lon2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2)
+            + cos($latFrom) * cos($latTo)
+            * sin($lonDelta / 2) * sin($lonDelta / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

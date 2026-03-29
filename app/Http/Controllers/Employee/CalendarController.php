@@ -29,11 +29,11 @@ class CalendarController extends Controller
     public function events(Request $request)
     {
         $user = auth()->user();
-        
+
         if (!$user->worker) {
             return response()->json([]);
         }
-        
+
         $workerId = $user->worker->id;
         $start = $request->get('start', now()->startOfMonth()->format('Y-m-d'));
         $end = $request->get('end', now()->endOfMonth()->format('Y-m-d'));
@@ -68,8 +68,8 @@ class CalendarController extends Controller
                 'id' => 'leave-' . $leave->id,
                 'type' => 'leave',
                 'title' => $leave->leaveType->name ?? 'Cuti',
-                'start' => $leave->start_date,
-                'end' => Carbon::parse($leave->end_date)->addDay()->format('Y-m-d'), // FullCalendar exclusive end
+                'start' => Carbon::parse($leave->start_date)->toDateString(),
+                'end' => Carbon::parse($leave->end_date)->addDay()->toDateString(), // FullCalendar exclusive end
                 'status' => $leave->status,
                 'color' => $this->getLeaveColor($leave->status),
                 'description' => $leave->reason,
@@ -98,8 +98,8 @@ class CalendarController extends Controller
                 'id' => 'business-trip-' . $trip->id,
                 'type' => 'business-trip',
                 'title' => '✈️ Perjalanan Dinas: ' . $trip->destination,
-                'start' => $trip->start_date,
-                'end' => Carbon::parse($trip->end_date)->addDay()->format('Y-m-d'), // FullCalendar exclusive end
+                'start' => Carbon::parse($trip->start_date)->toDateString(),
+                'end' => Carbon::parse($trip->end_date)->addDay()->toDateString(), // FullCalendar exclusive end
                 'status' => $trip->status,
                 'color' => $this->getBusinessTripColor($trip->status),
                 'description' => $trip->purpose,

@@ -18,24 +18,20 @@ class SuperAdminSeeder extends Seeder
         $this->command->info('👑 Starting SuperAdminSeeder...');
 
         // ========== VALIDASI MASTER DATA ==========
-        
+
         $this->command->info('🔍 Checking master data...');
-        
-        $gender = \App\Models\Gender::firstOrCreate(['name' => 'Laki-laki']);
-        $religion = \App\Models\Religion::firstOrCreate(['name' => 'Islam']);
+
         $department = \App\Models\Department::firstOrCreate(
-            ['name' => 'Admin'], 
+            ['name' => 'Admin'],
             ['description' => 'Staff administrasi']
         );
 
-        $this->command->info("   ✅ Gender: {$gender->name}");
-        $this->command->info("   ✅ Religion: {$religion->name}");
         $this->command->info("   ✅ Department: {$department->name}");
 
         // ========== VALIDASI SPATIE ROLE ==========
-        
+
         $superAdminRole = \Spatie\Permission\Models\Role::where('name', 'Super Admin')->first();
-        
+
         if (!$superAdminRole) {
             $this->command->error('❌ Role "Super Admin" tidak ada!');
             $this->command->error('   Run RolePermissionSeeder terlebih dahulu.');
@@ -45,7 +41,7 @@ class SuperAdminSeeder extends Seeder
         $this->command->info("   ✅ Role: {$superAdminRole->name}");
 
         // ========== CEK DUPLICATE ==========
-        
+
         $existingUser = User::where('username', 'superadmin')->first();
         if ($existingUser) {
             $this->command->warn('⚠️  Super Admin already exists. Skipping...');
@@ -61,7 +57,7 @@ class SuperAdminSeeder extends Seeder
         }
 
         // ========== CREATE SUPER ADMIN ==========
-        
+
         $this->command->info('');
         $this->command->info('🔨 Creating Super Admin...');
 
@@ -76,8 +72,8 @@ class SuperAdminSeeder extends Seeder
                 'address' => 'Jakarta',
                 'birth_date' => '1990-01-01',
                 'birth_place' => 'Jakarta',
-                'gender_id' => $gender->id,
-                'religion_id' => $religion->id,
+                'gender' => 'Laki-laki',
+                'religion' => 'Islam',
                 'department_id' => $department->id,
                 'hire_date' => now(),
                 'employment_status' => 'permanent',
@@ -103,7 +99,7 @@ class SuperAdminSeeder extends Seeder
             $this->command->info("   ✅ Role assigned: Super Admin");
 
             // ========== SUCCESS OUTPUT ==========
-            
+
             $this->command->info('');
             $this->command->info('✅ Super Admin created successfully!');
             $this->command->info('');
@@ -120,7 +116,7 @@ class SuperAdminSeeder extends Seeder
         } catch (\Exception $e) {
             $this->command->error('❌ Failed to create Super Admin!');
             $this->command->error("   Error: {$e->getMessage()}");
-            
+
             // Rollback if worker created but user failed
             if (isset($worker) && $worker->exists) {
                 $worker->delete();

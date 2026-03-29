@@ -19,7 +19,7 @@ class ComprehensiveBusinessTripSeeder extends Seeder
         $this->command->info('Creating comprehensive business trip data...');
 
         $workers = Worker::with('user')->get();
-        
+
         if ($workers->isEmpty()) {
             $this->command->warn('No workers found. Please seed workers first.');
             return;
@@ -118,7 +118,7 @@ class ComprehensiveBusinessTripSeeder extends Seeder
 
         // Random date
         $baseDate = now()->subDays(rand(0, 60));
-        
+
         // Untuk pending, gunakan tanggal future (minimal 2 hari ke depan)
         if ($status === 'pending') {
             $baseDate = now()->addDays(rand(2, 45));
@@ -138,16 +138,8 @@ class ComprehensiveBusinessTripSeeder extends Seeder
         $baseCost = rand(2000000, 5000000);
         $estimatedCost = $baseCost + ($duration * rand(500000, 1500000));
 
-        // Build itinerary with transportation and accommodation info
         $transportation = $transportations[array_rand($transportations)];
         $accommodation = $accommodations[array_rand($accommodations)];
-        
-        $itinerary = [
-            'transportation' => $transportation,
-            'accommodation' => $accommodation ?: 'Tidak menginap',
-            'departure_time' => sprintf('%02d:00', rand(6, 10)),
-            'return_time' => sprintf('%02d:00', rand(15, 20)),
-        ];
 
         $data = [
             'id' => Str::uuid(),
@@ -157,7 +149,8 @@ class ComprehensiveBusinessTripSeeder extends Seeder
             'start_date' => $startDate,
             'end_date' => $endDate,
             'estimated_cost' => $estimatedCost,
-            'itinerary' => json_encode($itinerary),
+            'transportation' => $transportation,
+            'accommodation' => $accommodation,
             'status' => $status,
             'created_at' => $baseDate->copy()->subDays(rand(3, 10)),
             'updated_at' => $baseDate->copy()->subDays(rand(1, 3)),
@@ -167,7 +160,7 @@ class ComprehensiveBusinessTripSeeder extends Seeder
         if (in_array($status, ['approved', 'rejected', 'completed'])) {
             // Get random admin/manager untuk approver
             $approver = User::role(['Super Admin', 'HR', 'Manager'])->inRandomOrder()->first();
-            
+
             $data['approved_by'] = $approver->id ?? null;
             $data['approved_at'] = $baseDate->copy()->subDays(rand(1, 5));
 
@@ -200,11 +193,7 @@ class ComprehensiveBusinessTripSeeder extends Seeder
                 'Bersama delegasi 3 orang',
                 'Termasuk budget untuk transport lokal',
             ];
-            
-            // Append notes to itinerary
-            $currentItinerary = json_decode($data['itinerary'], true);
-            $currentItinerary['notes'] = $notes[array_rand($notes)];
-            $data['itinerary'] = json_encode($currentItinerary);
+            $data['notes'] = $notes[array_rand($notes)];
         }
 
         return BusinessTrip::create($data);

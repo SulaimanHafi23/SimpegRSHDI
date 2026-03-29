@@ -29,12 +29,9 @@ use App\Http\Controllers\WorkerDocument\WorkerDocumentController;
 
 // ========== MASTER DATA CONTROLLERS ==========
 use App\Http\Controllers\Master\ShiftController;
-use App\Http\Controllers\Master\LocationController;
-use App\Http\Controllers\Master\GenderController;
 use App\Http\Controllers\Master\DepartmentController;
 use App\Http\Controllers\Master\DocumentTypeController;
 use App\Http\Controllers\Master\DepartmentDocumentTypeController;
-use App\Http\Controllers\Master\ReligionController;
 use App\Http\Controllers\Master\LeaveTypeController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\AuditLogController;
@@ -341,9 +338,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Off-day management routes
         Route::prefix('{workerId}/off-days')->name('off-days.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'index'])->name('index');
-            Route::post('/exceptions', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'storeException'])->name('store-exception');
             Route::post('/patterns', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'storePattern'])->name('store-pattern');
-            Route::delete('/exceptions/{exceptionId}', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'destroyException'])->name('destroy-exception');
             Route::delete('/patterns/{patternId}', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'destroyPattern'])->name('destroy-pattern');
             Route::post('/check-date', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'checkDate'])->name('check-date');
             Route::post('/range', [\App\Http\Controllers\Worker\WorkerOffDayController::class, 'getRange'])->name('range');
@@ -447,22 +442,13 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== MASTER DATA MANAGEMENT ==========
-    Route::prefix('master')->name('admin.master.')->middleware(['role_or_permission:Super Admin|HR|department.manage|shift.manage|religion.manage|gender.manage|location.manage|leave-type.manage|document-type.manage|department-document-type.manage'])->group(function () {
+    Route::prefix('master')->name('admin.master.')->middleware(['role_or_permission:Super Admin|HR|department.manage|shift.manage|leave-type.manage|document-type.manage|department-document-type.manage'])->group(function () {
 
         // Departments (Pengganti Positions)
         Route::resource('departments', DepartmentController::class);
 
         // Shifts
         Route::resource('shifts', ShiftController::class);
-
-        // Locations (read-only)
-        Route::resource('locations', LocationController::class)->only(['index', 'show']);
-
-        // Genders
-        Route::resource('genders', GenderController::class);
-
-        // Religions
-        Route::resource('religions', ReligionController::class);
 
         // Document Types
         Route::resource('document-types', DocumentTypeController::class);

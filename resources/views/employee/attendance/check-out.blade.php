@@ -34,7 +34,7 @@
                 <div class="ml-2 sm:ml-3">
                     <h3 class="text-xs sm:text-sm font-semibold text-gray-800 mb-2">Cara Check Out:</h3>
                     <ol class="text-xs sm:text-sm text-gray-700 space-y-1 list-decimal list-inside">
-                        <li>Pilih lokasi check-out</li>
+                        <li>Lokasi check-out ditentukan otomatis oleh sistem</li>
                         <li>Pastikan GPS berhasil didapatkan</li>
                         <li>Pastikan posisi berada dalam radius lokasi</li>
                         <li>Ambil foto bukti (opsional)</li>
@@ -94,13 +94,12 @@
                     </h3>
 
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Pilih Lokasi Check-Out</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Lokasi Check-Out (Otomatis)</label>
                         @php
-                            $singleLocation = $locations->count() === 1 ? $locations->first() : null;
+                            $singleLocation = $locations->first();
                             $defaultLocationId = old('location_id', $singleLocation?->id);
                         @endphp
-                        <select name="location_id" id="location_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('location_id') border-red-500 @enderror" required>
-                            <option value="">-- Pilih Lokasi --</option>
+                        <select name="location_id" id="location_id" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('location_id') border-red-500 @enderror" disabled>
                             @foreach($locations as $location)
                                 <option value="{{ $location->id }}"
                                         data-lat="{{ $location->latitude }}"

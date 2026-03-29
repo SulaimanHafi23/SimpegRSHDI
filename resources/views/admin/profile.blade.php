@@ -17,10 +17,10 @@
                 <div class="text-center">
                     <div class="relative inline-block">
                         @if($user->worker && $user->worker->photo_url && Storage::disk('public')->exists($user->worker->photo_url))
-                            <img src="{{ Storage::url($user->worker->photo_url) }}" alt="{{ $user->name }}" 
+                            <img src="{{ Storage::url($user->worker->photo_url) }}" alt="{{ $user->name }}"
                                  class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-green-500">
                         @elseif($user->photo && Storage::disk('public')->exists($user->photo))
-                            <img src="{{ Storage::url($user->photo) }}" alt="{{ $user->name }}" 
+                            <img src="{{ Storage::url($user->photo) }}" alt="{{ $user->name }}"
                                  class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-green-500">
                         @else
                             <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-green-500 flex items-center justify-center text-white text-3xl sm:text-4xl font-bold border-4 border-green-600">
@@ -30,7 +30,7 @@
                     </div>
                     <h2 class="mt-4 text-lg sm:text-xl font-bold text-gray-800">{{ $user->name }}</h2>
                     <p class="text-sm sm:text-base text-gray-600">{{ $user->email }}</p>
-                    
+
                     <div class="mt-4 space-y-2">
                         @foreach($user->roles as $role)
                             <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full
@@ -89,7 +89,7 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-user-edit text-green-600 mr-2"></i>Update Profile
                 </h2>
-                
+
                 <form id="profileForm" action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
@@ -111,7 +111,7 @@
                         <!-- Gender (readonly) -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
-                            <input type="text" value="{{ $user->worker->gender->name ?? '-' }}" readonly
+                            <input type="text" value="{{ $user->worker->gender ?? '-' }}" readonly
                                    class="w-full px-3 py-2 border border-gray-200 bg-gray-100 rounded-lg text-gray-700 cursor-not-allowed">
                         </div>
                         <!-- Tanggal Lahir (readonly) -->
@@ -196,7 +196,7 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-4">
                     <i class="fas fa-lock text-yellow-600 mr-2"></i>Ubah Password
                 </h2>
-                
+
                 <form action="{{ route('profile.update-password') }}" method="POST">
                     @csrf
                     @method('PUT')

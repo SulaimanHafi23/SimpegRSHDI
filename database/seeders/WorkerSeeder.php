@@ -3,8 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Department;
-use App\Models\Gender;
-use App\Models\Religion;
 use App\Models\Worker;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -46,8 +44,6 @@ class WorkerSeeder extends Seeder
             $religionName = $this->normalizeReligion($row['religion'] ?? null);
             $departmentName = $this->normalizeDepartment($row['department'] ?? null);
 
-            $gender = Gender::firstOrCreate(['name' => $genderName], ['is_active' => true]);
-            $religion = Religion::firstOrCreate(['name' => $religionName], ['is_active' => true]);
             $baseDepartmentCode = strtoupper(Str::slug($departmentName, ''));
             if ($baseDepartmentCode === '') {
                 $baseDepartmentCode = 'DEPARTEMEN';
@@ -101,8 +97,8 @@ class WorkerSeeder extends Seeder
                 'address' => trim((string) ($row['address'] ?? '')),
                 'birth_date' => $birthDate,
                 'birth_place' => trim((string) ($row['birth_place'] ?? '-')) ?: '-',
-                'gender_id' => $gender->id,
-                'religion_id' => $religion->id,
+                'gender' => $genderName,
+                'religion' => $religionName,
                 'department_id' => $department->id,
                 'hire_date' => $hireDate,
                 'employment_status' => $employmentStatus,

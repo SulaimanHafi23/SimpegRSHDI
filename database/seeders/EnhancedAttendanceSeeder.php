@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Attendance;
 use App\Models\AttendancePhoto;
 use App\Models\Worker;
-use App\Models\WorkerShift;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -32,9 +31,9 @@ class EnhancedAttendanceSeeder extends Seeder
 
         foreach ($workers as $worker) {
             $this->command->info("Creating attendance for: {$worker->name}");
-            
+
             $currentDate = $startDate->copy();
-            
+
             while ($currentDate->lte($endDate)) {
                 // Skip Sundays (hari libur)
                 if ($currentDate->isSunday()) {
@@ -85,41 +84,41 @@ class EnhancedAttendanceSeeder extends Seeder
     private function determineScenario(Carbon $date): string
     {
         $rand = rand(1, 100);
-        
+
         // Lebih banyak absent di hari Senin/Jumat
         if (($date->isMonday() || $date->isFriday()) && $rand <= 5) {
             return 'absent';
         }
-        
+
         // 3% kemungkinan absent
         if ($rand <= 3) {
             return 'absent';
         }
-        
+
         // 15% kemungkinan terlambat
         if ($rand <= 18) {
             return 'late';
         }
-        
+
         // 10% kemungkinan pulang cepat
         if ($rand <= 28) {
             return 'early_out';
         }
-        
+
         // 5% kemungkinan terlambat dan pulang cepat
         if ($rand <= 33) {
             return 'late_and_early';
         }
-        
+
         // 2% kemungkinan lupa check in/out
         if ($rand <= 35) {
             return 'missing_checkout';
         }
-        
+
         if ($rand <= 37) {
             return 'missing_checkin';
         }
-        
+
         // Sisanya normal
         return 'normal';
     }
@@ -142,7 +141,7 @@ class EnhancedAttendanceSeeder extends Seeder
             ->setHour($checkInTime->hour)
             ->setMinute($checkInTime->minute)
             ->setSecond(0);
-        
+
         $checkOut = $attendanceDate->copy()
             ->setHour($checkOutTime->hour)
             ->setMinute($checkOutTime->minute)
@@ -219,7 +218,6 @@ class EnhancedAttendanceSeeder extends Seeder
             'late_minutes' => $lateMinutes,
             'early_minutes' => $earlyMinutes,
             'work_hours' => $workHours,
-            'location_id' => $worker->location_id,
             'notes' => $notes,
             'created_at' => $date,
             'updated_at' => $date,

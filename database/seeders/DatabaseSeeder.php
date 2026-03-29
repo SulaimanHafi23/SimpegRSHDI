@@ -13,10 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->command->info('🌱 Seeding Master Data...');
         $this->call([
-            GenderSeeder::class,
-            ReligionSeeder::class,
             DepartmentSeeder::class,
-            LocationSeeder::class,
             ShiftSeeder::class,
             ShiftDayTimeSeeder::class,
             DocumentTypeSeeder::class,

@@ -82,8 +82,8 @@
                 <td>{{ $worker->name }}</td>
                 <td>{{ $worker->email }}</td>
                 <td>{{ $worker->phone_number ?? '-' }}</td>
-                <td>{{ $worker->gender->name ?? '-' }}</td>
-                <td>{{ $worker->religion->name ?? '-' }}</td>
+                <td>{{ $worker->gender ?? '-' }}</td>
+                <td>{{ $worker->religion ?? '-' }}</td>
                 <td>{{ $worker->birth_date ? $worker->birth_date->format('d/m/Y') : '-' }}</td>
                 <td>{{ $worker->department->name ?? '-' }}</td>
                 <td>{{ ucfirst($worker->employment_status ?? '-') }}</td>

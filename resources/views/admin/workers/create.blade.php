@@ -116,26 +116,28 @@
                     @error('birth_date')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="gender_id" class="block text-sm font-medium text-gray-700 mb-1.5">Jenis Kelamin <span class="text-red-500">*</span></label>
-                    <select name="gender_id" id="gender_id" required
-                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('gender_id') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    <label for="gender" class="block text-sm font-medium text-gray-700 mb-1.5">Jenis Kelamin <span class="text-red-500">*</span></label>
+                    <select name="gender" id="gender" required
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('gender') border-red-400 bg-red-50 @else border-gray-200 @enderror">
                         <option value="">-- Pilih Jenis Kelamin --</option>
-                        @foreach($genders as $gender)
-                            <option value="{{ $gender->id }}" {{ old('gender_id') == $gender->id ? 'selected' : '' }}>{{ $gender->name }}</option>
-                        @endforeach
+                        <option value="Laki-laki" {{ old('gender') == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                        <option value="Perempuan" {{ old('gender') == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
                     </select>
-                    @error('gender_id')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                    @error('gender')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="religion_id" class="block text-sm font-medium text-gray-700 mb-1.5">Agama <span class="text-red-500">*</span></label>
-                    <select name="religion_id" id="religion_id" required
-                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('religion_id') border-red-400 bg-red-50 @else border-gray-200 @enderror">
+                    <label for="religion" class="block text-sm font-medium text-gray-700 mb-1.5">Agama <span class="text-red-500">*</span></label>
+                    <select name="religion" id="religion" required
+                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition text-sm sm:text-base @error('religion') border-red-400 bg-red-50 @else border-gray-200 @enderror">
                         <option value="">-- Pilih Agama --</option>
-                        @foreach($religions as $religion)
-                            <option value="{{ $religion->id }}" {{ old('religion_id') == $religion->id ? 'selected' : '' }}>{{ $religion->name }}</option>
-                        @endforeach
+                        <option value="Islam" {{ old('religion') == 'Islam' ? 'selected' : '' }}>Islam</option>
+                        <option value="Kristen" {{ old('religion') == 'Kristen' ? 'selected' : '' }}>Kristen</option>
+                        <option value="Katolik" {{ old('religion') == 'Katolik' ? 'selected' : '' }}>Katolik</option>
+                        <option value="Hindu" {{ old('religion') == 'Hindu' ? 'selected' : '' }}>Hindu</option>
+                        <option value="Buddha" {{ old('religion') == 'Buddha' ? 'selected' : '' }}>Buddha</option>
+                        <option value="Konghucu" {{ old('religion') == 'Konghucu' ? 'selected' : '' }}>Konghucu</option>
                     </select>
-                    @error('religion_id')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
+                    @error('religion')<p class="mt-1 text-sm text-red-500">{{ $message }}</p>@enderror
                 </div>
                 <div class="sm:col-span-2">
                     <label for="address" class="block text-sm font-medium text-gray-700 mb-1.5">Alamat <span class="text-xs font-normal text-gray-400 ml-1">(Opsional)</span></label>
