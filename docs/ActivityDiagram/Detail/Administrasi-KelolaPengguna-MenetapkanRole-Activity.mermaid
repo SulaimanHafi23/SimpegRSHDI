@@ -1,0 +1,12 @@
+---
+id: AD-KelolaPengguna-MenetapkanRole
+title: Activity Diagram - Kelola Pengguna (Menetapkan Role)
+---
+flowchart TD
+  A([Mulai]) --> B[Admin pilih pengguna]
+  B --> C[Pilih role baru]
+  C --> D{Role valid?}
+  D -- Tidak --> C
+  D -- Ya --> E[Simpan role pengguna]
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z([Selesai])

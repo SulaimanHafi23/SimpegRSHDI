@@ -121,30 +121,6 @@ class LeaveRequestController extends Controller
         return view('admin.leave.show', compact('leaveRequest'));
     }
 
-    public function edit(string $id)
-    {
-        $leaveRequest = $this->leaveRequestService->getById($id);
-        $workers = $this->workerService->getAllActive();
-        $leaveTypes = $this->leaveTypeService->getAllActive();
-
-        return view('admin.leave.edit', compact('leaveRequest', 'workers', 'leaveTypes'));
-    }
-
-    public function update(LeaveRequestRequest $request, string $id)
-    {
-        try {
-            $this->leaveRequestService->update($id, $request->validated());
-
-            return redirect()
-                ->route('admin.leave.show', $id)
-                ->with('success', 'Permohonan cuti berhasil diperbarui');
-        } catch (\Exception $e) {
-            return back()
-                ->withInput()
-                ->with('error', $e->getMessage());
-        }
-    }
-
     public function destroy(string $id)
     {
         try {

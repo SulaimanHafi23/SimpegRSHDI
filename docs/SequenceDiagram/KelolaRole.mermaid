@@ -1,0 +1,22 @@
+﻿---
+id: KelolaRole
+title: Kelola Role (Parent)
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor SA as Super Admin
+    participant UI as Web UI
+    participant C as RoleController
+    participant R as Role Model
+    participant DB as Database
+
+    SA->>UI: Buka menu Kelola Role
+    UI->>C: GET /admin/roles
+    C->>R: Fetch semua role dengan permission count
+    R->>DB: SELECT * FROM roles LEFT JOIN role_permission ON ... ORDER BY name ASC
+    DB-->>R: List role dengan daftar permission
+    R-->>C: Collection roles
+    C-->>UI: Response dengan daftar role
+    UI-->>SA: Tampilkan daftar role dengan opsi Create, Edit, Delete, View Permissions
+

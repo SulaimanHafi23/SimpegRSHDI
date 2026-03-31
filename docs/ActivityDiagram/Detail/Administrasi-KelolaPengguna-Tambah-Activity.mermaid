@@ -1,0 +1,12 @@
+---
+id: AD-KelolaPengguna-Tambah
+title: Activity Diagram - Kelola Pengguna (Tambah)
+---
+flowchart TD
+  A([Mulai]) --> B[Admin buka form tambah pengguna]
+  B --> C[Isi data pengguna]
+  C --> D{Data valid?}
+  D -- Tidak --> C
+  D -- Ya --> E[Simpan pengguna]
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z([Selesai])

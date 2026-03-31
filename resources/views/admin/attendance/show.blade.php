@@ -179,14 +179,6 @@
                         <p class="font-semibold text-gray-900">{{ $attendance->check_in?->format('H:i:s') ?? '-' }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-600">Latitude</p>
-                        <p class="font-semibold text-gray-900">{{ $attendance->check_in_latitude ?? '-' }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-600">Longitude</p>
-                        <p class="font-semibold text-gray-900">{{ $attendance->check_in_longitude ?? '-' }}</p>
-                    </div>
-                    <div>
                         <p class="text-sm text-gray-600">Jarak dari Lokasi</p>
                         <p class="font-semibold text-gray-900">{{ $attendance->distance_check_in ?? 0 }} meter</p>
                     </div>
@@ -253,14 +245,6 @@
                         <div>
                             <p class="text-sm text-gray-600">Waktu</p>
                             <p class="font-semibold text-gray-900">{{ $attendance->check_out?->format('H:i:s') ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Latitude</p>
-                            <p class="font-semibold text-gray-900">{{ $attendance->check_out_latitude ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-gray-600">Longitude</p>
-                            <p class="font-semibold text-gray-900">{{ $attendance->check_out_longitude ?? '-' }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Jarak dari Lokasi</p>

@@ -1,0 +1,12 @@
+---
+id: AD-KelolaShift-Tambah
+title: Activity Diagram - Kelola Shift (Tambah)
+---
+flowchart TD
+  A([Mulai]) --> B[HR buka form shift]
+  B --> C[Isi data shift]
+  C --> D{Data valid?}
+  D -- Tidak --> C
+  D -- Ya --> E[Simpan shift]
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z([Selesai])

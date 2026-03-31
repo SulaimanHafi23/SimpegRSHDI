@@ -1,0 +1,20 @@
+---
+id: AD-KelolaHariLibur
+title: Activity Diagram - Kelola Hari Libur
+---
+flowchart TD
+  A([Mulai]) --> B[HR/Super Admin buka menu Hari Libur]
+  B --> C[Lihat daftar hari libur]
+  C --> D{Aksi}
+  D -- Create --> E[Tambah hari libur manual]
+  D -- Update --> F[Ubah data hari libur]
+  D -- Delete --> G[Hapus hari libur]
+  D -- Bulk Create --> H[Import hari libur massal]
+  D -- Auto Generate --> I[Generate hari libur otomatis]
+  E --> J[Validasi dan simpan]
+  F --> J
+  G --> J
+  H --> J
+  I --> J
+  J --> C
+  D -- Selesai --> Z([Selesai])

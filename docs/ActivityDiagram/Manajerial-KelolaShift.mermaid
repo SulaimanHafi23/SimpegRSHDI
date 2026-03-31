@@ -1,0 +1,26 @@
+---
+id: AD-Manajerial-KelolaShift
+title: Activity Diagram - Manajerial Kelola Shift
+---
+flowchart TD
+  A([Mulai]) --> B[HR buka menu Kelola Shift]
+  B --> C[Lihat daftar shift]
+  C --> D{Aksi}
+
+  D -- Tambah Shift --> E[Isi jam masuk, jam pulang, aturan]
+  E --> F{Data shift valid?}
+  F -- Tidak --> E
+  F -- Ya --> G[Simpan shift]
+  G --> C
+
+  D -- Ubah Shift --> H[Edit konfigurasi shift]
+  H --> I[Simpan perubahan]
+  I --> C
+
+  D -- Hapus Shift --> J{Shift dipakai jadwal aktif?}
+  J -- Ya --> J1[Tolak hapus shift]
+  J1 --> C
+  J -- Tidak --> K[Hapus shift]
+  K --> C
+
+  D -- Kembali --> Z([Selesai])

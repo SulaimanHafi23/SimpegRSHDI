@@ -1,0 +1,12 @@
+---
+id: AD-KelolaDepartemen-Hapus
+title: Activity Diagram - Kelola Departemen (Hapus)
+---
+flowchart TD
+  A([Mulai]) --> B[HR/Admin pilih departemen]
+  B --> C{Dipakai data pegawai?}
+  C -- Ya --> D[Tolak hapus departemen]
+  C -- Tidak --> E[Hapus departemen]
+  D --> Z([Selesai])
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z

@@ -100,26 +100,6 @@
                             required 
                             :error="$errors->first('check_in')" />
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <x-form.input 
-                                name="latitude_in" 
-                                label="Latitude" 
-                                type="number"
-                                step="0.00000001"
-                                :value="old('latitude_in', $attendance->check_in_latitude)"
-                                :error="$errors->first('latitude_in')"
-                                placeholder="Contoh: -6.200000" />
-
-                            <x-form.input 
-                                name="longitude_in" 
-                                label="Longitude" 
-                                type="number"
-                                step="0.00000001"
-                                :value="old('longitude_in', $attendance->check_in_longitude)"
-                                :error="$errors->first('longitude_in')"
-                                placeholder="Contoh: 106.816666" />
-                        </div>
-
                         <x-form.file 
                             name="photo_in" 
                             label="Foto Check In (Opsional)"
@@ -158,26 +138,6 @@
                             :error="$errors->first('check_out')"
                             help="Kosongkan jika belum check out" />
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <x-form.input 
-                                name="latitude_out" 
-                                label="Latitude" 
-                                type="number"
-                                step="0.00000001"
-                                :value="old('latitude_out', $attendance->check_out_latitude)"
-                                :error="$errors->first('latitude_out')"
-                                placeholder="Contoh: -6.200000" />
-
-                            <x-form.input 
-                                name="longitude_out" 
-                                label="Longitude" 
-                                type="number"
-                                step="0.00000001"
-                                :value="old('longitude_out', $attendance->check_out_longitude)"
-                                :error="$errors->first('longitude_out')"
-                                placeholder="Contoh: 106.816666" />
-                        </div>
-
                         <x-form.file 
                             name="photo_out" 
                             label="Foto Check Out (Opsional)"
@@ -215,7 +175,7 @@
                         </div>
                         <div class="flex items-start space-x-2">
                             <i class="fas fa-map-marker-alt text-green-500 mt-0.5"></i>
-                            <p class="text-gray-600">Koordinat GPS digunakan untuk validasi lokasi absensi.</p>
+                            <p class="text-gray-600">Koordinat GPS hanya digunakan saat validasi. Sistem menyimpan jarak absensi (meter).</p>
                         </div>
                     </div>
                 </x-card>

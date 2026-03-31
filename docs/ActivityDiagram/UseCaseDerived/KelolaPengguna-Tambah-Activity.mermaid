@@ -1,0 +1,29 @@
+---
+id: UC-AD-KelolaPengguna-Tambah
+title: Activity Diagram - Kelola Pengguna (Tambah)
+---
+flowchart LR
+  start((Mulai)) --> A1
+
+  subgraph Admin
+    A1[Buka halaman pengguna]
+    A2[Klik Tambah Pengguna]
+    A3[Isi data akun pengguna]
+    A4[Klik Simpan/Batal]
+  end
+
+  subgraph Sistem
+    S1[Tampilkan form tambah pengguna]
+    S2{Aksi Simpan?}
+    S3{Data valid dan unik?}
+    S4[Simpan akun pengguna]
+    S5[Tampilkan notifikasi berhasil]
+    S6[Tampilkan pesan validasi]
+    S7[Kembali ke daftar pengguna]
+  end
+
+  A1 --> A2 --> S1 --> A3 --> A4 --> S2
+  S2 -- Tidak --> S7 --> endn((Selesai))
+  S2 -- Ya --> S3
+  S3 -- Tidak --> S6 --> A3
+  S3 -- Ya --> S4 --> S5 --> S7 --> endn

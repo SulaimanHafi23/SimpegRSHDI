@@ -1,0 +1,25 @@
+---
+id: UC-AD-KelolaHariLibur-Hapus
+title: Activity Diagram - Kelola Hari Libur (Delete)
+---
+flowchart LR
+  start((Mulai)) --> A1
+
+  subgraph Admin
+    A1[Buka daftar Hari Libur]
+    A2[Pilih data Hari Libur]
+    A3[Klik tombol Hapus]
+    A4[Pilih Ya atau Tidak]
+  end
+
+  subgraph Sistem
+    S1[Tampilkan dialog konfirmasi]
+    S2{Konfirmasi Ya?}
+    S3[Hapus data dari database]
+    S4[Tampilkan notifikasi berhasil]
+    S5[Kembali ke daftar hari libur]
+  end
+
+  A1 --> A2 --> A3 --> S1 --> A4 --> S2
+  S2 -- Tidak --> S5 --> endn((Selesai))
+  S2 -- Ya --> S3 --> S4 --> S5 --> endn

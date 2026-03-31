@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'></script>
+    <style>
+        body { margin: 0; padding: 0; background: transparent; }
+        .mermaid { display: flex; justify-content: center; align-items: center; }
+        svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class='mermaid'>
+﻿---
+id: PortalPegawai-JadwalKerja
+title: Portal Pegawai - Jadwal Kerja (Read)
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor P as Pegawai
+    participant UI as Web UI
+    participant C as WorkerScheduleController
+    participant S as WorkerSchedule Model
+    participant DB as Database
+
+    P->>UI: Buka menu Jadwal Kerja
+    UI->>C: GET /portal/schedules
+    C->>S: Ambil jadwal berdasarkan worker_id
+    S->>DB: SELECT * FROM worker_schedules WHERE worker_id = ? ORDER BY date ASC
+    DB-->>S: Data jadwal kerja
+    S-->>C: Collection jadwal
+    C-->>UI: Response data jadwal
+    UI-->>P: Tampilkan kalender/tabel jadwal kerja
+
+
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.mermaid.contentLoaded();
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+﻿---
+id: KelolaHariLibur-UbahHariLibur
+title: Kelola Hari Libur - Ubah Hari Libur
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor SA as Super Admin/HR
+    participant UI as Web UI
+    participant C as HolidayController
+    participant H as Holiday Model
+    participant DB as Database
+
+    SA->>UI: Klik tombol Edit pada hari libur tertentu
+    UI->>C: GET /admin/holidays/{id}
+    C->>H: Find holiday berdasarkan id
+    H->>DB: SELECT * FROM holidays WHERE id = ?
+    DB-->>H: Holiday data
+    H-->>C: Holiday instance
+    C-->>UI: Response dengan data untuk form edit
+    UI->>UI: Tampilkan form dengan data terpre-fill
+    SA->>UI: Ubah data dan klik Simpan
+    UI->>C: PUT /admin/holidays/{id}
+    note over C: Validasi: tanggal unik (exclude current record), format valid
+    alt Validasi berhasil
+        C->>H: Update holiday dengan data baru
+        H->>DB: UPDATE holidays SET date = ?, name = ?, type = ?, updated_at = NOW() WHERE id = ?
+        DB-->>H: Holiday berhasil diperbarui
+        H-->>C: Updated holiday instance
+        C-->>UI: Response sukses
+        UI-->>SA: Notifikasi perubahan berhasil
+    else Validasi gagal
+        C-->>UI: Response error dengan pesan validasi
+        UI-->>SA: Tampilkan pesan error
+    end
+

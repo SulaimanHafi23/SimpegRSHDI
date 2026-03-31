@@ -1,0 +1,29 @@
+---
+id: UC-AD-KelolaRole-Tambah
+title: Activity Diagram - Kelola Role (Tambah)
+---
+flowchart LR
+  start((Mulai)) --> A1
+
+  subgraph Admin
+    A1[Buka halaman role]
+    A2[Klik Tambah Role]
+    A3[Isi nama role dan hak akses]
+    A4[Klik Simpan/Batal]
+  end
+
+  subgraph Sistem
+    S1[Tampilkan form tambah role]
+    S2{Aksi Simpan?}
+    S3{Data valid?}
+    S4[Simpan role baru]
+    S5[Tampilkan notifikasi berhasil]
+    S6[Tampilkan pesan validasi]
+    S7[Kembali ke daftar role]
+  end
+
+  A1 --> A2 --> S1 --> A3 --> A4 --> S2
+  S2 -- Tidak --> S7 --> endn((Selesai))
+  S2 -- Ya --> S3
+  S3 -- Tidak --> S6 --> A3
+  S3 -- Ya --> S4 --> S5 --> S7 --> endn

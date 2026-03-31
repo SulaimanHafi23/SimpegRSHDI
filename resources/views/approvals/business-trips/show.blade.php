@@ -64,9 +64,10 @@
                 </p>
                 @endif
                 @if($trip->rejection_reason)
-                <p class="text-red-700 text-sm mt-2">
-                    <strong>Alasan:</strong> {{ $trip->rejection_reason }}
-                </p>
+                <div class="mt-3 rounded-md border border-red-200 bg-red-100/60 px-3 py-2">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-red-700">Alasan Penolakan</p>
+                    <p class="mt-1 text-sm leading-relaxed text-red-800">{{ $trip->rejection_reason }}</p>
+                </div>
                 @endif
             </div>
         </div>
@@ -326,16 +327,19 @@
     <div x-show="showRejectModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showRejectModal = false"></div>
-            <div class="relative bg-white rounded-lg max-w-md w-full p-6">
-                <h3 class="text-lg font-semibold mb-4">Reject Permohonan</h3>
+            <div class="relative bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+                <h3 class="text-lg font-semibold text-gray-900 mb-1">Tolak Perjalanan Dinas</h3>
+                <p class="text-sm text-gray-500 mb-4">Tuliskan alasan yang jelas agar pegawai dapat melakukan perbaikan.</p>
                 <form method="POST" action="{{ route('approvals.business-trips.reject', $trip->id) }}">
                     @csrf
-                    <div class="mb-4">
+                    <div class="mb-4 rounded-lg border border-red-100 bg-red-50/50 p-3">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Alasan Penolakan <span class="text-red-500">*</span>
                         </label>
                         <textarea x-model="rejectionReason" name="rejection_reason" rows="4" required
-                                  class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-red-500"></textarea>
+                                  class="w-full rounded-lg border-gray-300 text-sm focus:border-red-500 focus:ring focus:ring-red-200"
+                                  placeholder="Contoh: Dokumen pendukung belum lengkap, mohon lengkapi STR/SIP terbaru."></textarea>
+                        <p class="text-xs text-gray-500 mt-2">Alasan ini akan ditampilkan ke pegawai sebagai catatan penolakan.</p>
                     </div>
                     <div class="flex justify-end gap-2">
                         <button type="button" @click="showRejectModal = false"
@@ -344,7 +348,7 @@
                         </button>
                         <button type="submit"
                                 class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                            <i class="fas fa-times mr-2"></i>Reject
+                            <i class="fas fa-times mr-2"></i>Tolak
                         </button>
                     </div>
                 </form>

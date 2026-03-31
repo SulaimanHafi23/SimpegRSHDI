@@ -9,18 +9,6 @@
         title="Detail Pengajuan Cuti"
         description="Informasi lengkap pengajuan cuti pegawai"
         icon="fas fa-calendar-check">
-        <x-slot:actions>
-            @if($leaveRequest->status == 'Pending')
-                @can('edit-leave')
-                    <x-button
-                        variant="primary"
-                        icon="fas fa-edit"
-                        onclick="window.location.href='{{ route('admin.leave.edit', $leaveRequest->id) }}'">
-                        Edit
-                    </x-button>
-                @endcan
-            @endif
-        </x-slot:actions>
     </x-page-header>
 
     {{-- Alert Messages --}}
@@ -41,13 +29,14 @@
         <div class="flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 @php
+                    $normalizedStatus = strtolower((string) $leaveRequest->status);
                     $statusConfig = [
-                        'Pending' => ['variant' => 'warning', 'icon' => 'fas fa-clock', 'label' => 'Menunggu Persetujuan'],
-                        'Approved' => ['variant' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Disetujui'],
-                        'Rejected' => ['variant' => 'danger', 'icon' => 'fas fa-times-circle', 'label' => 'Ditolak'],
-                        'Cancelled' => ['variant' => 'secondary', 'icon' => 'fas fa-ban', 'label' => 'Dibatalkan'],
+                        'pending' => ['variant' => 'warning', 'icon' => 'fas fa-clock', 'label' => 'Menunggu Persetujuan'],
+                        'approved' => ['variant' => 'success', 'icon' => 'fas fa-check-circle', 'label' => 'Disetujui'],
+                        'rejected' => ['variant' => 'danger', 'icon' => 'fas fa-times-circle', 'label' => 'Ditolak'],
+                        'cancelled' => ['variant' => 'secondary', 'icon' => 'fas fa-ban', 'label' => 'Dibatalkan'],
                     ];
-                    $config = $statusConfig[$leaveRequest->status] ?? ['variant' => 'secondary', 'icon' => 'fas fa-info-circle', 'label' => $leaveRequest->status];
+                    $config = $statusConfig[$normalizedStatus] ?? ['variant' => 'secondary', 'icon' => 'fas fa-info-circle', 'label' => $leaveRequest->status];
                 @endphp
 
                 <div>
@@ -59,31 +48,30 @@
             </div>
 
             {{-- Approval Actions --}}
-            @if($leaveRequest->status == 'Pending')
-                @can('approve-leave')
-                    <div class="flex gap-3">
-                        <form action="{{ route('admin.leave.approve', $leaveRequest->id) }}" method="POST" class="inline">
-                            @csrf
-                            <x-button
-                                type="submit"
-                                variant="success"
-                                icon="fas fa-check"
-                                onclick="return confirm('Setujui pengajuan cuti ini?')">
-                                Setujui
-                            </x-button>
-                        </form>
-                        <form action="{{ route('admin.leave.reject', $leaveRequest->id) }}" method="POST" class="inline">
-                            @csrf
-                            <x-button
-                                type="submit"
-                                variant="danger"
-                                icon="fas fa-times"
-                                onclick="return confirm('Tolak pengajuan cuti ini?')">
-                                Tolak
-                            </x-button>
-                        </form>
-                    </div>
-                @endcan
+            @if($normalizedStatus === 'pending')
+                <div class="flex gap-3">
+                    <form action="{{ route('admin.leave.approve', $leaveRequest->id) }}" method="POST" class="inline">
+                        @csrf
+                        <x-button
+                            type="submit"
+                            variant="success"
+                            icon="fas fa-check"
+                            onclick="return confirm('Setujui pengajuan cuti ini?')">
+                            Setujui
+                        </x-button>
+                    </form>
+                    <form id="reject-form" action="{{ route('admin.leave.reject', $leaveRequest->id) }}" method="POST" class="inline">
+                        @csrf
+                        <input type="hidden" name="rejection_reason" id="rejection_reason">
+                        <x-button
+                            type="button"
+                            variant="danger"
+                            icon="fas fa-times"
+                            onclick="submitLeaveReject()">
+                            Tolak
+                        </x-button>
+                    </form>
+                </div>
             @endif
         </div>
     </x-card>
@@ -158,10 +146,10 @@
             </x-card>
 
             {{-- Approval History --}}
-            @if($leaveRequest->approved_at || $leaveRequest->rejected_at)
+            @if($leaveRequest->approved_at)
                 <x-card title="Riwayat Persetujuan">
                     <div class="space-y-3">
-                        @if($leaveRequest->approved_at)
+                        @if($normalizedStatus === 'approved')
                             <div class="flex items-start space-x-3">
                                 <div class="flex-shrink-0">
                                     <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -172,13 +160,15 @@
                                     <p class="text-sm font-medium text-gray-900">Disetujui</p>
                                     <p class="text-sm text-gray-500">{{ $leaveRequest->approved_at->format('d M Y, H:i') }}</p>
                                     @if($leaveRequest->approved_by)
-                                        <p class="text-xs text-gray-400 mt-1">Oleh: {{ $leaveRequest->approvedBy->name ?? '-' }}</p>
+                                        <p class="text-xs text-gray-400 mt-1">Oleh:
+                                            {{ $leaveRequest->approver->worker->name ?? $leaveRequest->approver->username ?? $leaveRequest->approver->email ?? '-' }}
+                                        </p>
                                     @endif
                                 </div>
                             </div>
                         @endif
 
-                        @if($leaveRequest->rejected_at)
+                        @if($normalizedStatus === 'rejected')
                             <div class="flex items-start space-x-3">
                                 <div class="flex-shrink-0">
                                     <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -187,9 +177,11 @@
                                 </div>
                                 <div class="flex-1">
                                     <p class="text-sm font-medium text-gray-900">Ditolak</p>
-                                    <p class="text-sm text-gray-500">{{ $leaveRequest->rejected_at->format('d M Y, H:i') }}</p>
-                                    @if($leaveRequest->rejected_by)
-                                        <p class="text-xs text-gray-400 mt-1">Oleh: {{ $leaveRequest->rejectedBy->name ?? '-' }}</p>
+                                    <p class="text-sm text-gray-500">{{ $leaveRequest->approved_at->format('d M Y, H:i') }}</p>
+                                    @if($leaveRequest->approved_by)
+                                        <p class="text-xs text-gray-400 mt-1">Oleh:
+                                            {{ $leaveRequest->approver->worker->name ?? $leaveRequest->approver->username ?? $leaveRequest->approver->email ?? '-' }}
+                                        </p>
                                     @endif
                                     @if($leaveRequest->rejection_reason)
                                         <p class="text-sm text-gray-700 mt-2 italic">"{{ $leaveRequest->rejection_reason }}"</p>
@@ -229,17 +221,7 @@
             {{-- Quick Actions --}}
             <x-card title="Aksi Cepat">
                 <div class="space-y-2">
-                    @if($leaveRequest->status == 'Pending')
-                        @can('edit-leave')
-                            <x-button
-                                variant="outline"
-                                icon="fas fa-edit"
-                                class="w-full justify-start"
-                                onclick="window.location.href='{{ route('admin.leave.edit', $leaveRequest->id) }}'">
-                                Edit Pengajuan
-                            </x-button>
-                        @endcan
-
+                    @if($normalizedStatus === 'pending')
                         @can('delete-leave')
                             <x-button
                                 variant="outline"
@@ -255,17 +237,27 @@
                             </form>
                         @endcan
                     @endif
-
-                    <x-button
-                        variant="outline"
-                        icon="fas fa-print"
-                        class="w-full justify-start"
-                        onclick="window.print()">
-                        Cetak Detail
-                    </x-button>
                 </div>
             </x-card>
         </div>
     </div>
-</div>
+ </div>
+
+@push('scripts')
+<script>
+    function submitLeaveReject() {
+        const reason = prompt('Masukkan alasan penolakan:');
+        if (!reason || reason.trim() === '') {
+            return;
+        }
+
+        if (!confirm('Tolak pengajuan cuti ini?')) {
+            return;
+        }
+
+        document.getElementById('rejection_reason').value = reason.trim();
+        document.getElementById('reject-form').submit();
+    }
+</script>
+@endpush
 @endsection

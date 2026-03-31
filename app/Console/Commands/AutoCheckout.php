@@ -88,8 +88,6 @@ class AutoCheckout extends Command
                 try {
                     $attendance->update([
                         'check_out' => $checkOutTime,
-                        'check_out_latitude' => $attendance->check_in_latitude,
-                        'check_out_longitude' => $attendance->check_in_longitude,
                         'distance_check_out' => $attendance->distance_check_in ?? 0,
                         'is_early_leave' => false,
                         'early_leave_minutes' => 0,

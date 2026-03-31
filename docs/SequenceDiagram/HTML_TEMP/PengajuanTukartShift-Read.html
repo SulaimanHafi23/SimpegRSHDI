@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'></script>
+    <style>
+        body { margin: 0; padding: 0; background: transparent; }
+        .mermaid { display: flex; justify-content: center; align-items: center; }
+        svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class='mermaid'>
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor A as Pegawai
+    participant UI as Web UI
+    participant C as EmployeeShiftSwapController
+    participant M as ShiftSwapRequest Model
+    participant DB as Database
+
+    A->>UI: Buka menu Tukar Shift
+    UI->>C: GET /employee/shift-swaps
+    C->>M: Ambil data pengajuan
+    M->>DB: SELECT
+    DB-->>M: Data pengajuan
+    M-->>C: Hasil query
+    C-->>UI: Response daftar pengajuan
+    UI-->>A: Tampilkan riwayat pengajuan
+
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.mermaid.contentLoaded();
+    </script>
+</body>
+</html>

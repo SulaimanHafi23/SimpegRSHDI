@@ -1,0 +1,12 @@
+---
+id: AD-KelolaPengguna-Ubah
+title: Activity Diagram - Kelola Pengguna (Ubah)
+---
+flowchart TD
+  A([Mulai]) --> B[Admin pilih pengguna]
+  B --> C[Ubah data pengguna]
+  C --> D{Perubahan valid?}
+  D -- Tidak --> C
+  D -- Ya --> E[Simpan perubahan]
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z([Selesai])

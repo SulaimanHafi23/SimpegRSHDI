@@ -1,0 +1,29 @@
+---
+id: UC-AD-KelolaHariLibur-Tambah
+title: Activity Diagram - Kelola Hari Libur (Create)
+---
+flowchart LR
+  start((Mulai)) --> A1
+
+  subgraph Admin
+    A1[Buka halaman Hari Libur]
+    A2[Klik tombol Tambah]
+    A3[Isi tanggal dan keterangan]
+    A4[Klik Simpan atau Batal]
+  end
+
+  subgraph Sistem
+    S1[Tampilkan form tambah]
+    S2{Aksi Simpan?}
+    S3{Data valid?}
+    S4[Simpan data ke database]
+    S5[Tampilkan notifikasi berhasil]
+    S6[Tampilkan pesan validasi]
+    S7[Kembali ke daftar hari libur]
+  end
+
+  A1 --> A2 --> S1 --> A3 --> A4 --> S2
+  S2 -- Tidak --> S7 --> endn((Selesai))
+  S2 -- Ya --> S3
+  S3 -- Tidak --> S6 --> A3
+  S3 -- Ya --> S4 --> S5 --> S7 --> endn

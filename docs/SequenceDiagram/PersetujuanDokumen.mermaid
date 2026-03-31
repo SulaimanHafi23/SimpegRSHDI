@@ -1,0 +1,23 @@
+﻿---
+id: PersetujuanDokumen
+title: Persetujuan Dokumen (Parent)
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor HR as HR/Super Admin
+    participant UI as Web UI
+    participant C as DocumentApprovalController
+    participant D as WorkerDocument Model
+    participant DB as Database
+
+    HR->>UI: Buka menu Persetujuan Dokumen
+    UI->>C: GET /admin/document-approvals
+    note over C: Filter: pending, verified, rejected
+    C->>D: Fetch dokumen pegawai yang pending atau needs review
+    D->>DB: SELECT * FROM worker_documents WHERE status IN ('pending', 'expired_soon') ORDER BY created_at ASC
+    DB-->>D: List dokumen dengan status untuk diverifikasi
+    D-->>C: Collection worker documents
+    C-->>UI: Response dengan daftar dokumen pending
+    UI-->>HR: Tampilkan daftar dokumen dengan opsi Verifikasi, Tolak, Lihat Detail
+

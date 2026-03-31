@@ -1,0 +1,12 @@
+---
+id: AD-KelolaShift-Hapus
+title: Activity Diagram - Kelola Shift (Hapus)
+---
+flowchart TD
+  A([Mulai]) --> B[HR pilih shift]
+  B --> C{Dipakai jadwal aktif?}
+  C -- Ya --> D[Tolak hapus shift]
+  C -- Tidak --> E[Hapus shift]
+  D --> Z([Selesai])
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z

@@ -1,0 +1,29 @@
+---
+id: AD-Detail-Persetujuan-VerifikasiDokumen
+title: Activity Diagram Detail - Verifikasi Dokumen Pegawai
+---
+flowchart TD
+  A([Mulai]) --> B[HR buka daftar dokumen menunggu verifikasi]
+  B --> C[Pilih dokumen pegawai]
+  C --> D[Load metadata dan file dokumen]
+  D --> E{Dokumen ditemukan?}
+  E -- Tidak --> E1[Tampilkan error data tidak ditemukan]
+  E1 --> Z([Selesai])
+  E -- Ya --> F{File dokumen dapat diakses?}
+  F -- Tidak --> F1[Tampilkan error file tidak tersedia]
+  F1 --> G1[Catat audit gagal verifikasi]
+  G1 --> Z
+  F -- Ya --> G{Dokumen valid dan lengkap?}
+  G -- Tidak --> H[Input alasan penolakan dokumen]
+  H --> I[Set status dokumen = rejected]
+  I --> J[Kirim notifikasi reject dokumen]
+  J --> K[Catat audit reject dokumen]
+  K --> Z
+  G -- Ya --> L[Set status dokumen = verified]
+  L --> M{Update berhasil?}
+  M -- Tidak --> M1[Tampilkan error update status]
+  M1 --> Z
+  M -- Ya --> N[Kirim notifikasi verifikasi berhasil]
+  N --> O[Catat audit verifikasi dokumen]
+  O --> P[Tampilkan pesan berhasil]
+  P --> Z

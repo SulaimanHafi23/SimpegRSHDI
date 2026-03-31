@@ -1,0 +1,27 @@
+---
+id: AD-PortalPegawai-AbsensiSaya
+title: Activity Diagram - Portal Pegawai Absensi Saya
+---
+flowchart TD
+  A([Mulai]) --> B[Buka menu Absensi Saya]
+  B --> C[Lihat riwayat absensi]
+  C --> D{Aksi}
+  D -- Check-In --> E[Buka form check-in]
+  E --> F[Validasi lokasi/jadwal/waktu]
+  F --> G{Valid}
+  G -- Ya --> H[Simpan check-in]
+  G -- Tidak --> I[Tampilkan error check-in]
+  H --> C
+  I --> C
+  D -- Check-Out --> J[Pilih data check-in aktif]
+  J --> K[Validasi check-out]
+  K --> L{Valid}
+  L -- Ya --> M[Simpan check-out]
+  L -- Tidak --> N[Tampilkan error check-out]
+  M --> C
+  N --> C
+  D -- Export --> O[Pilih filter tanggal]
+  O --> P[Generate file export]
+  P --> Q[Unduh file]
+  Q --> C
+  D -- Selesai --> Z([Selesai])

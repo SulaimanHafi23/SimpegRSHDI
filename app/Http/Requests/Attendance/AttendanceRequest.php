@@ -44,10 +44,6 @@ class AttendanceRequest extends FormRequest
             'check_out' => 'nullable|date|after:check_in',
             'status' => ['required', Rule::in(array_keys(AttendanceRequest::getStatuses()))],
             'notes' => 'nullable|string|max:500',
-            'latitude_in' => 'nullable|numeric|between:-90,90',
-            'longitude_in' => 'nullable|numeric|between:-180,180',
-            'latitude_out' => 'nullable|numeric|between:-90,90',
-            'longitude_out' => 'nullable|numeric|between:-180,180',
             'photo_in' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
             'photo_out' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
         ];
@@ -62,10 +58,6 @@ class AttendanceRequest extends FormRequest
             'check_out' => 'Jam Keluar',
             'status' => 'Status',
             'notes' => 'Catatan',
-            'latitude_in' => 'Latitude Masuk',
-            'longitude_in' => 'Longitude Masuk',
-            'latitude_out' => 'Latitude Keluar',
-            'longitude_out' => 'Longitude Keluar',
             'photo_in' => 'Foto Masuk',
             'photo_out' => 'Foto Keluar',
         ];

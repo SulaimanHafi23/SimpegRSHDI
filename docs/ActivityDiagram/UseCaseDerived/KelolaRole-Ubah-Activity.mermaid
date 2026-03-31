@@ -1,0 +1,31 @@
+---
+id: UC-AD-KelolaRole-Ubah
+title: Activity Diagram - Kelola Role (Ubah)
+---
+flowchart LR
+  start((Mulai)) --> A1
+
+  subgraph Admin
+    A1[Buka daftar role]
+    A2[Pilih role]
+    A3[Klik Ubah]
+    A4[Edit nama role/hak akses]
+    A5[Klik Simpan/Batal]
+  end
+
+  subgraph Sistem
+    S1[Tampilkan form ubah role]
+    S2[Isi data role saat ini]
+    S3{Aksi Simpan?}
+    S4{Data valid?}
+    S5[Update role]
+    S6[Tampilkan notifikasi berhasil]
+    S7[Tampilkan pesan validasi]
+    S8[Kembali ke daftar role]
+  end
+
+  A1 --> A2 --> A3 --> S1 --> S2 --> A4 --> A5 --> S3
+  S3 -- Tidak --> S8 --> endn((Selesai))
+  S3 -- Ya --> S4
+  S4 -- Tidak --> S7 --> A4
+  S4 -- Ya --> S5 --> S6 --> S8 --> endn

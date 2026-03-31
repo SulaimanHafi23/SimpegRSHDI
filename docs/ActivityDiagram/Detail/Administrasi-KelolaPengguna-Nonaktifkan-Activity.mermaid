@@ -1,0 +1,12 @@
+---
+id: AD-KelolaPengguna-Nonaktifkan
+title: Activity Diagram - Kelola Pengguna (Nonaktifkan)
+---
+flowchart TD
+  A([Mulai]) --> B[Admin pilih akun aktif]
+  B --> C[Klik nonaktifkan]
+  C --> D{Konfirmasi?}
+  D -- Tidak --> Z([Selesai])
+  D -- Ya --> E[Update status akun nonaktif]
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z

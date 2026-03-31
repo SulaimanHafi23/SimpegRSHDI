@@ -32,7 +32,7 @@ class HolidayController extends Controller
         }
 
         $holidays = $query->orderBy('date', 'asc')->paginate(20);
-        
+
         $years = Holiday::selectRaw('YEAR(date) as year')
             ->distinct()
             ->orderBy('year', 'desc')
@@ -128,19 +128,46 @@ class HolidayController extends Controller
             'holidays.*.description' => 'nullable|string',
         ]);
 
-        $count = 0;
+        $submittedDates = collect($validated['holidays'])
+            ->map(fn ($holiday) => \Carbon\Carbon::parse($holiday['date'])->toDateString())
+            ->unique()
+            ->values();
+
+        $existingDates = Holiday::whereIn('date', $submittedDates)
+            ->pluck('date')
+            ->map(fn ($date) => \Carbon\Carbon::parse($date)->toDateString())
+            ->flip();
+
+        $created = 0;
+        $skipped = 0;
+        $seenDates = [];
+
         foreach ($validated['holidays'] as $holidayData) {
+            $date = \Carbon\Carbon::parse($holidayData['date'])->toDateString();
+
+            if (isset($seenDates[$date]) || $existingDates->has($date)) {
+                $skipped++;
+                continue;
+            }
+
             Holiday::create([
                 'name' => $holidayData['name'],
-                'date' => $holidayData['date'],
+                'date' => $date,
                 'description' => $holidayData['description'] ?? null,
                 'is_national' => true,
             ]);
-            $count++;
+
+            $seenDates[$date] = true;
+            $created++;
+        }
+
+        $message = "Berhasil menambahkan {$created} libur nasional.";
+        if ($skipped > 0) {
+            $message .= " ({$skipped} data dilewati karena sudah ada)";
         }
 
         return redirect()->route('admin.holidays.index')
-            ->with('success', "Berhasil menambahkan {$count} libur nasional.");
+            ->with('success', $message);
     }
 
     /**
@@ -170,7 +197,7 @@ class HolidayController extends Controller
         foreach ($holidays as $holidayData) {
             // Check if holiday already exists
             $exists = Holiday::where('date', $holidayData['date'])->exists();
-            
+
             if (!$exists) {
                 Holiday::create([
                     'name' => $holidayData['name'],

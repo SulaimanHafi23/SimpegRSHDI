@@ -1,0 +1,12 @@
+---
+id: AD-KelolaRole-Ubah
+title: Activity Diagram - Kelola Role (Ubah)
+---
+flowchart TD
+  A([Mulai]) --> B[Admin pilih role]
+  B --> C[Edit permission role]
+  C --> D{Valid?}
+  D -- Tidak --> C
+  D -- Ya --> E[Simpan perubahan role]
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z([Selesai])

@@ -1,0 +1,26 @@
+---
+id: AD-Detail-Manajerial-BulkTambahShiftOverride
+title: Activity Diagram Detail - Bulk Tambah Shift Override
+---
+flowchart TD
+  A([Mulai]) --> B[HR buka menu bulk shift override]
+  B --> C[Upload template override]
+  C --> D{Format file valid?}
+  D -- Tidak --> D1[Tampilkan error format file]
+  D1 --> C
+  D -- Ya --> E[Parse baris data override]
+  E --> F{Ada baris invalid?}
+  F -- Ya --> F1[Tampilkan daftar error per baris]
+  F1 --> G{Lanjut simpan baris valid?}
+  G -- Tidak --> Z([Selesai])
+  G -- Ya --> H[Simpan baris valid]
+  F -- Tidak --> H
+  H --> I{Simpan bulk berhasil?}
+  I -- Tidak --> I1[Rollback transaksi]
+  I1 --> I2[Tampilkan error simpan massal]
+  I2 --> Z
+  I -- Ya --> J[Generate ringkasan hasil import]
+  J --> K[Kirim notifikasi hasil bulk ke HR]
+  K --> L[Catat audit bulk override]
+  L --> M[Tampilkan pesan berhasil]
+  M --> Z

@@ -1,0 +1,43 @@
+---
+id: Activity-Login-Swimlane
+title: Activity Diagram - Login ke Dalam Sistem (Swimlane Pengguna dan Sistem)
+---
+flowchart LR
+  subgraph L[Login ke dalam sistem]
+    direction LR
+
+    subgraph Pengguna[Pengguna]
+      direction TB
+      UStart((Mulai))
+      U1[Masuk Aplikasi]
+      U2[Mengisi Username/Email dan Password di Halaman Login]
+      U3[Klik Tombol Login]
+      UStart --> U1 --> U2 --> U3
+    end
+
+    subgraph Sistem[Sistem]
+      direction TB
+      S1[Tampil Halaman Landing Page dan pilih masuk ke halaman login]
+      S2[Tampil Halaman Login dengan tombol Simpan dan Batal]
+      S3{Validasi?}
+      S4[Muncul Pesan: Username/Email/Password Salah]
+      S5[Cek Level]
+      S6{Role Pengguna}
+      SA[Tampil Halaman Beranda sebagai Admin]
+      SK[Tampil Halaman Beranda sebagai Pegawai]
+      SM[Tampil Halaman Beranda sebagai Manajer]
+      SH[Tampil Halaman Beranda sebagai HR]
+      SEnd((Selesai))
+    end
+
+    U1 --> S1 --> S2
+    U3 --> S3
+
+    S3 -- Tidak Valid --> S4 --> S2
+    S3 -- Valid --> S5 --> S6
+
+    S6 -- Admin --> SA --> SEnd
+    S6 -- Karyawan --> SK --> SEnd
+    S6 -- Manajer --> SM --> SEnd
+    S6 -- HR --> SH --> SEnd
+  end

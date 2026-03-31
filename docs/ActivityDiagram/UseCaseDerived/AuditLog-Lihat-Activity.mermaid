@@ -1,0 +1,24 @@
+---
+id: UC-AD-AuditLog-Lihat
+title: Activity Diagram - Audit Log (Lihat)
+---
+flowchart LR
+  start((Mulai)) --> A1
+
+  subgraph Admin
+    A1[Buka menu Audit Log]
+    A2[Pilih filter periode/user/aksi]
+    A3[Klik Terapkan Filter]
+  end
+
+  subgraph Sistem
+    S1[Tampilkan halaman audit log]
+    S2[Ambil data log sesuai filter]
+    S3[Tampilkan daftar log]
+    S4{Admin buka detail log?}
+    S5[Tampilkan detail perubahan]
+  end
+
+  A1 --> S1 --> A2 --> A3 --> S2 --> S3 --> S4
+  S4 -- Ya --> S5 --> endn((Selesai))
+  S4 -- Tidak --> endn

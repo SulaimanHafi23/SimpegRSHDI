@@ -1,0 +1,21 @@
+---
+id: AD-Autentikasi-Login
+title: Activity Diagram - Autentikasi Login
+---
+flowchart TD
+  A([Mulai]) --> B[User buka halaman login]
+  B --> C[Isi username/email dan password]
+  C --> D[Klik Login]
+  D --> E{Validasi kredensial}
+  E -- Tidak valid --> F[Tampilkan pesan gagal]
+  F --> C
+  E -- Valid --> G[Set session/login]
+  G --> H{Cek role user}
+  H -- Pegawai --> I[Redirect dashboard pegawai]
+  H -- Manager --> J[Redirect dashboard manager]
+  H -- HR --> K[Redirect dashboard HR]
+  H -- Super Admin --> L[Redirect dashboard admin]
+  I --> Z([Selesai])
+  J --> Z
+  K --> Z
+  L --> Z

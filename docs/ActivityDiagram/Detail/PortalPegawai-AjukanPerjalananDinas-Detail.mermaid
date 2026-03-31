@@ -1,0 +1,26 @@
+---
+id: AD-Detail-PortalPegawai-AjukanPerjalananDinas
+title: Activity Diagram Detail - Pegawai Ajukan Perjalanan Dinas
+---
+flowchart TD
+  A([Mulai]) --> B[Pegawai buka form perjalanan dinas]
+  B --> C[Isi tujuan, tanggal, agenda, lampiran]
+  C --> D{Form valid?}
+  D -- Tidak --> D1[Tampilkan error validasi]
+  D1 --> C
+  D -- Ya --> E{Lampiran wajib lengkap?}
+  E -- Tidak --> E1[Tampilkan error lampiran wajib]
+  E1 --> C
+  E -- Ya --> F{Tanggal bentrok dengan cuti/jadwal khusus?}
+  F -- Ya --> F1[Tampilkan warning konflik jadwal]
+  F1 --> G{Lanjutkan?}
+  G -- Tidak --> Z([Selesai])
+  G -- Ya --> H[Simpan pengajuan pending]
+  F -- Tidak --> H
+  H --> I{Simpan berhasil?}
+  I -- Tidak --> I1[Tampilkan error server]
+  I1 --> Z
+  I -- Ya --> J[Kirim notifikasi ke manager/HR]
+  J --> K[Catat audit pengajuan perjalanan dinas]
+  K --> L[Tampilkan pesan berhasil]
+  L --> Z

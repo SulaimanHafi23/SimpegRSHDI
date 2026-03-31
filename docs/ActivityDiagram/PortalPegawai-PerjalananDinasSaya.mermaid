@@ -1,0 +1,23 @@
+---
+id: AD-PortalPegawai-PerjalananDinas
+title: Activity Diagram - Portal Pegawai Perjalanan Dinas Saya
+---
+flowchart TD
+  A([Mulai]) --> B[Buka menu Perjalanan Dinas]
+  B --> C[Lihat riwayat perjalanan dinas]
+  C --> D{Aksi}
+  D -- Ajukan --> E[Isi form perjalanan dinas]
+  E --> F[Submit pengajuan]
+  F --> G{Validasi data}
+  G -- Tidak valid --> H[Tampilkan error]
+  H --> C
+  G -- Valid --> I[Simpan pending]
+  I --> J[Kirim notifikasi approver]
+  J --> C
+  D -- Batalkan --> K[Pilih pengajuan yang valid dibatalkan]
+  K --> L[Update status canceled]
+  L --> C
+  D -- Export --> M[Pilih filter]
+  M --> N[Generate dan unduh file]
+  N --> C
+  D -- Selesai --> Z([Selesai])

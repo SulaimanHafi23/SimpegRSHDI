@@ -1,0 +1,12 @@
+---
+id: AD-KelolaRole-Hapus
+title: Activity Diagram - Kelola Role (Hapus)
+---
+flowchart TD
+  A([Mulai]) --> B[Admin pilih role]
+  B --> C{Role dipakai user?}
+  C -- Ya --> D[Tolak hapus]
+  C -- Tidak --> E[Hapus role]
+  D --> Z([Selesai])
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z

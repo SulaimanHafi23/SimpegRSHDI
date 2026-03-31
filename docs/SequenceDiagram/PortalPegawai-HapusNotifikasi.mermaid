@@ -1,0 +1,29 @@
+﻿---
+id: PortalPegawai-HapusNotifikasi
+title: Portal Pegawai - Hapus Notifikasi
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor P as Pegawai
+    participant UI as Web UI
+    participant C as NotificationController
+    participant N as Notification Model
+    participant DB as Database
+
+    P->>UI: Klik Hapus pada notifikasi
+    UI->>UI: Konfirmasi hapus notifikasi
+    P->>UI: Setujui penghapusan
+    UI->>C: DELETE /portal/notifications/{id}
+    C->>N: Verifikasi notifikasi milik user
+    N->>DB: SELECT * FROM notifications WHERE id = ? AND user_id = ?
+    alt Data valid
+        N->>DB: DELETE FROM notifications WHERE id = ?
+        DB-->>N: Notifikasi terhapus
+        C-->>UI: Response sukses
+        UI-->>P: Notifikasi berhasil dihapus
+    else Data tidak ditemukan
+        C-->>UI: Response error 404
+        UI-->>P: Notifikasi tidak ditemukan
+    end
+

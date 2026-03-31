@@ -1,0 +1,21 @@
+---
+id: AD-Laporan
+title: Activity Diagram - Laporan
+---
+flowchart TD
+  A([Mulai]) --> B[Manager/HR/Super Admin buka menu Laporan]
+  B --> C{Jenis laporan}
+  C -- Absensi --> D[Lihat laporan absensi]
+  C -- Cuti --> E[Lihat laporan cuti]
+  C -- Dokumen --> F[Lihat laporan dokumen]
+  C -- Tukar Shift --> G[Lihat laporan tukar shift]
+  C -- Perjalanan Dinas --> H[Lihat laporan perjalanan dinas]
+  D --> I{Export?}
+  E --> I
+  F --> I
+  G --> I
+  H --> I
+  I -- Ya --> J[Pilih format dan unduh]
+  I -- Tidak --> B
+  J --> B
+  C -- Selesai --> Z([Selesai])

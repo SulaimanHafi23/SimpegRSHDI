@@ -1,0 +1,26 @@
+---
+id: AD-DataMaster-KelolaDepartemen
+title: Activity Diagram - Data Master Kelola Departemen
+---
+flowchart TD
+  A([Mulai]) --> B[HR/Super Admin buka menu Departemen]
+  B --> C[Lihat daftar departemen]
+  C --> D{Aksi}
+
+  D -- Tambah --> E[Isi nama dan kode departemen]
+  E --> F{Data valid dan unik?}
+  F -- Tidak --> E
+  F -- Ya --> G[Simpan departemen]
+  G --> C
+
+  D -- Ubah --> H[Edit data departemen]
+  H --> I[Simpan perubahan]
+  I --> C
+
+  D -- Hapus --> J{Departemen dipakai data pegawai?}
+  J -- Ya --> J1[Tolak hapus departemen]
+  J1 --> C
+  J -- Tidak --> K[Hapus departemen]
+  K --> C
+
+  D -- Kembali --> Z([Selesai])

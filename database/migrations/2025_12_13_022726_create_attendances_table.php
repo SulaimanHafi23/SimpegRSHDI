@@ -20,16 +20,12 @@ return new class extends Migration
             
             // Check In
             $table->dateTime('check_in');
-            $table->decimal('check_in_latitude', 10, 8);
-            $table->decimal('check_in_longitude', 11, 8);
             $table->integer('distance_check_in')->comment('dalam meter');
             $table->boolean('check_in_by_admin')->default(false);
             $table->foreignUuid('check_in_admin_id')->nullable()->constrained('users')->nullOnDelete();
             
             // Check Out (nullable)
             $table->dateTime('check_out')->nullable();
-            $table->decimal('check_out_latitude', 10, 8)->nullable();
-            $table->decimal('check_out_longitude', 11, 8)->nullable();
             $table->integer('distance_check_out')->nullable()->comment('dalam meter');
             $table->boolean('check_out_by_admin')->default(false);
             $table->foreignUuid('check_out_admin_id')->nullable()->constrained('users')->nullOnDelete();

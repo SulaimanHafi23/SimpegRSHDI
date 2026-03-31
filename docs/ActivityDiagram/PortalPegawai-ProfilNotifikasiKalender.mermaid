@@ -1,0 +1,34 @@
+---
+id: AD-PortalPegawai-ProfilNotifKalender
+title: Activity Diagram - Portal Pegawai Profil Notifikasi Kalender
+---
+flowchart TD
+  A([Mulai]) --> B[Buka portal pegawai]
+  B --> C{Menu dipilih}
+
+  C -- Profil --> D[Lihat profil]
+  D --> E{Aksi profil}
+  E -- Ubah profil --> F[Edit data profil]
+  F --> G[Simpan perubahan]
+  G --> D
+  E -- Ubah password --> H[Isi password lama dan baru]
+  H --> I{Validasi password}
+  I -- Valid --> J[Update password]
+  I -- Tidak valid --> K[Tampilkan error]
+  J --> D
+  K --> D
+
+  C -- Notifikasi --> L[Lihat daftar notifikasi]
+  L --> M{Aksi notifikasi}
+  M -- Mark as read --> N[Update status read]
+  M -- Mark all as read --> O[Update semua status read]
+  M -- Hapus --> P[Delete notifikasi]
+  N --> L
+  O --> L
+  P --> L
+
+  C -- Kalender --> Q[Lihat kalender kerja]
+  Q --> R[Ambil event jadwal/libur]
+  R --> Q
+
+  C -- Selesai --> Z([Selesai])

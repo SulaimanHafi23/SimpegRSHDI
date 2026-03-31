@@ -1,0 +1,26 @@
+---
+id: AD-Detail-Persetujuan-RevertTukarShift
+title: Activity Diagram Detail - Revert Eksekusi Tukar Shift
+---
+flowchart TD
+  A([Mulai]) --> B[Manager buka riwayat tukar shift]
+  B --> C[Pilih request berstatus executed]
+  C --> D[Load data jadwal sebelum dan sesudah swap]
+  D --> E{Request bisa direvert?}
+  E -- Tidak --> E1[Tampilkan error tidak eligible revert]
+  E1 --> Z([Selesai])
+  E -- Ya --> F[Input alasan revert]
+  F --> G{Alasan valid?}
+  G -- Tidak --> G1[Tampilkan validasi alasan]
+  G1 --> F
+  G -- Ya --> H[Konfirmasi revert]
+  H --> I[Restore jadwal awal kedua pegawai]
+  I --> J[Update status request = reverted]
+  J --> K{Transaksi berhasil?}
+  K -- Tidak --> K1[Rollback perubahan]
+  K1 --> K2[Tampilkan error proses revert]
+  K2 --> Z
+  K -- Ya --> L[Kirim notifikasi revert ke pihak terkait]
+  L --> M[Catat audit revert tukar shift]
+  M --> N[Tampilkan pesan sukses]
+  N --> Z

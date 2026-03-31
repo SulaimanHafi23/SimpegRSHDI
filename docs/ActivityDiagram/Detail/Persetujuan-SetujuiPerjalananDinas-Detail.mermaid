@@ -1,0 +1,28 @@
+---
+id: AD-Detail-Persetujuan-SetujuiPerjalananDinas
+title: Activity Diagram Detail - Setujui Perjalanan Dinas
+---
+flowchart TD
+  A([Mulai]) --> B[Manager/HR buka daftar perjalanan dinas pending]
+  B --> C[Pilih pengajuan]
+  C --> D[Load detail pengajuan + dokumen pendukung]
+  D --> E{Pengajuan ditemukan?}
+  E -- Tidak --> E1[Tampilkan error data tidak ditemukan]
+  E1 --> Z([Selesai])
+  E -- Ya --> F{Status pending?}
+  F -- Tidak --> F1[Tampilkan error status tidak valid]
+  F1 --> Z
+  F -- Ya --> G{Dokumen pendukung valid?}
+  G -- Tidak --> G1[Tampilkan error verifikasi dokumen]
+  G1 --> H1[Catat audit gagal approve]
+  H1 --> Z
+  G -- Ya --> H[Konfirmasi approve]
+  H --> I[Update status pengajuan = approved]
+  I --> J{Update berhasil?}
+  J -- Tidak --> J1[Rollback transaksi]
+  J1 --> J2[Tampilkan error server]
+  J2 --> Z
+  J -- Ya --> K[Kirim notifikasi approved ke pegawai]
+  K --> L[Catat audit approve perjalanan dinas]
+  L --> M[Tampilkan pesan berhasil]
+  M --> Z

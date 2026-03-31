@@ -1,0 +1,19 @@
+﻿%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor A as Manager/HR
+    participant UI as Web UI
+    participant C as BusinessTripController
+    participant M as BusinessTrip Model
+    participant DB as Database
+
+    A->>UI: Klik Setujui pada data Setujui Permintaan Perjalanan Dinas
+    UI->>C: POST /approvals/business-trips/{id}/approve
+    C->>M: Update status = approved
+    M->>DB: UPDATE status dan approved_by
+    DB-->>M: Data berhasil diperbarui
+    M-->>C: Status terbaru
+    C-->>UI: Response sukses
+    UI-->>A: Notifikasi persetujuan berhasil
+
+

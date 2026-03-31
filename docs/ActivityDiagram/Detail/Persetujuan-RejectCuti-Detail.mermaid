@@ -1,0 +1,29 @@
+---
+id: AD-Detail-Persetujuan-RejectCuti
+title: Activity Diagram Detail - Reject Permintaan Cuti
+---
+flowchart TD
+  A([Mulai]) --> B[Manager buka daftar cuti pending]
+  B --> C[Pilih pengajuan cuti]
+  C --> D[Load detail pengajuan]
+  D --> E{Pengajuan ada?}
+  E -- Tidak --> E1[Tampilkan error data tidak ditemukan]
+  E1 --> Z([Selesai])
+  E -- Ya --> F{Status pending?}
+  F -- Tidak --> F1[Tampilkan error sudah diproses]
+  F1 --> Z
+  F -- Ya --> G[Input alasan penolakan]
+  G --> H{Alasan valid?}
+  H -- Tidak --> H1[Tampilkan validasi alasan wajib]
+  H1 --> G
+  H -- Ya --> I[Konfirmasi reject]
+  I --> J[Update status menjadi rejected + simpan alasan]
+  J --> K{Update berhasil?}
+  K -- Tidak --> K1[Rollback transaksi]
+  K1 --> K2[Tampilkan error server]
+  K2 --> Z
+  K -- Ya --> L[Trigger notifikasi hasil reject]
+  L --> M[Kirim notifikasi ke pegawai]
+  M --> N[Catat audit reject cuti]
+  N --> O[Tampilkan pesan berhasil]
+  O --> Z

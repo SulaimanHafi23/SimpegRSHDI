@@ -1,0 +1,31 @@
+---
+id: UC-AD-KelolaHariLibur-Ubah
+title: Activity Diagram - Kelola Hari Libur (Update)
+---
+flowchart LR
+  start((Mulai)) --> A1
+
+  subgraph Admin
+    A1[Buka daftar Hari Libur]
+    A2[Pilih data Hari Libur]
+    A3[Klik tombol Ubah]
+    A4[Perbarui data]
+    A5[Klik Simpan atau Batal]
+  end
+
+  subgraph Sistem
+    S1[Tampilkan form ubah]
+    S2[Prefill data hari libur]
+    S3{Aksi Simpan?}
+    S4{Data valid?}
+    S5[Update data di database]
+    S6[Tampilkan pesan validasi]
+    S7[Tampilkan notifikasi berhasil]
+    S8[Kembali ke daftar hari libur]
+  end
+
+  A1 --> A2 --> A3 --> S1 --> S2 --> A4 --> A5 --> S3
+  S3 -- Tidak --> S8 --> endn((Selesai))
+  S3 -- Ya --> S4
+  S4 -- Tidak --> S6 --> A4
+  S4 -- Ya --> S5 --> S7 --> S8 --> endn

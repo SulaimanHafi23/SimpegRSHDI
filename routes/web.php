@@ -296,6 +296,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
         Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
+        Route::delete('/{id}', [BusinessTripApprovalController::class, 'destroy'])->name('destroy');
     });
 
     // ========== REPORT ROUTES ==========
@@ -413,8 +414,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/create', [LeaveRequestController::class, 'create'])->name('create');
         Route::post('/', [LeaveRequestController::class, 'store'])->name('store');
         Route::get('/{id}', [LeaveRequestController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [LeaveRequestController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [LeaveRequestController::class, 'update'])->name('update');
         Route::delete('/{id}', [LeaveRequestController::class, 'destroy'])->name('destroy');
         Route::post('/{id}/approve', [LeaveRequestController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [LeaveRequestController::class, 'reject'])->name('reject');

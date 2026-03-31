@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'></script>
+    <style>
+        body { margin: 0; padding: 0; background: transparent; }
+        .mermaid { display: flex; justify-content: center; align-items: center; }
+        svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class='mermaid'>
+﻿---
+id: KelolaRole-HapusRole
+title: Kelola Role - Hapus Role
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor SA as Super Admin
+    participant UI as Web UI
+    participant C as RoleController
+    participant R as Role Model
+    participant DB as Database
+
+    SA->>UI: Klik tombol Hapus pada role tertentu
+    UI->>UI: Tampilkan konfirmasi penghapusan
+    SA->>UI: Klik tombol "Hapus" pada dialog konfirmasi
+    UI->>C: DELETE /admin/roles/{id}
+    note over C: Cek: apakah ada users dengan role ini?
+    C->>R: Check if role has associated users
+    R->>DB: SELECT COUNT(*) FROM users WHERE role_id = ?
+    DB-->>R: Count of users
+    alt Tidak ada users
+        R->>DB: DELETE FROM role_permission WHERE role_id = ?
+        DB-->>R: Permissions deleted
+        R->>DB: DELETE FROM roles WHERE id = ?
+        DB-->>R: Role berhasil dihapus
+        R-->>C: Confirmation deleted
+        C-->>UI: Response sukses
+        UI-->>SA: Notifikasi penghapusan berhasil
+    else Ada users dengan role ini
+        R-->>C: Error - cannot delete, users assigned
+        C-->>UI: Response error
+        UI-->>SA: Tampilkan pesan error: "Tidak dapat menghapus role yang masih digunakan oleh pengguna"
+    end
+
+
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.mermaid.contentLoaded();
+    </script>
+</body>
+</html>

@@ -188,34 +188,6 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                     </svg>
                                 </a>
-
-                                @if($leave->status == 'pending')
-                                    {{-- Approve button --}}
-                                    <button onclick="approveLeave('{{ $leave->id }}')"
-                                            class="text-green-600 hover:text-green-900"
-                                            title="Setujui">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                        </svg>
-                                    </button>
-                                    <button onclick="rejectLeave('{{ $leave->id }}')"
-                                            class="text-red-600 hover:text-red-900"
-                                            title="Tolak">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                        </svg>
-                                    </button>
-                                @endif
-
-                                @if($leave->status == 'pending')
-                                        <a href="{{ route('admin.leave.edit', $leave->id) }}"
-                                           class="text-indigo-600 hover:text-indigo-900"
-                                           title="Edit">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                            </svg>
-                                        </a>
-                                    @endif
                                     <form action="{{ route('admin.leave.destroy', $leave->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
@@ -248,51 +220,4 @@
         @endif
     </x-card>
 </div>
-
-@push('scripts')
-<script>
-    function approveLeave(id) {
-        if (confirm('Setujui pengajuan cuti ini?')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/leaves/${id}/approve`;
-
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-
-            form.appendChild(csrfInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-
-    function rejectLeave(id) {
-        const reason = prompt('Alasan penolakan:');
-        if (reason && reason.trim() !== '') {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/leaves/${id}/reject`;
-
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-
-            const reasonInput = document.createElement('input');
-            reasonInput.type = 'hidden';
-            reasonInput.name = 'rejection_reason';
-            reasonInput.value = reason;
-
-            form.appendChild(csrfInput);
-            form.appendChild(reasonInput);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-</script>
-@endpush
 @endsection

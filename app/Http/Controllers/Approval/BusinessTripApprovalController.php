@@ -160,6 +160,20 @@ class BusinessTripApprovalController extends Controller
         return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas ditolak.');
     }
 
+    public function destroy(string $id)
+    {
+        $trip = BusinessTrip::findOrFail($id);
+
+        $user = auth()->user();
+        if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
+            return back()->with('error', 'Anda tidak memiliki akses untuk menghapus permohonan ini.');
+        }
+
+        $trip->delete();
+
+        return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas berhasil dihapus.');
+    }
+
     public function export(Request $request)
     {
         try {

@@ -1,0 +1,25 @@
+﻿---
+id: KelolaMappingDokumenPosisi-HapusMapping
+title: Kelola Mapping Dokumen Posisi - Hapus Mapping
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor HR as HR/Super Admin
+    participant UI as Web UI
+    participant C as DocumentPositionMappingController
+    participant DPM as DocumentPositionMapping Model
+    participant DB as Database
+
+    HR->>UI: Klik tombol Hapus pada mapping tertentu
+    UI->>UI: Tampilkan konfirmasi penghapusan
+    HR->>UI: Klik tombol "Hapus" pada dialog konfirmasi
+    UI->>C: DELETE /admin/document-position-mappings/{id}
+    C->>DPM: Delete mapping berdasarkan id
+    note over DPM: Catatan: penghapusan mapping tidak menghagapus dokumen yang sudah diupload sebelumnya
+    DPM->>DB: DELETE FROM document_position_mappings WHERE id = ?
+    DB-->>DPM: Mapping berhasil dihapus
+    DPM-->>C: Confirmation
+    C-->>UI: Response sukses
+    UI-->>HR: Notifikasi penghapusan berhasil
+

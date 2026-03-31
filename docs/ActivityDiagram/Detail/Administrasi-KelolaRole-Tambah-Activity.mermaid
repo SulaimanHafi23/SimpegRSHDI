@@ -1,0 +1,12 @@
+---
+id: AD-KelolaRole-Tambah
+title: Activity Diagram - Kelola Role (Tambah)
+---
+flowchart TD
+  A([Mulai]) --> B[Admin buka form role]
+  B --> C[Isi nama role dan permission]
+  C --> D{Valid?}
+  D -- Tidak --> C
+  D -- Ya --> E[Simpan role]
+  E --> F[Tampilkan notifikasi berhasil]
+  F --> Z([Selesai])

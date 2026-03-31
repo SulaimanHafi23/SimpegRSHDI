@@ -1,0 +1,22 @@
+﻿---
+id: KelolaShiftOverride-LihatShiftOverride
+title: Kelola Shift Override - Lihat Detail Shift Override
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor HR as HR/Manager
+    participant UI as Web UI
+    participant C as ShiftOverrideController
+    participant SO as ShiftOverride Model
+    participant DB as Database
+
+    HR->>UI: Klik pada shift override untuk melihat detail
+    UI->>C: GET /admin/shift-overrides/{id}
+    C->>SO: Find override dengan relasi worker dan shift
+    SO->>DB: SELECT so.*, w.name, w.nip, s.name as shift_name, s.start_time, s.end_time FROM shift_overrides so JOIN workers w JOIN shifts s WHERE so.id = ?
+    DB-->>SO: Override data lengkap
+    SO-->>C: ShiftOverride instance
+    C-->>UI: Response dengan detail
+    UI-->>HR: Tampilkan: Pegawai, Shift Override, Tanggal, Jam Kerja, Alasan, Dibuat oleh
+

@@ -1,0 +1,29 @@
+---
+id: AD-Detail-Persetujuan-TolakPerjalananDinas
+title: Activity Diagram Detail - Tolak Perjalanan Dinas
+---
+flowchart TD
+  A([Mulai]) --> B[Manager/HR buka daftar perjalanan dinas pending]
+  B --> C[Pilih pengajuan]
+  C --> D[Load detail pengajuan]
+  D --> E{Pengajuan ada?}
+  E -- Tidak --> E1[Tampilkan error data tidak ditemukan]
+  E1 --> Z([Selesai])
+  E -- Ya --> F{Status pending?}
+  F -- Tidak --> F1[Tampilkan error status tidak valid]
+  F1 --> Z
+  F -- Ya --> G[Input alasan penolakan]
+  G --> H{Alasan valid?}
+  H -- Tidak --> H1[Tampilkan validasi alasan wajib]
+  H1 --> G
+  H -- Ya --> I[Konfirmasi tolak]
+  I --> J[Update status pengajuan = rejected]
+  J --> K[Simpan alasan reject]
+  K --> L{Update berhasil?}
+  L -- Tidak --> L1[Rollback transaksi]
+  L1 --> L2[Tampilkan error server]
+  L2 --> Z
+  L -- Ya --> M[Kirim notifikasi reject ke pegawai]
+  M --> N[Catat audit reject perjalanan dinas]
+  N --> O[Tampilkan pesan berhasil]
+  O --> Z

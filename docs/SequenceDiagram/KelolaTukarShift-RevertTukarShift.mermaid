@@ -1,0 +1,29 @@
+﻿---
+id: KelolaTukarShift-RevertTukarShift
+title: Kelola Tukar Shift - Revert Tukar Shift
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor Mgr as Manager/HR
+    participant UI as Web UI
+    participant C as ShiftSwapApprovalController
+    participant R as ShiftSwapRequest Model
+    participant WS as WorkerSchedule Model
+    participant DB as Database
+
+    Mgr->>UI: Klik Revert pada request yang sudah dieksekusi
+    UI->>C: POST /manager/shift-swap-approvals/{id}/revert
+    C->>R: Validasi status request = executed
+    alt Valid
+        C->>WS: Kembalikan jadwal ke kondisi semula
+        WS->>DB: UPDATE worker_schedules (rollback swap)
+        C->>R: Ubah status request = approved
+        R->>DB: UPDATE shift_swap_requests SET status = 'approved'
+        C-->>UI: Response sukses
+        UI-->>Mgr: Revert tukar shift berhasil
+    else Tidak valid
+        C-->>UI: Response error
+        UI-->>Mgr: Request belum bisa direvert
+    end
+

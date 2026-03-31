@@ -1,0 +1,30 @@
+graph TD
+    Start((Start)) --> Login[Pengguna Login Ke SIDIA]
+    Login --> Dashboard{Pilih Menu di Dashboard}
+
+    %% --- PRESENSI SIDIA ---
+    Dashboard -->|Pilih Menu Absensi| KlikAbsen[Klik Tombol Absensi Check-in/Check-out]
+    KlikAbsen --> SimpanDB1[(Sistem Simpan Timestamp ke Database)]
+    SimpanDB1 --> EndPresensi((End))
+
+    %% --- PEMBERKASAN SIDIA ---
+    Dashboard -->|Pilih Menu Dokumen| Unggah[Unggah File PDF/Gambar STR/SIP]
+    Unggah --> SimpanDB2[(Sistem Simpan File ke Database)]
+    SimpanDB2 --> AksesHRD[HRD Dapat Akses Instan]
+    AksesHRD --> EndBerkas((End))
+
+    %% --- PENGAJUAN SIDIA ---
+    Dashboard -->|Pilih Menu Pengajuan| IsiDigital[Isi Form Digital & Upload Lampiran]
+    IsiDigital --> NotifAtasan[Sistem Kirim ke Manager]
+    NotifAtasan --> CekSistem{Manager Setuju atau Tolak?}
+    CekSistem -->|Tolak| StatusTolak[Sistem Update Status: Tolak]
+    CekSistem -->|Setuju| StatusSetuju[Sistem Update Status: Setuju]
+    StatusTolak --> NotifPegawai[Pegawai Lihat Status]
+    StatusSetuju --> NotifPegawai
+    NotifPegawai --> EndAjuan((End))
+
+    %% --- LAPORAN SIDIA ---
+    Dashboard -->|Pilih Menu Laporan Khusus Admin/TU| PilihPeriode[Pilih Periode Laporan]
+    PilihPeriode --> KlikGen[Klik Generasi Laporan]
+    KlikGen --> TampilLap[Sistem Tampilkan/Cetak Laporan Otomatis]
+    TampilLap --> EndLap((End))

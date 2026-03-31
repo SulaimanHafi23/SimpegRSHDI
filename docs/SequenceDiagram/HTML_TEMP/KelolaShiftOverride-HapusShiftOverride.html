@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'></script>
+    <style>
+        body { margin: 0; padding: 0; background: transparent; }
+        .mermaid { display: flex; justify-content: center; align-items: center; }
+        svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class='mermaid'>
+﻿---
+id: KelolaShiftOverride-HapusShiftOverride
+title: Kelola Shift Override - Hapus Shift Override
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor HR as HR/Manager
+    participant UI as Web UI
+    participant C as ShiftOverrideController
+    participant SO as ShiftOverride Model
+    participant DB as Database
+
+    HR->>UI: Klik tombol Hapus pada shift override tertentu
+    UI->>UI: Tampilkan konfirmasi penghapusan
+    HR->>UI: Klik tombol "Hapus" pada dialog konfirmasi
+    UI->>C: DELETE /admin/shift-overrides/{id}
+    C->>SO: Delete override berdasarkan id
+    SO->>DB: DELETE FROM shift_overrides WHERE id = ?
+    DB-->>SO: Override berhasil dihapus
+    SO-->>C: Confirmation
+    C-->>UI: Response sukses
+    UI-->>HR: Notifikasi penghapusan berhasil
+
+
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.mermaid.contentLoaded();
+    </script>
+</body>
+</html>

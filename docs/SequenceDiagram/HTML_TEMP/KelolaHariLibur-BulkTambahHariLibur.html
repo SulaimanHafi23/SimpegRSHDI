@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src='https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'></script>
+    <style>
+        body { margin: 0; padding: 0; background: transparent; }
+        .mermaid { display: flex; justify-content: center; align-items: center; }
+        svg { max-width: 100%; height: auto; }
+    </style>
+</head>
+<body>
+    <div class='mermaid'>
+﻿---
+id: KelolaHariLibur-BulkTambahHariLibur
+title: Kelola Hari Libur - Bulk Tambah Hari Libur
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+sequenceDiagram
+    autonumber
+    actor SA as Super Admin/HR
+    participant UI as Web UI
+    participant C as HolidayController
+    participant H as Holiday Model
+    participant DB as Database
+
+    SA->>UI: Klik tombol "Tambah Bulk" atau "Import Excel"
+    UI->>UI: Tampilkan form upload file atau tabel input multiple
+    SA->>UI: Upload file Excel atau input beberapa hari libur sekaligus
+    UI->>C: POST /admin/holidays/bulk-create
+    note over C: Validasi: format data, tanggal unik, tidak ada duplikasi
+    alt Validasi berhasil
+        C->>H: Create multiple holidays dari array data
+        H->>DB: INSERT INTO holidays (date, name, type, created_by, created_at) VALUES (...), (...), ...
+        DB-->>H: Semua hari libur berhasil disimpan
+        H-->>C: Array of new holiday instances
+        C-->>UI: Response sukses dengan jumlah record yang ditambahkan
+        UI-->>SA: Notifikasi: "X hari libur berhasil ditambahkan"
+    else Validasi gagal
+        C-->>UI: Response error dengan detail error per record
+        UI-->>SA: Tampilkan pesan error dan baris yang bermasalah
+    end
+
+
+    </div>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+        mermaid.mermaid.contentLoaded();
+    </script>
+</body>
+</html>
