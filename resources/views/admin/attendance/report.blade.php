@@ -65,7 +65,6 @@
                         <div><span class="text-gray-500">Check-in:</span> <span class="font-medium">{{ $row->check_in?->format('H:i') ?? '-' }}</span></div>
                         <div><span class="text-gray-500">Check-out:</span> <span class="font-medium">{{ $row->check_out?->format('H:i') ?? '-' }}</span></div>
                         <div><span class="text-gray-500">Telat:</span> <span class="font-medium">{{ $row->late_minutes ?? 0 }} mnt</span></div>
-                        <div><span class="text-gray-500">Lembur:</span> <span class="font-medium">{{ $row->overtime_minutes ?? 0 }} mnt</span></div>
                     </div>
                     @if($row->notes)
                         <div class="text-xs text-gray-500"><span class="font-medium">Catatan:</span> {{ $row->notes }}</div>
@@ -84,7 +83,6 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Check-out</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Telat (menit)</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lembur (menit)</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Catatan</th>
                         </tr>
                     </thead>
@@ -98,7 +96,6 @@
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ $row->check_out?->format('H:i') ?? '-' }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ ucfirst($row->status ?? '-') }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ $row->late_minutes ?? 0 }}</td>
-                                <td class="px-6 py-4 text-sm text-gray-900">{{ $row->overtime_minutes ?? 0 }}</td>
                                 <td class="px-6 py-4 text-sm text-gray-900">{{ $row->notes ?? '-' }}</td>
                             </tr>
                         @endforeach

@@ -530,12 +530,6 @@
                     <span class="summary-item-label">⏰ Keterlambatan</span>
                     <span class="summary-item-value" style="color: #dc2626;">{{ $stats['late_arrivals'] }}</span>
                 </div>
-                @if($stats['overtime_hours'] > 0)
-                <div class="summary-item">
-                    <span class="summary-item-label">⏱️ Total Lembur (Jam)</span>
-                    <span class="summary-item-value" style="color: #8b5cf6;">{{ $stats['overtime_hours'] }}</span>
-                </div>
-                @endif
             </div>
         </div>
         <div class="summary-col">

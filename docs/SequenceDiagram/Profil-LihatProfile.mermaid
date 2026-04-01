@@ -9,11 +9,16 @@ sequenceDiagram
 
     A->>UI: Buka menu Lihat Profile
     UI->>C: GET /profile
-    C->>M: Ambil data sesuai filter
-    M->>DB: SELECT
-    DB-->>M: Dataset
-    M-->>C: Data siap tampil
-    C-->>UI: Kirim data ke halaman
-    UI-->>A: Tampilkan data
+    C->>M: Ambil user login + relasi worker
+    M->>DB: SELECT user + worker by session/auth id
+    DB-->>M: Data user dan worker
+    M-->>C: Data user dan worker
+    alt User punya worker_id
+        C-->>UI: Render admin.profile (user + worker)
+        UI-->>A: Tampilkan detail profile
+    else User tidak punya worker_id
+        C-->>UI: Render admin.profile (user only)
+        UI-->>A: Tampilkan detail profile
+    end
 
 

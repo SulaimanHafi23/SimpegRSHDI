@@ -77,7 +77,7 @@ class ReportController extends Controller
 
             $callback = function () use ($collection) {
                 $out = fopen('php://output', 'w');
-                fputcsv($out, ['Worker', 'Date', 'Check In', 'Check Out', 'Location', 'Status', 'Is Late', 'Late Minutes', 'Overtime Minutes']);
+                fputcsv($out, ['Worker', 'Date', 'Check In', 'Check Out', 'Location', 'Status', 'Is Late', 'Late Minutes']);
                 foreach ($collection as $row) {
                     fputcsv($out, [
                         $row->worker->name ?? '-',
@@ -88,7 +88,6 @@ class ReportController extends Controller
                         $row->status ?? '-',
                         $row->is_late ? 'Yes' : 'No',
                         $row->late_minutes ?? 0,
-                        $row->overtime_minutes ?? 0,
                     ]);
                 }
                 fclose($out);

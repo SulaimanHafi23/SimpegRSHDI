@@ -260,7 +260,6 @@ class AttendanceService
                 'status' => $data['status'] ?? 'present',
                 'is_late' => $isLate,
                 'late_minutes' => $lateMinutes,
-                'is_outside_radius' => $isOutsideRadius,
             ]);
 
             $attendance = $this->attendanceRepository->create($attendanceDTO);
@@ -274,8 +273,6 @@ class AttendanceService
                     'photo_path' => $photoPath,
                     'photo_type' => 'check_in',
                     'taken_at' => $checkInTime,
-                    'latitude' => $data['latitude'],
-                    'longitude' => $data['longitude'],
                 ]);
 
                 $this->attendancePhotoRepository->create($photoDTO);
@@ -382,11 +379,16 @@ class AttendanceService
                 (float) $data['latitude'],
                 (float) $data['longitude']
             );
+            $isOutsideRadius = $distance > $configuredLocation['radius'];
+
+            // Enforce radius only for present status
+            if ($attendance->status === 'present' && $isOutsideRadius) {
+                throw new \Exception('Anda berada di luar radius lokasi absensi. Silakan mendekat ke lokasi yang ditentukan.');
+            }
 
             // Hitung early leave dan overtime
             $isEarlyLeave = $checkOutTime->lessThan($shiftEndDateTime);
             $earlyLeaveMinutes = 0;
-            $overtimeMinutes = 0;
 
             if ($isEarlyLeave) {
                 $earlyLeaveMinutes = $checkOutTime->diffInMinutes($shiftEndDateTime);
@@ -413,11 +415,6 @@ class AttendanceService
 
                 // Optional: Bisa ditambahkan notifikasi atau approval untuk early leave
                 $earlyLeaveWarning = "Perhatian: Anda pulang lebih awal {$earlyLeaveText} dari jadwal ({$shiftEndDateTime->format('H:i')}). Pastikan Anda sudah mendapat izin dari atasan.";
-            } else {
-                // Calculate overtime if checkout is after shift end time
-                $overtimeMinutes = $checkOutTime->greaterThan($shiftEndDateTime)
-                    ? $checkOutTime->diffInMinutes($shiftEndDateTime)
-                    : 0;
             }
 
             $existingNotes = trim((string) $attendance->notes);
@@ -458,8 +455,6 @@ class AttendanceService
                 'late_minutes' => $attendance->late_minutes,
                 'is_early_leave' => $isEarlyLeave,
                 'early_leave_minutes' => $earlyLeaveMinutes,
-                'is_outside_radius' => $distance > $configuredLocation['radius'],
-                'overtime_minutes' => $overtimeMinutes,
                 'notes' => $combinedNotes,
             ]);
 
@@ -474,8 +469,6 @@ class AttendanceService
                     'photo_path' => $photoPath,
                     'photo_type' => 'check_out',
                     'taken_at' => $checkOutTime,
-                    'latitude' => $data['latitude'],
-                    'longitude' => $data['longitude'],
                 ]);
 
                 $this->attendancePhotoRepository->create($photoDTO);
@@ -518,8 +511,6 @@ class AttendanceService
             'late_minutes' => $data['late_minutes'] ?? $existing->late_minutes,
             'is_early_leave' => $data['is_early_leave'] ?? $existing->is_early_leave,
             'early_leave_minutes' => $data['early_leave_minutes'] ?? $existing->early_leave_minutes,
-            'is_outside_radius' => $data['is_outside_radius'] ?? $existing->is_outside_radius,
-            'overtime_minutes' => $data['overtime_minutes'] ?? $existing->overtime_minutes,
             'notes' => $data['notes'] ?? $existing->notes,
         ];
 

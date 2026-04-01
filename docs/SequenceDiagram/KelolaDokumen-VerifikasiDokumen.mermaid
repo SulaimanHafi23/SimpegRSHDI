@@ -1,19 +1,25 @@
-﻿%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+﻿---
+id: PersetujuanDokumen-VerifikasiDokumen
+title: Persetujuan Dokumen - Verifikasi Dokumen
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
 sequenceDiagram
     autonumber
-    actor A as Pegawai/HR
+    actor HR as HR/Super Admin
     participant UI as Web UI
-    participant C as DocumentController
-    participant M as WorkerDocument Model
+    participant C as DocumentApprovalController
+    participant D as WorkerDocument Model
     participant DB as Database
 
-    A->>UI: Klik verifikasi dokumen
-    UI->>C: POST /approvals/documents/{id}/verify
-    C->>M: Update status = verified
-    M->>DB: UPDATE status_verifikasi
-    DB-->>M: Status verifikasi tersimpan
-    M-->>C: Hasil verifikasi
+    HR->>UI: Klik tombol "Verifikasi" atau "Setujui" pada dokumen
+    UI->>UI: Tampilkan form verifikasi (catatan verifikasi, tgl expired)
+    HR->>UI: Isi catatan dan klik Verifikasi
+    UI->>C: POST /admin/document-approvals/{id}/verify
+    C->>D: Update status = verified, verified_by = HR_id, verified_at = now, notes
+    D->>DB: UPDATE worker_documents SET status = 'verified', verified_by = ?, verified_at = NOW(), notes = ? WHERE id = ?
+    DB-->>D: Dokumen berhasil diverifikasi
+    D-->>C: Updated WorkerDocument
     C-->>UI: Response sukses
-    UI-->>A: Dokumen terverifikasi
-
+    UI-->>HR: Notifikasi verifikasi berhasil
+    note over C: Audit log: catat siapa/kapan verifikasi dokumen siapa
 

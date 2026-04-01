@@ -181,14 +181,6 @@
                     </span>
                     <span class="font-medium text-orange-600">{{ $stats['late_arrivals'] }}</span>
                 </div>
-                @if($stats['overtime_hours'] > 0)
-                <div class="flex justify-between items-center py-2">
-                    <span class="text-sm text-gray-600">
-                        <i class="fas fa-plus-circle mr-2 text-purple-500"></i>Total Lembur (Jam)
-                    </span>
-                    <span class="font-medium text-purple-600">{{ $stats['overtime_hours'] }}</span>
-                </div>
-                @endif
             </div>
         </div>
 

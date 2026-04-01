@@ -10,8 +10,6 @@ class AttendancePhotoDTO
         public readonly string $photo_path,
         public readonly string $photo_type,
         public readonly string $taken_at,
-        public readonly ?float $latitude,
-        public readonly ?float $longitude,
     ) {}
 
     public static function fromRequest(array $data): self
@@ -22,8 +20,6 @@ class AttendancePhotoDTO
             photo_path: $data['photo_path'],
             photo_type: $data['photo_type'],
             taken_at: $data['taken_at'],
-            latitude: $data['latitude'] ?? null,
-            longitude: $data['longitude'] ?? null,
         );
     }
 
@@ -35,8 +31,6 @@ class AttendancePhotoDTO
             'photo_path' => $this->photo_path,
             'photo_type' => $this->photo_type,
             'taken_at' => $this->taken_at,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
         ], fn($value) => $value !== null);
     }
 }

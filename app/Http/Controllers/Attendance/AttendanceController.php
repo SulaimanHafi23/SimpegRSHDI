@@ -852,7 +852,6 @@ class AttendanceController extends Controller
             'complete_attendance' => 0,
             'late_arrivals' => 0,
             'early_departures' => 0,
-            'overtime_hours' => 0,
             'leave_days' => 0,
             'sick_days' => 0,
             'permission_days' => 0,
@@ -880,11 +879,6 @@ class AttendanceController extends Controller
                 // Cek pulang lebih awal
                 if ($attendance->is_early_leave) {
                     $stats['early_departures']++;
-                }
-
-                // Hitung overtime jika ada (dalam menit, konversi ke jam)
-                if ($attendance->overtime_minutes && $attendance->overtime_minutes > 0) {
-                    $stats['overtime_hours'] += round($attendance->overtime_minutes / 60, 1);
                 }
             }
 

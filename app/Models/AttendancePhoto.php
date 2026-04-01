@@ -18,15 +18,11 @@ class AttendancePhoto extends Model
         'photo_path',
         'photo_type',
         'taken_at',
-        'latitude',
-        'longitude',
         'created_at',
     ];
 
     protected $casts = [
         'taken_at' => 'datetime',
-        'latitude' => 'decimal:8',
-        'longitude' => 'decimal:8',
         'created_at' => 'datetime',
     ];
 

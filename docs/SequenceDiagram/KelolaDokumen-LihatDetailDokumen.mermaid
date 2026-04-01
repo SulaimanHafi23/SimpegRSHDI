@@ -1,19 +1,21 @@
-﻿%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+﻿---
+id: PersetujuanDokumen-LihatDetailDokumen
+title: Persetujuan Dokumen - Lihat Detail Dokumen
+---
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
 sequenceDiagram
     autonumber
-    actor A as Pegawai/HR
+    actor HR as HR/Super Admin
     participant UI as Web UI
-    participant C as DocumentController
-    participant M as WorkerDocument Model
+    participant C as DocumentApprovalController
+    participant D as WorkerDocument Model
     participant DB as Database
 
-    A->>UI: Buka menu Lihat Detail Dokumen
-    UI->>C: GET /approvals/documents
-    C->>M: Ambil data sesuai filter
-    M->>DB: SELECT
-    DB-->>M: Dataset
-    M-->>C: Data siap tampil
-    C-->>UI: Kirim data ke halaman
-    UI-->>A: Tampilkan data
-
-
+    HR->>UI: Klik pada dokumen untuk melihat detail dan preview
+    UI->>C: GET /admin/document-approvals/{id}
+    C->>D: Find dokumen berdasarkan id dengan relasi worker
+    D->>DB: SELECT wd.*, w.name, w.nip FROM worker_documents wd JOIN workers w ON wd.worker_id = w.id WHERE wd.id = ?
+    DB-->>D: Worker document dengan data pegawai
+    D-->>C: WorkerDocument instance
+    C-->>UI: Response dengan dokumen lengkap (metadata, file URL/preview)
+    UI-->>HR: Tampilkan: Pegawai, Jenis Dokumen, Upload Date, Expiry Date, File Preview/Download

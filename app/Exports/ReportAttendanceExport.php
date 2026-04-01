@@ -39,7 +39,6 @@ class ReportAttendanceExport implements FromCollection, WithHeadings, WithMappin
             'Status',
             'Terlambat',
             'Menit Terlambat',
-            'Lembur (Menit)',
         ];
     }
 
@@ -56,7 +55,6 @@ class ReportAttendanceExport implements FromCollection, WithHeadings, WithMappin
             ucfirst($attendance->status ?? '-'),
             $attendance->is_late ? 'Ya' : 'Tidak',
             $attendance->late_minutes ?? 0,
-            $attendance->overtime_minutes ?? 0,
         ];
     }
 

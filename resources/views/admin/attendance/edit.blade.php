@@ -37,17 +37,17 @@
     <form action="{{ route('admin.attendance.update', $attendance->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
         @csrf
         @method('PUT')
-        
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {{-- Left Column --}}
             <div class="space-y-6">
                 {{-- Worker & Date Info --}}
                 <x-card title="Informasi Dasar">
                     <div class="space-y-4">
-                        <x-form.select 
-                            name="worker_id" 
+                        <x-form.select
+                            name="worker_id"
                             label="Pegawai"
-                            required 
+                            required
                             :error="$errors->first('worker_id')">
                             <option value="">Pilih Pegawai</option>
                             @foreach($workers as $worker)
@@ -57,18 +57,18 @@
                             @endforeach
                         </x-form.select>
 
-                        <x-form.input 
-                            name="date" 
-                            label="Tanggal" 
+                        <x-form.input
+                            name="date"
+                            label="Tanggal"
                             type="date"
                             :value="old('date', $attendance->attendance_date?->format('Y-m-d'))"
-                            required 
+                            required
                             :error="$errors->first('date')" />
 
-                        <x-form.select 
-                            name="status" 
+                        <x-form.select
+                            name="status"
                             label="Status"
-                            required 
+                            required
                             :error="$errors->first('status')">
                             <option value="">Pilih Status</option>
                             <option value="present" {{ old('status', $attendance->status) == 'present' ? 'selected' : '' }}>Hadir</option>
@@ -79,10 +79,10 @@
                             <option value="permission" {{ old('status', $attendance->status) == 'permission' ? 'selected' : '' }}>Izin</option>
                         </x-form.select>
 
-                        <x-form.textarea 
-                            name="notes" 
-                            label="Catatan (Opsional)" 
-                            rows="3" 
+                        <x-form.textarea
+                            name="notes"
+                            label="Catatan (Opsional)"
+                            rows="3"
                             :value="old('notes', $attendance->notes)"
                             :error="$errors->first('notes')"
                             placeholder="Tambahkan catatan jika diperlukan" />
@@ -92,16 +92,16 @@
                 {{-- Check In Info --}}
                 <x-card title="Data Check In">
                     <div class="space-y-4">
-                        <x-form.input 
-                            name="check_in" 
-                            label="Waktu Check In" 
+                        <x-form.input
+                            name="check_in"
+                            label="Waktu Check In"
                             type="datetime-local"
                             :value="old('check_in', $attendance->check_in?->format('Y-m-d\TH:i'))"
-                            required 
+                            required
                             :error="$errors->first('check_in')" />
 
-                        <x-form.file 
-                            name="photo_in" 
+                        <x-form.file
+                            name="photo_in"
                             label="Foto Check In (Opsional)"
                             accept="image/*"
                             preview
@@ -113,8 +113,8 @@
                                 <div class="grid grid-cols-3 gap-2">
                                     @foreach($attendance->checkInPhoto as $photo)
                                         @if($photo->photo_path && Storage::disk('public')->exists($photo->photo_path))
-                                            <img src="{{ asset('storage/' . $photo->photo_path) }}" 
-                                                 alt="Check In" 
+                                            <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                                 alt="Check In"
                                                  class="w-full h-20 object-cover rounded border">
                                         @endif
                                     @endforeach
@@ -130,16 +130,16 @@
                 {{-- Check Out Info --}}
                 <x-card title="Data Check Out">
                     <div class="space-y-4">
-                        <x-form.input 
-                            name="check_out" 
-                            label="Waktu Check Out (Opsional)" 
+                        <x-form.input
+                            name="check_out"
+                            label="Waktu Check Out (Opsional)"
                             type="datetime-local"
                             :value="old('check_out', $attendance->check_out?->format('Y-m-d\TH:i'))"
                             :error="$errors->first('check_out')"
                             help="Kosongkan jika belum check out" />
 
-                        <x-form.file 
-                            name="photo_out" 
+                        <x-form.file
+                            name="photo_out"
                             label="Foto Check Out (Opsional)"
                             accept="image/*"
                             preview
@@ -151,8 +151,8 @@
                                 <div class="grid grid-cols-3 gap-2">
                                     @foreach($attendance->checkOutPhoto as $photo)
                                         @if($photo->photo_path && Storage::disk('public')->exists($photo->photo_path))
-                                            <img src="{{ asset('storage/' . $photo->photo_path) }}" 
-                                                 alt="Check Out" 
+                                            <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                                 alt="Check Out"
                                                  class="w-full h-20 object-cover rounded border">
                                         @endif
                                     @endforeach
@@ -221,13 +221,13 @@
         {{-- Action Buttons --}}
         <x-card>
             <div class="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-                <x-button 
+                <x-button
                     variant="secondary"
                     onclick="window.location.href='{{ route('admin.attendance.show', $attendance->id) }}'">
                     Batal
                 </x-button>
-                <x-button 
-                    variant="success" 
+                <x-button
+                    variant="success"
                     icon="fas fa-save"
                     type="submit">
                     Update

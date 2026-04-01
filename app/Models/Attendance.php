@@ -30,8 +30,6 @@ class Attendance extends Model
         'late_minutes',
         'is_early_leave',
         'early_leave_minutes',
-        'is_outside_radius',
-        'overtime_minutes',
         'notes',
     ];
 
@@ -47,8 +45,6 @@ class Attendance extends Model
         'late_minutes' => 'integer',
         'is_early_leave' => 'boolean',
         'early_leave_minutes' => 'integer',
-        'is_outside_radius' => 'boolean',
-        'overtime_minutes' => 'integer',
     ];
 
     public function worker(): BelongsTo

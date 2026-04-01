@@ -17,8 +17,6 @@ return new class extends Migration
             $table->string('photo_path');
             $table->enum('photo_type', ['check_in', 'check_out']);
             $table->timestamp('taken_at');
-            $table->decimal('latitude', 10, 8)->nullable();
-            $table->decimal('longitude', 11, 8)->nullable();
             $table->timestamp('created_at');
 
             $table->index('attendance_id');

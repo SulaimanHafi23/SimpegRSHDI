@@ -22,8 +22,6 @@ class AttendanceDTO
         public readonly int $late_minutes,
         public readonly bool $is_early_leave,
         public readonly int $early_leave_minutes,
-        public readonly bool $is_outside_radius,
-        public readonly ?int $overtime_minutes,
         public readonly ?string $notes,
     ) {}
 
@@ -47,8 +45,6 @@ class AttendanceDTO
             late_minutes: $data['late_minutes'] ?? 0,
             is_early_leave: $data['is_early_leave'] ?? false,
             early_leave_minutes: $data['early_leave_minutes'] ?? 0,
-            is_outside_radius: $data['is_outside_radius'] ?? false,
-            overtime_minutes: $data['overtime_minutes'] ?? null,
             notes: $data['notes'] ?? null,
         );
     }
@@ -77,8 +73,6 @@ class AttendanceDTO
             'late_minutes' => $this->late_minutes,
             'is_early_leave' => $this->is_early_leave,
             'early_leave_minutes' => $this->early_leave_minutes,
-            'is_outside_radius' => $this->is_outside_radius,
-            'overtime_minutes' => $this->overtime_minutes,
             'notes' => $this->notes,
         ];
     }

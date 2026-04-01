@@ -118,24 +118,6 @@
                         </div>
                     @endif
 
-                    @if($attendance->is_outside_radius)
-                        <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-map-marker-alt text-red-600"></i>
-                                <span class="text-sm text-red-900">Luar Radius</span>
-                            </div>
-                        </div>
-                    @endif
-
-                    @if($attendance->overtime_minutes > 0)
-                        <div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-business-time text-blue-600"></i>
-                                <span class="text-sm text-blue-900">Lembur</span>
-                            </div>
-                            <span class="font-semibold text-blue-900">{{ $attendance->overtime_minutes }} menit</span>
-                        </div>
-                    @endif
                 </div>
             </div>
         </div>
@@ -303,7 +285,7 @@
                         $hours = floor($workingHours / 60);
                         $minutes = $workingHours % 60;
                     @endphp
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         <div class="text-center p-4 bg-blue-50 rounded-lg">
                             <p class="text-sm text-gray-600">Total Jam Kerja</p>
                             <p class="text-2xl font-bold text-blue-600">{{ $hours }}j {{ $minutes }}m</p>
@@ -315,10 +297,6 @@
                         <div class="text-center p-4 bg-orange-50 rounded-lg">
                             <p class="text-sm text-gray-600">Pulang Cepat</p>
                             <p class="text-2xl font-bold text-orange-600">{{ $attendance->early_leave_minutes ?? 0 }}m</p>
-                        </div>
-                        <div class="text-center p-4 bg-purple-50 rounded-lg">
-                            <p class="text-sm text-gray-600">Lembur</p>
-                            <p class="text-2xl font-bold text-purple-600">{{ $attendance->overtime_minutes ?? 0 }}m</p>
                         </div>
                     </div>
                 </div>

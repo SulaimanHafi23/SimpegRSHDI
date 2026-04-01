@@ -87,7 +87,6 @@ class AttendanceStatsSummarySheet implements FromCollection, WithHeadings, WithS
             ['Hanya Pulang', $this->stats['check_out_only'], 'Tanpa masuk'],
             ['Keterlambatan', $this->stats['late_arrivals'], 'Datang terlambat'],
             ['Pulang Awal', $this->stats['early_departures'], 'Pulang lebih awal'],
-            ['Total Lembur (Jam)', $this->stats['overtime_hours'], 'Jam lembur'],
             [''],
             ['CUTI & IZIN', '', ''],
             ['Cuti', $this->stats['leave_days'], 'Hari cuti'],
