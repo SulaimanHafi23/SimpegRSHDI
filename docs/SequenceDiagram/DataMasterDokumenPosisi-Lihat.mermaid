@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaMappingDokumenPosisi-LihatMapping
 title: Kelola Mapping Dokumen Posisi - Lihat Detail Mapping
 ---
@@ -6,16 +6,16 @@ title: Kelola Mapping Dokumen Posisi - Lihat Detail Mapping
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentPositionMappingController
-    participant DPM as DocumentPositionMapping Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentPositionMappingController :control
+    participant DPM as DocumentPositionMapping Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik pada mapping untuk melihat detail
     UI->>C: GET /admin/document-position-mappings/{id}
-    C->>DPM: Find mapping dengan relasi posisi dan dokumen
-    DPM->>DB: SELECT dpm.*, p.name as position_name, dt.name as document_name FROM document_position_mappings dpm JOIN positions p JOIN document_types dt WHERE dpm.id = ?
-    DB-->>DPM: Mapping data lengkap
+    C->>+DPM: Find mapping dengan relasi posisi dan dokumen
+    DPM->>+DB: SELECT dpm.*, p.name as position_name, dt.name as document_name FROM document_position_mappings dpm JOIN positions p JOIN document_types dt WHERE dpm.id = ?
+    DB-->>-DPM: Mapping data lengkap
     DPM-->>C: DocumentPositionMapping instance
     C-->>UI: Response dengan detail
     UI-->>HR: Tampilkan: Posisi, Jenis Dokumen, Required, Dibuat pada

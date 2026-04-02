@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJenisDokumen-HapusJenisDokumen
 title: Kelola Jenis Dokumen - Hapus Jenis Dokumen
 ---
@@ -6,22 +6,22 @@ title: Kelola Jenis Dokumen - Hapus Jenis Dokumen
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentTypeController
-    participant DT as DocumentType Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentTypeController :control
+    participant DT as DocumentType Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol Hapus pada jenis dokumen tertentu
     UI->>UI: Tampilkan konfirmasi penghapusan
     HR->>UI: Klik tombol "Hapus" pada dialog konfirmasi
     UI->>C: DELETE /admin/document-types/{id}
     note over C: Cek: apakah masih ada dokumen pegawai dengan tipe ini?
-    C->>DT: Check if document type has documents
-    DT->>DB: SELECT COUNT(*) FROM worker_documents WHERE document_type_id = ?
-    DB-->>DT: Count
+    C->>+DT: Check if document type has documents
+    DT->>+DB: SELECT COUNT(*) FROM worker_documents WHERE document_type_id = ?
+    DB-->>-DT: Count
     alt Tidak ada dokumen
-        DT->>DB: DELETE FROM document_types WHERE id = ?
-        DB-->>DT: Jenis dokumen berhasil dihapus
+        DT->>+DB: DELETE FROM document_types WHERE id = ?
+        DB-->>-DT: Jenis dokumen berhasil dihapus
         DT-->>C: Confirmation
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi penghapusan berhasil

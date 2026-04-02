@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJadwalPegawai-UbahJadwal
 title: Kelola Jadwal Pegawai - Ubah Jadwal
 ---
@@ -6,16 +6,16 @@ title: Kelola Jadwal Pegawai - Ubah Jadwal
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as WorkerScheduleController
-    participant WS as WorkerSchedule Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as WorkerScheduleController :control
+    participant WS as WorkerSchedule Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol Edit pada jadwal tertentu
     UI->>C: GET /admin/worker-schedules/{id}
-    C->>WS: Find jadwal dengan relasi
-    WS->>DB: SELECT ws.*, w.name, w.nip, s.name as shift_name FROM ... WHERE ws.id = ?
-    DB-->>WS: Schedule data
+    C->>+WS: Find jadwal dengan relasi
+    WS->>+DB: SELECT ws.*, w.name, w.nip, s.name as shift_name FROM ... WHERE ws.id = ?
+    DB-->>-WS: Schedule data
     WS-->>C: WorkerSchedule instance
     C-->>UI: Response dengan data
     UI->>UI: Tampilkan form dengan data terpre-fill
@@ -23,9 +23,9 @@ sequenceDiagram
     UI->>C: PUT /admin/worker-schedules/{id}
     note over C: Validasi: shift ada, tanggal valid, no overlap
     alt Validasi berhasil
-        C->>WS: Update jadwal
-        WS->>DB: UPDATE worker_schedules SET shift_id = ?, start_date = ?, end_date = ?, notes = ?, updated_at = NOW() WHERE id = ?
-        DB-->>WS: Jadwal berhasil diperbarui
+        C->>+WS: Update jadwal
+        WS->>+DB: UPDATE worker_schedules SET shift_id = ?, start_date = ?, end_date = ?, notes = ?, updated_at = NOW() WHERE id = ?
+        DB-->>-WS: Jadwal berhasil diperbarui
         WS-->>C: Updated instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi perubahan berhasil

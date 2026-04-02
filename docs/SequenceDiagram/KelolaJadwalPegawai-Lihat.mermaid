@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJadwalPegawai-LihatJadwal
 title: Kelola Jadwal Pegawai - Lihat Detail Jadwal
 ---
@@ -6,17 +6,17 @@ title: Kelola Jadwal Pegawai - Lihat Detail Jadwal
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as WorkerScheduleController
-    participant WS as WorkerSchedule Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as WorkerScheduleController :control
+    participant WS as WorkerSchedule Model :entity
+    participant DB as Database :entity
 
-    HR->>UI: Klik pada jadwal untuk melihat detail
-    UI->>C: GET /admin/worker-schedules/{id}
-    C->>WS: Find jadwal dengan relasi worker dan shift
-    WS->>DB: SELECT ws.*, w.name, w.nip, s.name as shift_name, s.start_time, s.end_time FROM worker_schedules ws JOIN workers w JOIN shifts s WHERE ws.id = ?
-    DB-->>WS: Schedule data lengkap
-    WS-->>C: WorkerSchedule instance
-    C-->>UI: Response dengan detail
-    UI-->>HR: Tampilkan: Pegawai, Shift, Tanggal Mulai, Tanggal Akhir, Jam Kerja, Catatan
+    HR->>+UI: Klik pada jadwal untuk melihat detail
+    UI->>+C: GET /admin/worker-schedules/{id}
+    C->>+WS: Find jadwal dengan relasi worker dan shift
+    WS->>+DB: SELECT ws.*, w.name, w.nip, s.name as shift_name, s.start_time, s.end_time FROM worker_schedules ws JOIN workers w JOIN shifts s WHERE ws.id = ?
+    DB-->>-WS: Schedule data lengkap
+    WS-->>-C: WorkerSchedule instance
+    C-->>-UI: Response dengan detail
+    UI-->>-HR: Tampilkan: Pegawai, Shift, Tanggal Mulai, Tanggal Akhir, Jam Kerja, Catatan
 

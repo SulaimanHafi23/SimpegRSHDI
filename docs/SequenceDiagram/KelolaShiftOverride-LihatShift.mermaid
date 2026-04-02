@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaShiftOverride-LihatShiftOverride
 title: Kelola Shift Override - Lihat Detail Shift Override
 ---
@@ -6,17 +6,17 @@ title: Kelola Shift Override - Lihat Detail Shift Override
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as ShiftOverrideController
-    participant SO as ShiftOverride Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as ShiftOverrideController :control
+    participant SO as ShiftOverride Model :entity
+    participant DB as Database :entity
 
-    HR->>UI: Klik pada shift override untuk melihat detail
-    UI->>C: GET /admin/shift-overrides/{id}
-    C->>SO: Find override dengan relasi worker dan shift
-    SO->>DB: SELECT so.*, w.name, w.nip, s.name as shift_name, s.start_time, s.end_time FROM shift_overrides so JOIN workers w JOIN shifts s WHERE so.id = ?
-    DB-->>SO: Override data lengkap
-    SO-->>C: ShiftOverride instance
-    C-->>UI: Response dengan detail
-    UI-->>HR: Tampilkan: Pegawai, Shift Override, Tanggal, Jam Kerja, Alasan, Dibuat oleh
+    HR->>+UI: Klik pada shift override untuk melihat detail
+    UI->>+C: GET /admin/shift-overrides/{id}
+    C->>+SO: Find override dengan relasi worker dan shift
+    SO->>+DB: SELECT so.*, w.name, w.nip, s.name as shift_name, s.start_time, s.end_time FROM shift_overrides so JOIN workers w JOIN shifts s WHERE so.id = ?
+    DB-->>-SO: Override data lengkap
+    SO-->>-C: ShiftOverride instance
+    C-->>-UI: Response dengan detail
+    UI-->>-HR: Tampilkan: Pegawai, Shift Override, Tanggal, Jam Kerja, Alasan, Dibuat oleh
 

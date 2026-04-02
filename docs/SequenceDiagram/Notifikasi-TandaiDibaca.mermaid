@@ -1,4 +1,4 @@
-﻿---
+---
 id: Notifikasi-TandaiDibaca
 title: Notifikasi - Tandai Dibaca
 ---
@@ -6,17 +6,17 @@ title: Notifikasi - Tandai Dibaca
 sequenceDiagram
     autonumber
     actor P as Pegawai
-    participant UI as Web UI
-    participant C as NotificationController
-    participant N as Notification Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as NotificationController :control
+    participant N as Notification Model :entity
+    participant DB as Database :entity
 
-    P->>UI: Klik pada notifikasi atau tombol Tandai Sudah Dibaca
-    UI->>C: PATCH /portal/notifications/{id}/read
-    C->>N: Update notification dengan id tertentu
-    N->>DB: UPDATE notifications SET read_at = NOW() WHERE id = ?
-    DB-->>N: Row berhasil diperbarui
-    N-->>C: Updated notification instance
-    C-->>UI: Response sukses
-    UI-->>P: Notifikasi kini ditampilkan sebagai sudah dibaca
+    P->>+UI: Klik pada notifikasi atau tombol Tandai Sudah Dibaca
+    UI->>+C: PATCH /portal/notifications/{id}/read
+    C->>+N: Update notification dengan id tertentu
+    N->>+DB: UPDATE notifications SET read_at = NOW() WHERE id = ?
+    DB-->>-N: Row berhasil diperbarui
+    N-->>-C: Updated notification instance
+    C-->>-UI: Response sukses
+    UI-->>-P: Notifikasi kini ditampilkan sebagai sudah dibaca
 

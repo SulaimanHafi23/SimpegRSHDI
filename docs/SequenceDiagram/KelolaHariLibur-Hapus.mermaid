@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaHariLibur-HapusHariLibur
 title: Kelola Hari Libur - Hapus Hari Libur
 ---
@@ -6,20 +6,20 @@ title: Kelola Hari Libur - Hapus Hari Libur
 sequenceDiagram
     autonumber
     actor SA as Super Admin/HR
-    participant UI as Web UI
-    participant C as HolidayController
-    participant H as Holiday Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as HolidayController :control
+    participant H as Holiday Model :entity
+    participant DB as Database :entity
 
     SA->>UI: Klik tombol Hapus pada hari libur tertentu
     UI->>UI: Tampilkan konfirmasi penghapusan
     SA->>UI: Klik tombol "Hapus" pada dialog konfirmasi
     UI->>C: DELETE /admin/holidays/{id}
-    C->>H: Delete holiday berdasarkan id
+    C->>+H: Delete holiday berdasarkan id
     note over H: Cek: apakah sudah ada referensi atau data log terkait?
     alt Tidak ada referensi
-        H->>DB: DELETE FROM holidays WHERE id = ?
-        DB-->>H: Holiday berhasil dihapus
+        H->>+DB: DELETE FROM holidays WHERE id = ?
+        DB-->>-H: Holiday berhasil dihapus
         H-->>C: Confirmation deleted
         C-->>UI: Response sukses
         UI-->>SA: Notifikasi penghapusan berhasil

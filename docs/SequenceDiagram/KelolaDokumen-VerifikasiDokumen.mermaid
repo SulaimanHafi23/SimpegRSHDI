@@ -1,4 +1,4 @@
-﻿---
+---
 id: PersetujuanDokumen-VerifikasiDokumen
 title: Persetujuan Dokumen - Verifikasi Dokumen
 ---
@@ -6,20 +6,20 @@ title: Persetujuan Dokumen - Verifikasi Dokumen
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentApprovalController
-    participant D as WorkerDocument Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentApprovalController :control
+    participant D as WorkerDocument Model :entity
+    participant DB as Database :entity
 
-    HR->>UI: Klik tombol "Verifikasi" atau "Setujui" pada dokumen
-    UI->>UI: Tampilkan form verifikasi (catatan verifikasi, tgl expired)
-    HR->>UI: Isi catatan dan klik Verifikasi
-    UI->>C: POST /admin/document-approvals/{id}/verify
-    C->>D: Update status = verified, verified_by = HR_id, verified_at = now, notes
-    D->>DB: UPDATE worker_documents SET status = 'verified', verified_by = ?, verified_at = NOW(), notes = ? WHERE id = ?
-    DB-->>D: Dokumen berhasil diverifikasi
-    D-->>C: Updated WorkerDocument
-    C-->>UI: Response sukses
-    UI-->>HR: Notifikasi verifikasi berhasil
+    HR->>+UI: Klik tombol "Verifikasi" atau "Setujui" pada dokumen
+    UI->>+UI: Tampilkan form verifikasi (catatan verifikasi, tgl expired)
+    HR->>+UI: Isi catatan dan klik Verifikasi
+    UI->>+C: POST /admin/document-approvals/{id}/verify
+    C->>+D: Update status = verified, verified_by = HR_id, verified_at = now, notes
+    D->>+DB: UPDATE worker_documents SET status = 'verified', verified_by = ?, verified_at = NOW(), notes = ? WHERE id = ?
+    DB-->>-D: Dokumen berhasil diverifikasi
+    D-->>-C: Updated WorkerDocument
+    C-->>-UI: Response sukses
+    UI-->>-HR: Notifikasi verifikasi berhasil
     note over C: Audit log: catat siapa/kapan verifikasi dokumen siapa
 

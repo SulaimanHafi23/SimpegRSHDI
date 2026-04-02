@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJenisDokumen-UbahJenisDokumen
 title: Kelola Jenis Dokumen - Ubah Jenis Dokumen
 ---
@@ -6,16 +6,16 @@ title: Kelola Jenis Dokumen - Ubah Jenis Dokumen
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentTypeController
-    participant DT as DocumentType Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentTypeController :control
+    participant DT as DocumentType Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol Edit pada jenis dokumen tertentu
     UI->>C: GET /admin/document-types/{id}
-    C->>DT: Find document type
-    DT->>DB: SELECT * FROM document_types WHERE id = ?
-    DB-->>DT: Document type data
+    C->>+DT: Find document type
+    DT->>+DB: SELECT * FROM document_types WHERE id = ?
+    DB-->>-DT: Document type data
     DT-->>C: DocumentType instance
     C-->>UI: Response dengan data
     UI->>UI: Tampilkan form dengan data terpre-fill
@@ -23,9 +23,9 @@ sequenceDiagram
     UI->>C: PUT /admin/document-types/{id}
     note over C: Validasi: nama unik (exclude current), kode unik (exclude current)
     alt Validasi berhasil
-        C->>DT: Update document type
-        DT->>DB: UPDATE document_types SET name = ?, code = ?, description = ?, is_required = ?, updated_at = NOW() WHERE id = ?
-        DB-->>DT: Jenis dokumen berhasil diperbarui
+        C->>+DT: Update document type
+        DT->>+DB: UPDATE document_types SET name = ?, code = ?, description = ?, is_required = ?, updated_at = NOW() WHERE id = ?
+        DB-->>-DT: Jenis dokumen berhasil diperbarui
         DT-->>C: Updated instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi perubahan berhasil

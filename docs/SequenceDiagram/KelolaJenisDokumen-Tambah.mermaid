@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJenisDokumen-TambahJenisDokumen
 title: Kelola Jenis Dokumen - Tambah Jenis Dokumen
 ---
@@ -6,10 +6,10 @@ title: Kelola Jenis Dokumen - Tambah Jenis Dokumen
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentTypeController
-    participant DT as DocumentType Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentTypeController :control
+    participant DT as DocumentType Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol "Tambah Jenis Dokumen"
     UI->>UI: Tampilkan form input (nama, kode, deskripsi, required)
@@ -17,9 +17,9 @@ sequenceDiagram
     UI->>C: POST /admin/document-types
     note over C: Validasi: nama unik, kode unik, tidak kosong
     alt Validasi berhasil
-        C->>DT: Create document type baru
-        DT->>DB: INSERT INTO document_types (name, code, description, is_required, created_at)
-        DB-->>DT: Jenis dokumen berhasil disimpan
+        C->>+DT: Create document type baru
+        DT->>+DB: INSERT INTO document_types (name, code, description, is_required, created_at)
+        DB-->>-DT: Jenis dokumen berhasil disimpan
         DT-->>C: New DocumentType instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi berhasil, refresh daftar

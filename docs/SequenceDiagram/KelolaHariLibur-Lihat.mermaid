@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaHariLibur-LihatHariLibur
 title: Kelola Hari Libur - Lihat Detail Hari Libur
 ---
@@ -6,17 +6,17 @@ title: Kelola Hari Libur - Lihat Detail Hari Libur
 sequenceDiagram
     autonumber
     actor SA as Super Admin/HR
-    participant UI as Web UI
-    participant C as HolidayController
-    participant H as Holiday Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as HolidayController :control
+    participant H as Holiday Model :entity
+    participant DB as Database :entity
 
-    SA->>UI: Klik pada row hari libur untuk melihat detail
-    UI->>C: GET /admin/holidays/{id}
-    C->>H: Find holiday berdasarkan id
-    H->>DB: SELECT * FROM holidays WHERE id = ?
-    DB-->>H: Holiday data lengkap
-    H-->>C: Holiday instance
-    C-->>UI: Response dengan data detail hari libur
-    UI-->>SA: Tampilkan detail: tanggal, nama, tipe, created_by, created_at
+    SA->>+UI: Klik pada row hari libur untuk melihat detail
+    UI->>+C: GET /admin/holidays/{id}
+    C->>+H: Find holiday berdasarkan id
+    H->>+DB: SELECT * FROM holidays WHERE id = ?
+    DB-->>-H: Holiday data lengkap
+    H-->>-C: Holiday instance
+    C-->>-UI: Response dengan data detail hari libur
+    UI-->>-SA: Tampilkan detail: tanggal, nama, tipe, created_by, created_at
 

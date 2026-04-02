@@ -1,4 +1,4 @@
-﻿---
+---
 id: Notifikasi-Hapus
 title: Notifikasi - Hapus
 ---
@@ -6,20 +6,20 @@ title: Notifikasi - Hapus
 sequenceDiagram
     autonumber
     actor P as Pegawai
-    participant UI as Web UI
-    participant C as NotificationController
-    participant N as Notification Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as NotificationController :control
+    participant N as Notification Model :entity
+    participant DB as Database :entity
 
     P->>UI: Klik Hapus pada notifikasi
     UI->>UI: Konfirmasi hapus notifikasi
     P->>UI: Setujui penghapusan
     UI->>C: DELETE /portal/notifications/{id}
-    C->>N: Verifikasi notifikasi milik user
-    N->>DB: SELECT * FROM notifications WHERE id = ? AND user_id = ?
+    C->>+N: Verifikasi notifikasi milik user
+    N->>+DB: SELECT * FROM notifications WHERE id = ? AND user_id = ?
     alt Data valid
-        N->>DB: DELETE FROM notifications WHERE id = ?
-        DB-->>N: Notifikasi terhapus
+        N->>+DB: DELETE FROM notifications WHERE id = ?
+        DB-->>-N: Notifikasi terhapus
         C-->>UI: Response sukses
         UI-->>P: Notifikasi berhasil dihapus
     else Data tidak ditemukan

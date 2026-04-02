@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaHariLibur-TambahHariLibur
 title: Kelola Hari Libur - Tambah Hari Libur
 ---
@@ -6,10 +6,10 @@ title: Kelola Hari Libur - Tambah Hari Libur
 sequenceDiagram
     autonumber
     actor SA as Super Admin/HR
-    participant UI as Web UI
-    participant C as HolidayController
-    participant H as Holiday Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as HolidayController :control
+    participant H as Holiday Model :entity
+    participant DB as Database :entity
 
     SA->>UI: Klik tombol "Tambah Hari Libur"
     UI->>UI: Tampilkan form input (tanggal, nama, tipe)
@@ -17,9 +17,9 @@ sequenceDiagram
     UI->>C: POST /admin/holidays
     note over C: Validasi: tanggal unik, format valid
     alt Validasi berhasil
-        C->>H: Create holiday baru dengan date, name, type
-        H->>DB: INSERT INTO holidays (date, name, type, created_by, created_at)
-        DB-->>H: Holiday berhasil disimpan
+        C->>+H: Create holiday baru dengan date, name, type
+        H->>+DB: INSERT INTO holidays (date, name, type, created_by, created_at)
+        DB-->>-H: Holiday berhasil disimpan
         H-->>C: New holiday instance
         C-->>UI: Response sukses
         UI-->>SA: Notifikasi berhasil, refresh daftar

@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaShiftOverride-TambahShiftOverride
 title: Kelola Shift Override - Tambah Shift Override
 ---
@@ -6,10 +6,10 @@ title: Kelola Shift Override - Tambah Shift Override
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as ShiftOverrideController
-    participant SO as ShiftOverride Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as ShiftOverrideController :control
+    participant SO as ShiftOverride Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol "Tambah Shift Override"
     UI->>UI: Tampilkan form input (pilih pegawai, shift override, tanggal, alasan)
@@ -17,9 +17,9 @@ sequenceDiagram
     UI->>C: POST /admin/shift-overrides
     note over C: Validasi: pegawai ada, shift ada, tanggal valid
     alt Validasi berhasil
-        C->>SO: Create shift override baru
-        SO->>DB: INSERT INTO shift_overrides (worker_id, shift_id, date, reason, created_by, created_at)
-        DB-->>SO: Override berhasil disimpan
+        C->>+SO: Create shift override baru
+        SO->>+DB: INSERT INTO shift_overrides (worker_id, shift_id, date, reason, created_by, created_at)
+        DB-->>-SO: Override berhasil disimpan
         SO-->>C: New override instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi berhasil, refresh tabel

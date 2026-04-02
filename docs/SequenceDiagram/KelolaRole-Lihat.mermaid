@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaRole-LihatRole
 title: Kelola Role - Lihat Detail Role
 ---
@@ -6,17 +6,17 @@ title: Kelola Role - Lihat Detail Role
 sequenceDiagram
     autonumber
     actor SA as Super Admin
-    participant UI as Web UI
-    participant C as RoleController
-    participant R as Role Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as RoleController :control
+    participant R as Role Model :entity
+    participant DB as Database :entity
 
-    SA->>UI: Klik pada row role untuk melihat detail
-    UI->>C: GET /admin/roles/{id}
-    C->>R: Find role berdasarkan id dengan permissions
-    R->>DB: SELECT r.*, rp.permission_id FROM roles r LEFT JOIN role_permission rp ON r.id = rp.role_id WHERE r.id = ?
-    DB-->>R: Role data dengan list permission IDs
-    R-->>C: Role instance dengan permissions collection
-    C-->>UI: Response dengan data detail role
-    UI-->>SA: Tampilkan: nama, deskripsi, list permissions yang di-assign
+    SA->>+UI: Klik pada row role untuk melihat detail
+    UI->>+C: GET /admin/roles/{id}
+    C->>+R: Find role berdasarkan id dengan permissions
+    R->>+DB: SELECT r.*, rp.permission_id FROM roles r LEFT JOIN role_permission rp ON r.id = rp.role_id WHERE r.id = ?
+    DB-->>-R: Role data dengan list permission IDs
+    R-->>-C: Role instance dengan permissions collection
+    C-->>-UI: Response dengan data detail role
+    UI-->>-SA: Tampilkan: nama, deskripsi, list permissions yang di-assign
 

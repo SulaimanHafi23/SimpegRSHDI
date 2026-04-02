@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaHariLibur-AutoGenerateHariLibur
 title: Kelola Hari Libur - Auto Generate Hari Libur (berdasarkan pattern)
 ---
@@ -6,23 +6,23 @@ title: Kelola Hari Libur - Auto Generate Hari Libur (berdasarkan pattern)
 sequenceDiagram
     autonumber
     actor SA as Super Admin/HR
-    participant UI as Web UI
-    participant C as HolidayController
-    participant HService as HolidayService
-    participant H as Holiday Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as HolidayController :control
+    participant HService as HolidayService :control
+    participant H as Holiday Model :entity
+    participant DB as Database :entity
 
-    SA->>UI: Klik tombol "Auto Generate" atau "Generate Jadwal"
-    UI->>UI: Tampilkan form dengan opsi (tahun, pola/template, tipe)
-    SA->>UI: Pilih parameter dan klik Generate
-    UI->>C: POST /admin/holidays/auto-generate
-    C->>HService: Generate holidays berdasarkan parameter (tahun, template)
+    SA->>+UI: Klik tombol "Auto Generate" atau "Generate Jadwal"
+    UI->>+UI: Tampilkan form dengan opsi (tahun, pola/template, tipe)
+    SA->>+UI: Pilih parameter dan klik Generate
+    UI->>+C: POST /admin/holidays/auto-generate
+    C->>+HService: Generate holidays berdasarkan parameter (tahun, template)
     note over HService: Logika: terapkan pattern (e.g., Jumat setiap minggu, tanggal tetap nasional, dll)
-    HService->>HService: Hitung dan filter tanggal yang valid (tidak duplikasi, tidak weekend jika needed)
-    HService->>H: Buat array holiday objects
-    H->>DB: INSERT INTO holidays (date, name, type, created_by, created_at) VALUES (...)
-    DB-->>H: Holidays auto-generated berhasil disimpan
-    H-->>C: Array of generated holidays
-    C-->>UI: Response sukses dengan preview dan jumlah yang akan ditambahkan
-    UI-->>SA: Tampilkan konfirmasi: "X hari libur akan ditambahkan (lihat preview)"
+    HService->>+HService: Hitung dan filter tanggal yang valid (tidak duplikasi, tidak weekend jika needed)
+    HService->>+H: Buat array holiday objects
+    H->>+DB: INSERT INTO holidays (date, name, type, created_by, created_at) VALUES (...)
+    DB-->>-H: Holidays auto-generated berhasil disimpan
+    H-->>-C: Array of generated holidays
+    C-->>-UI: Response sukses dengan preview dan jumlah yang akan ditambahkan
+    UI-->>-SA: Tampilkan konfirmasi: "X hari libur akan ditambahkan (lihat preview)"
 

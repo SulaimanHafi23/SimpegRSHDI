@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaDokumen-DownloadDokumen
 title: Kelola Dokumen - Download Dokumen
 ---
@@ -6,18 +6,18 @@ title: Kelola Dokumen - Download Dokumen
 sequenceDiagram
     autonumber
     actor U as Pegawai/HR
-    participant UI as Web UI
-    participant C as WorkerDocumentController
-    participant D as WorkerDocument Model
-    participant FS as File Storage
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as WorkerDocumentController :control
+    participant D as WorkerDocument Model :entity
+    participant FS as File Storage :entity
+    participant DB as Database :entity
 
     U->>UI: Klik Download pada dokumen
     UI->>C: GET /documents/{id}/download
-    C->>D: Validasi hak akses dokumen
-    D->>DB: SELECT * FROM worker_documents WHERE id = ?
+    C->>+D: Validasi hak akses dokumen
+    D->>+DB: SELECT * FROM worker_documents WHERE id = ?
     alt Akses valid
-        C->>FS: Ambil file path dokumen
+        C->>+FS: Ambil file path dokumen
         FS-->>C: Stream file
         C-->>UI: Response file download
         UI-->>U: Dokumen terunduh

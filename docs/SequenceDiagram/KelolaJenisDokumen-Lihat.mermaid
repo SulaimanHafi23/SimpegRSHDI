@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJenisDokumen-LihatJenisDokumen
 title: Kelola Jenis Dokumen - Lihat Detail Jenis Dokumen
 ---
@@ -6,17 +6,17 @@ title: Kelola Jenis Dokumen - Lihat Detail Jenis Dokumen
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentTypeController
-    participant DT as DocumentType Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentTypeController :control
+    participant DT as DocumentType Model :entity
+    participant DB as Database :entity
 
-    HR->>UI: Klik pada jenis dokumen untuk melihat detail
-    UI->>C: GET /admin/document-types/{id}
-    C->>DT: Find document type berdasarkan id
-    DT->>DB: SELECT * FROM document_types WHERE id = ?
-    DB-->>DT: Document type data
-    DT-->>C: DocumentType instance
-    C-->>UI: Response dengan data detail
-    UI-->>HR: Tampilkan: Nama, Kode, Deskripsi, Required flag, Dibuat pada
+    HR->>+UI: Klik pada jenis dokumen untuk melihat detail
+    UI->>+C: GET /admin/document-types/{id}
+    C->>+DT: Find document type berdasarkan id
+    DT->>+DB: SELECT * FROM document_types WHERE id = ?
+    DB-->>-DT: Document type data
+    DT-->>-C: DocumentType instance
+    C-->>-UI: Response dengan data detail
+    UI-->>-HR: Tampilkan: Nama, Kode, Deskripsi, Required flag, Dibuat pada
 

@@ -2,27 +2,27 @@
 sequenceDiagram
     autonumber
     actor A as HR/Admin
-    participant UI as Web UI
-    participant C as ShiftController
-    participant S as ShiftService
-    participant R as ShiftRepository
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as ShiftController :control
+    participant S as ShiftService :control
+    participant R as ShiftRepository :entity
+    participant DB as Database :entity
 
-    A->>UI: Klik Detail Shift
-    UI->>C: GET /master/shifts/{id}
-    C->>S: findById(id)
-    S->>R: findById(id)
-    R->>DB: SELECT shift by id
-    DB-->>R: Data shift
-    R-->>S: Shift entity
+    A->>+UI: Klik Detail Shift
+    UI->>+C: GET /master/shifts/{id}
+    C->>+S: findById(id)
+    S->>+R: findById(id)
+    R->>+DB: SELECT shift by id
+    DB-->>-R: Data shift
+    R-->>-S: Shift entity
     S-->>C: Data shift
-    C->>S: getShiftStatistics(id)
-    S->>R: getShiftStatistics(id)
-    R->>DB: SELECT statistik penggunaan shift
-    DB-->>R: Data statistik
-    R-->>S: Statistik shift
-    S-->>C: Statistik siap tampil
-    C-->>UI: Render admin.master.shifts.show
-    UI-->>A: Tampilkan detail shift + statistik
+    C->>+S: getShiftStatistics(id)
+    S->>+R: getShiftStatistics(id)
+    R->>+DB: SELECT statistik penggunaan shift
+    DB-->>-R: Data statistik
+    R-->>-S: Statistik shift
+    S-->>-C: Statistik siap tampil
+    C-->>-UI: Render admin.master.shifts.show
+    UI-->>-A: Tampilkan detail shift + statistik
 
 

@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaMappingDokumenPosisi-HapusMapping
 title: Kelola Mapping Dokumen Posisi - Hapus Mapping
 ---
@@ -6,19 +6,19 @@ title: Kelola Mapping Dokumen Posisi - Hapus Mapping
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentPositionMappingController
-    participant DPM as DocumentPositionMapping Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentPositionMappingController :control
+    participant DPM as DocumentPositionMapping Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol Hapus pada mapping tertentu
     UI->>UI: Tampilkan konfirmasi penghapusan
     HR->>UI: Klik tombol "Hapus" pada dialog konfirmasi
     UI->>C: DELETE /admin/document-position-mappings/{id}
-    C->>DPM: Delete mapping berdasarkan id
+    C->>+DPM: Delete mapping berdasarkan id
     note over DPM: Catatan: penghapusan mapping tidak menghagapus dokumen yang sudah diupload sebelumnya
-    DPM->>DB: DELETE FROM document_position_mappings WHERE id = ?
-    DB-->>DPM: Mapping berhasil dihapus
+    DPM->>+DB: DELETE FROM document_position_mappings WHERE id = ?
+    DB-->>-DPM: Mapping berhasil dihapus
     DPM-->>C: Confirmation
     C-->>UI: Response sukses
     UI-->>HR: Notifikasi penghapusan berhasil

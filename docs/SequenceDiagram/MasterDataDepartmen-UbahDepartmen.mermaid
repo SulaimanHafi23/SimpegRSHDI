@@ -1,19 +1,34 @@
-﻿%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
+%%{init: {"theme": "base", "themeVariables": {"background": "#dddddd", "primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "textColor": "#000000", "actorBkg": "#ffffff", "actorBorder": "#000000", "actorTextColor": "#000000", "activationBkgColor": "#ffffff", "activationBorderColor": "#000000", "signalColor": "#000000", "signalTextColor": "#000000", "labelBoxBkgColor": "#ffffff", "labelBoxBorderColor": "#000000", "labelTextColor": "#000000", "sequenceNumberColor": "#000000", "noteBkgColor": "#ffffff", "noteBorderColor": "#000000", "noteTextColor": "#000000"}, "sequence": {"useMaxWidth": true, "wrap": true, "messageFontSize": 12, "noteFontSize": 12}}}%%
 sequenceDiagram
     autonumber
     actor A as HR/Admin
-    participant UI as Web UI
-    participant C as DepartmentController
-    participant M as Department Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DepartmentController :control
+    participant M as Department Model :entity
+    participant DB as Database :entity
 
-    A->>UI: Jalankan aksi Ubah Departmen
-    UI->>C: Submit perubahan
-    C->>M: Update data (status/atribut)
-    M->>DB: UPDATE
-    DB-->>M: Perubahan tersimpan
-    M-->>C: Hasil update
-    C-->>UI: Response sukses/gagal
-    UI-->>A: Tampilkan hasil proses
+    A->>+UI: Klik data Departmen yang akan diubah
+    UI->>+C: GET /master/departments/{id}/edit
+    C->>+M: Ambil data departmen lama
+    M->>+DB: SELECT data departmen by id
+    DB-->>-M: Data departmen lama
+    M-->>-C: Data departmen lama
+    C-->>-UI: Tampilkan form edit dengan data lama
+    UI-->>-A: Form edit siap diisi
+
+    A->>+UI: Ubah data lalu klik Simpan
+    UI->>+C: PUT /master/departments/{id}
+    %% note over C: Validasi: nama departmen tidak kosong dan unik
+    alt Data valid
+        C->>+M: Update data departmen
+        M->>+DB: UPDATE departments
+        DB-->>-M: Perubahan tersimpan
+        M-->>-C: Hasil update
+        C-->>-UI: Response sukses
+        UI-->>-A: Notifikasi perubahan berhasil
+    else Data tidak valid
+        C-->>+UI: Response gagal validasi
+        UI-->>-A: Tampilkan pesan error
+    end
 
 

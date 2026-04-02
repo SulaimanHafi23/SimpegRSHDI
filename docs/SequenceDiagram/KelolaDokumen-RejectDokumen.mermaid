@@ -1,4 +1,4 @@
-﻿---
+---
 id: PersetujuanDokumen-TolakDokumen
 title: Persetujuan Dokumen - Tolak Dokumen
 ---
@@ -6,20 +6,20 @@ title: Persetujuan Dokumen - Tolak Dokumen
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentApprovalController
-    participant D as WorkerDocument Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentApprovalController :control
+    participant D as WorkerDocument Model :entity
+    participant DB as Database :entity
 
-    HR->>UI: Klik tombol "Tolak" pada dokumen
-    UI->>UI: Tampilkan form penolakan (alasan penolakan)
-    HR->>UI: Isi alasan penolakan dan klik Tolak
-    UI->>C: POST /admin/document-approvals/{id}/reject
-    C->>D: Update status = rejected, rejected_by = HR_id, rejected_at = now, rejection_reason
-    D->>DB: UPDATE worker_documents SET status = 'rejected', rejected_by = ?, rejected_at = NOW(), rejection_reason = ? WHERE id = ?
-    DB-->>D: Dokumen berhasil ditolak
-    D-->>C: Updated WorkerDocument
-    C-->>UI: Response sukses
-    UI-->>HR: Notifikasi penolakan berhasil
+    HR->>+UI: Klik tombol "Tolak" pada dokumen
+    UI->>+UI: Tampilkan form penolakan (alasan penolakan)
+    HR->>+UI: Isi alasan penolakan dan klik Tolak
+    UI->>+C: POST /admin/document-approvals/{id}/reject
+    C->>+D: Update status = rejected, rejected_by = HR_id, rejected_at = now, rejection_reason
+    D->>+DB: UPDATE worker_documents SET status = 'rejected', rejected_by = ?, rejected_at = NOW(), rejection_reason = ? WHERE id = ?
+    DB-->>-D: Dokumen berhasil ditolak
+    D-->>-C: Updated WorkerDocument
+    C-->>-UI: Response sukses
+    UI-->>-HR: Notifikasi penolakan berhasil
     note over C: Notifikasi ke pegawai: dokumen ditolak dengan alasan, minta upload ulang
 

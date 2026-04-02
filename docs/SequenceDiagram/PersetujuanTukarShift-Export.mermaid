@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaTukarShift-EksportRiwayatTukarShift
 title: Kelola Tukar Shift - Export Riwayat
 ---
@@ -6,20 +6,20 @@ title: Kelola Tukar Shift - Export Riwayat
 sequenceDiagram
     autonumber
     actor Mgr as Manager/HR
-    participant UI as Web UI
-    participant C as ShiftSwapApprovalController
-    participant R as ShiftSwapRequest Model
-    participant E as Export Service
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as ShiftSwapApprovalController :control
+    participant R as ShiftSwapRequest Model :entity
+    participant E as Export Service :control
+    participant DB as Database :entity
 
-    Mgr->>UI: Klik Export Riwayat Tukar Shift
-    UI->>C: GET /manager/shift-swap-approvals/export
-    C->>R: Ambil data sesuai filter
-    R->>DB: SELECT * FROM shift_swap_requests WHERE filter...
-    DB-->>R: Dataset riwayat
-    R-->>C: Data riwayat
-    C->>E: Generate file export (xlsx/csv)
-    E-->>C: File siap diunduh
-    C-->>UI: Response file download
-    UI-->>Mgr: File riwayat berhasil diunduh
+    Mgr->>+UI: Klik Export Riwayat Tukar Shift
+    UI->>+C: GET /manager/shift-swap-approvals/export
+    C->>+R: Ambil data sesuai filter
+    R->>+DB: SELECT * FROM shift_swap_requests WHERE filter...
+    DB-->>-R: Dataset riwayat
+    R-->>-C: Data riwayat
+    C->>+E: Generate file export (xlsx/csv)
+    E-->>-C: File siap diunduh
+    C-->>-UI: Response file download
+    UI-->>-Mgr: File riwayat berhasil diunduh
 

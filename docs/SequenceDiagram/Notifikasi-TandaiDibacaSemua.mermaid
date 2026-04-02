@@ -1,4 +1,4 @@
-﻿---
+---
 id: Notifikasi-TandaiDibacaSemua
 title: Notifikasi - Tandai Dibaca Semua
 ---
@@ -6,17 +6,17 @@ title: Notifikasi - Tandai Dibaca Semua
 sequenceDiagram
     autonumber
     actor P as Pegawai
-    participant UI as Web UI
-    participant C as NotificationController
-    participant N as Notification Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as NotificationController :control
+    participant N as Notification Model :entity
+    participant DB as Database :entity
 
-    P->>UI: Klik tombol "Tandai Semua Notifikasi Sudah Dibaca"
-    UI->>C: PATCH /portal/notifications/mark-all-read
-    C->>N: Update all notifications untuk pegawai ini
-    N->>DB: UPDATE notifications SET read_at = NOW() WHERE user_id = ? AND read_at IS NULL
-    DB-->>N: Multiple rows berhasil diperbarui
-    N-->>C: Updated count
-    C-->>UI: Response sukses dengan jumlah notifikasi yang diperbarui
-    UI-->>P: Semua notifikasi kini ditampilkan sebagai sudah dibaca
+    P->>+UI: Klik tombol "Tandai Semua Notifikasi Sudah Dibaca"
+    UI->>+C: PATCH /portal/notifications/mark-all-read
+    C->>+N: Update all notifications untuk pegawai ini
+    N->>+DB: UPDATE notifications SET read_at = NOW() WHERE user_id = ? AND read_at IS NULL
+    DB-->>-N: Multiple rows berhasil diperbarui
+    N-->>-C: Updated count
+    C-->>-UI: Response sukses dengan jumlah notifikasi yang diperbarui
+    UI-->>-P: Semua notifikasi kini ditampilkan sebagai sudah dibaca
 

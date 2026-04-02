@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaShiftOverride-BulkTambahShiftOverride
 title: Kelola Shift Override - Bulk Tambah Shift Override
 ---
@@ -6,10 +6,10 @@ title: Kelola Shift Override - Bulk Tambah Shift Override
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as ShiftOverrideController
-    participant SO as ShiftOverride Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as ShiftOverrideController :control
+    participant SO as ShiftOverride Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol "Bulk Tambah" atau "Import Excel"
     UI->>UI: Tampilkan form upload file atau tabel input multiple
@@ -17,9 +17,9 @@ sequenceDiagram
     UI->>C: POST /admin/shift-overrides/bulk-create
     note over C: Validasi: format data, pegawai ada, shift ada, tanggal valid
     alt Validasi berhasil
-        C->>SO: Create multiple overrides dari array data
-        SO->>DB: INSERT INTO shift_overrides (worker_id, shift_id, date, reason, created_by, created_at) VALUES (...), (...), ...
-        DB-->>SO: Semua override berhasil disimpan
+        C->>+SO: Create multiple overrides dari array data
+        SO->>+DB: INSERT INTO shift_overrides (worker_id, shift_id, date, reason, created_by, created_at) VALUES (...), (...), ...
+        DB-->>-SO: Semua override berhasil disimpan
         SO-->>C: Array of new override instances
         C-->>UI: Response sukses dengan jumlah record yang ditambahkan
         UI-->>HR: Notifikasi: "X shift override berhasil ditambahkan"

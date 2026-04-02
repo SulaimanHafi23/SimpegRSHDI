@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaShiftOverride-UbahShiftOverride
 title: Kelola Shift Override - Ubah Shift Override
 ---
@@ -6,16 +6,16 @@ title: Kelola Shift Override - Ubah Shift Override
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as ShiftOverrideController
-    participant SO as ShiftOverride Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as ShiftOverrideController :control
+    participant SO as ShiftOverride Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol Edit pada shift override tertentu
     UI->>C: GET /admin/shift-overrides/{id}
-    C->>SO: Find override dengan relasi
-    SO->>DB: SELECT so.*, w.name, w.nip, s.name as shift_name FROM ... WHERE so.id = ?
-    DB-->>SO: Override data
+    C->>+SO: Find override dengan relasi
+    SO->>+DB: SELECT so.*, w.name, w.nip, s.name as shift_name FROM ... WHERE so.id = ?
+    DB-->>-SO: Override data
     SO-->>C: ShiftOverride instance
     C-->>UI: Response dengan data
     UI->>UI: Tampilkan form dengan data terpre-fill
@@ -23,9 +23,9 @@ sequenceDiagram
     UI->>C: PUT /admin/shift-overrides/{id}
     note over C: Validasi: shift ada, tanggal valid
     alt Validasi berhasil
-        C->>SO: Update override
-        SO->>DB: UPDATE shift_overrides SET shift_id = ?, date = ?, reason = ?, updated_at = NOW() WHERE id = ?
-        DB-->>SO: Override berhasil diperbarui
+        C->>+SO: Update override
+        SO->>+DB: UPDATE shift_overrides SET shift_id = ?, date = ?, reason = ?, updated_at = NOW() WHERE id = ?
+        DB-->>-SO: Override berhasil diperbarui
         SO-->>C: Updated instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi perubahan berhasil

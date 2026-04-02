@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJadwalPegawai-HapusJadwal
 title: Kelola Jadwal Pegawai - Hapus Jadwal
 ---
@@ -6,20 +6,20 @@ title: Kelola Jadwal Pegawai - Hapus Jadwal
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as WorkerScheduleController
-    participant WS as WorkerSchedule Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as WorkerScheduleController :control
+    participant WS as WorkerSchedule Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol Hapus pada jadwal tertentu
     UI->>UI: Tampilkan konfirmasi penghapusan
     HR->>UI: Klik tombol "Hapus" pada dialog konfirmasi
     UI->>C: DELETE /admin/worker-schedules/{id}
-    C->>WS: Delete jadwal berdasarkan id
+    C->>+WS: Delete jadwal berdasarkan id
     note over WS: Cek: apakah sudah ada attendance/absensi untuk jadwal ini?
     alt Tidak ada attendance
-        WS->>DB: DELETE FROM worker_schedules WHERE id = ?
-        DB-->>WS: Jadwal berhasil dihapus
+        WS->>+DB: DELETE FROM worker_schedules WHERE id = ?
+        DB-->>-WS: Jadwal berhasil dihapus
         WS-->>C: Confirmation
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi penghapusan berhasil

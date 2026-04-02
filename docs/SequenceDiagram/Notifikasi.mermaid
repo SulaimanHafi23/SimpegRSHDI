@@ -1,4 +1,4 @@
-﻿---
+---
 id: Notifikasi
 title: Notifikasi
 ---
@@ -6,17 +6,17 @@ title: Notifikasi
 sequenceDiagram
     autonumber
     actor P as Pegawai
-    participant UI as Web UI
-    participant C as NotificationController
-    participant N as Notification Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as NotificationController :control
+    participant N as Notification Model :entity
+    participant DB as Database :entity
 
-    P->>UI: Buka menu Notifikasi Saya
-    UI->>C: GET /portal/notifications
-    C->>N: Fetch where user_id = pegawai_id, order by created_at DESC
-    N->>DB: SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC
-    DB-->>N: List notifikasi dengan status (read/unread)
-    N-->>C: Collection notifikasi
-    C-->>UI: Response dengan daftar notifikasi
-    UI-->>P: Tampilkan daftar notifikasi (unread diberi tanda)
+    P->>+UI: Buka menu Notifikasi Saya
+    UI->>+C: GET /portal/notifications
+    C->>+N: Fetch where user_id = pegawai_id, order by created_at DESC
+    N->>+DB: SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC
+    DB-->>-N: List notifikasi dengan status (read/unread)
+    N-->>-C: Collection notifikasi
+    C-->>-UI: Response dengan daftar notifikasi
+    UI-->>-P: Tampilkan daftar notifikasi (unread diberi tanda)
 

@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaMappingDokumenPosisi-UbahMapping
 title: Kelola Mapping Dokumen Posisi - Ubah Mapping
 ---
@@ -6,16 +6,16 @@ title: Kelola Mapping Dokumen Posisi - Ubah Mapping
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentPositionMappingController
-    participant DPM as DocumentPositionMapping Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentPositionMappingController :control
+    participant DPM as DocumentPositionMapping Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol Edit pada mapping tertentu
     UI->>C: GET /admin/document-position-mappings/{id}
-    C->>DPM: Find mapping dengan relasi
-    DPM->>DB: SELECT dpm.*, p.name as position_name, dt.name as document_name FROM ... WHERE dpm.id = ?
-    DB-->>DPM: Mapping data
+    C->>+DPM: Find mapping dengan relasi
+    DPM->>+DB: SELECT dpm.*, p.name as position_name, dt.name as document_name FROM ... WHERE dpm.id = ?
+    DB-->>-DPM: Mapping data
     DPM-->>C: DocumentPositionMapping instance
     C-->>UI: Response dengan data
     UI->>UI: Tampilkan form dengan data terpre-fill (posisi dan dokumen biasanya read-only, hanya required flag)
@@ -23,9 +23,9 @@ sequenceDiagram
     UI->>C: PUT /admin/document-position-mappings/{id}
     note over C: Validasi: posisi dan dokumen tetap sama (deduplikasi)
     alt Validasi berhasil
-        C->>DPM: Update mapping
-        DPM->>DB: UPDATE document_position_mappings SET is_required = ?, updated_at = NOW() WHERE id = ?
-        DB-->>DPM: Mapping berhasil diperbarui
+        C->>+DPM: Update mapping
+        DPM->>+DB: UPDATE document_position_mappings SET is_required = ?, updated_at = NOW() WHERE id = ?
+        DB-->>-DPM: Mapping berhasil diperbarui
         DPM-->>C: Updated instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi perubahan berhasil

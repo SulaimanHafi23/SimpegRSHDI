@@ -1,4 +1,4 @@
-﻿---
+---
 id: PortalPegawai-JadwalKerja
 title: Portal Pegawai - Jadwal Kerja (Read)
 ---
@@ -6,17 +6,17 @@ title: Portal Pegawai - Jadwal Kerja (Read)
 sequenceDiagram
     autonumber
     actor P as Pegawai
-    participant UI as Web UI
-    participant C as WorkerScheduleController
-    participant S as WorkerSchedule Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as WorkerScheduleController :control
+    participant S as WorkerSchedule Model :entity
+    participant DB as Database :entity
 
-    P->>UI: Buka menu Jadwal Kerja
-    UI->>C: GET /portal/schedules
-    C->>S: Ambil jadwal berdasarkan worker_id
-    S->>DB: SELECT * FROM worker_schedules WHERE worker_id = ? ORDER BY date ASC
-    DB-->>S: Data jadwal kerja
-    S-->>C: Collection jadwal
-    C-->>UI: Response data jadwal
-    UI-->>P: Tampilkan kalender/tabel jadwal kerja
+    P->>+UI: Buka menu Jadwal Kerja
+    UI->>+C: GET /portal/schedules
+    C->>+S: Ambil jadwal berdasarkan worker_id
+    S->>+DB: SELECT * FROM worker_schedules WHERE worker_id = ? ORDER BY date ASC
+    DB-->>-S: Data jadwal kerja
+    S-->>-C: Collection jadwal
+    C-->>-UI: Response data jadwal
+    UI-->>-P: Tampilkan kalender/tabel jadwal kerja
 

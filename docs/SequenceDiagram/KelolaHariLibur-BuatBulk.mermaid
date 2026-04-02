@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaHariLibur-BulkTambahHariLibur
 title: Kelola Hari Libur - Bulk Tambah Hari Libur
 ---
@@ -6,10 +6,10 @@ title: Kelola Hari Libur - Bulk Tambah Hari Libur
 sequenceDiagram
     autonumber
     actor SA as Super Admin/HR
-    participant UI as Web UI
-    participant C as HolidayController
-    participant H as Holiday Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as HolidayController :control
+    participant H as Holiday Model :entity
+    participant DB as Database :entity
 
     SA->>UI: Klik tombol "Tambah Bulk" atau "Import Excel"
     UI->>UI: Tampilkan form upload file atau tabel input multiple
@@ -17,9 +17,9 @@ sequenceDiagram
     UI->>C: POST /admin/holidays/bulk-create
     note over C: Validasi: format data, tanggal unik, tidak ada duplikasi
     alt Validasi berhasil
-        C->>H: Create multiple holidays dari array data
-        H->>DB: INSERT INTO holidays (date, name, type, created_by, created_at) VALUES (...), (...), ...
-        DB-->>H: Semua hari libur berhasil disimpan
+        C->>+H: Create multiple holidays dari array data
+        H->>+DB: INSERT INTO holidays (date, name, type, created_by, created_at) VALUES (...), (...), ...
+        DB-->>-H: Semua hari libur berhasil disimpan
         H-->>C: Array of new holiday instances
         C-->>UI: Response sukses dengan jumlah record yang ditambahkan
         UI-->>SA: Notifikasi: "X hari libur berhasil ditambahkan"

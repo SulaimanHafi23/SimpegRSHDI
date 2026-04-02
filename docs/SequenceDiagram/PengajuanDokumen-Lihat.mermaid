@@ -1,4 +1,4 @@
-﻿---
+---
 id: PersetujuanDokumen-LihatDetailDokumen
 title: Persetujuan Dokumen - Lihat Detail Dokumen
 ---
@@ -6,16 +6,16 @@ title: Persetujuan Dokumen - Lihat Detail Dokumen
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentApprovalController
-    participant D as WorkerDocument Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentApprovalController :control
+    participant D as WorkerDocument Model :entity
+    participant DB as Database :entity
 
-    HR->>UI: Klik pada dokumen untuk melihat detail dan preview
-    UI->>C: GET /admin/document-approvals/{id}
-    C->>D: Find dokumen berdasarkan id dengan relasi worker
-    D->>DB: SELECT wd.*, w.name, w.nip FROM worker_documents wd JOIN workers w ON wd.worker_id = w.id WHERE wd.id = ?
-    DB-->>D: Worker document dengan data pegawai
-    D-->>C: WorkerDocument instance
-    C-->>UI: Response dengan dokumen lengkap (metadata, file URL/preview)
-    UI-->>HR: Tampilkan: Pegawai, Jenis Dokumen, Upload Date, Expiry Date, File Preview/Download
+    HR->>+UI: Klik pada dokumen untuk melihat detail dan preview
+    UI->>+C: GET /admin/document-approvals/{id}
+    C->>+D: Find dokumen berdasarkan id dengan relasi worker
+    D->>+DB: SELECT wd.*, w.name, w.nip FROM worker_documents wd JOIN workers w ON wd.worker_id = w.id WHERE wd.id = ?
+    DB-->>-D: Worker document dengan data pegawai
+    D-->>-C: WorkerDocument instance
+    C-->>-UI: Response dengan dokumen lengkap (metadata, file URL/preview)
+    UI-->>-HR: Tampilkan: Pegawai, Jenis Dokumen, Upload Date, Expiry Date, File Preview/Download

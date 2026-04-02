@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaRole-UbahRole
 title: Kelola Role - Ubah Role
 ---
@@ -6,16 +6,16 @@ title: Kelola Role - Ubah Role
 sequenceDiagram
     autonumber
     actor SA as Super Admin
-    participant UI as Web UI
-    participant C as RoleController
-    participant R as Role Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as RoleController :control
+    participant R as Role Model :entity
+    participant DB as Database :entity
 
     SA->>UI: Klik tombol Edit pada role tertentu
     UI->>C: GET /admin/roles/{id}
-    C->>R: Find role dengan permissions
-    R->>DB: SELECT r.*, rp.permission_id FROM roles r LEFT JOIN role_permission rp ON r.id = rp.role_id WHERE r.id = ?
-    DB-->>R: Role data
+    C->>+R: Find role dengan permissions
+    R->>+DB: SELECT r.*, rp.permission_id FROM roles r LEFT JOIN role_permission rp ON r.id = rp.role_id WHERE r.id = ?
+    DB-->>-R: Role data
     R-->>C: Role instance
     C-->>UI: Response dengan data untuk form edit
     UI->>UI: Tampilkan form dengan data terpre-fill
@@ -23,13 +23,13 @@ sequenceDiagram
     UI->>C: PUT /admin/roles/{id}
     note over C: Validasi: nama unik (exclude current), tidak kosong
     alt Validasi berhasil
-        C->>R: Update role dengan data baru
-        R->>DB: UPDATE roles SET name = ?, description = ?, updated_at = NOW() WHERE id = ?
-        DB-->>R: Role berhasil diperbarui
+        C->>+R: Update role dengan data baru
+        R->>+DB: UPDATE roles SET name = ?, description = ?, updated_at = NOW() WHERE id = ?
+        DB-->>-R: Role berhasil diperbarui
         note over C: Sync permissions: hapus yang tidak dipilih, tambah yang baru
-        C->>R: Sync permissions
-        R->>DB: DELETE role_permission lama lalu INSERT role_permission baru
-        DB-->>R: Permissions synced
+        C->>+R: Sync permissions
+        R->>+DB: DELETE role_permission lama lalu INSERT role_permission baru
+        DB-->>-R: Permissions synced
         R-->>C: Updated role instance
         C-->>UI: Response sukses
         UI-->>SA: Notifikasi perubahan berhasil

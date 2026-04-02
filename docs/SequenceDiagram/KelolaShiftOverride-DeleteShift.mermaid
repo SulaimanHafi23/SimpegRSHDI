@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaShiftOverride-HapusShiftOverride
 title: Kelola Shift Override - Hapus Shift Override
 ---
@@ -6,19 +6,19 @@ title: Kelola Shift Override - Hapus Shift Override
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as ShiftOverrideController
-    participant SO as ShiftOverride Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as ShiftOverrideController :control
+    participant SO as ShiftOverride Model :entity
+    participant DB as Database :entity
 
-    HR->>UI: Klik tombol Hapus pada shift override tertentu
-    UI->>UI: Tampilkan konfirmasi penghapusan
-    HR->>UI: Klik tombol "Hapus" pada dialog konfirmasi
-    UI->>C: DELETE /admin/shift-overrides/{id}
-    C->>SO: Delete override berdasarkan id
-    SO->>DB: DELETE FROM shift_overrides WHERE id = ?
-    DB-->>SO: Override berhasil dihapus
-    SO-->>C: Confirmation
-    C-->>UI: Response sukses
-    UI-->>HR: Notifikasi penghapusan berhasil
+    HR->>+UI: Klik tombol Hapus pada shift override tertentu
+    UI->>+UI: Tampilkan konfirmasi penghapusan
+    HR->>+UI: Klik tombol "Hapus" pada dialog konfirmasi
+    UI->>+C: DELETE /admin/shift-overrides/{id}
+    C->>+SO: Delete override berdasarkan id
+    SO->>+DB: DELETE FROM shift_overrides WHERE id = ?
+    DB-->>-SO: Override berhasil dihapus
+    SO-->>-C: Confirmation
+    C-->>-UI: Response sukses
+    UI-->>-HR: Notifikasi penghapusan berhasil
 

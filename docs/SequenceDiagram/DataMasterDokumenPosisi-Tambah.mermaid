@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaMappingDokumenPosisi-TambahMapping
 title: Kelola Mapping Dokumen Posisi - Tambah Mapping
 ---
@@ -6,10 +6,10 @@ title: Kelola Mapping Dokumen Posisi - Tambah Mapping
 sequenceDiagram
     autonumber
     actor HR as HR/Super Admin
-    participant UI as Web UI
-    participant C as DocumentPositionMappingController
-    participant DPM as DocumentPositionMapping Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as DocumentPositionMappingController :control
+    participant DPM as DocumentPositionMapping Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol "Tambah Mapping"
     UI->>UI: Tampilkan form dengan dropdown posisi dan jenis dokumen, checkbox required
@@ -17,9 +17,9 @@ sequenceDiagram
     UI->>C: POST /admin/document-position-mappings
     note over C: Validasi: kombinasi position_id + document_type_id belum ada (unique)
     alt Validasi berhasil
-        C->>DPM: Create mapping baru
-        DPM->>DB: INSERT INTO document_position_mappings (position_id, document_type_id, is_required, created_at)
-        DB-->>DPM: Mapping berhasil disimpan
+        C->>+DPM: Create mapping baru
+        DPM->>+DB: INSERT INTO document_position_mappings (position_id, document_type_id, is_required, created_at)
+        DB-->>-DPM: Mapping berhasil disimpan
         DPM-->>C: New mapping instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi berhasil, refresh daftar

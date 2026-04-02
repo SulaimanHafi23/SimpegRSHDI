@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaJadwalPegawai-TambahJadwal
 title: Kelola Jadwal Pegawai - Tambah Jadwal
 ---
@@ -6,10 +6,10 @@ title: Kelola Jadwal Pegawai - Tambah Jadwal
 sequenceDiagram
     autonumber
     actor HR as HR/Manager
-    participant UI as Web UI
-    participant C as WorkerScheduleController
-    participant WS as WorkerSchedule Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as WorkerScheduleController :control
+    participant WS as WorkerSchedule Model :entity
+    participant DB as Database :entity
 
     HR->>UI: Klik tombol "Tambah Jadwal"
     UI->>UI: Tampilkan form input (pilih pegawai, shift, tanggal mulai-akhir, catatan)
@@ -17,9 +17,9 @@ sequenceDiagram
     UI->>C: POST /admin/worker-schedules
     note over C: Validasi: pegawai ada, shift ada, tanggal valid, no overlap conflict
     alt Validasi berhasil
-        C->>WS: Create jadwal baru untuk pegawai
-        WS->>DB: INSERT INTO worker_schedules (worker_id, shift_id, start_date, end_date, notes, created_by, created_at)
-        DB-->>WS: Jadwal berhasil disimpan
+        C->>+WS: Create jadwal baru untuk pegawai
+        WS->>+DB: INSERT INTO worker_schedules (worker_id, shift_id, start_date, end_date, notes, created_by, created_at)
+        DB-->>-WS: Jadwal berhasil disimpan
         WS-->>C: New schedule instance
         C-->>UI: Response sukses
         UI-->>HR: Notifikasi berhasil, refresh kalender/tabel

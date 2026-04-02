@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaRole-TambahRole
 title: Kelola Role - Tambah Role
 ---
@@ -6,10 +6,10 @@ title: Kelola Role - Tambah Role
 sequenceDiagram
     autonumber
     actor SA as Super Admin
-    participant UI as Web UI
-    participant C as RoleController
-    participant R as Role Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as RoleController :control
+    participant R as Role Model :entity
+    participant DB as Database :entity
 
     SA->>UI: Klik tombol "Tambah Role"
     UI->>UI: Tampilkan form input (nama role, deskripsi, pilih permissions)
@@ -17,13 +17,13 @@ sequenceDiagram
     UI->>C: POST /admin/roles
     note over C: Validasi: nama unik, nama tidak kosong
     alt Validasi berhasil
-        C->>R: Create role baru dengan name, description
-        R->>DB: INSERT INTO roles (name, description, created_at)
-        DB-->>R: Role berhasil disimpan
+        C->>+R: Create role baru dengan name, description
+        R->>+DB: INSERT INTO roles (name, description, created_at)
+        DB-->>-R: Role berhasil disimpan
         note over C: Jika ada permissions terpilih, attach ke role
-        C->>R: Attach permissions ke role
-        R->>DB: INSERT INTO role_permission (role_id, permission_id) VALUES (...)
-        DB-->>R: Permissions berhasil di-attach
+        C->>+R: Attach permissions ke role
+        R->>+DB: INSERT INTO role_permission (role_id, permission_id) VALUES (...)
+        DB-->>-R: Permissions berhasil di-attach
         R-->>C: New role instance dengan permissions
         C-->>UI: Response sukses
         UI-->>SA: Notifikasi berhasil, refresh daftar

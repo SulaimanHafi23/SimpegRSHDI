@@ -1,4 +1,4 @@
-﻿---
+---
 id: KelolaHariLibur-UbahHariLibur
 title: Kelola Hari Libur - Ubah Hari Libur
 ---
@@ -6,16 +6,16 @@ title: Kelola Hari Libur - Ubah Hari Libur
 sequenceDiagram
     autonumber
     actor SA as Super Admin/HR
-    participant UI as Web UI
-    participant C as HolidayController
-    participant H as Holiday Model
-    participant DB as Database
+    participant UI as Web UI :boundary
+    participant C as HolidayController :control
+    participant H as Holiday Model :entity
+    participant DB as Database :entity
 
     SA->>UI: Klik tombol Edit pada hari libur tertentu
     UI->>C: GET /admin/holidays/{id}
-    C->>H: Find holiday berdasarkan id
-    H->>DB: SELECT * FROM holidays WHERE id = ?
-    DB-->>H: Holiday data
+    C->>+H: Find holiday berdasarkan id
+    H->>+DB: SELECT * FROM holidays WHERE id = ?
+    DB-->>-H: Holiday data
     H-->>C: Holiday instance
     C-->>UI: Response dengan data untuk form edit
     UI->>UI: Tampilkan form dengan data terpre-fill
@@ -23,9 +23,9 @@ sequenceDiagram
     UI->>C: PUT /admin/holidays/{id}
     note over C: Validasi: tanggal unik (exclude current record), format valid
     alt Validasi berhasil
-        C->>H: Update holiday dengan data baru
-        H->>DB: UPDATE holidays SET date = ?, name = ?, type = ?, updated_at = NOW() WHERE id = ?
-        DB-->>H: Holiday berhasil diperbarui
+        C->>+H: Update holiday dengan data baru
+        H->>+DB: UPDATE holidays SET date = ?, name = ?, type = ?, updated_at = NOW() WHERE id = ?
+        DB-->>-H: Holiday berhasil diperbarui
         H-->>C: Updated holiday instance
         C-->>UI: Response sukses
         UI-->>SA: Notifikasi perubahan berhasil
