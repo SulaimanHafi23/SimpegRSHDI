@@ -285,19 +285,6 @@
                         </div>
                     @endif
 
-                    <!-- Success Message -->
-                    @if (session('success'))
-                        <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
-                            <div class="flex items-start">
-                                <i class="fas fa-check-circle text-green-500 text-xl mr-3 mt-0.5"></i>
-                                <div>
-                                    <strong class="font-semibold text-green-800">Success!</strong>
-                                    <p class="text-sm text-green-700 mt-1">{{ session('success') }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
-
                     <!-- Login Form -->
                     <form method="POST" action="{{ route('login.post') }}" class="space-y-6">
                         @csrf

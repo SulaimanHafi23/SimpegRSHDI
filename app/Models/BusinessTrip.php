@@ -24,6 +24,7 @@ class BusinessTrip extends Model
         'transportation',
         'accommodation',
         'notes',
+        'supporting_document_path',
         'estimated_cost',
         'status',
         'approved_by',

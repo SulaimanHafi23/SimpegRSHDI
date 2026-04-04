@@ -9,9 +9,6 @@
     </div>
 
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-        @if(session('error'))
-            <div class="mb-4 text-red-600">{{ session('error') }}</div>
-        @endif
 
         <form action="{{ route('admin.master.department-document-types.update', ['department_document_type' => $department->id ?? 'universal']) }}" method="POST" class="space-y-4">
             @csrf

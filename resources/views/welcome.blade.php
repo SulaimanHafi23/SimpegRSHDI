@@ -1010,7 +1010,7 @@
                     <ul class="bento-bullets" style="margin-top:12px;">
                         <li>Pengelolaan Data Dokumen Pegawai</li>
                         <li>Manajemen Perjalanan Dinas</li>
-                        <li>Rekap Cuti &amp; Lembur Terintegrasi</li>
+                        <li>Rekap Cuti Terintegrasi</li>
                     </ul>
                 </div>
                 <div class="photo-card animate-float">

@@ -30,38 +30,6 @@
         </div>
     </div>
 
-    <!-- Alert Success -->
-    @if (session('success'))
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3">
-            <div class="flex-shrink-0 mt-0.5">
-                <i class="fas fa-check-circle text-green-600 text-lg"></i>
-            </div>
-            <div>
-                <h3 class="text-sm font-semibold text-green-800">Berhasil!</h3>
-                <p class="text-sm text-green-700 mt-1">{{ session('success') }}</p>
-            </div>
-            <button onclick="this.parentElement.remove()" class="ml-auto text-green-600 hover:text-green-800">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    @endif
-
-    <!-- Alert Error Session -->
-    @if (session('error'))
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
-            <div class="flex-shrink-0 mt-0.5">
-                <i class="fas fa-exclamation-circle text-red-600 text-lg"></i>
-            </div>
-            <div>
-                <h3 class="text-sm font-semibold text-red-800">Error!</h3>
-                <p class="text-sm text-red-700 mt-1">{{ session('error') }}</p>
-            </div>
-            <button onclick="this.parentElement.remove()" class="ml-auto text-red-600 hover:text-red-800">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    @endif
-
     <!-- Filter Section -->
     <div class="bg-white rounded-lg shadow p-6" x-data="{ showFilters: false }">
         <div class="flex items-center justify-between mb-4">

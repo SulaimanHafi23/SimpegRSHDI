@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Models\Holiday;
 use App\Models\BusinessTrip;
+use App\Models\Holiday;
 use App\Services\Leave\LeaveRequestService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -16,11 +16,13 @@ class CalendarController extends Controller
     ) {}
 
     /**
-     * Display calendar view
+     * Redirect the old calendar URL to the merged shift schedule page.
      */
     public function index()
     {
-        return view('employee.calendar.index');
+        return redirect()
+            ->route('employee.shifts.index')
+            ->with('info', 'Kalender aktivitas sudah dipindahkan ke halaman Jadwal Kerja Saya.');
     }
 
     /**
@@ -28,9 +30,9 @@ class CalendarController extends Controller
      */
     public function events(Request $request)
     {
-        $user = auth()->user();
+        $user = $request->user();
 
-        if (!$user->worker) {
+        if (!$user || !$user->worker) {
             return response()->json([]);
         }
 

@@ -228,7 +228,6 @@ Folder: `ActivityDiagram/`
 | **Leave Management** | Pengajuan cuti dengan workflow approval | ✅ Active |
 | **Shift Management** | Jadwal kerja, swap, override | ✅ Active |
 | **Shift Swap** | Tukar shift dengan validasi ketat | ✅ Active |
-| **Overtime** | Pengajuan lembur | ✅ Active |
 | **Business Trip** | Perjalanan dinas | ✅ Active |
 | **Master Data** | Kelola departemen, shift, jenis cuti, dll | ✅ Active |
 | **Worker Documents** | Upload & verify dokumen pegawai | ✅ Active |

@@ -11,7 +11,7 @@
         <ul class="mt-3 space-y-2 text-sm leading-7 text-emerald-50/80 sm:text-base">
             <li>Data akun dan identitas pegawai seperti nama, email, jabatan, unit kerja, role, dan informasi profil.</li>
             <li>Data operasional absensi seperti waktu check-in, check-out, foto kehadiran, titik lokasi, dan status kehadiran.</li>
-            <li>Data administrasi pengajuan seperti cuti, lembur, perjalanan dinas, shift swap, dokumen pegawai, serta catatan persetujuan atasan.</li>
+            <li>Data administrasi pengajuan seperti cuti, perjalanan dinas, shift swap, dokumen pegawai, serta catatan persetujuan atasan.</li>
             <li>Data notifikasi sistem, audit log, dan jejak aktivitas yang diperlukan untuk keamanan serta pelacakan perubahan.</li>
         </ul>
     </div>

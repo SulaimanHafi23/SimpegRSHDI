@@ -182,6 +182,18 @@
                             <p class="text-base font-semibold text-gray-900">{{ $trip->accommodation ?? '-' }}</p>
                         </div>
 
+                        <div>
+                            <label class="block text-sm font-medium text-gray-500 mb-1">Dokumen Pendukung</label>
+                            @if($trip->supporting_document_path)
+                                <a href="{{ Storage::disk('public')->url($trip->supporting_document_path) }}" target="_blank" rel="noopener"
+                                   class="inline-flex items-center text-blue-700 hover:text-blue-800 font-semibold">
+                                    <i class="fas fa-paperclip mr-2"></i>Lihat Lampiran
+                                </a>
+                            @else
+                                <p class="text-base font-semibold text-red-600">Tidak ada lampiran</p>
+                            @endif
+                        </div>
+
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-500 mb-1">Tujuan Perjalanan</label>
                             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">

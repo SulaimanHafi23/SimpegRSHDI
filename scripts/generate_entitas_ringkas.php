@@ -19,7 +19,7 @@ $kamus = [
     'department'=>'departemen','departments'=>'departemen','document'=>'dokumen','documents'=>'dokumen','type'=>'tipe','types'=>'tipe',
     'failed'=>'gagal','job'=>'pekerjaan','jobs'=>'pekerjaan','gender'=>'jenis kelamin','genders'=>'jenis kelamin','holiday'=>'hari libur',
     'holidays'=>'hari libur','leave'=>'cuti','request'=>'pengajuan','requests'=>'pengajuan','location'=>'lokasi','locations'=>'lokasi',
-    'notification'=>'notifikasi','notifications'=>'notifikasi','overtime'=>'lembur','password'=>'kata sandi','reset'=>'reset','token'=>'token','tokens'=>'token',
+    'notification'=>'notifikasi','notifications'=>'notifikasi','password'=>'kata sandi','reset'=>'reset','token'=>'token','tokens'=>'token',
     'personal'=>'pribadi','access'=>'akses','religion'=>'agama','religions'=>'agama','salary'=>'gaji','component'=>'komponen','components'=>'komponen',
     'session'=>'sesi','sessions'=>'sesi','shift'=>'shift','shifts'=>'shift','day'=>'hari','time'=>'waktu','times'=>'waktu','override'=>'penyesuaian','overrides'=>'penyesuaian',
     'swap'=>'tukar','user'=>'pengguna','users'=>'pengguna','worker'=>'pegawai','workers'=>'pegawai','off'=>'libur','exception'=>'pengecualian',

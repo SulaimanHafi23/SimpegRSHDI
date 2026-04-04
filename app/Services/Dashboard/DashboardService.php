@@ -4,10 +4,8 @@ namespace App\Services\Dashboard;
 
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
-use App\Models\OvertimeRequest;
 use App\Models\Worker;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
@@ -152,44 +150,6 @@ class DashboardService
     }
 
     /**
-     * Get overtime request statistics
-     */
-    public function getOvertimeStats(string $period = 'month')
-    {
-        $query = OvertimeRequest::query();
-
-        switch ($period) {
-            case 'today':
-                $query->whereDate('created_at', now());
-                break;
-            case 'week':
-                $query->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()]);
-                break;
-            case 'month':
-                $query->whereMonth('created_at', now()->month)
-                      ->whereYear('created_at', now()->year);
-                break;
-            case 'year':
-                $query->whereYear('created_at', now()->year);
-                break;
-        }
-
-        $counts = (clone $query)->selectRaw("status, COUNT(*) as cnt")
-            ->groupBy('status')
-            ->pluck('cnt', 'status');
-
-        $totalHours = (clone $query)->where('status', 'approved')->sum('total_hours');
-
-        return [
-            'total' => $counts->sum(),
-            'pending' => $counts->get('pending', 0),
-            'approved' => $counts->get('approved', 0),
-            'rejected' => $counts->get('rejected', 0),
-            'total_hours' => $totalHours,
-        ];
-    }
-
-    /**
      * Get top 10 most active workers (by attendance)
      */
     public function getTopWorkers(int $limit = 10)
@@ -228,7 +188,6 @@ class DashboardService
     {
         return [
             'leaves' => LeaveRequest::where('status', 'pending')->count(),
-            'overtimes' => OvertimeRequest::where('status', 'pending')->count(),
         ];
     }
 

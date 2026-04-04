@@ -13,7 +13,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Intervention\Image\ImageManagerStatic as Image;
 
 class AttendanceService
 {
@@ -119,6 +118,15 @@ class AttendanceService
 
             $status = $data['status'] ?? 'present';
 
+            if (in_array($status, ['sick', 'permission'], true) && empty($data['attachment'])) {
+                throw new \Exception('Status sakit/izin wajib melampirkan dokumen pendukung.');
+            }
+
+            $attachmentPath = null;
+            if (!empty($data['attachment'])) {
+                $attachmentPath = $this->saveAttachment($data['attachment'], $workerId, $status);
+            }
+
             // Get worker's shift for today (check ShiftOverride first, then active shift)
             $shiftOverride = $worker ? $worker->shiftOverrides()
                 ->where('override_date', $today)
@@ -146,52 +154,45 @@ class AttendanceService
             $shiftStartTimeStr = $schedule['start_time'];
             $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
 
-            // Special handling for overnight shifts
-            // If shift is overnight (e.g., 22:00-06:00) and current time is in the morning,
-            // the shift actually starts tonight, not this morning
+            // Special handling for overnight shifts (e.g. 22:00-06:00):
+            // when current time is after midnight but before shift end, the active shift started yesterday.
             if ($schedule['is_overnight']) {
-                $shiftStartHour = (int) \Carbon\Carbon::parse($shiftStartTimeStr)->format('H');
-                $currentHour = $checkInTime->hour;
+                $shiftEndDateTimeToday = \Carbon\Carbon::parse($today . ' ' . $schedule['end_time']);
 
-                // If current time is before noon and shift starts after noon (evening shift),
-                // the shift hasn't started yet (it will start tonight)
-                if ($currentHour < 12 && $shiftStartHour >= 12) {
-                    // Shift starts tonight, so add 0 days (today evening)
-                    // But we're checking in the morning, which is ~12+ hours too early
-                    $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
-                } elseif ($currentHour >= 12 && $shiftStartHour >= 12) {
-                    // Both in evening - shift starts today
-                    $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
-                } else {
-                    // Current time is afternoon/evening, shift started last night
-                    // This is valid - shift started yesterday evening
+                if ($checkInTime->lessThan($shiftEndDateTimeToday)) {
                     $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr)->subDay();
+                } else {
+                    $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $shiftStartTimeStr);
                 }
             }
 
             // Skip time window restrictions for non-present statuses
             if ($status === 'present') {
                 // Get time window configuration
-                $checkInWindowBeforeHours = config('attendance.check_in_window_before_hours', 2);
+                $checkInWindowBeforeMinutes = (int) round((float) config('attendance.check_in_window_before_hours', 0.5) * 60);
                 $earlyCheckInGraceMinutes = config('attendance.early_checkin_grace_minutes', 30);
                 $strictTimeWindow = config('attendance.strict_time_window', false);
 
                 // Calculate earliest allowed check-in time
-                $earliestCheckInTime = $shiftStartDateTime->copy()->subHours($checkInWindowBeforeHours);
+                $earliestCheckInTime = $shiftStartDateTime->copy()->subMinutes($checkInWindowBeforeMinutes);
                 $veryEarlyCheckInTime = $earliestCheckInTime->copy()->subMinutes($earlyCheckInGraceMinutes);
 
                 // Validation: Too early check-in
                 if ($checkInTime->lessThan($veryEarlyCheckInTime)) {
-                    $hoursDiff = $checkInTime->diffInHours($shiftStartDateTime);
-                    $minutesDiff = $checkInTime->diffInMinutes($shiftStartDateTime) % 60;
+                    $totalDiffMinutes = $checkInTime->diffInMinutes($shiftStartDateTime);
+                    $hoursDiff = intdiv($totalDiffMinutes, 60);
+                    $minutesDiff = $totalDiffMinutes % 60;
+                    $windowHours = intdiv($checkInWindowBeforeMinutes, 60);
+                    $windowMinutes = $checkInWindowBeforeMinutes % 60;
+                    $windowText = trim(($windowHours > 0 ? $windowHours . ' jam ' : '') . ($windowMinutes > 0 ? $windowMinutes . ' menit' : ''));
 
                     $message = sprintf(
                         'Check-in terlalu dini! Anda mencoba check-in %d jam %d menit sebelum shift dimulai (pukul %s). ' .
-                        'Batas check-in paling awal adalah %d jam sebelum shift (pukul %s).',
+                        'Batas check-in paling awal adalah %s sebelum shift (pukul %s).',
                         $hoursDiff,
                         $minutesDiff,
                         $shiftStartDateTime->format('H:i'),
-                        $checkInWindowBeforeHours,
+                        $windowText,
                         $earliestCheckInTime->format('H:i')
                     );
 
@@ -199,7 +200,7 @@ class AttendanceService
                         throw new \Exception($message);
                     } else {
                         // Log warning but allow (non-strict mode)
-                        \Log::warning('Very early check-in attempt', [
+                        Log::warning('Very early check-in attempt', [
                             'worker_id' => $workerId,
                             'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
                             'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
@@ -210,7 +211,7 @@ class AttendanceService
                     }
                 } elseif ($checkInTime->lessThan($earliestCheckInTime)) {
                     // Warning for slightly early check-in (within grace period)
-                    \Log::info('Early check-in (within grace period)', [
+                    Log::info('Early check-in (within grace period)', [
                         'worker_id' => $workerId,
                         'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
                         'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
@@ -249,10 +250,11 @@ class AttendanceService
             }
 
             // Create attendance
+            $attendanceBusinessDate = $shiftStartDateTime->copy()->format('Y-m-d');
             $attendanceDTO = AttendanceDTO::fromRequest([
                 'worker_id' => $workerId,
                 'shift_id' => $shift->id,
-                'attendance_date' => $today,
+                'attendance_date' => $attendanceBusinessDate,
                 'check_in' => $checkInTime,
                 'distance_check_in' => $distance,
                 'check_in_by_admin' => $data['by_admin'] ?? false,
@@ -331,25 +333,25 @@ class AttendanceService
             }
 
             $schedule = $shift->getScheduleForDate($attendance->attendance_date);
+            $shiftStartTime = $schedule['start_time'];
             $shiftEndTime = $schedule['end_time'];
-            $shiftEndDateTime = \Carbon\Carbon::parse($attendanceDate->format('Y-m-d') . ' ' . $shiftEndTime);
 
-            // Jika shift melewati tengah malam (overnight), tambahkan satu hari ke tanggal akhir shift
-            if ($schedule['is_overnight']) {
+            // Anchor ke tanggal check-in aktual agar perhitungan shift malam tetap benar
+            // walau attendance_date lama tersimpan tidak konsisten.
+            $checkInDateTime = \Carbon\Carbon::parse($attendance->check_in);
+            $shiftBaseDate = $checkInDateTime->copy()->startOfDay();
+            $shiftStartDateTime = \Carbon\Carbon::parse($shiftBaseDate->format('Y-m-d') . ' ' . $shiftStartTime);
+            $shiftEndDateTime = \Carbon\Carbon::parse($shiftBaseDate->format('Y-m-d') . ' ' . $shiftEndTime);
+
+            if (!empty($schedule['is_overnight']) && $shiftEndDateTime->lessThanOrEqualTo($shiftStartDateTime)) {
                 $shiftEndDateTime->addDay();
             }
 
             // Validasi: Tidak boleh checkout terlalu lama setelah shift berakhir
-            // Max window = shift end + checkout window + overtime buffer
-            $checkOutWindowAfterHours = (int) config('attendance.check_out_window_after_hours', 4);
+            // Max window = shift end + checkout window
+            $checkOutWindowAfterMinutes = (int) round((float) config('attendance.check_out_window_after_hours', 1.5) * 60);
 
-            // Check for approved overtime request
-            $hasApprovedOvertime = \App\Models\OvertimeRequest::where('worker_id', $attendance->worker_id)
-                ->where('status', 'approved')
-                ->whereDate('overtime_date', $attendance->attendance_date)
-                ->exists();
-
-            $maxCheckoutTime = $shiftEndDateTime->copy()->addHours($checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0));
+            $maxCheckoutTime = $shiftEndDateTime->copy()->addMinutes($checkOutWindowAfterMinutes);
             $isAdminCheckout = (bool) ($data['by_admin'] ?? false);
 
             if (!$isAdminCheckout && $checkOutTime->greaterThan($maxCheckoutTime)) {
@@ -362,7 +364,7 @@ class AttendanceService
             }
 
             if ($isAdminCheckout && $checkOutTime->greaterThan($maxCheckoutTime)) {
-                \Log::info('Admin bypassed checkout window', [
+                Log::info('Admin bypassed checkout window', [
                     'attendance_id' => $attendanceId,
                     'worker_id' => $attendance->worker_id,
                     'admin_id' => $data['admin_id'] ?? null,
@@ -386,7 +388,7 @@ class AttendanceService
                 throw new \Exception('Anda berada di luar radius lokasi absensi. Silakan mendekat ke lokasi yang ditentukan.');
             }
 
-            // Hitung early leave dan overtime
+            // Hitung early leave dan kelebihan jam kerja
             $isEarlyLeave = $checkOutTime->lessThan($shiftEndDateTime);
             $earlyLeaveMinutes = 0;
 
@@ -405,7 +407,7 @@ class AttendanceService
                     $earlyLeaveText .= $earlyLeaveRemainingMinutes . ' menit';
                 }
 
-                \Log::warning('Early check-out detected', [
+                Log::warning('Early check-out detected', [
                     'worker_id' => $attendance->worker_id,
                     'attendance_id' => $attendanceId,
                     'scheduled_end' => $shiftEndDateTime->format('H:i'),
@@ -553,8 +555,8 @@ class AttendanceService
 
         // Try to process with Intervention Image if available; otherwise fallback to storing original file
         try {
-            if (class_exists('\\Intervention\\Image\\ImageManagerStatic')) {
-                $img = Image::make($photo->getRealPath());
+            if (class_exists('Intervention\\Image\\ImageManagerStatic')) {
+                $img = call_user_func(['Intervention\\Image\\ImageManagerStatic', 'make'], $photo->getRealPath());
                 $img->orientate();
                 if ($img->width() > 800) {
                     $img->resize(800, null, function ($constraint) {
@@ -570,11 +572,24 @@ class AttendanceService
                 return $path;
             }
         } catch (\Throwable $e) {
-            \Log::warning('Image processing failed, storing original: ' . $e->getMessage());
+            Log::warning('Image processing failed, storing original: ' . $e->getMessage());
         }
 
         // Fallback: store original uploaded file
         return $photo->storeAs('attendance-photos', $filename, 'public');
+    }
+
+    protected function saveAttachment($attachment, string $workerId, string $status): string
+    {
+        $filename = sprintf(
+            '%s_%s_attachment_%s.%s',
+            $workerId,
+            $status,
+            now()->format('YmdHis'),
+            $attachment->getClientOriginalExtension()
+        );
+
+        return $attachment->storeAs('attendance-attachments', $filename, 'public');
     }
 
     /**
@@ -655,13 +670,8 @@ class AttendanceService
             if ($now->greaterThan($thresholdTime)) {
                 $hoursLate = $now->diffInHours($shiftEndTime);
 
-                $checkOutWindowAfterHours = (int) config('attendance.check_out_window_after_hours', 4);
-                $hasApprovedOvertime = \App\Models\OvertimeRequest::where('worker_id', $worker->id)
-                    ->where('status', 'approved')
-                    ->whereDate('overtime_date', $attendanceDate->format('Y-m-d'))
-                    ->exists();
-
-                $maxCheckoutTime = $shiftEndTime->copy()->addHours($checkOutWindowAfterHours + ($hasApprovedOvertime ? 2 : 0));
+                $checkOutWindowAfterMinutes = (int) round((float) config('attendance.check_out_window_after_hours', 1.5) * 60);
+                $maxCheckoutTime = $shiftEndTime->copy()->addMinutes($checkOutWindowAfterMinutes);
                 $isWindowExpired = $now->greaterThan($maxCheckoutTime);
 
                 if ($onlyActionable && $isWindowExpired) {

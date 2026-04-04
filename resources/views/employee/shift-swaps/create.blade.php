@@ -18,11 +18,6 @@
         </div>
     </div>
 
-    @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
-    @endif
 
     @if($errors->any())
         <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
@@ -106,6 +101,7 @@
                 </select>
                 <p class="text-xs text-gray-500 mt-1">
                     Open request berarti siapa saja bisa menerima tukar shift.<br>
+                    <span class="text-emerald-600">🔔 Jika memilih rekan kerja target, sistem akan mengirim notifikasi otomatis ke rekan tersebut.</span><br>
                     <span class="text-blue-600">ℹ️ Semua permintaan tukar shift memerlukan persetujuan HR.</span>
                 </p>
                 @error('target_worker_id')
@@ -388,10 +384,18 @@ function removeDateInput(button) {
 // Form validation before submit
 document.querySelector('form').addEventListener('submit', function(e) {
     const swapType = document.querySelector('input[name="swap_type"]:checked')?.value;
+    const targetWorkerId = document.getElementById('target_worker_id')?.value;
+    const targetShiftId = document.getElementById('target_shift_id')?.value;
 
     if (!swapType) {
         e.preventDefault();
         alert('Pilih jenis tukar shift.');
+        return false;
+    }
+
+    if (targetWorkerId && !targetShiftId) {
+        e.preventDefault();
+        alert('Pilih shift target jika Anda memilih rekan kerja tertentu.');
         return false;
     }
 
@@ -453,9 +457,12 @@ document.getElementById('target_worker_id').addEventListener('change', function(
 
     if (!workerId) {
         targetShiftSelect.innerHTML = '<option value="">-- Pilih Rekan Kerja Terlebih Dahulu --</option>';
+        targetShiftSelect.required = false;
         targetShiftSelect.disabled = false;
         return;
     }
+
+    targetShiftSelect.required = true;
 
     // Fetch shifts for selected worker
     fetch(`/api/workers/${workerId}/future-shifts`)

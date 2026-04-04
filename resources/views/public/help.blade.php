@@ -20,7 +20,7 @@
             <h3 class="text-xl font-bold text-white">2. Employee</h3>
             <ul class="mt-3 space-y-2 text-sm leading-7 text-emerald-50/80 sm:text-base">
                 <li>Gunakan menu attendance untuk check-in, check-out, melihat riwayat, dan export data bila diizinkan.</li>
-                <li>Ajukan cuti, lembur, perjalanan dinas, atau shift swap dari menu yang tersedia dengan data tanggal, alasan, dan lampiran yang valid.</li>
+                <li>Ajukan cuti, perjalanan dinas, atau shift swap dari menu yang tersedia dengan data tanggal, alasan, dan lampiran yang valid.</li>
                 <li>Perbarui profil serta dokumen pegawai agar data administratif tetap akurat dan mudah diverifikasi.</li>
             </ul>
         </div>
@@ -57,7 +57,7 @@
         <div class="section-card p-5 sm:p-6">
             <h3 class="text-xl font-bold text-white">7. Pengajuan dan dokumen</h3>
             <ul class="mt-3 space-y-2 text-sm leading-7 text-emerald-50/80 sm:text-base">
-                <li>Unggah lampiran yang relevan untuk cuti, lembur, perjalanan dinas, atau dokumen pegawai.</li>
+                <li>Unggah lampiran yang relevan untuk cuti, perjalanan dinas, atau dokumen pegawai.</li>
                 <li>Pastikan format dan ukuran file mengikuti batasan yang ditetapkan form.</li>
                 <li>Pantau status approval secara berkala untuk melihat apakah permintaan disetujui, ditolak, atau masih menunggu.</li>
             </ul>

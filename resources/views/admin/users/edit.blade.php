@@ -6,11 +6,6 @@
 <div class="space-y-6">
 	<x-page-header title="Edit User" description="Perbarui data akun pengguna" icon="fas fa-user-edit" />
 
-	@if(session('error'))
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-			<span class="block sm:inline">{{ session('error') }}</span>
-		</div>
-	@endif
 
 	@if($errors->any())
 		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">

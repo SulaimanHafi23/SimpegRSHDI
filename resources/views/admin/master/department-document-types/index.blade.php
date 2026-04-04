@@ -14,16 +14,6 @@
         </a>
     </div>
 
-    @if(session('success'))
-        <div class="p-3 bg-green-50 border border-green-200 text-green-700 rounded">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="p-3 bg-red-50 border border-red-200 text-red-700 rounded">
-            {{ session('error') }}
-        </div>
-    @endif
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         @if(isset($universalDocumentTypes) && $universalDocumentTypes->isNotEmpty())

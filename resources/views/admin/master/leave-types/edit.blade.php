@@ -31,23 +31,8 @@
                 </div>
             </div>
         </div>
-    @elseif(session('error'))
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
-                <p class="text-red-800">{{ session('error') }}</p>
-            </div>
-        </div>
     @endif
 
-    @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-500 mr-3"></i>
-                <p class="text-green-800">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
 
     <div class="bg-white rounded-lg shadow-md p-6">
         <form action="{{ route('admin.master.leave-types.update', $leaveType->id) }}" method="POST">

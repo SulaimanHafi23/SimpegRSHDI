@@ -18,7 +18,7 @@ class WorkerShiftApiController extends Controller
 
     /**
      * Get the shift end time (and start time) for a worker on a given date.
-     * Used by overtime forms to auto-fill the start_time field.
+      * Used by employee scheduling forms to auto-fill shift time information.
      *
      * GET /api/workers/{workerId}/shift-time?date=YYYY-MM-DD
      */

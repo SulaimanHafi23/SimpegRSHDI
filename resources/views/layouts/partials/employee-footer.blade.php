@@ -27,16 +27,16 @@
             @endif
         </a>
 
-        <!-- Jadwal -->
+        <!-- Jadwal Pegawai -->
         <a href="{{ route('employee.shifts.index') }}" class="flex flex-col items-center {{ request()->routeIs('employee.shifts.*') ? '-mt-8' : 'space-y-1' }} transition duration-200">
             @if(request()->routeIs('employee.shifts.*'))
                 <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-full shadow-lg hover:shadow-xl transition duration-200 ring-4 ring-yellow-300/30">
                     <i class="fas fa-calendar-alt text-2xl"></i>
                 </div>
-                <span class="text-xs font-medium text-gray-600 mt-2">Jadwal</span>
+                <span class="text-xs font-medium text-gray-600 mt-2">Jadwal Pegawai</span>
             @else
                 <i class="fas fa-calendar-alt text-xl text-gray-600"></i>
-                <span class="text-xs font-medium text-gray-600">Jadwal</span>
+                <span class="text-xs font-medium text-gray-600">Jadwal Pegawai</span>
             @endif
         </a>
 

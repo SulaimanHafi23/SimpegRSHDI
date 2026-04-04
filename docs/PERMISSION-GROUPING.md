@@ -68,10 +68,6 @@ Permissions di halaman roles telah dikelompokkan menjadi **7 kategori** untuk me
   - `leave.manage` - Full management
   - `leave.approve` - Approve/reject
   
-- **Overtime (Lembur)**
-  - `overtime.manage` - Full management
-  - `overtime.approve` - Approve/reject
-  
 - **Shift Swap (Tukar Shift)**
   - `shift-swap.manage` - Full management
   - `shift-swap.approve` - Approve/reject
@@ -103,8 +99,6 @@ Permissions di halaman roles telah dikelompokkan menjadi **7 kategori** untuk me
 - `schedule.view` - Lihat jadwal sendiri
 - `leave.request` - Ajukan cuti
 - `leave.view` - Lihat cuti sendiri
-- `overtime.request` - Ajukan lembur
-- `overtime.view` - Lihat lembur sendiri
 - `shift-swap.request` - Ajukan tukar shift
 - `shift-swap.view` - Lihat tukar shift sendiri
 - `business-trip.request` - Ajukan perjalanan dinas
@@ -187,13 +181,10 @@ Permissions di halaman roles telah dikelompokkan menjadi **7 kategori** untuk me
 └─────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────┐
-│  ✅ Persetujuan (12)                            │
+│  ✅ Persetujuan (9)                             │
 │  ├─ Leave                                       │
 │  │  ├─ leave.manage                             │
 │  │  └─ leave.approve                            │
-│  ├─ Overtime                                    │
-│  │  ├─ overtime.manage                          │
-│  │  └─ overtime.approve                         │
 │  ├─ Shift Swap                                  │
 │  │  ├─ shift-swap.manage                        │
 │  │  └─ shift-swap.approve                       │
@@ -203,7 +194,7 @@ Permissions di halaman roles telah dikelompokkan menjadi **7 kategori** untuk me
 └─────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────┐
-│  👤 Akses Pegawai (13)                          │
+│  👤 Akses Pegawai (11)                          │
 │  ├─ worker.view                                 │
 │  ├─ worker-document.view                        │
 │  ├─ attendance.checkin                          │
@@ -211,8 +202,6 @@ Permissions di halaman roles telah dikelompokkan menjadi **7 kategori** untuk me
 │  ├─ schedule.view                               │
 │  ├─ leave.request                               │
 │  ├─ leave.view                                  │
-│  ├─ overtime.request                            │
-│  ├─ overtime.view                               │
 │  ├─ shift-swap.request                          │
 │  ├─ shift-swap.view                             │
 │  ├─ business-trip.request                       │
@@ -250,7 +239,7 @@ if (str_contains($permName, 'worker.manage') ||
     str_contains($permName, 'attendance.manage') || ...)
 
 // 4. Approval - approval modules with .approve or .manage
-if (in_array($module, ['leave', 'overtime', ...]) && 
+if (in_array($module, ['leave', 'shift-swap', 'business-trip']) && 
     (str_contains('.approve') || str_contains('.manage')))
 
 // 5. Employee Access - .request, .view, .checkin actions

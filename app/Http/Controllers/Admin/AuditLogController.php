@@ -40,7 +40,7 @@ class AuditLogController extends Controller
         // Filter by model type (validated to prevent injection)
         if ($request->filled('model_type')) {
             // Whitelist approach for extra safety
-            $allowedModels = ['Worker', 'User', 'LeaveRequest', 'OvertimeRequest'];
+            $allowedModels = ['Worker', 'User', 'LeaveRequest'];
             if (in_array($validated['model_type'], $allowedModels)) {
                 $query->where('auditable_type', 'App\\Models\\' . $validated['model_type']);
             }

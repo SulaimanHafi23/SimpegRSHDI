@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Model;
 
 class AppServiceProvider extends ServiceProvider
@@ -61,11 +63,6 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            \App\Repositories\Contracts\Overtime\OvertimeRequestRepositoryInterface::class,
-            \App\Repositories\Overtime\OvertimeRequestRepository::class
-        );
-
-        $this->app->bind(
             \App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface::class,
             \App\Repositories\WorkerDocument\WorkerDocumentRepository::class
         );
@@ -94,48 +91,48 @@ class AppServiceProvider extends ServiceProvider
         // Log lazy loading violations instead of throwing exceptions
         // This helps detect N+1 queries without crashing the app
         Model::handleLazyLoadingViolationUsing(function ($model, $relation) {
-            \Log::warning("Lazy loading [{$relation}] on model [" . get_class($model) . "]");
+            Log::warning("Lazy loading [{$relation}] on model [" . get_class($model) . "]");
         });
 
         // Permission Blade Directives
         Blade::if('can', function ($permission) {
-            return auth()->check() && auth()->user()->can($permission);
+            return Auth::check() && Auth::user()->can($permission);
         });
 
         Blade::if('canany', function (...$permissions) {
-            return auth()->check() && auth()->user()->hasAnyPermission($permissions);
+            return Auth::check() && Auth::user()->hasAnyPermission($permissions);
         });
 
         Blade::if('role', function ($role) {
-            return auth()->check() && auth()->user()->hasRole($role);
+            return Auth::check() && Auth::user()->hasRole($role);
         });
 
         Blade::if('roleany', function (...$roles) {
-            return auth()->check() && auth()->user()->hasAnyRole($roles);
+            return Auth::check() && Auth::user()->hasAnyRole($roles);
         });
 
         Blade::if('hasallpermissions', function (...$permissions) {
-            return auth()->check() && auth()->user()->hasAllPermissions($permissions);
+            return Auth::check() && Auth::user()->hasAllPermissions($permissions);
         });
 
         // Check if user is Super Admin
         Blade::if('superadmin', function () {
-            return auth()->check() && auth()->user()->hasRole('Super Admin');
+            return Auth::check() && Auth::user()->hasRole('Super Admin');
         });
 
         // Check if user is HR
         Blade::if('hr', function () {
-            return auth()->check() && auth()->user()->hasRole('HR');
+            return Auth::check() && Auth::user()->hasRole('HR');
         });
 
         // Check if user is Manager
         Blade::if('manager', function () {
-            return auth()->check() && auth()->user()->hasRole('Manager');
+            return Auth::check() && Auth::user()->hasRole('Manager');
         });
 
         // Check if user is Employee
         Blade::if('employee', function () {
-            return auth()->check() && auth()->user()->hasRole('Employee');
+            return Auth::check() && Auth::user()->hasRole('Employee');
         });
     }
 }

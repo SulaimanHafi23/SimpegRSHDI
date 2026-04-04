@@ -34,6 +34,7 @@ class BusinessTripRequest extends FormRequest
             'accommodation' => 'nullable|string|max:255',
             'estimated_cost' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:500',
+            'supporting_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ];
     }
 
@@ -66,6 +67,7 @@ class BusinessTripRequest extends FormRequest
             'accommodation' => 'Akomodasi',
             'estimated_cost' => 'Estimasi Biaya',
             'notes' => 'Catatan',
+            'supporting_document' => 'Dokumen Surat Tugas/Disposisi',
         ];
     }
 
@@ -73,6 +75,7 @@ class BusinessTripRequest extends FormRequest
     {
         return [
             'start_date.after_or_equal' => 'Perjalanan dinas harus diajukan minimal 1 hari sebelum keberangkatan. Tanggal keberangkatan paling cepat besok (' . now()->addDay()->format('d M Y') . ').',
+            'supporting_document.required' => 'Perjalanan dinas wajib melampirkan surat tugas atau surat disposisi.',
         ];
     }
 

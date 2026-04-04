@@ -30,23 +30,8 @@
                 @endforeach
             </ul>
         </div>
-    @elseif(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle mr-2"></i>
-                <span>{{ session('error') }}</span>
-            </div>
-        </div>
     @endif
 
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4" role="alert">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle mr-2"></i>
-                <span>{{ session('success') }}</span>
-            </div>
-        </div>
-    @endif
 
     <!-- Form -->
     <div class="bg-white rounded-lg shadow-md p-6">

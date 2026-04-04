@@ -43,7 +43,7 @@
         </div>
     </div>
 
-    <form action="{{ route('employee.business-trips.store') }}" method="POST" id="tripForm" class="space-y-4 sm:space-y-5">
+    <form action="{{ route('employee.business-trips.store') }}" method="POST" enctype="multipart/form-data" id="tripForm" class="space-y-4 sm:space-y-5">
         @csrf
 
         {{-- Card 1: Tujuan & Tanggal --}}
@@ -251,6 +251,18 @@
                           class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none text-sm sm:text-base @error('notes') border-red-400 bg-red-50 @enderror"
                           placeholder="Catatan khusus atau informasi tambahan...">{{ old('notes') }}</textarea>
                 @error('notes')
+                    <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mt-4">
+                <label for="supporting_document" class="block text-sm font-medium text-gray-700 mb-1.5">
+                    Surat Tugas / Disposisi <span class="text-red-500">*</span>
+                </label>
+                <input type="file" name="supporting_document" id="supporting_document" accept=".pdf,.jpg,.jpeg,.png" required
+                       class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm sm:text-base @error('supporting_document') border-red-400 bg-red-50 @enderror">
+                <p class="mt-1 text-xs text-gray-500">Wajib upload surat tugas/disposisi (PDF/JPG/PNG, maks 5MB).</p>
+                @error('supporting_document')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
             </div>

@@ -49,13 +49,6 @@ graph TB
             DetailShiftSwap["Lihat Detail Tukar Shift"]
         end
         
-        subgraph OvertimeMgmt["Kelola Lembur"]
-            SubmitOvertime["Ajukan Permintaan Lembur"]
-            ApproveOvertime["Setujui Permintaan Lembur"]
-            DetailOvertime["Lihat Detail Lembur"]
-            ExportOvertime["Ekspor Data Lembur"]
-        end
-        
         subgraph DocumentMgmt["Kelola Dokumen"]
             SubmitDocument["Kirim Dokumen"]
             VerifyDocument["Verifikasi Dokumen"]
@@ -66,7 +59,6 @@ graph TB
         subgraph ReportMgmt["Buat Laporan"]
             AttendanceReport["Laporan Absensi"]
             LeaveReport["Laporan Cuti"]
-            OvertimeReport["Laporan Lembur"]
             SalaryReport["Laporan Gaji"]
         end
         
@@ -81,7 +73,6 @@ graph TB
         
         subgraph SystemConfig["Konfigurasi Sistem"]
             ManageHolidays["Kelola Hari Libur"]
-            ManageSalaryComponent["Kelola Komponen Gaji"]
             ViewAuditLog["Lihat Log Audit"]
             SystemSettings["Pengaturan Sistem"]
         end
@@ -99,7 +90,6 @@ graph TB
     Pegawai -->|akses| DetailLeaveReq
     Pegawai -->|akses| SubmitShiftSwap
     Pegawai -->|akses| DetailShiftSwap
-    Pegawai -->|akses| SubmitOvertime
     Pegawai -->|akses| DetailAttendance
     Pegawai -->|akses| SubmitDocument
     Pegawai -->|akses| DetailDocument
@@ -113,7 +103,6 @@ graph TB
     Manager -->|akses| DetailShiftSwap
     Manager -->|akses| ApproveShiftSwap
     Manager -->|akses| RejectShiftSwap
-    Manager -->|akses| DetailOvertime
     Manager -->|akses| ReadDept
     Manager -->|akses| ReadShift
     
@@ -123,11 +112,9 @@ graph TB
     HR -->|akses-penuh| LeaveMgmt
     HR -->|akses-penuh| AttendanceMgmt
     HR -->|akses-penuh| LeaveReqMgmt
-    HR -->|akses-penuh| OvertimeMgmt
     HR -->|akses-penuh| DocumentMgmt
     HR -->|akses-penuh| ReportMgmt
     HR -->|akses| ManageHolidays
-    HR -->|akses| ManageSalaryComponent
     HR -->|akses| ViewAuditLog
     
     %% ========== ADMIN PERMISSIONS ==========
@@ -178,12 +165,6 @@ graph TB
     ShiftSwapMgmt -->|extend| RejectShiftSwap
     ShiftSwapMgmt -->|extend| DetailShiftSwap
     
-    %% Overtime Management
-    OvertimeMgmt -->|extend| SubmitOvertime
-    OvertimeMgmt -->|extend| ApproveOvertime
-    OvertimeMgmt -->|extend| DetailOvertime
-    OvertimeMgmt -->|extend| ExportOvertime
-    
     %% Document Management
     DocumentMgmt -->|extend| SubmitDocument
     DocumentMgmt -->|extend| VerifyDocument
@@ -193,7 +174,6 @@ graph TB
     %% Report Management
     ReportMgmt -->|extend| AttendanceReport
     ReportMgmt -->|extend| LeaveReport
-    ReportMgmt -->|extend| OvertimeReport
     ReportMgmt -->|extend| SalaryReport
     
     %% User Management
@@ -206,7 +186,6 @@ graph TB
     
     %% System Config
     SystemConfig -->|extend| ManageHolidays
-    SystemConfig -->|extend| ManageSalaryComponent
     SystemConfig -->|extend| ViewAuditLog
     SystemConfig -->|extend| SystemSettings
     
@@ -221,7 +200,6 @@ graph TB
     style AttendanceMgmt fill:#f5f5f5
     style LeaveReqMgmt fill:#f5f5f5
     style ShiftSwapMgmt fill:#f5f5f5
-    style OvertimeMgmt fill:#f5f5f5
     style DocumentMgmt fill:#f5f5f5
     style ReportMgmt fill:#f5f5f5
     style UserMgmt fill:#f5f5f5
@@ -258,10 +236,6 @@ graph TB
 | | Setujui | ❌ | ✅ | ✅ | ❌ |
 | | Tolak | ❌ | ✅ | ✅ | ❌ |
 | | Lihat Detail | ✅* | ✅** | ✅ | ❌ |
-| **Lembur** | Ajukan | ✅ | ❌ | ❌ | ❌ |
-| | Setujui | ❌ | ❌ | ✅ | ❌ |
-| | Lihat Detail | ✅* | ✅** | ✅ | ❌ |
-| | Ekspor | ❌ | ✅ | ✅ | ❌ |
 | **Dokumen** | Kirim | ✅ | ❌ | ❌ | ❌ |
 | | Verifikasi | ❌ | ❌ | ✅ | ❌ |
 | | Lihat Detail | ✅* | ❌ | ✅ | ❌ |
@@ -274,7 +248,6 @@ graph TB
 | | Reset Password | ❌ | ❌ | ❌ | ✅ |
 | | Tetapkan Role | ❌ | ❌ | ❌ | ✅ |
 | **Sistem** | Kelola Hari Libur | ❌ | ❌ | ✅ | ✅ |
-| | Kelola Komponen Gaji | ❌ | ❌ | ✅ | ✅ |
 | | Lihat Log Audit | ❌ | ❌ | ✅ | ✅ |
 | | Pengaturan Sistem | ❌ | ❌ | ❌ | ✅ |
 
@@ -346,22 +319,7 @@ HR:
   - Oversight penuh dan kemampuan override
 ```
 
-### 5. **Kelola Lembur**
-```
-Pegawai:
-  - Ajukan Permintaan Lembur → Ajukan dengan tanggal, jam, alasan
-
-Manager:
-  - Lihat Detail Lembur → Lihat permintaan lembur tim
-  - Ekspor Lembur → Report lembur tim
-
-HR/Admin:
-  - Setujui Permintaan Lembur → Proses persetujuan
-  - Lihat Detail Lembur → Akses penuh
-  - Ekspor Lembur → Ekspor untuk payroll
-```
-
-### 6. **Kelola Dokumen**
+### 5. **Kelola Dokumen**
 ```
 Pegawai:
   - Kirim Dokumen → Upload dokumen (SK, sertifikat, dll)
@@ -376,7 +334,7 @@ Admin:
   - Sama seperti HR
 ```
 
-### 7. **Kelola Pengguna**
+### 6. **Kelola Pengguna**
 ```
 Admin (Hanya Admin):
   - Buat Pengguna → Daftar pengguna baru
@@ -387,11 +345,10 @@ Admin (Hanya Admin):
   - Tetapkan Role → Assign role/permission
 ```
 
-### 8. **Buat Laporan**
+### 7. **Buat Laporan**
 ```
 HR/Admin:
   - Laporan Absensi → Generate laporan kehadiran pegawai
   - Laporan Cuti → Generate laporan penggunaan cuti
-  - Laporan Lembur → Generate laporan lembur kerja
-  - Laporan Gaji → Generate laporan komponen gaji
+  - Laporan Gaji → Generate laporan payroll
 ```

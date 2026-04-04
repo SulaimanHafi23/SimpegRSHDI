@@ -64,7 +64,7 @@ Setelah integrasi aktif, sistem SIDIA (Sistem Informasi Darlan Ismail dan Absens
 
 1. **Sinkronisasi Jadwal Shift** - Jadwal shift pegawai otomatis masuk ke Google Calendar
 2. **Reminder Cuti** - Pengajuan cuti yang disetujui otomatis membuat event di calendar
-3. **Reminder Lembur** - Jadwal lembur yang disetujui masuk ke calendar
+3. **Reminder Tukar Shift** - Jadwal pertukaran shift yang disetujui masuk ke calendar
 4. **Notifikasi Perjalanan Dinas** - Event perjalanan dinas di calendar
 5. **Hari Libur** - Sinkronisasi hari libur nasional dan cuti bersama
 

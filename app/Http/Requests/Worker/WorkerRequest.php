@@ -45,13 +45,27 @@ class WorkerRequest extends FormRequest
                 Rule::unique('workers', 'phone_number')->ignore($workerId),
             ],
             'birth_place' => 'required|string|max:100',
-            'birth_date' => 'required|date|before:today',
+            'birth_date' => [
+                'required',
+                'date',
+                'before:today',
+                function ($attribute, $value, $fail) {
+                    if (now()->diffInYears(\Carbon\Carbon::parse($value)) < 17) {
+                        $fail('Usia pegawai minimal 17 tahun.');
+                    }
+                },
+            ],
             'address' => 'nullable|string|max:500',
             'religion' => ['required', Rule::in(['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'])],
             'gender' => ['required', Rule::in(['Laki-laki', 'Perempuan'])],
             'department_id' => ['required', Rule::exists('departments', 'id')],
-            'hire_date' => 'required|date',
-            'resign_date' => 'nullable|date|after_or_equal:hire_date',
+            'hire_date' => 'required|date|before_or_equal:today',
+            'resign_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:hire_date',
+                Rule::prohibitedIf(empty($workerId)),
+            ],
             'employment_status' => ['required', Rule::in(['permanent', 'contract', 'internship'])],
             'status' => ['nullable', Rule::in(['active', 'inactive', 'resigned'])],
             'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:2048',
@@ -62,6 +76,8 @@ class WorkerRequest extends FormRequest
     {
         return [
             'birth_date.before' => 'Tanggal Lahir harus sebelum hari ini.',
+            'hire_date.before_or_equal' => 'Tanggal Masuk tidak boleh melebihi hari ini.',
+            'resign_date.prohibited' => 'Tanggal Resign hanya diisi saat update data pegawai.',
         ];
     }
 

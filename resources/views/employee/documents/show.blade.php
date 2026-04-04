@@ -6,7 +6,7 @@
 <div class="space-y-6">
     <!-- Header -->
     <div class="mb-6 flex items-center">
-        <!-- <a href="{{ route('employee.documents.index') }}" 
+        <!-- <a href="{{ route('employee.documents.index') }}"
            class="mr-4 text-gray-600 hover:text-gray-800">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
@@ -47,7 +47,7 @@
     <!-- Document Details -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">Informasi Dokumen</h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label class="text-sm text-gray-600">Jenis Dokumen</label>
@@ -93,7 +93,7 @@
     <!-- File Preview -->
     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
         <h2 class="text-lg font-semibold text-gray-800 mb-4">File Dokumen</h2>
-        
+
         <!-- File Info -->
         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
             <div class="flex items-center space-x-4">
@@ -103,7 +103,7 @@
                         $isPdf = $extension === 'pdf';
                         $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
                     @endphp
-                    
+
                     @if($isPdf)
                         <svg class="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
@@ -130,7 +130,7 @@
                     </p>
                 </div>
             </div>
-            <a href="{{ route('employee.documents.download', $document->id) }}" 
+            <a href="{{ route('employee.documents.download', $document->id) }}"
                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -144,23 +144,23 @@
             @if($isPdf)
                 <!-- PDF Preview -->
                 <div class="w-full" style="min-height: 600px;">
-                    <iframe 
-                        src="{{ Storage::url($document->file_path) }}#toolbar=1&navpanes=0&scrollbar=1" 
+                    <iframe
+                        src="{{ route('employee.documents.preview', $document->id) }}#toolbar=1&navpanes=0&scrollbar=1"
                         class="w-full"
                         style="height: 800px; border: none;"
                         type="application/pdf">
                         <p class="p-4 text-center text-gray-600">
-                            Browser Anda tidak mendukung preview PDF. 
+                            Browser Anda tidak mendukung preview PDF.
                             <a href="{{ route('employee.documents.download', $document->id) }}" class="text-blue-600 hover:underline">
                                 Klik di sini untuk download
                             </a>
                         </p>
                     </iframe>
                 </div>
-                
+
                 <!-- Alternative PDF viewer button -->
                 <div class="p-4 bg-white border-t">
-                    <button onclick="openPdfInNewTab()" 
+                    <button onclick="openPdfInNewTab()"
                             class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition text-sm">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -171,13 +171,13 @@
             @elseif($isImage)
                 <!-- Image Preview -->
                 <div class="relative group">
-                    <img 
-                        src="{{ Storage::url($document->file_path) }}" 
+                    <img
+                        src="{{ route('employee.documents.preview', $document->id) }}"
                         alt="{{ $document->file_name }}"
                         class="w-full h-auto max-h-[800px] object-contain cursor-pointer"
                         onclick="openImageModal()"
                         id="documentImage">
-                    
+
                     <!-- Overlay hint -->
                     <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 flex items-center justify-center pointer-events-none">
                         <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white px-4 py-2 rounded-lg shadow-lg text-gray-800 text-sm font-medium">
@@ -193,7 +193,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     <p class="text-gray-600 mb-4">Preview tidak tersedia untuk file tipe {{ strtoupper($extension) }}</p>
-                    <a href="{{ route('employee.documents.download', $document->id) }}" 
+                    <a href="{{ route('employee.documents.download', $document->id) }}"
                        class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -214,8 +214,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </button>
-            <img 
-                src="{{ Storage::url($document->file_path) }}" 
+            <img
+                src="{{ route('employee.documents.preview', $document->id) }}"
                 alt="{{ $document->file_name }}"
                 class="max-w-full max-h-screen object-contain"
                 onclick="event.stopPropagation()">
@@ -226,7 +226,7 @@
     <script>
         @if($isPdf)
         function openPdfInNewTab() {
-            window.open('{{ Storage::url($document->file_path) }}', '_blank');
+            window.open('{{ route('employee.documents.preview', $document->id) }}', '_blank');
         }
         @endif
 
@@ -274,24 +274,6 @@
                     <p class="text-gray-700 mt-1">{{ $document->verification_notes }}</p>
                 </div>
             @endif
-        </div>
-    @endif
-
-    <!-- Delete Button -->
-    @if($document->status === 'pending')
-        <div class="flex justify-end">
-            <form action="{{ route('employee.documents.destroy', $document->id) }}" method="POST">
-                @csrf
-                @method('DELETE')
-                <button type="submit" 
-                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-lg shadow-md transition duration-150"
-                        onclick="return confirm('Yakin ingin menghapus dokumen ini?')">
-                    <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
-                    Hapus Dokumen
-                </button>
-            </form>
         </div>
     @endif
 </div>

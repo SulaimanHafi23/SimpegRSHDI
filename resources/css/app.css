@@ -19,10 +19,13 @@ body {
 img,
 svg,
 video,
-canvas,
-iframe {
+canvas {
     max-width: 100%;
     height: auto;
+}
+
+iframe {
+    max-width: 100%;
 }
 
 /* Form controls should not overflow on small screens */

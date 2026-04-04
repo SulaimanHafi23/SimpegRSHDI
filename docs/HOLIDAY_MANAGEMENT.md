@@ -246,11 +246,10 @@ Setelah libur ditambahkan, sistem akan otomatis:
 3. Klik **Filter**
 4. Lihat list libur untuk tahun tersebut
 
-### Q: Apakah hari libur mempengaruhi perhitungan cuti & lembur?
+### Q: Apakah hari libur mempengaruhi perhitungan cuti?
 
 **A:** Ya! Sistem menggunakan data holidays untuk:
 - ✅ Exclude hari libur dari perhitungan jam kerja
-- ✅ Tidak hitung lemburjika pada hari libur
 - ✅ Highlight di attendance calendar
 - ✅ Report kehadiran otomatis exclude hari libur
 

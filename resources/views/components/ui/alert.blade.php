@@ -4,6 +4,7 @@
     'message',
     'dismissible' => true,
     'autoDismiss' => false,
+    'dismissAfter' => 5000,
 ])
 
 @php
@@ -23,10 +24,16 @@ $icons = [
 @endphp
 
 <div
-    x-data="{ show: true }"
+    x-data="{
+        show: true,
+        init() {
+            if ({{ $autoDismiss ? 'true' : 'false' }}) {
+                setTimeout(() => { this.show = false }, {{ (int) $dismissAfter }});
+            }
+        }
+    }"
     x-show="show"
     x-transition
-    @if($autoDismiss) data-auto-dismiss="true" @endif
     {{ $attributes->merge(['class' => 'rounded-lg border-l-4 p-4 mb-4 ' . $styles[$type]]) }}
 >
     <div class="flex items-start">

@@ -377,8 +377,31 @@
     </x-card>
 </div>
 
+<div id="rejectSwapModal" class="hidden fixed inset-0 z-50" onclick="if(event.target === this) closeRejectSwapModal()">
+    <div class="absolute inset-0 bg-black/30"></div>
+    <div class="relative flex min-h-screen items-center justify-center p-4">
+        <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl" onclick="event.stopPropagation()">
+            <div class="border-b border-gray-200 px-5 py-4">
+                <h3 class="text-base font-semibold text-gray-900">Tolak Permintaan Tukar Shift</h3>
+                <p class="mt-1 text-sm text-gray-500">Masukkan alasan penolakan agar keputusan lebih jelas untuk pemohon.</p>
+            </div>
+            <div class="px-5 py-4">
+                <label for="rejectSwapReason" class="mb-2 block text-sm font-medium text-gray-700">Alasan Penolakan <span class="text-red-500">*</span></label>
+                <textarea id="rejectSwapReason" rows="4" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" placeholder="Tuliskan alasan penolakan..."></textarea>
+                <p id="rejectSwapError" class="mt-2 hidden text-xs text-red-600">Alasan penolakan wajib diisi.</p>
+            </div>
+            <div class="flex justify-end gap-2 border-t border-gray-200 px-5 py-4">
+                <button type="button" onclick="closeRejectSwapModal()" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                <button type="button" onclick="submitRejectSwap()" class="rounded-lg border border-red-700 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Tolak Permintaan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+    let rejectSwapId = null;
+
     function approveSwap(id) {
         if (confirm('Apakah Anda yakin ingin menyetujui permintaan tukar shift ini?')) {
             const form = document.createElement('form');
@@ -397,29 +420,70 @@
     }
 
     function rejectSwap(id) {
-        const reason = prompt('Masukkan alasan penolakan:');
-        if (reason && reason.trim() !== '') {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/manager/shift-swap-approvals/${id}/reject`;
+        rejectSwapId = id;
 
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
+        const modal = document.getElementById('rejectSwapModal');
+        const textarea = document.getElementById('rejectSwapReason');
+        const error = document.getElementById('rejectSwapError');
 
-            const reasonInput = document.createElement('input');
-            reasonInput.type = 'hidden';
-            reasonInput.name = 'reason';
-            reasonInput.value = reason;
-            form.appendChild(reasonInput);
-
-            document.body.appendChild(form);
-            form.submit();
-        } else if (reason !== null) {
-            alert('Alasan penolakan harus diisi!');
+        if (!modal || !textarea) {
+            return;
         }
+
+        textarea.value = '';
+        textarea.classList.remove('border-red-500');
+        if (error) {
+            error.classList.add('hidden');
+        }
+
+        modal.classList.remove('hidden');
+        setTimeout(() => textarea.focus(), 50);
+    }
+
+    function closeRejectSwapModal() {
+        const modal = document.getElementById('rejectSwapModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+        rejectSwapId = null;
+    }
+
+    function submitRejectSwap() {
+        const textarea = document.getElementById('rejectSwapReason');
+        const error = document.getElementById('rejectSwapError');
+
+        if (!rejectSwapId || !textarea) {
+            return;
+        }
+
+        const reason = textarea.value.trim();
+        if (!reason) {
+            textarea.classList.add('border-red-500');
+            if (error) {
+                error.classList.remove('hidden');
+            }
+            textarea.focus();
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/manager/shift-swap-approvals/${rejectSwapId}/reject`;
+
+        const csrfToken = document.createElement('input');
+        csrfToken.type = 'hidden';
+        csrfToken.name = '_token';
+        csrfToken.value = '{{ csrf_token() }}';
+        form.appendChild(csrfToken);
+
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason;
+        form.appendChild(reasonInput);
+
+        document.body.appendChild(form);
+        form.submit();
     }
 
     function executeSwap(id) {

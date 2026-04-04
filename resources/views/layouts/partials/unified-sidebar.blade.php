@@ -282,7 +282,7 @@
             <span class="text-sm {{ request()->routeIs('employee.business-trips.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Perjalanan Dinas</span>
         </a>
 
-        {{-- Dokumen & Kalender --}}
+        {{-- Dokumen & Jadwal Pegawai --}}
         <a href="{{ route('employee.documents.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.documents.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.documents.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
@@ -290,14 +290,6 @@
             </div>
             <span class="text-sm {{ request()->routeIs('employee.documents.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Dokumen Saya</span>
         </a>
-        <a href="{{ route('employee.calendar.index') }}"
-           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('employee.calendar.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
-            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('employee.calendar.*') ? 'bg-white/20' : 'bg-green-500/20' }} rounded-lg flex-shrink-0">
-                <i class="fas fa-calendar-day text-xs {{ request()->routeIs('employee.calendar.*') ? 'text-white' : 'text-green-300' }}"></i>
-            </div>
-            <span class="text-sm {{ request()->routeIs('employee.calendar.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Kalender</span>
-        </a>
-
         {{-- Profil --}}
         @if(auth()->user()->hasRole('Employee') || auth()->user()->can('profile.view'))
         <a href="{{ route('employee.profile.show') }}"

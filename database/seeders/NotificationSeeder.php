@@ -31,11 +31,6 @@ class NotificationSeeder extends Seeder
                 'message' => 'Pengajuan cuti Anda telah ditolak. Silakan hubungi HR untuk informasi lebih lanjut.',
             ],
             [
-                'type' => 'App\\Notifications\\OvertimeApproved',
-                'title' => 'Lembur Disetujui',
-                'message' => 'Pengajuan lembur Anda telah disetujui.',
-            ],
-            [
                 'type' => 'App\\Notifications\\BusinessTripApproved',
                 'title' => 'Perjalanan Dinas Disetujui',
                 'message' => 'Pengajuan perjalanan dinas Anda telah disetujui. Silakan persiapkan keberangkatan.',

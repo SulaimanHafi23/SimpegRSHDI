@@ -139,8 +139,8 @@
         <div class="p-5 sm:p-6 bg-white shadow-lg rounded-xl hover:shadow-xl transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="mb-1 text-xs sm:text-sm text-gray-600">Total Lembur</p>
-                    <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">{{ $monthlyStats['overtime_hours'] ?? 0 }}</h3>
+                    <p class="mb-1 text-xs sm:text-sm text-gray-600">Total Jam Kerja Tambahan</p>
+                    <h3 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-800">{{ $monthlyStats['extra_hours'] ?? 0 }}</h3>
                     <p class="mt-2 text-xs sm:text-sm text-purple-600">
                         <i class="mr-1 fas fa-clock"></i>
                         Jam
@@ -226,11 +226,11 @@
                 <span class="text-xs sm:text-sm font-medium text-center text-gray-700">Ajukan Cuti</span>
             </a>
 
-            <a href="{{ route('workers.overtimes.create') }}" class="flex flex-col items-center p-3 sm:p-4 transition duration-300 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg hover:scale-105">
+            <a href="{{ route('workers.shift-swaps.create') }}" class="flex flex-col items-center p-3 sm:p-4 transition duration-300 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-lg hover:scale-105">
                 <div class="p-2 sm:p-3 mb-2 text-white bg-purple-500 rounded-full">
-                    <i class="text-lg sm:text-xl fas fa-clock"></i>
+                    <i class="text-lg sm:text-xl fas fa-exchange-alt"></i>
                 </div>
-                <span class="text-xs sm:text-sm font-medium text-center text-gray-700">Ajukan Lembur</span>
+                <span class="text-xs sm:text-sm font-medium text-center text-gray-700">Tukar Shift</span>
             </a>
 
             <a href="{{ route('workers.documents') }}" class="flex flex-col items-center p-3 sm:p-4 transition duration-300 rounded-lg bg-gradient-to-br from-green-50 to-green-100 hover:shadow-lg hover:scale-105">
@@ -281,12 +281,12 @@
                 <div class="flex items-center space-x-3">
                     <div class="
                         {{ $request->type === 'leave' ? 'bg-blue-100 text-blue-600' : '' }}
-                        {{ $request->type === 'overtime' ? 'bg-purple-100 text-purple-600' : '' }}
+                        {{ $request->type === 'shift_swap' ? 'bg-purple-100 text-purple-600' : '' }}
                         {{ $request->type === 'business_trip' ? 'bg-green-100 text-green-600' : '' }}
                         p-3 rounded-full">
                         <i class="fas
                             {{ $request->type === 'leave' ? 'fa-calendar-times' : '' }}
-                            {{ $request->type === 'overtime' ? 'fa-clock' : '' }}
+                            {{ $request->type === 'shift_swap' ? 'fa-exchange-alt' : '' }}
                             {{ $request->type === 'business_trip' ? 'fa-plane' : '' }}
                             text-lg"></i>
                     </div>

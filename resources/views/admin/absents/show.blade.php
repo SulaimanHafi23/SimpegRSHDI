@@ -10,7 +10,7 @@
             <p class="text-sm text-gray-600 mt-1">Informasi lengkap kehadiran pegawai</p>
         </div>
         <div class="flex space-x-2">
-            <button onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()" 
+            <button onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()"
                     class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
                 <i class="fas fa-trash mr-2"></i>Hapus
             </button>
@@ -111,7 +111,7 @@
                         <p class="text-xl font-bold text-yellow-600">0 Menit</p>
                     </div>
                     <div class="bg-gray-50 rounded-lg p-4 text-center">
-                        <p class="text-sm text-gray-600 mb-1">Lembur</p>
+                        <p class="text-sm text-gray-600 mb-1">Jam Tambahan</p>
                         <p class="text-xl font-bold text-green-600">0 Jam</p>
                     </div>
                 </div>

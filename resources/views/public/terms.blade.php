@@ -18,7 +18,7 @@
     <div class="section-card p-5 sm:p-6">
         <h3 class="text-xl font-bold text-white">2. Integritas data operasional</h3>
         <ul class="mt-3 space-y-2 text-sm leading-7 text-emerald-50/80 sm:text-base">
-            <li>Data absensi, cuti, lembur, perjalanan dinas, dan shift swap harus diinput sesuai kondisi nyata dan jadwal kerja yang berlaku.</li>
+            <li>Data absensi, cuti, perjalanan dinas, dan shift swap harus diinput sesuai kondisi nyata dan jadwal kerja yang berlaku.</li>
             <li>Foto absensi, lokasi, dan dokumen pendukung tidak boleh dimanipulasi untuk memperoleh persetujuan yang tidak semestinya.</li>
             <li>Setiap approval atau penolakan yang diberikan atasan harus berdasarkan kewenangan dan bukti administrasi yang memadai.</li>
         </ul>

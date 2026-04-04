@@ -93,8 +93,6 @@
                     @endif
                 </div>
             </div>
-
-            <!-- Overtime Status -->
         </div>
     </div>
 
@@ -156,16 +154,14 @@
                         </div>
                         <div class="relative group">
                             @php
-                                $photoUrl = asset('storage/' . $checkInPhoto->photo_path);
-                                $filePath = storage_path('app/public/' . $checkInPhoto->photo_path);
-                                $altPhotoUrl = url('storage/' . $checkInPhoto->photo_path);
+                                $photoUrl = route('employee.attendance.photo', ['id' => $attendance->id, 'type' => 'check_in']);
                             @endphp
 
                             <img src="{{ $photoUrl }}"
                                  alt="Foto Check-In"
                                  class="w-full h-48 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow cursor-pointer"
                                  onclick="openImageModal('{{ $photoUrl }}', 'Foto Check-In')"
-                                 onerror="console.log('Primary URL failed:', this.src); this.src='{{ $altPhotoUrl }}'; this.onerror=function(){console.log('Alt URL also failed:', this.src); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBDOTIuMjY4IDcwIDg2IDc2LjI2OCA4NiA4NFM5Mi4yNjggOTggMTAwIDk4UzExNCA5MS43MzIgMTE0IDg0UzEwNy43MzIgNzAgMTAwIDcwWk0xMDAgOTJDOTUuNTggOTIgOTIgODguNDIgOTIgODRTOTUuNTggNzYgMTAwIDc2UzEwOCA3OS41OCAxMDggODRTMTA0LjQyIDkyIDEwMCA5MloiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTEzMCAxMDBIMTQwVjEzMEgxMzBWMTAwWiIgZmlsbD0iIzlDQTRBRiIvPgo8cGF0aCBkPSJNNzAgMTAwSDgwVjEzMEg3MFYxMDBaIiBmaWxsPSIjOUNBNEFGIi8+Cjx0ZXh0IHg9IjUwJSIgeT0iMTUwIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBNEFGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4Ij5Gb3RvIFRpZGFrIFRlcmJhY2E8L3RleHQ+Cjwvc3ZnPgo='; this.classList.add('bg-gray-100'); this.classList.remove('cursor-pointer'); this.onclick=null;};"
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBDOTIuMjY4IDcwIDg2IDc2LjI2OCA4NiA4NFM5Mi4yNjggOTggMTAwIDk4UzExNCA5MS43MzIgMTE0IDg0UzEwNy43MzIgNzAgMTAwIDcwWk0xMDAgOTJDOTUuNTggOTIgOTIgODguNDIgOTIgODRTOTUuNTggNzYgMTAwIDc2UzEwOCA3OS41OCAxMDggODRTMTA0LjQyIDkyIDEwMCA5MloiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTEzMCAxMDBIMTQwVjEzMEgxMzBWMTAwWiIgZmlsbD0iIzlDQTRBRiIvPgo8cGF0aCBkPSJNNzAgMTAwSDgwVjEzMEg3MFYxMDBaIiBmaWxsPSIjOUNBNEFGIi8+Cjx0ZXh0IHg9IjUwJSIgeT0iMTUwIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBNEFGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4Ij5Gb3RvIFRpZGFrIFRlcmJhY2E8L3RleHQ+Cjwvc3ZnPgo='; this.classList.add('bg-gray-100'); this.classList.remove('cursor-pointer'); this.onclick=null;"
                                  loading="lazy">
                             {{-- Hover Indicator - Now using pointer-events-none to not block image --}}
                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 rounded-lg transition-opacity duration-200 flex items-end justify-center pb-3 pointer-events-none">
@@ -243,16 +239,14 @@
                         </div>
                         <div class="relative group">
                             @php
-                                $photoUrl = asset('storage/' . $checkOutPhoto->photo_path);
-                                $filePath = storage_path('app/public/' . $checkOutPhoto->photo_path);
-                                $altPhotoUrl = url('storage/' . $checkOutPhoto->photo_path);
+                                $photoUrl = route('employee.attendance.photo', ['id' => $attendance->id, 'type' => 'check_out']);
                             @endphp
 
                             <img src="{{ $photoUrl }}"
                                  alt="Foto Check-Out"
                                  class="w-full h-48 object-cover rounded-lg shadow-sm group-hover:shadow-md transition-shadow cursor-pointer"
                                  onclick="openImageModal('{{ $photoUrl }}', 'Foto Check-Out')"
-                                 onerror="console.log('Primary URL failed:', this.src); this.src='{{ $altPhotoUrl }}'; this.onerror=function(){console.log('Alt URL also failed:', this.src); this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBDOTIuMjY4IDcwIDg2IDc2LjI2OCA4NiA4NFM5Mi4yNjggOTggMTAwIDk4UzExNCA5MS43MzIgMTE0IDg0UzEwNy43MzIgNzAgMTAwIDcwWk0xMDAgOTJDOTUuNTggOTIgOTIgODguNDIgOTIgODRTOTUuNTggNzYgMTAwIDc2UzEwOCA3OS41OCAxMDggODRTMTA0LjQyIDkyIDEwMCA5MloiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTEzMCAxMDBIMTQwVjEzMEgxMzBWMTAwWiIgZmlsbD0iIzlDQTRBRiIvPgo8cGF0aCBkPSJNNzAgMTAwSDgwVjEzMEg3MFYxMDBaIiBmaWxsPSIjOUNBNEFGIi8+Cjx0ZXh0IHg9IjUwJSIgeT0iMTUwIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBNEFGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4Ij5Gb3RvIFRpZGFrIFRlcmJhY2E8L3RleHQ+Cjwvc3ZnPgo='; this.classList.add('bg-gray-100'); this.classList.remove('cursor-pointer'); this.onclick=null;};"
+                                 onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAyMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xMDAgNzBDOTIuMjY4IDcwIDg2IDc2LjI2OCA4NiA4NFM5Mi4yNjggOTggMTAwIDk4UzExNCA5MS43MzIgMTE0IDg0UzEwNy43MzIgNzAgMTAwIDcwWk0xMDAgOTJDOTUuNTggOTIgOTIgODguNDIgOTIgODRTOTUuNTggNzYgMTAwIDc2UzEwOCA3OS41OCAxMDggODRTMTA0LjQyIDkyIDEwMCA5MloiIGZpbGw9IiM5Q0E0QUYiLz4KPHBhdGggZD0iTTEzMCAxMDBIMTQwVjEzMEgxMzBWMTAwWiIgZmlsbD0iIzlDQTRBRiIvPgo8cGF0aCBkPSJNNzAgMTAwSDgwVjEzMEg3MFYxMDBaIiBmaWxsPSIjOUNBNEFGIi8+Cjx0ZXh0IHg9IjUwJSIgeT0iMTUwIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOUNBNEFGIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNHB4Ij5Gb3RvIFRpZGFrIFRlcmJhY2E8L3RleHQ+Cjwvc3ZnPgo='; this.classList.add('bg-gray-100'); this.classList.remove('cursor-pointer'); this.onclick=null;"
                                  loading="lazy">
                             {{-- Hover Indicator - Now using pointer-events-none to not block image --}}
                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 rounded-lg transition-opacity duration-200 flex items-end justify-center pb-3 pointer-events-none">

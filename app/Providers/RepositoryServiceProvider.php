@@ -49,12 +49,6 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Leave\LeaveRequestRepository::class
         );
 
-        // Overtime
-        $this->app->bind(
-            \App\Repositories\Contracts\Overtime\OvertimeRequestRepositoryInterface::class,
-            \App\Repositories\Overtime\OvertimeRequestRepository::class
-        );
-
         // Worker Document
         $this->app->bind(
             \App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface::class,

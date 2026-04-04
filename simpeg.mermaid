@@ -46,17 +46,6 @@ erDiagram
         boolean is_national
     }
 
-    salary_components {
-        uuid id PK
-        string code UK
-        string name
-        enum type
-        text description
-        boolean is_taxable
-        boolean is_active
-        timestamp deleted_at
-    }
-
     %% ===== PEGAWAI & AUTENTIKASI =====
     workers {
         uuid id PK
@@ -205,7 +194,6 @@ erDiagram
         boolean is_early_leave
         integer early_leave_minutes
         boolean is_outside_radius
-        integer overtime_minutes
         text notes
         timestamp deleted_at
     }
@@ -239,21 +227,6 @@ erDiagram
         integer total_days
         text reason
         string attachment_path
-        enum status
-        uuid approved_by FK
-        timestamp approved_at
-        text rejection_reason
-        timestamp deleted_at
-    }
-
-    overtime_requests {
-        uuid id PK
-        uuid worker_id FK
-        date overtime_date
-        time start_time
-        time end_time
-        decimal total_hours
-        text reason
         enum status
         uuid approved_by FK
         timestamp approved_at
@@ -396,9 +369,6 @@ erDiagram
     leave_types ||--o{ leave_requests : jenis
     workers ||--o{ leave_requests : pemohon
     users o|--o{ leave_requests : penyetuju
-
-    workers ||--o{ overtime_requests : pemohon
-    users o|--o{ overtime_requests : penyetuju
 
     workers ||--o{ business_trips : pemohon
     users o|--o{ business_trips : penyetuju

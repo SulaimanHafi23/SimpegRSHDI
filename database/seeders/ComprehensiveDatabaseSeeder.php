@@ -81,32 +81,24 @@ class ComprehensiveDatabaseSeeder extends Seeder
         $this->command->info('✅ Leave Requests seeded!');
         $this->command->newLine();
 
-        // 7. Overtime Requests (Enhanced with various statuses)
-        $this->command->info('7️⃣  Seeding Overtime Requests (Comprehensive)...');
-        $this->call([
-            ComprehensiveOvertimeSeeder::class,
-        ]);
-        $this->command->info('✅ Overtime Requests seeded!');
-        $this->command->newLine();
-
-        // 8. Worker Documents (Enhanced with various statuses)
-        $this->command->info('8️⃣  Seeding Worker Documents (Enhanced)...');
+        // 7. Worker Documents (Enhanced with various statuses)
+        $this->command->info('7️⃣  Seeding Worker Documents (Enhanced)...');
         $this->call([
             EnhancedWorkerDocumentSeeder::class,
         ]);
         $this->command->info('✅ Worker Documents seeded!');
         $this->command->newLine();
 
-        // 9. Shift Swap Requests (Comprehensive with various scenarios)
-        $this->command->info('9️⃣  Seeding Shift Swap Requests (Comprehensive)...');
+        // 8. Shift Swap Requests (Comprehensive with various scenarios)
+        $this->command->info('8️⃣  Seeding Shift Swap Requests (Comprehensive)...');
         $this->call([
             ComprehensiveShiftSwapSeeder::class,
         ]);
         $this->command->info('✅ Shift Swap Requests seeded!');
         $this->command->newLine();
 
-        // 10. Business Trips (Comprehensive with various statuses)
-        $this->command->info('🔟 Seeding Business Trips (Comprehensive)...');
+        // 9. Business Trips (Comprehensive with various statuses)
+        $this->command->info('9️⃣  Seeding Business Trips (Comprehensive)...');
         $this->call([
             ComprehensiveBusinessTripSeeder::class,
         ]);
@@ -137,7 +129,6 @@ class ComprehensiveDatabaseSeeder extends Seeder
             'shift_swap_requests',
             'shift_swap_audit_logs',
             'worker_documents',
-            'overtime_requests',
             'leave_requests',
             'attendance_photos',
             'attendances',
@@ -186,7 +177,6 @@ class ComprehensiveDatabaseSeeder extends Seeder
                 ['Worker Shifts', DB::table('worker_shifts')->count()],
                 ['Attendances', DB::table('attendances')->count()],
                 ['Leave Requests', DB::table('leave_requests')->count()],
-                ['Overtime Requests', DB::table('overtime_requests')->count()],
                 ['Worker Documents', DB::table('worker_documents')->count()],
                 ['Shift Swap Requests', DB::table('shift_swap_requests')->count()],
                 ['Business Trips', DB::table('business_trips')->count()],

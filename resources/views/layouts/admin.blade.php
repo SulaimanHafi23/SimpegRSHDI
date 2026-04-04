@@ -80,27 +80,23 @@
                     </div>
                 @endif
 
-                @if($isCreateOrEditPage)
-                    {{-- Keep traditional alerts for create/edit pages --}}
-                    @if(session('success'))
-                        <x-ui.alert type="success" :message="session('success')" />
-                    @endif
-
-                    @if(session('error'))
-                        <x-ui.alert type="error" :message="session('error')" />
-                    @endif
-
-                    @if(session('warning'))
-                        <x-ui.alert type="warning" :message="session('warning')" />
-                    @endif
-
-                    @if(session('info'))
-                        <x-ui.alert type="info" :message="session('info')" />
-                    @endif
-                @else
-                    {{-- Use Sweet Alert for other pages --}}
-                    <x-sweet-alert />
+                @if(session('error'))
+                    <x-ui.alert type="error" :message="session('error')" />
                 @endif
+
+                @if(session('success'))
+                    <x-ui.alert type="success" :message="session('success')" :auto-dismiss="true" :dismiss-after="4500" />
+                @endif
+
+                @if(session('warning'))
+                    <x-ui.alert type="warning" :message="session('warning')" :auto-dismiss="true" :dismiss-after="6000" />
+                @endif
+
+                @if(session('info'))
+                    <x-ui.alert type="info" :message="session('info')" :auto-dismiss="true" :dismiss-after="4500" />
+                @endif
+
+                <x-sweet-alert />
 
                 <!-- Page Content -->
                 @yield('content')

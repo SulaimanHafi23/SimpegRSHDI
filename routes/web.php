@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -21,8 +24,6 @@ use App\Http\Controllers\ShiftOverride\ShiftOverrideController;
 
 // ========== LEAVE CONTROLLER ==========
 use App\Http\Controllers\Leave\LeaveRequestController;
-
-// ========== OVERTIME CONTROLLER ==========
 
 // ========== DOCUMENT CONTROLLER ==========
 use App\Http\Controllers\WorkerDocument\WorkerDocumentController;
@@ -63,8 +64,8 @@ use App\Http\Controllers\Report\ReportController;
 
 // ========== AUTH ROUTES ==========
 Route::get('/', function () {
-    if (auth()->check()) {
-        $user = auth()->user();
+    if (Auth::check()) {
+        $user = Auth::user();
 
         if ($user->hasRole('Manager')) {
             return redirect()->route('manager.dashboard');
@@ -119,7 +120,7 @@ Route::middleware('auth')->get('/api/world-time', function () {
             ]);
         }
     } catch (\Exception $e) {
-        \Log::warning('World Time API failed, using server time', ['error' => $e->getMessage()]);
+        Log::warning('World Time API failed, using server time', ['error' => $e->getMessage()]);
     }
 
     // Fallback: Use server time with correct timezone
@@ -136,6 +137,25 @@ Route::middleware('auth')->get('/api/world-time', function () {
         'server_time' => $now->format('Y-m-d H:i:s')
     ]);
 })->name('api.world-time');
+
+// ========== STORAGE FALLBACK (for files in disk: public) ==========
+// This keeps existing URLs like /storage/... working even when symlink/public mapping is unavailable.
+Route::get('/storage/{path}', function (string $path) {
+    $normalizedPath = str_replace('\\', '/', $path);
+
+    if (str_contains($normalizedPath, '..')) {
+        abort(404);
+    }
+
+    $disk = Storage::disk('public');
+    if (!$disk->exists($normalizedPath)) {
+        abort(404);
+    }
+
+    return response()->file($disk->path($normalizedPath), [
+        'Cache-Control' => 'public, max-age=3600',
+    ]);
+})->where('path', '.*')->name('storage.fallback');
 
 // ========== AUTHENTICATED ROUTES ==========
 Route::middleware(['auth', 'redirect_role'])->group(function () {
@@ -161,6 +181,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::post('/check-in', [EmployeeAttendanceController::class, 'checkIn'])->name('check-in');
             Route::get('/check-out', [EmployeeAttendanceController::class, 'checkOutForm'])->name('check-out-form');
             Route::post('/check-out/{id}', [EmployeeAttendanceController::class, 'checkOut'])->name('check-out');
+            Route::get('/{id}/photo/{type}', [EmployeeAttendanceController::class, 'photo'])
+                ->where('type', 'check_in|check_out')
+                ->name('photo');
             Route::get('/{id}', [EmployeeAttendanceController::class, 'show'])->name('show');
         });
 
@@ -210,6 +233,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::get('/create', [EmployeeDocumentController::class, 'create'])->name('create');
             Route::post('/', [EmployeeDocumentController::class, 'store'])->name('store');
             Route::get('/{id}', [EmployeeDocumentController::class, 'show'])->name('show');
+            Route::get('/{id}/preview', [EmployeeDocumentController::class, 'preview'])->name('preview');
             Route::get('/{id}/download', [EmployeeDocumentController::class, 'download'])->name('download');
             Route::delete('/{id}', [EmployeeDocumentController::class, 'destroy'])->name('destroy');
         });
@@ -232,11 +256,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\Employee\NotificationController::class, 'destroy'])->name('destroy');
         });
 
-        // Calendar for employees
-        Route::prefix('calendar')->name('calendar.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('index');
-            Route::get('/events', [\App\Http\Controllers\Employee\CalendarController::class, 'events'])->name('events');
-        });
+        // Employee calendar content has been merged into the shift schedule page.
+        Route::get('/calendar', [\App\Http\Controllers\Employee\CalendarController::class, 'index'])->name('calendar.index');
+        Route::get('/calendar/events', [\App\Http\Controllers\Employee\CalendarController::class, 'events'])->name('calendar.events');
     });
 
     // ========== MANAGER ROUTES ==========

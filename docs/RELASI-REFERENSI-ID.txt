@@ -18,7 +18,6 @@ KAMUS NAMA TABEL (EN -> ID)
 - document_types -> jenis_dokumen
 - leave_requests -> pengajuan_cuti
 - leave_types -> jenis_cuti
-- overtime_requests -> pengajuan_lembur
 - shift_day_times -> waktu_harian_shift
 - shift_overrides -> override_shift
 - shift_swap_audit_logs -> log_audit_tukar_shift
@@ -48,8 +47,6 @@ No. tabel_asal.kolom_fk (ID) -> tabel_tujuan.pk (ID) | kardinalitas (ID) | refer
 12. leave_requests.approved_by (pengajuan_cuti.approved_by) -> users.id (pengguna.id) | nol-atau-banyak-ke-satu | 2025_12_05_145713_create_leave_requests_table.php
 13. leave_requests.leave_type_id (pengajuan_cuti.leave_type_id) -> leave_types.id (jenis_cuti.id) | banyak-ke-satu | 2025_12_05_145713_create_leave_requests_table.php
 14. leave_requests.worker_id (pengajuan_cuti.worker_id) -> workers.id (pegawai.id) | banyak-ke-satu | 2025_12_05_145713_create_leave_requests_table.php
-15. overtime_requests.approved_by (pengajuan_lembur.approved_by) -> users.id (pengguna.id) | nol-atau-banyak-ke-satu | 2025_12_13_023230_create_overtime_requests_table.php
-16. overtime_requests.worker_id (pengajuan_lembur.worker_id) -> workers.id (pegawai.id) | banyak-ke-satu | 2025_12_13_023230_create_overtime_requests_table.php
 17. shift_day_times.shift_id (waktu_harian_shift.shift_id) -> shifts.id (shift.id) | banyak-ke-satu | 2026_02_11_000001_create_shift_day_times_table.php
 18. shift_overrides.created_by (override_shift.created_by) -> users.id (pengguna.id) | banyak-ke-satu | 2025_12_13_022713_create_shift_overrides_table.php
 19. shift_overrides.shift_id (override_shift.shift_id) -> shifts.id (shift.id) | banyak-ke-satu | 2025_12_13_022713_create_shift_overrides_table.php

@@ -186,14 +186,14 @@
                     <p class="text-xs text-gray-400">Opsional</p>
                 </div>
             </div>
-            <label for="document"
+                 <label for="attachment"
                    class="relative flex flex-col items-center justify-center w-full h-28 sm:h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-emerald-50 hover:border-emerald-400 transition-all group">
                 <div id="uploadPlaceholder" class="flex flex-col items-center py-3 text-center pointer-events-none px-4">
                     <svg class="w-8 h-8 sm:w-10 sm:h-10 text-gray-300 group-hover:text-emerald-400 mb-1.5 transition" width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                     </svg>
                     <p class="text-xs sm:text-sm text-gray-500"><span class="font-semibold text-emerald-600">Pilih file</span> atau seret ke sini</p>
-                    <p class="text-xs text-gray-400 mt-0.5">PDF, JPG, JPEG, PNG (maks. 2MB)</p>
+                    <p class="text-xs text-gray-400 mt-0.5">PDF, JPG, JPEG, PNG (maks. 5MB)</p>
                 </div>
                 <div id="uploadFileName" class="hidden items-center gap-2 py-3 pointer-events-none px-4 max-w-full">
                     <svg class="w-5 h-5 text-emerald-500 shrink-0" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,11 +201,11 @@
                     </svg>
                     <span id="uploadFileNameText" class="text-sm font-medium text-emerald-700 truncate"></span>
                 </div>
-                <input type="file" name="document" id="document" accept=".pdf,.jpg,.jpeg,.png"
+                <input type="file" name="attachment" id="attachment" accept=".pdf,.jpg,.jpeg,.png"
                        class="absolute inset-0 opacity-0 cursor-pointer"
                        onchange="handleFileSelect(this)">
             </label>
-            @error('document')
+            @error('attachment')
                 <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
             @enderror
         </div>

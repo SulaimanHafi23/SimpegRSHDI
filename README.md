@@ -7,7 +7,7 @@
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat&logo=mysql&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-Sistem Informasi Manajemen Pegawai untuk Rumah Sakit, mencakup manajemen karyawan, absensi GPS, cuti, lembur, shift, dan payroll.
+Sistem Informasi Manajemen Pegawai untuk Rumah Sakit, mencakup manajemen karyawan, absensi GPS, cuti, shift, dan payroll.
 
 ---
 
@@ -52,12 +52,6 @@ Sistem Informasi Manajemen Pegawai untuk Rumah Sakit, mencakup manajemen karyawa
 - ✅ Cek saldo cuti
 - ✅ Validasi tanggal konflik
 - ✅ History cuti
-
-### ⏰ Manajemen Lembur
-- ✅ Pengajuan lembur
-- ✅ Approval Manager/HR
-- ✅ Kalkulasi jam lembur
-- ✅ Export laporan lembur
 
 ### 🔄 Shift Management
 - ✅ Penjadwalan shift dinamis
@@ -285,9 +279,8 @@ Sistem menggunakan **26 tabel** yang terbagi dalam 5 kategori:
 - `custom_working_days` - Hari kerja custom
 - `holidays` - Data libur
 
-### Leave & Overtime
+### Leave Management
 - `leave_requests` - Pengajuan cuti
-- `overtime_requests` - Pengajuan lembur
 - `shift_swap_requests` - Request tukar shift
 - `shift_swap_audit_logs` - Audit log shift swap
 
@@ -324,7 +317,7 @@ Sistem menggunakan **26 tabel** yang terbagi dalam 5 kategori:
 
 ### Approval (Manager/HR)
 1. Buka menu "Approvals"
-2. Pilih jenis: Cuti, Lembur, atau Dokumen
+2. Pilih jenis: Cuti atau Dokumen
 3. Review detail pengajuan
 4. Approve atau Reject dengan catatan
 

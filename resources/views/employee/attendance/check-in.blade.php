@@ -13,18 +13,6 @@
         <p class="text-sm sm:text-base text-gray-600 mt-1">Catat kehadiran Anda hari ini</p>
     </div>
 
-    @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-3 sm:px-4 py-3 rounded-lg relative mb-4" role="alert">
-            <span class="block sm:inline text-sm">{{ session('error') }}</span>
-        </div>
-    @endif
-
-    @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-3 sm:px-4 py-3 rounded-lg relative mb-4" role="alert">
-            <span class="block sm:inline text-sm">{{ session('success') }}</span>
-        </div>
-    @endif
-
     <!-- Check In Form -->
     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <!-- Instructions -->
@@ -38,8 +26,8 @@
                     <ol class="text-xs sm:text-sm text-gray-700 space-y-1 list-decimal list-inside">
                         <li>Lokasi absensi ditentukan otomatis oleh sistem</li>
                         <li>Pilih status kehadiran Anda</li>
-                        <li>Klik "Dapatkan Lokasi" untuk GPS</li>
-                        <li>Upload foto (opsional)</li>
+                        <li>Sistem akan otomatis mengambil lokasi GPS saat halaman dibuka</li>
+                        <li>Ambil foto bukti kehadiran (wajib)</li>
                         <li>Klik "Check In Sekarang"</li>
                     </ol>
                 </div>
@@ -156,6 +144,18 @@
                 </p>
             </div>
 
+            <div class="mb-4" id="supporting-document-wrapper" style="display:none;">
+                <label for="attachment" class="block text-sm font-medium text-gray-700 mb-2">
+                    Dokumen Pendukung (Sakit/Izin) <span class="text-red-500">*</span>
+                </label>
+                <input type="file" name="attachment" id="attachment" accept=".pdf,.jpg,.jpeg,.png"
+                       class="w-full px-3 py-2.5 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('attachment') border-red-500 @enderror">
+                @error('attachment')
+                    <p class="mt-1 text-xs sm:text-sm text-red-500">{{ $message }}</p>
+                @enderror
+                <p class="mt-1 text-xs text-gray-500">Wajib untuk status sakit/izin (PDF/JPG/PNG, maks 5MB).</p>
+            </div>
+
             <!-- Map Container -->
             <div class="mb-4 relative">
                 <div id="map" class="w-full h-48 sm:h-64 rounded-lg border-2 border-gray-300 overflow-hidden relative z-0"></div>
@@ -169,7 +169,7 @@
             <!-- Photo Camera -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                    Foto (Opsional)
+                    Foto Bukti Kehadiran (Wajib)
                 </label>
 
                 <!-- Camera Preview -->
@@ -211,7 +211,7 @@
                 @error('photo')
                     <p class="mt-1 text-xs sm:text-sm text-red-500">{{ $message }}</p>
                 @enderror
-                <p class="mt-2 text-xs text-gray-500">Foto akan diambil menggunakan kamera perangkat</p>
+                <p class="mt-2 text-xs text-gray-500">Foto wajib diambil menggunakan kamera perangkat</p>
             </div>
 
             <!-- Notes -->
@@ -240,12 +240,12 @@
                         <button type="button"
                                 onclick="getLocation()"
                                 class="flex-1 sm:flex-none text-xs px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition shadow-sm">
-                            <i class="fas fa-crosshairs mr-1"></i>Dapatkan Lokasi
+                            <i class="fas fa-sync-alt mr-1"></i>Refresh Lokasi
                         </button>
                     </div>
                 </div>
                 <div id="locationStatus" class="text-xs sm:text-sm text-gray-600 mb-1">
-                    <i class="fas fa-info-circle mr-1"></i>Klik "Dapatkan Lokasi" setelah memilih lokasi
+                    <i class="fas fa-spinner fa-spin mr-1"></i>Mengambil lokasi otomatis...
                 </div>
                 <div id="accuracyInfo" class="text-xs text-gray-500">Akurasi: —</div>
                 <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude') }}">
@@ -671,7 +671,26 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Auto fetch GPS location when page is opened (same behavior as check-out page).
+    getLocation();
 });
+
+const statusInput = document.getElementById('status');
+const attachmentInput = document.getElementById('attachment');
+const attachmentWrapper = document.getElementById('supporting-document-wrapper');
+
+function syncAttendanceAttachmentRequirement() {
+    const needsAttachment = ['sick', 'permission'].includes(statusInput.value);
+    attachmentWrapper.style.display = needsAttachment ? 'block' : 'none';
+    attachmentInput.required = needsAttachment;
+    if (!needsAttachment) {
+        attachmentInput.value = '';
+    }
+}
+
+statusInput.addEventListener('change', syncAttendanceAttachmentRequirement);
+syncAttendanceAttachmentRequirement();
 
 // ============================================
 // CAMERA FUNCTIONALITY

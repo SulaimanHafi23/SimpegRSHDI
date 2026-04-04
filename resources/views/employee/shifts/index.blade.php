@@ -15,13 +15,8 @@
         </div>
     </div>
 
-    @if(session('error'))
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ session('error') }}</span>
-        </div>
-    @endif
 
-    <!-- Month Navigation (inline with calendar style like Kalender Cuti & Lembur) -->
+    <!-- Month Navigation (inline with calendar style like Kalender Cuti) -->
 
     <!-- Regular Shift Info -->
     @if($workerShift)
@@ -54,7 +49,7 @@
         </div>
     @endif
 
-    <!-- Calendar (styled similar to Kalender Cuti & Lembur) -->
+    <!-- Calendar (styled similar to Kalender Cuti) -->
     <div class="bg-white rounded-lg shadow-md overflow-hidden">
         <!-- Calendar Navigation -->
         <div class="bg-gradient-to-r from-green-600 to-green-700 text-white p-4 flex items-center justify-between">
@@ -171,6 +166,124 @@
                         @endforeach
                     </div>
                 @endforeach
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Calendar -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden" x-data="activityCalendar({ month: {{ $month }}, year: {{ $year }} })" x-init="initCalendar()">
+        <div class="border-b border-gray-200 bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-4 text-white sm:px-5">
+            <div class="flex items-center justify-between gap-3">
+                <div>
+                    <h3 class="text-lg font-semibold flex items-center gap-2">
+                        <i class="fas fa-calendar-alt text-amber-300"></i>
+                        Kalender Aktivitas
+                    </h3>
+                    <p class="mt-1 text-xs text-slate-200 sm:text-sm">Cuti, libur nasional, dan perjalanan dinas pada bulan ini.</p>
+                </div>
+                <span class="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90">{{ $date->translatedFormat('F Y') }}</span>
+            </div>
+        </div>
+
+        <div class="p-4 sm:p-5">
+            <div class="mb-4 flex flex-wrap gap-3 text-xs sm:text-sm">
+                <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-red-600"></span>
+                    <span class="text-gray-600">Libur Nasional</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-green-500"></span>
+                    <span class="text-gray-600">Cuti Disetujui</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-purple-500"></span>
+                    <span class="text-gray-600">Perjalanan Dinas</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-amber-500"></span>
+                    <span class="text-gray-600">Menunggu Persetujuan</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="h-3 w-3 rounded-full bg-rose-500"></span>
+                    <span class="text-gray-600">Ditolak</span>
+                </div>
+            </div>
+
+            <p class="mb-2 text-xs italic text-gray-400 md:hidden"><i class="fas fa-arrows-alt-h mr-1"></i>Geser untuk melihat kalender lengkap</p>
+            <div class="overflow-x-auto scroll-smooth -mx-4 px-4 md:mx-0 md:px-0">
+                <div class="min-w-[600px]">
+                    <div class="grid grid-cols-7 gap-2 mb-2">
+                        <template x-for="day in ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']" :key="day">
+                            <div class="text-center text-sm font-semibold text-gray-600 py-2" x-text="day"></div>
+                        </template>
+                    </div>
+
+                    <div class="grid grid-cols-7 gap-2">
+                        <template x-for="(day, index) in calendarDays" :key="index">
+                            <div :class="getDayClass(day)"
+                                 @click="day.date ? showDayEvents(day) : null"
+                                 class="min-h-24 rounded-lg border p-2 relative">
+                                <div class="text-sm font-semibold mb-1"
+                                     :class="day.isToday ? 'text-white' : (day.isCurrentMonth ? 'text-gray-700' : 'text-gray-400')"
+                                     x-text="day.day"></div>
+
+                                <template x-if="day.events && day.events.length > 0">
+                                    <div class="space-y-1">
+                                        <template x-for="event in day.events.slice(0, 2)" :key="event.id">
+                                            <div class="truncate rounded px-2 py-1 text-xs text-white" :style="'background-color: ' + event.color" x-text="event.title"></div>
+                                        </template>
+                                        <template x-if="day.events.length > 2">
+                                            <div class="text-xs font-semibold text-gray-500">+<span x-text="day.events.length - 2"></span> lainnya</div>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div x-show="showModal"
+             x-cloak
+             @click="showModal = false"
+             x-transition
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm bg-white/30">
+            <div class="w-full max-w-md rounded-lg bg-white p-6 shadow-xl" @click.stop>
+                <div class="mb-4 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900" x-text="selectedDate"></h3>
+                        <p class="mt-1 text-sm text-gray-600" x-text="selectedSummary"></p>
+                    </div>
+                    <button @click="showModal = false" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <template x-if="selectedEvents.length === 0">
+                    <p class="py-4 text-center text-gray-500">Tidak ada aktivitas pada tanggal ini</p>
+                </template>
+
+                <div class="space-y-3">
+                    <template x-for="event in selectedEvents" :key="event.id">
+                        <div class="rounded-lg border border-gray-200 p-4" :style="'border-left: 4px solid ' + event.color">
+                            <div class="mb-2 flex items-start justify-between gap-3">
+                                <h4 class="font-semibold text-gray-900" x-text="event.title"></h4>
+                                <span class="rounded-full px-2 py-1 text-xs text-white" :style="'background-color: ' + event.color" x-text="getStatusText(event.status)"></span>
+                            </div>
+                            <p class="mb-2 text-sm text-gray-600" x-text="event.description"></p>
+                            <template x-if="event.type === 'holiday'">
+                                <p class="text-xs text-gray-500"><i class="fas fa-flag mr-1"></i>Libur Nasional Indonesia</p>
+                            </template>
+                            <template x-if="event.type === 'leave'">
+                                <p class="text-xs text-gray-500"><i class="fas fa-calendar-day mr-1"></i><span x-text="event.days"></span> hari</p>
+                            </template>
+                            <template x-if="event.type === 'business-trip'">
+                                <p class="text-xs text-gray-500"><i class="fas fa-plane-departure mr-1"></i><span x-text="'Tujuan: ' + event.destination"></span></p>
+                            </template>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
     </div>
@@ -425,6 +538,137 @@ function shiftCalendar() {
             }
 
             this.showModal = true;
+        }
+    }
+}
+
+function activityCalendar({ month, year }) {
+    return {
+        currentDate: new Date(year, month - 1, 1),
+        calendarDays: [],
+        events: [],
+        showModal: false,
+        selectedDate: '',
+        selectedSummary: '',
+        selectedEvents: [],
+
+        initCalendar() {
+            this.updateCalendar();
+            this.loadEvents();
+        },
+
+        updateCalendar() {
+            const year = this.currentDate.getFullYear();
+            const month = this.currentDate.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startingDayOfWeek = firstDay.getDay();
+            const daysFromPrevMonth = startingDayOfWeek;
+            const totalDays = lastDay.getDate();
+            const totalCells = Math.ceil((daysFromPrevMonth + totalDays) / 7) * 7;
+
+            this.calendarDays = [];
+
+            const prevMonthLastDay = new Date(year, month, 0).getDate();
+            for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
+                const dayNum = prevMonthLastDay - i;
+                const date = new Date(year, month - 1, dayNum);
+                this.calendarDays.push({ day: dayNum, date, isCurrentMonth: false, isToday: false, events: [] });
+            }
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            for (let i = 1; i <= totalDays; i++) {
+                const date = new Date(year, month, i);
+                date.setHours(0, 0, 0, 0);
+                this.calendarDays.push({ day: i, date, isCurrentMonth: true, isToday: this.isSameDay(date, today), events: [] });
+            }
+
+            const remainingCells = totalCells - this.calendarDays.length;
+            for (let i = 1; i <= remainingCells; i++) {
+                const date = new Date(year, month + 1, i);
+                date.setHours(0, 0, 0, 0);
+                this.calendarDays.push({ day: i, date, isCurrentMonth: false, isToday: false, events: [] });
+            }
+
+            this.assignEventsToCalendar();
+        },
+
+        loadEvents() {
+            const start = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1).toISOString().split('T')[0];
+            const end = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth() + 1, 0).toISOString().split('T')[0];
+            const cacheBuster = new Date().getTime();
+
+            fetch(`{{ route('employee.calendar.events') }}?start=${start}&end=${end}&_=${cacheBuster}`)
+                .then(response => response.json())
+                .then(data => {
+                    this.events = data || [];
+                    this.assignEventsToCalendar();
+                })
+                .catch(error => console.error('Error loading activity calendar:', error));
+        },
+
+        assignEventsToCalendar() {
+            this.calendarDays.forEach(day => {
+                if (!day.date) return;
+
+                const dayDate = new Date(day.date);
+                dayDate.setHours(0, 0, 0, 0);
+
+                day.events = this.events.filter(event => {
+                    const eventStart = new Date(event.start);
+                    eventStart.setHours(0, 0, 0, 0);
+
+                    const eventEnd = new Date(event.end);
+                    eventEnd.setHours(0, 0, 0, 0);
+
+                    return dayDate >= eventStart && dayDate < eventEnd;
+                });
+            });
+        },
+
+        showDayEvents(day) {
+            if (!day.date || !day.events || day.events.length === 0) return;
+
+            this.selectedDate = day.date.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            this.selectedEvents = day.events;
+            this.selectedSummary = `${day.events.length} aktivitas terjadwal`;
+            this.showModal = true;
+        },
+
+        getStatusText(status) {
+            const statusMap = {
+                holiday: 'Libur Nasional',
+                approved: 'Disetujui',
+                pending: 'Menunggu',
+                rejected: 'Ditolak'
+            };
+
+            return statusMap[status] || status;
+        },
+
+        getDayClass(day) {
+            let classes = 'cursor-pointer hover:bg-gray-50 transition';
+
+            if (day.isToday) {
+                classes += ' bg-green-600';
+            } else if (!day.isCurrentMonth) {
+                classes += ' bg-gray-50';
+            }
+
+            return classes;
+        },
+
+        isSameDay(date1, date2) {
+            return date1.getFullYear() === date2.getFullYear()
+                && date1.getMonth() === date2.getMonth()
+                && date1.getDate() === date2.getDate();
         }
     }
 }

@@ -69,7 +69,10 @@
                     </p>
                 @endif
                 @if($trip->rejection_reason)
-                    <p class="text-xs sm:text-sm text-red-700 mt-1"><strong>Alasan:</strong> {{ $trip->rejection_reason }}</p>
+                    <div class="mt-2 rounded-lg border border-red-200 bg-red-100/40 px-3 py-2">
+                        <p class="text-xs font-semibold uppercase tracking-wide text-red-700">Alasan Penolakan</p>
+                        <p class="mt-1 text-xs sm:text-sm leading-relaxed text-red-800">{{ $trip->rejection_reason }}</p>
+                    </div>
                 @endif
             </div>
         </div>
@@ -135,6 +138,18 @@
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Akomodasi</p>
                     <p class="text-sm sm:text-base font-medium text-gray-800">{{ $trip->accommodation ?? '-' }}</p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-500 mb-1">Dokumen Pendukung</p>
+                    @if($trip->supporting_document_path)
+                        <a href="{{ Storage::disk('public')->url($trip->supporting_document_path) }}" target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-1 text-sm font-medium text-blue-700 hover:text-blue-800">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Lihat Lampiran
+                        </a>
+                    @else
+                        <p class="text-sm sm:text-base font-medium text-gray-500">-</p>
+                    @endif
                 </div>
                 <div>
                     <p class="text-xs text-gray-500 mb-1">Diajukan Pada</p>

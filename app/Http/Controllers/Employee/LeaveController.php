@@ -9,6 +9,7 @@ use App\Services\Export\PdfExportService;
 use App\Exports\EmployeeLeaveExport;
 use App\DTOs\LeaveRequestDTO;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 
@@ -27,7 +28,7 @@ class LeaveController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -76,7 +77,7 @@ class LeaveController extends Controller
      */
     public function create()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -102,7 +103,7 @@ class LeaveController extends Controller
      */
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -115,7 +116,7 @@ class LeaveController extends Controller
             'start_date' => 'required|date|after_or_equal:today',
             'end_date' => 'required|date|after_or_equal:start_date',
             'reason' => 'required|string|max:1000',
-            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         try {
@@ -123,6 +124,24 @@ class LeaveController extends Controller
             $startDate = \Carbon\Carbon::parse($validated['start_date']);
             $endDate = \Carbon\Carbon::parse($validated['end_date']);
             $totalDays = $startDate->diffInDays($endDate) + 1;
+
+            $hasOverlappingLeave = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+                ->whereIn('status', ['pending', 'approved'])
+                ->where(function ($query) use ($validated) {
+                    $query->whereBetween('start_date', [$validated['start_date'], $validated['end_date']])
+                        ->orWhereBetween('end_date', [$validated['start_date'], $validated['end_date']])
+                        ->orWhere(function ($nested) use ($validated) {
+                            $nested->where('start_date', '<=', $validated['start_date'])
+                                ->where('end_date', '>=', $validated['end_date']);
+                        });
+                })
+                ->exists();
+
+            if ($hasOverlappingLeave) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tanggal cuti bentrok dengan pengajuan sebelumnya. Tanggal hanya bisa dipilih lagi jika pengajuan sebelumnya ditolak.');
+            }
 
             $dto = LeaveRequestDTO::fromRequest([
                 'worker_id' => $worker->id,
@@ -132,7 +151,7 @@ class LeaveController extends Controller
                 'total_days' => $totalDays,
                 'reason' => $validated['reason'],
                 'status' => 'pending',
-                'document' => $request->file('document'),
+                'attachment' => $request->file('attachment'),
             ]);
 
             $this->leaveService->create($dto->toArray());
@@ -152,7 +171,7 @@ class LeaveController extends Controller
      */
     public function show(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -175,7 +194,7 @@ class LeaveController extends Controller
      */
     public function cancel(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -210,7 +229,7 @@ class LeaveController extends Controller
      */
     public function export(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -256,7 +275,7 @@ class LeaveController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {

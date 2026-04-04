@@ -18,7 +18,7 @@
 
 1. **Otomasi Manajemen Pegawai** - Mengurangi administrative overhead dengan digitalisasi proses manual
 2. **Transparansi Attendance** - Tracking real-time kehadiran pegawai menggunakan GPS
-3. **Workflow Approval Terstruktur** - Approval cuti, lembur, shift swap, dan perjalanan dinas dengan audit trail
+3. **Workflow Approval Terstruktur** - Approval cuti, shift swap, dan perjalanan dinas dengan audit trail
 4. **Data-Driven Insights** - Dashboard dan laporan untuk decision making
 5. **Kepatuhan Regulasi** - Validasi rest period, minimum staffing, dan audit log lengkap
 
@@ -55,7 +55,7 @@ Sistem mendukung 4 aktor utama dengan permission berbeda:
   - Shift override, shift swap execution
   - Absensi histori dan statistik
 - **Approval**:
-  - Cuti, overtime, perjalanan dinas, shift swap
+  - Cuti, perjalanan dinas, shift swap
   - Verifikasi dokumen pegawai
 - **Laporan**:
   - Export attendance, leave, documents
@@ -67,7 +67,6 @@ Sistem mendukung 4 aktor utama dengan permission berbeda:
   - **Dashboard Manager** - statistik departemen (attendance rate, cuti pending, shift swaps, etc)
   - **Approval Requests**:
     - Cuti pegawai (setujui/tolak)
-    - Overtime requests (setujui/tolak)
     - Shift swap requests (setujui/tolak/eksekusi/revert)
     - Perjalanan dinas (setujui/tolak)
   - **View Laporan** - attendance, leave, documents khusus departemen
@@ -84,7 +83,6 @@ Sistem mendukung 4 aktor utama dengan permission berbeda:
     - Batalkan pengajuan cuti pending
     - Lihat histori dan saldo cuti
   - **Shift Swap** - Ajukan tukar shift dengan pegawai lain
-  - **Overtime** - Ajukan pengajuan lembur
   - **Perjalanan Dinas** - Ajukan perjalanan dinas + batalkan
   - **Dokumen** - Upload, lihat, download, hapus dokumen pribadi
   - **Profil** - Lihat/update profil, ubah password
@@ -195,7 +193,7 @@ Sistem mendukung 4 aktor utama dengan permission berbeda:
 - **Auto-generate Schedule**: Generate jadwal untuk periode tertentu
 - **Schedule History**: Track perubahan shift dengan timestamp
 
-#### Shift Override (Overtime/Lembur)
+#### Shift Override (Penyesuaian Shift)
 - **Definition**: Penugasan shift tambahan di luar jadwal regular
 - **Bulk Create**: HR dapat membuat multiple shift override sekaligus
 - **Admin Approval**: HR approval untuk shift override
@@ -269,32 +267,7 @@ Sistem mendukung 4 aktor utama dengan permission berbeda:
 
 ---
 
-### 4️⃣ **Overtime Management (Manajemen Lembur)**
-
-#### Fitur
-- **Request Submission**: Pegawai submit pengajuan lembur dengan tanggal, jam, alasan
-- **Approval Workflow**: Manager/HR setujui atau tolak
-- **Calculation**: System auto-calculate jam lembur berdasarkan attendance
-- **Report**: Export lembur untuk payroll
-
-#### Use Case
-```
-Pegawai:
-1. Buka "Lembur"
-2. Klik "Ajukan Lembur"
-3. Pilih tanggal, jam mulai, jam selesai
-4. Masukkan keterangan pekerjaan
-5. Submit
-
-Manager:
-1. Buka "Approval → Lembur"
-2. Review request
-3. Setujui atau tolak dengan alasan
-```
-
----
-
-### 5️⃣ **Business Trip (Perjalanan Dinas)**
+### 4️⃣ **Business Trip (Perjalanan Dinas)**
 
 #### Fitur
 - **Trip Request**: Pegawai submit perjalanan dinas dengan tujuan, tanggal, estimasi biaya
@@ -398,7 +371,6 @@ Manager:
 - **Leave Approval**: Notifikasi saat cuti disetujui/ditolak
 - **Shift Swap**: Notifikasi saat swap request, approval, execution
 - **Document Verification**: Notifikasi saat dokumen verified/rejected
-- **Overtime Approval**: Notifikasi saat lembur disetujui
 - **Business Trip**: Notifikasi saat perjalanan dinas approved/rejected
 
 #### Channel
@@ -442,7 +414,7 @@ Pegawai dapat:
 - **System-wide Statistics**:
   - Total pegawai, departemen
   - Attendance KPI
-  - Leave/overtime trends
+  - Leave/shift swap trends
   - Document compliance status
   - Audit log activities
 - **Alerts**:
@@ -485,7 +457,6 @@ Laravel MVC Architecture:
 │   ├── Worker
 │   ├── Attendance
 │   ├── LeaveRequest
-│   ├── OvertimeRequest
 │   ├── BusinessTrip
 │   ├── ShiftSwapRequest
 │   ├── WorkerDocument
@@ -513,7 +484,6 @@ Laravel MVC Architecture:
 │
 ├── Requests (Form Validation)
 │   ├── LeaveRequestRequest
-│   ├── OvertimeRequestRequest
 │   └── ... (request validation)
 │
 ├── Traits (Reusable Logic)
@@ -571,21 +541,21 @@ External Integrations:
    └─ Employee management (CRUD, resign)
    └─ Attendance management
    └─ Master data management
-   └─ Leave/Overtime/Trip approval
+  └─ Leave/Shift Swap/Trip approval
    └─ Document verification
    └─ Reports & export
    └─ NO role/user management
 
 3. Manager (Department Manager)
    └─ Dashboard (department-level)
-   └─ Approval functions (cuti, lembur, shift swap, trip)
+  └─ Approval functions (cuti, shift swap, trip)
    └─ Department reports
    └─ NO employee CRUD
    └─ NO master data access
 
 4. Employee (Pegawai)
    └─ Check-in/check-out
-   └─ Submit requests (cuti, lembur, trip, shift swap)
+  └─ Submit requests (cuti, trip, shift swap)
    └─ View personal data
    └─ View personal reports
    └─ NO approval functions
@@ -597,7 +567,7 @@ External Integrations:
 1. Dashboard (2): dashboard.admin, dashboard.employee
 2. Master Data (9): religion.manage, gender.manage, dept.manage, shift.manage, etc
 3. Management (4): worker.manage, attendance.manage, schedule.manage, document.manage
-4. Approvals (12): leave.manage/approve, overtime.manage/approve, shift-swap.manage/approve, trip.manage/approve
+4. Approvals (9): leave.manage/approve, shift-swap.manage/approve, trip.manage/approve
 5. Employee Access (13): worker.view, attendance.checkin, leave.request, etc
 6. Reports (3): report.view, report.export, report.personal
 7. Settings (2): role.manage, user.manage
@@ -634,9 +604,9 @@ External Integrations:
        │        │        │         │          │
     has_many    │        │         │          │
        │        │        │         │          │
-       ▼        ▼        ▼         ▼          ▼
-   Attendance  Leave   Overtime  Business   WorkerShift
-                       Trip
+         ▼        ▼                   ▼          ▼
+       Attendance  Leave            Business   WorkerShift
+                     Trip
 ```
 
 ### Key Tables
@@ -647,7 +617,6 @@ External Integrations:
 • attendances - GPS attendance records
 • leave_requests - Cuti requests
 • leaf_types - Jenis cuti
-• overtime_requests - Lembur requests
 • business_trips - Perjalanan dinas
 • shift_swap_requests - Tukar shift requests
 • worker_shifts - Schedule assignments
@@ -832,7 +801,6 @@ Sidebar Menu:
 ├── Dashboard - Quick stats & activity
 ├── Absensi - Check-in/check-out, history, export
 ├── Cuti - Ajukan, lihat riwayat, saldo
-├── Lembur - Ajukan lembur
 ├── Perjalanan Dinas - Ajukan trip
 ├── Shift - Lihat jadwal, ajukan tukar shift
 ├── Dokumen - Upload, lihat, download
@@ -845,7 +813,7 @@ Sidebar Menu:
 ```
 Sidebar Menu:
 ├── Dashboard - Department stats
-├── Persetujuan - Cuti, lembur, trip, shift swap
+├── Persetujuan - Cuti, trip, shift swap
 ├── Laporan - Attendance, leave, documents
 ├── Notifikasi
 └── Logout
@@ -858,7 +826,6 @@ Sidebar Menu:
 ├── Data Pegawai - CRUD, import, export, resign
 ├── Absensi - Admin check-in, history, export
 ├── Cuti - CRUD, approve/reject
-├── Lembur - CRUD, approve/reject
 ├── Perjalanan Dinas - CRUD, approve/reject
 ├── Shift
 │   ├── Master Shift - CRUD
@@ -901,13 +868,10 @@ All HR access +
    • "Permintaan pertukaran shift Anda disetujui"
    • "Manager menyetujui pertukaran shift"
 
-3. Overtime
-   • "Pengajuan lembur Anda disetujui"
-
-4. Business Trip
+3. Business Trip
    • "Perjalanan dinas Anda disetujui"
 
-5. Document
+4. Document
    • "Dokumen Anda sudah diverifikasi"
    • "Dokumen Anda ditolak: [Alasan]"
 

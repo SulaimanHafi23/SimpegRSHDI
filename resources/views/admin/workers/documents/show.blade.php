@@ -26,8 +26,14 @@
 
                 @if($fileExists)
                     @if(in_array(strtolower($ext), ['pdf']))
-                        <div class="w-full min-h-[75vh] sm:min-h-[85vh] lg:min-h-[1100px]">
-                            <iframe src="{{ $disk->url($filePath) }}#view=FitH" class="w-full h-full border rounded" frameborder="0"></iframe>
+                        <div class="w-full border rounded overflow-hidden bg-white" style="min-height: 600px;">
+                            <iframe
+                                src="{{ $disk->url($filePath) }}#toolbar=1&navpanes=0&scrollbar=1&zoom=page-width"
+                                class="w-full"
+                                style="height: 800px; border: none;"
+                                frameborder="0"
+                                loading="lazy">
+                            </iframe>
                         </div>
                     @elseif(in_array(strtolower($ext), ['jpg','jpeg','png','gif']))
                         <img src="{{ $disk->url($filePath) }}" alt="{{ $document->file_name }}" class="w-full rounded">
@@ -101,17 +107,26 @@
 
                         <button onclick="document.getElementById('reject-modal').classList.remove('hidden')" class="px-4 py-2 bg-red-600 text-white rounded">Tolak</button>
 
-                        <div id="reject-modal" class="hidden fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-white/30" onclick="if(event.target === this) document.getElementById('reject-modal').classList.add('hidden')">
-                            <div class="bg-white rounded p-4 w-full max-w-md" onclick="event.stopPropagation()">
-                                <form action="{{ route('admin.worker-documents.reject', $document->id) }}" method="POST">
-                                    @csrf
-                                    <label class="block text-sm">Alasan penolakan</label>
-                                    <textarea name="notes" class="w-full mt-2 rounded border px-3 py-2" required></textarea>
-                                    <div class="flex justify-end mt-3">
-                                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded">Kirim</button>
-                                        <button type="button" onclick="document.getElementById('reject-modal').classList.add('hidden')" class="ml-2 px-4 py-2 bg-gray-200 rounded">Batal</button>
-                                    </div>
-                                </form>
+                        <div id="reject-modal" class="hidden fixed inset-0 z-50" onclick="if(event.target === this) document.getElementById('reject-modal').classList.add('hidden')">
+                            <div class="absolute inset-0 bg-black/30"></div>
+                            <div class="relative flex min-h-screen items-center justify-center p-4">
+                                <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl" onclick="event.stopPropagation()">
+                                    <form action="{{ route('admin.worker-documents.reject', $document->id) }}" method="POST">
+                                        @csrf
+                                        <div class="border-b border-gray-200 px-5 py-4">
+                                            <h3 class="text-base font-semibold text-gray-900">Tolak Dokumen</h3>
+                                            <p class="mt-1 text-sm text-gray-500">Isi alasan penolakan untuk dikirim ke pegawai.</p>
+                                        </div>
+                                        <div class="px-5 py-4">
+                                            <label class="block text-sm font-medium text-gray-700">Alasan penolakan <span class="text-red-500">*</span></label>
+                                            <textarea name="notes" class="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" rows="4" required placeholder="Tuliskan alasan penolakan..."></textarea>
+                                        </div>
+                                        <div class="flex justify-end gap-2 border-t border-gray-200 px-5 py-4">
+                                            <button type="button" onclick="document.getElementById('reject-modal').classList.add('hidden')" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                                            <button type="submit" class="rounded-lg border border-red-700 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Tolak Dokumen</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
                     @endif

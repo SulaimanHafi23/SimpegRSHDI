@@ -7,6 +7,8 @@ use App\Services\Attendance\AttendanceService;
 use App\Services\Export\PdfExportService;
 use App\Services\WorkerOffDay\WorkerOffDayService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class AttendanceController extends Controller
 {
@@ -23,7 +25,7 @@ class AttendanceController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -224,7 +226,7 @@ class AttendanceController extends Controller
      */
     public function checkInForm()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -296,7 +298,7 @@ class AttendanceController extends Controller
      */
     public function checkOutForm()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -344,7 +346,37 @@ class AttendanceController extends Controller
         // Shift yang berlaku pada tanggal attendance (mendukung overnight + tukar shift)
         $attendanceShiftInfo = $worker->resolveShiftForDate($attendance->attendance_date);
 
-        return view('employee.attendance.check-out', compact('locations', 'attendance', 'attendanceShiftInfo'));
+        $checkoutWindowInfo = null;
+        $effectiveSchedule = $attendanceShiftInfo['schedule'] ?? null;
+
+        if (is_array($effectiveSchedule) && !empty($effectiveSchedule['end_time'])) {
+            $attendanceDate = \Carbon\Carbon::parse($attendance->attendance_date);
+            $shiftEndDateTime = \Carbon\Carbon::parse($attendanceDate->format('Y-m-d') . ' ' . $effectiveSchedule['end_time']);
+
+            if (!empty($effectiveSchedule['is_overnight'])) {
+                $shiftEndDateTime->addDay();
+            }
+
+            $checkOutWindowAfterMinutes = (int) round((float) config('attendance.check_out_window_after_hours', 1.5) * 60);
+            $maxCheckoutTime = $shiftEndDateTime->copy()->addMinutes($checkOutWindowAfterMinutes);
+            $now = now();
+
+            $isPastShiftEnd = $now->greaterThan($shiftEndDateTime);
+            $isPastCheckoutWindow = $now->greaterThan($maxCheckoutTime);
+
+            $checkoutWindowInfo = [
+                'now' => $now,
+                'shift_end_time' => $shiftEndDateTime,
+                'max_checkout_time' => $maxCheckoutTime,
+                'is_past_shift_end' => $isPastShiftEnd,
+                'is_past_checkout_window' => $isPastCheckoutWindow,
+                'minutes_past_shift_end' => $isPastShiftEnd ? $shiftEndDateTime->diffInMinutes($now) : 0,
+                'minutes_to_shift_end' => !$isPastShiftEnd ? $now->diffInMinutes($shiftEndDateTime) : 0,
+                'minutes_to_checkout_deadline' => !$isPastCheckoutWindow ? $now->diffInMinutes($maxCheckoutTime) : 0,
+            ];
+        }
+
+        return view('employee.attendance.check-out', compact('locations', 'attendance', 'attendanceShiftInfo', 'checkoutWindowInfo'));
     }
 
     /**
@@ -352,7 +384,7 @@ class AttendanceController extends Controller
      */
     public function checkIn(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -365,8 +397,9 @@ class AttendanceController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'photo' => 'nullable|string',
+            'photo' => 'required|string',
             'status' => 'required|in:present,sick,permission,leave',
+            'attachment' => 'required_if:status,sick,permission|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         try {
@@ -425,6 +458,7 @@ class AttendanceController extends Controller
                 'notes' => $validated['notes'] ?? null,
                 'photo' => $photoFile,
                 'status' => $validated['status'],
+                'attachment' => $request->file('attachment'),
             ];
 
             $attendance = $this->attendanceService->checkIn($data);
@@ -449,7 +483,7 @@ class AttendanceController extends Controller
      */
     public function checkOut(Request $request, string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -498,7 +532,7 @@ class AttendanceController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
             'accuracy' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'photo' => 'nullable|string',
+            'photo' => 'required|string',
         ]);
 
         try {
@@ -588,7 +622,7 @@ class AttendanceController extends Controller
      */
     public function show(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -605,7 +639,6 @@ class AttendanceController extends Controller
 
         // Load relationships
         $attendance->load([
-            'location',
             'photos',
             'worker.workerShifts.shift'
         ]);
@@ -614,11 +647,49 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Serve attendance photo for the logged-in employee.
+     */
+    public function photo(string $id, string $type)
+    {
+        if (!in_array($type, ['check_in', 'check_out'], true)) {
+            abort(404);
+        }
+
+        $user = Auth::user();
+        $worker = $user->worker;
+
+        if (!$worker) {
+            abort(404);
+        }
+
+        $attendance = $this->attendanceService->getById($id);
+        if (!$attendance || $attendance->worker_id !== $worker->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $photo = $attendance->photos()
+            ->where('photo_type', $type)
+            ->orderByDesc('taken_at')
+            ->orderByDesc('created_at')
+            ->first();
+
+        if (!$photo || !Storage::disk('public')->exists($photo->photo_path)) {
+            abort(404, 'Foto tidak ditemukan.');
+        }
+
+        $absolutePath = Storage::disk('public')->path($photo->photo_path);
+
+        return response()->file($absolutePath, [
+            'Cache-Control' => 'private, max-age=3600',
+        ]);
+    }
+
+    /**
      * Export attendance to PDF/Excel/CSV
      */
     public function export(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {

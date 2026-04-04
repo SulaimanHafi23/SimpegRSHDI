@@ -12,17 +12,7 @@
     </x-page-header>
 
     {{-- Alert Messages --}}
-    @if(session('success'))
-        <x-alert type="success" dismissible>
-            {{ session('success') }}
-        </x-alert>
-    @endif
 
-    @if(session('error'))
-        <x-alert type="danger" dismissible>
-            {{ session('error') }}
-        </x-alert>
-    @endif
 
     {{-- Status Card --}}
     <x-card>
@@ -60,17 +50,13 @@
                             Setujui
                         </x-button>
                     </form>
-                    <form id="reject-form" action="{{ route('admin.leave.reject', $leaveRequest->id) }}" method="POST" class="inline">
-                        @csrf
-                        <input type="hidden" name="rejection_reason" id="rejection_reason">
-                        <x-button
-                            type="button"
-                            variant="danger"
-                            icon="fas fa-times"
-                            onclick="submitLeaveReject()">
-                            Tolak
-                        </x-button>
-                    </form>
+                    <x-button
+                        type="button"
+                        variant="danger"
+                        icon="fas fa-times"
+                        onclick="openLeaveRejectModal()">
+                        Tolak
+                    </x-button>
                 </div>
             @endif
         </div>
@@ -184,7 +170,10 @@
                                         </p>
                                     @endif
                                     @if($leaveRequest->rejection_reason)
-                                        <p class="text-sm text-gray-700 mt-2 italic">"{{ $leaveRequest->rejection_reason }}"</p>
+                                        <div class="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2">
+                                            <p class="text-xs font-semibold uppercase tracking-wide text-red-700">Alasan Penolakan</p>
+                                            <p class="mt-1 text-sm leading-relaxed text-red-800">{{ $leaveRequest->rejection_reason }}</p>
+                                        </div>
                                     @endif
                                 </div>
                             </div>
@@ -243,20 +232,83 @@
     </div>
  </div>
 
+@if($normalizedStatus === 'pending')
+    <div id="leave-reject-modal" class="hidden fixed inset-0 z-50" onclick="if(event.target === this) closeLeaveRejectModal()">
+        <div class="absolute inset-0 bg-black/30"></div>
+        <div class="relative flex min-h-screen items-center justify-center p-4">
+            <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl" onclick="event.stopPropagation()">
+                <div class="border-b border-gray-200 px-5 py-4">
+                    <h3 class="text-base font-semibold text-gray-900">Tolak Pengajuan Cuti</h3>
+                    <p class="mt-1 text-sm text-gray-500">Isi alasan penolakan agar pegawai memahami keputusan.</p>
+                </div>
+                <form id="reject-form" action="{{ route('admin.leave.reject', $leaveRequest->id) }}" method="POST" class="px-5 py-4" onsubmit="return validateLeaveRejectForm()">
+                    @csrf
+                    <label for="rejection_reason" class="mb-2 block text-sm font-medium text-gray-700">Alasan Penolakan <span class="text-red-500">*</span></label>
+                    <textarea id="rejection_reason" name="rejection_reason" rows="4" required class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" placeholder="Tuliskan alasan penolakan..."></textarea>
+                    <p id="leave-reject-error" class="mt-2 hidden text-xs text-red-600">Alasan penolakan wajib diisi.</p>
+                    <div class="mt-4 flex justify-end gap-2 border-t border-gray-200 pt-4">
+                        <button type="button" onclick="closeLeaveRejectModal()" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                        <button type="submit" class="rounded-lg border border-red-700 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Tolak Cuti</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+@endif
+
 @push('scripts')
 <script>
-    function submitLeaveReject() {
-        const reason = prompt('Masukkan alasan penolakan:');
-        if (!reason || reason.trim() === '') {
+    function openLeaveRejectModal() {
+        const modal = document.getElementById('leave-reject-modal');
+        const textarea = document.getElementById('rejection_reason');
+        const error = document.getElementById('leave-reject-error');
+
+        if (!modal || !textarea) {
             return;
         }
 
-        if (!confirm('Tolak pengajuan cuti ini?')) {
-            return;
+        textarea.value = '';
+        textarea.classList.remove('border-red-500');
+        if (error) {
+            error.classList.add('hidden');
         }
 
-        document.getElementById('rejection_reason').value = reason.trim();
-        document.getElementById('reject-form').submit();
+        modal.classList.remove('hidden');
+        setTimeout(() => textarea.focus(), 50);
+    }
+
+    function closeLeaveRejectModal() {
+        const modal = document.getElementById('leave-reject-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    function validateLeaveRejectForm() {
+        const textarea = document.getElementById('rejection_reason');
+        const error = document.getElementById('leave-reject-error');
+
+        if (!textarea) {
+            return false;
+        }
+
+        const reason = textarea.value.trim();
+        if (!reason) {
+            textarea.classList.add('border-red-500');
+            if (error) {
+                error.classList.remove('hidden');
+            }
+            textarea.focus();
+            return false;
+        }
+
+        textarea.value = reason;
+        textarea.classList.remove('border-red-500');
+        if (error) {
+            error.classList.add('hidden');
+        }
+
+        return true;
     }
 </script>
 @endpush

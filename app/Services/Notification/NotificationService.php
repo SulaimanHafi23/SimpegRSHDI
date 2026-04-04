@@ -89,7 +89,7 @@ class NotificationService
             $leaveData['start_date'],
             $leaveData['end_date']
         );
-        
+
         if ($reason) {
             $message .= ' Alasan: ' . $reason;
         }
@@ -102,55 +102,6 @@ class NotificationService
             'data' => [
                 'leave_id' => $leaveData['id'],
                 'type' => 'leave',
-                'action' => 'rejected',
-                'reason' => $reason
-            ],
-        ]);
-    }
-
-    /**
-     * Send notification when overtime is approved
-     */
-    public function notifyOvertimeApproved(string $userId, array $overtimeData): void
-    {
-        $this->create([
-            'user_id' => $userId,
-            'type' => 'overtime_approved',
-            'title' => 'Lembur Disetujui',
-            'message' => sprintf(
-                'Permohonan lembur Anda pada %s telah disetujui.',
-                $overtimeData['overtime_date']
-            ),
-            'data' => [
-                'overtime_id' => $overtimeData['id'],
-                'type' => 'overtime',
-                'action' => 'approved'
-            ],
-        ]);
-    }
-
-    /**
-     * Send notification when overtime is rejected
-     */
-    public function notifyOvertimeRejected(string $userId, array $overtimeData, ?string $reason = null): void
-    {
-        $message = sprintf(
-            'Permohonan lembur Anda pada %s telah ditolak.',
-            $overtimeData['overtime_date']
-        );
-        
-        if ($reason) {
-            $message .= ' Alasan: ' . $reason;
-        }
-
-        $this->create([
-            'user_id' => $userId,
-            'type' => 'overtime_rejected',
-            'title' => 'Lembur Ditolak',
-            'message' => $message,
-            'data' => [
-                'overtime_id' => $overtimeData['id'],
-                'type' => 'overtime',
                 'action' => 'rejected',
                 'reason' => $reason
             ],
@@ -187,7 +138,7 @@ class NotificationService
             'Dokumen %s Anda ditolak.',
             $documentData['document_type']
         );
-        
+
         if ($reason) {
             $message .= ' Alasan: ' . $reason;
         }
@@ -236,7 +187,7 @@ class NotificationService
             'Permohonan perjalanan dinas ke %s telah ditolak.',
             $tripData['destination']
         );
-        
+
         if ($reason) {
             $message .= ' Alasan: ' . $reason;
         }

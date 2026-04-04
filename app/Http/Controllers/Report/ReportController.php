@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Report;
 use App\Http\Controllers\Controller;
 use App\Services\Attendance\AttendanceService;
 use App\Services\Leave\LeaveRequestService;
-use App\Services\Overtime\OvertimeRequestService;
 use App\Services\WorkerDocument\WorkerDocumentService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
@@ -15,7 +14,6 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReportAttendanceExport;
 use App\Exports\ReportLeavesExport;
-use App\Exports\ReportOvertimesExport;
 use App\Exports\ReportWorkerDocumentsExport;
 
 class ReportController extends Controller
@@ -25,7 +23,6 @@ class ReportController extends Controller
     public function __construct(
         protected AttendanceService $attendanceService,
         protected LeaveRequestService $leaveService,
-        protected OvertimeRequestService $overtimeService,
         protected WorkerDocumentService $workerDocumentService
     ) {
         $this->middleware('auth');
@@ -137,44 +134,6 @@ class ReportController extends Controller
         $leaveTypes = \App\Models\LeaveType::select('id', 'name')->orderBy('name')->get();
 
         return view('admin.reports.leaves', compact('leaves', 'filters', 'workers', 'leaveTypes'));
-    }
-
-    public function overtimes(Request $request)
-    {
-        $month = $request->input('month');
-        $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-        }
-
-        $filters = [
-            'date_from' => $startDate,
-            'date_to' => $endDate,
-            'worker_id' => $request->input('worker_id'),
-            'status' => $request->input('status'),
-            'department_id' => $this->getManagerDepartmentFilter(),
-            'month' => $month,
-            'year' => $year,
-        ];
-
-        $overtimes = $this->overtimeService->getAll($filters);
-
-        $departmentId = $this->getManagerDepartmentFilter();
-        $workers = Worker::select('id', 'name')
-            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
-            ->orderBy('name')->get();
-
-        return view('admin.reports.overtimes', compact('overtimes', 'filters', 'workers'));
     }
 
     public function workerDocuments(Request $request)
@@ -400,56 +359,6 @@ class ReportController extends Controller
             return Excel::download(new ReportLeavesExport($collection, $filters), $filename . '.xlsx');
         } else {
             return Excel::download(new ReportLeavesExport($collection, $filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
-        }
-    }
-
-    /**
-     * Export Overtimes Report
-     */
-    public function exportOvertimes(Request $request)
-    {
-        $month = $request->input('month');
-        $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('date_from') ?? $request->input('start_date');
-            $endDate = $request->input('date_to') ?? $request->input('end_date');
-        }
-
-        $filters = [
-            'date_from' => $startDate,
-            'date_to' => $endDate,
-            'worker_id' => $request->input('worker_id'),
-            'status' => $request->input('status'),
-            'department_id' => $this->getManagerDepartmentFilter(),
-            'month' => $month,
-            'year' => $year,
-        ];
-
-        $overtimes = $this->overtimeService->getAll($filters);
-        $collection = $overtimes instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($overtimes->items()) : collect($overtimes);
-
-        $format = $request->input('format', 'pdf');
-        $filename = 'laporan-lembur-' . now()->format('Y-m-d-His');
-
-        if ($format === 'pdf') {
-            $pdf = Pdf::loadView('exports.report-overtimes-pdf', [
-                'overtimes' => $collection,
-                'filters' => $filters,
-            ]);
-            return $pdf->download($filename . '.pdf');
-        } elseif ($format === 'excel') {
-            return Excel::download(new ReportOvertimesExport($collection, $filters), $filename . '.xlsx');
-        } else {
-            return Excel::download(new ReportOvertimesExport($collection, $filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
         }
     }
 

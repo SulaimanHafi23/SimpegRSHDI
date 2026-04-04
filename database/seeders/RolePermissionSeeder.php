@@ -57,12 +57,6 @@ class RolePermissionSeeder extends Seeder
             'leave.request',     // Can submit own leave request
             'leave.view',        // View own leave requests only
 
-            // Overtime Management
-            'overtime.manage',   // Full CRUD + approve/reject all overtime
-            'overtime.approve',  // Can approve/reject overtime requests
-            'overtime.request',  // Can submit own overtime request
-            'overtime.view',     // View own overtime requests only
-
             // Business Trip Management
             'business-trip.manage',   // Full CRUD + approve/reject all business trips
             'business-trip.approve',  // Can approve/reject business trip requests
@@ -79,14 +73,14 @@ class RolePermissionSeeder extends Seeder
             'notification.view',   // View own notifications only
 
             // Calendar Management
-            'calendar.view',       // View calendar with events (holidays, leaves, overtimes)
+            'calendar.view',       // View calendar with events (holidays, leaves)
 
             // Profile Management
             'profile.view',        // View own profile
             'profile.edit',        // Edit own profile
 
             // Reports - Based on ReportController
-            'report.view',           // View reports (attendance, leave, overtime, worker, document)
+            'report.view',           // View reports (attendance, leave, worker, document)
             'report.export',         // Export reports to CSV/Excel/PDF
 
             // Settings & Administration
@@ -116,7 +110,7 @@ class RolePermissionSeeder extends Seeder
          * - Full worker lifecycle management
          * - Master data configuration
          * - Attendance and document management
-         * - Leave and overtime approval
+         * - Leave approval
          * - Reports access
          * - User management (except roles)
          */
@@ -139,11 +133,9 @@ class RolePermissionSeeder extends Seeder
             'schedule.manage',
             'worker-document.manage',
 
-            // Leave & Overtime - Manage & Approve
+            // Leave - Manage & Approve
             'leave.manage',
             'leave.approve',
-            'overtime.manage',
-            'overtime.approve',
 
             // Business Trip - Manage & Approve
             'business-trip.manage',
@@ -168,9 +160,9 @@ class RolePermissionSeeder extends Seeder
          * MANAGER ROLE
          * - Team oversight and approval authority
          * - View workers and schedules
-         * - Approve leave and overtime
+         * - Approve leave
          * - View reports
-         * - Full management access for leaves, overtimes, business trips, shift swaps
+         * - Full management access for leaves, business trips, shift swaps
          */
         $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
         $manager->syncPermissions([
@@ -186,9 +178,6 @@ class RolePermissionSeeder extends Seeder
             'leave.manage',       // Full CRUD + approve/reject all leave requests
             'leave.approve',
             'leave.view',
-            'overtime.manage',    // Full CRUD + approve/reject all overtime
-            'overtime.approve',
-            'overtime.view',
             'business-trip.manage',  // Full CRUD + approve/reject all business trips
             'business-trip.approve',
             'business-trip.view',
@@ -218,7 +207,7 @@ class RolePermissionSeeder extends Seeder
         /**
          * EMPLOYEE ROLE
          * - Personal data access only
-         * - Submit requests (leave, overtime)
+         * - Submit requests (leave)
          * - View own records and schedule
          * - Check in/out attendance
          * - View own documents
@@ -242,8 +231,6 @@ class RolePermissionSeeder extends Seeder
             // Request Submissions
             'leave.request',            // Submit leave requests
             'leave.view',               // View own leave requests
-            'overtime.request',         // Submit overtime requests
-            'overtime.view',            // View own overtime requests
             'business-trip.request',    // Submit business trip requests
             'business-trip.view',       // View own business trip requests
             'shift-swap.request',       // Submit shift swap requests
@@ -266,7 +253,6 @@ class RolePermissionSeeder extends Seeder
         $this->command->info('   - Master Data: 9');
         $this->command->info('   - Worker & Attendance: 9');
         $this->command->info('   - Leave Management: 4');
-        $this->command->info('   - Overtime Management: 4');
         $this->command->info('   - Reports: 2');
         $this->command->info('   - Settings: 2');
         $this->command->info('');

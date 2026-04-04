@@ -14,7 +14,7 @@
 
         <a href="{{ route('workers.schedule') }}" class="flex flex-col items-center space-y-1 {{ request()->routeIs('workers.schedule') ? 'text-green-600' : 'text-gray-600' }} hover:text-green-600 transition duration-200">
             <i class="fas fa-calendar-alt text-xl"></i>
-            <span class="text-xs font-medium">Jadwal</span>
+            <span class="text-xs font-medium">Jadwal Pegawai</span>
         </a>
 
         <a href="{{ route('workers.profile') }}" class="flex flex-col items-center space-y-1 {{ request()->routeIs('workers.profile') ? 'text-green-600' : 'text-gray-600' }} hover:text-green-600 transition duration-200">

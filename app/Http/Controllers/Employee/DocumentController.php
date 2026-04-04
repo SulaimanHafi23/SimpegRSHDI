@@ -8,6 +8,7 @@ use App\Services\Master\DocumentTypeService;
 use App\Models\DocumentType;
 use App\Models\WorkerDocument;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
@@ -252,6 +253,37 @@ class DocumentController extends Controller
         }
 
         return $this->documentService->downloadDocument($id);
+    }
+
+    /**
+     * Preview document inline for the owner.
+     */
+    public function preview(string $id)
+    {
+        $user = auth()->user();
+        $worker = $user->worker;
+
+        if (!$worker) {
+            abort(404);
+        }
+
+        $document = $this->documentService->getById($id);
+
+        if ($document->worker_id !== $worker->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $path = (string) $document->file_path;
+        $disk = Storage::disk('public');
+
+        if (!$disk->exists($path)) {
+            abort(404, 'Dokumen tidak ditemukan.');
+        }
+
+        return response()->file($disk->path($path), [
+            'Cache-Control' => 'private, max-age=3600',
+            'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+        ]);
     }
 
     /**

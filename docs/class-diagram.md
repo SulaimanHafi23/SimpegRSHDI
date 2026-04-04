@@ -167,4 +167,4 @@ classDiagram
 - **Leave Management**: Pekerja mengajukan `LeaveRequest` yang berkategori pada `LeaveType` tertentu.
 - **Shift Swap**: Seorang pekerja dapat mengajukan pertukaran jadwal (`ShiftSwapRequest`) dengan pekerja lainnya. Riwayat status pertukaran ini dicatat pada `ShiftSwapAuditLog`.
 
-Note: *Class ini menggambarkan arsitektur core data dari SIMPEG berdasarkan model dan migrasi terbaru tanpa mengikutsertakan model yang sudah tidak digunakan (seperti `ShiftOverride`, `OvertimeRequest`, dan `SalaryComponent`).*
+Note: *Class ini menggambarkan arsitektur core data dari SIMPEG berdasarkan model dan migrasi terbaru tanpa mengikutsertakan model yang sudah tidak digunakan (seperti `ShiftOverride`).*

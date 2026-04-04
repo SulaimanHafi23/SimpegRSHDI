@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Services\Notification\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 
 class BusinessTripController extends Controller
@@ -22,7 +24,7 @@ class BusinessTripController extends Controller
 
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
         if (!$worker) {
             return redirect()->route('employee.dashboard')->with('error', 'Data pekerja tidak ditemukan.');
@@ -53,7 +55,7 @@ class BusinessTripController extends Controller
 
     public function store(BusinessTripRequest $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
         if (!$worker) {
             return redirect()->route('employee.dashboard')->with('error', 'Data pekerja tidak ditemukan.');
@@ -62,7 +64,14 @@ class BusinessTripController extends Controller
         $data = $request->validated();
         $data['worker_id'] = $worker->id;
         $data['status'] = 'pending';
-        $data['id'] = \Str::uuid()->toString();
+        $data['id'] = Str::uuid()->toString();
+
+        if ($request->hasFile('supporting_document')) {
+            $ext = $request->file('supporting_document')->getClientOriginalExtension();
+            $filename = sprintf('%s_business_trip_%s.%s', $worker->id, now()->format('YmdHis'), $ext);
+            $data['supporting_document_path'] = $request->file('supporting_document')
+                ->storeAs('business-trip-documents', $filename, 'public');
+        }
 
         if (($data['trip_duration_type'] ?? 'full_day') === 'half_day') {
             $data['end_date'] = $data['start_date'];
@@ -80,7 +89,7 @@ class BusinessTripController extends Controller
 
     public function show(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
         $trip = BusinessTrip::findOrFail($id);
 
@@ -93,7 +102,7 @@ class BusinessTripController extends Controller
 
     public function cancel(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
         $trip = BusinessTrip::findOrFail($id);
 
@@ -112,7 +121,7 @@ class BusinessTripController extends Controller
 
     public function export(Request $request)
     {
-        $worker = auth()->user()->worker;
+        $worker = Auth::user()->worker;
         if (!$worker) {
             return redirect()->route('employee.dashboard')->with('error', 'Data pekerja tidak ditemukan.');
         }

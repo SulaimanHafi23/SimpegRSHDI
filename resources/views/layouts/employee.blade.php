@@ -74,39 +74,27 @@
                     </div>
                 @endif
 
-                @if($isCreateOrEditPage)
-                    {{-- Keep traditional alerts for create/edit pages --}}
-                    @if(session('success'))
-                        <div class="alert-dismissible mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded-lg flex items-center shadow-md">
-                            <i class="fas fa-check-circle mr-3"></i>
-                            <span>{{ session('success') }}</span>
-                        </div>
-                    @endif
+                @php
+                    $globalErrorMessage = session('error') ?? ($errors->any() ? $errors->first() : null);
+                @endphp
 
-                    @if(session('error'))
-                        <div class="alert-dismissible mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg flex items-center shadow-md">
-                            <i class="fas fa-exclamation-circle mr-3"></i>
-                            <span>{{ session('error') }}</span>
-                        </div>
-                    @endif
-
-                    @if(session('warning'))
-                        <div class="alert-dismissible mb-4 p-4 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded-lg flex items-center shadow-md">
-                            <i class="fas fa-exclamation-triangle mr-3"></i>
-                            <span>{{ session('warning') }}</span>
-                        </div>
-                    @endif
-
-                    @if(session('info'))
-                        <div class="alert-dismissible mb-4 p-4 bg-blue-100 border border-blue-400 text-blue-700 rounded-lg flex items-center shadow-md">
-                            <i class="fas fa-info-circle mr-3"></i>
-                            <span>{{ session('info') }}</span>
-                        </div>
-                    @endif
-                @else
-                    {{-- Use Sweet Alert for other pages --}}
-                    <x-sweet-alert />
+                @if($globalErrorMessage)
+                    <x-ui.alert type="error" :message="$globalErrorMessage" />
                 @endif
+
+                @if(session('success'))
+                    <x-ui.alert type="success" :message="session('success')" :auto-dismiss="true" :dismiss-after="4500" />
+                @endif
+
+                @if(session('warning'))
+                    <x-ui.alert type="warning" :message="session('warning')" :auto-dismiss="true" :dismiss-after="6000" />
+                @endif
+
+                @if(session('info'))
+                    <x-ui.alert type="info" :message="session('info')" :auto-dismiss="true" :dismiss-after="4500" />
+                @endif
+
+                <x-sweet-alert />
 
                 <!-- Page Content -->
                 @yield('content')

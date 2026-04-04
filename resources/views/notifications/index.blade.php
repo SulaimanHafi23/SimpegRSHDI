@@ -75,8 +75,6 @@
                     <option value="">Semua Tipe</option>
                     <option value="leave_approved" {{ request('type') === 'leave_approved' ? 'selected' : '' }}>Cuti Disetujui</option>
                     <option value="leave_rejected" {{ request('type') === 'leave_rejected' ? 'selected' : '' }}>Cuti Ditolak</option>
-                    <option value="overtime_approved" {{ request('type') === 'overtime_approved' ? 'selected' : '' }}>Lembur Disetujui</option>
-                    <option value="overtime_rejected" {{ request('type') === 'overtime_rejected' ? 'selected' : '' }}>Lembur Ditolak</option>
                     <option value="business_trip_approved" {{ request('type') === 'business_trip_approved' ? 'selected' : '' }}>Perjalanan Dinas Disetujui</option>
                     <option value="business_trip_rejected" {{ request('type') === 'business_trip_rejected' ? 'selected' : '' }}>Perjalanan Dinas Ditolak</option>
                     <option value="shift_swap_request" {{ request('type') === 'shift_swap_request' ? 'selected' : '' }}>Permintaan Tukar Shift</option>

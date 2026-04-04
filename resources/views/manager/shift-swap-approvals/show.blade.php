@@ -22,23 +22,7 @@
     </div>
 
     <!-- Alert Messages -->
-    @if(session('success'))
-        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-lg shadow-md">
-            <div class="flex items-center">
-                <i class="fas fa-check-circle text-green-500 text-xl mr-3"></i>
-                <p class="text-green-800 font-medium">{{ session('success') }}</p>
-            </div>
-        </div>
-    @endif
 
-    @if(session('error'))
-        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg shadow-md">
-            <div class="flex items-center">
-                <i class="fas fa-exclamation-circle text-red-500 text-xl mr-3"></i>
-                <p class="text-red-800 font-medium">{{ session('error') }}</p>
-            </div>
-        </div>
-    @endif
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

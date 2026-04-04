@@ -8,6 +8,7 @@ use App\Models\Worker;
 use App\Services\Notification\NotificationService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class BusinessTripApprovalController extends Controller
 {
@@ -96,7 +97,7 @@ class BusinessTripApprovalController extends Controller
     {
         $trip = BusinessTrip::with(['worker.user', 'worker.department', 'approvedBy'])->findOrFail($id);
 
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
             abort(403, 'Unauthorized');
         }
@@ -110,8 +111,12 @@ class BusinessTripApprovalController extends Controller
 
         $trip = BusinessTrip::findOrFail($id);
 
+        if (empty($trip->supporting_document_path)) {
+            return back()->with('error', 'Permohonan tidak dapat disetujui karena tidak memiliki lampiran surat tugas/disposisi.');
+        }
+
         // permission check for manager
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menyetujui permohonan ini.');
         }
@@ -138,7 +143,7 @@ class BusinessTripApprovalController extends Controller
 
         $trip = BusinessTrip::findOrFail($id);
 
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menolak permohonan ini.');
         }
@@ -164,7 +169,7 @@ class BusinessTripApprovalController extends Controller
     {
         $trip = BusinessTrip::findOrFail($id);
 
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menghapus permohonan ini.');
         }
@@ -178,7 +183,7 @@ class BusinessTripApprovalController extends Controller
     {
         try {
             $format = $request->input('format', 'excel');
-            $user = auth()->user();
+            $user = Auth::user();
 
             $month = $request->input('month');
             $year = $request->input('year');

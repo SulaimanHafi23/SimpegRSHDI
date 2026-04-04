@@ -19,6 +19,7 @@
             $effectiveShift = $attendanceShiftInfo['shift'] ?? null;
             $effectiveSchedule = $attendanceShiftInfo['schedule'] ?? null;
             $shiftSource = $attendanceShiftInfo['source'] ?? 'none';
+            $isCheckoutExpired = (bool) ($checkoutWindowInfo['is_past_checkout_window'] ?? false);
         @endphp
         <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg text-center">
             <div class="text-xs sm:text-sm text-gray-600 mb-1">Sesi Absensi</div>
@@ -37,12 +38,52 @@
                         <li>Lokasi check-out ditentukan otomatis oleh sistem</li>
                         <li>Pastikan GPS berhasil didapatkan</li>
                         <li>Pastikan posisi berada dalam radius lokasi</li>
-                        <li>Ambil foto bukti (opsional)</li>
+                        <li>Ambil foto bukti (wajib)</li>
                         <li>Klik "Konfirmasi Check Out"</li>
                     </ol>
                 </div>
             </div>
         </div>
+
+        @if($checkoutWindowInfo)
+            @php
+                $isPastShiftEnd = (bool) ($checkoutWindowInfo['is_past_shift_end'] ?? false);
+                $isPastCheckoutWindow = (bool) ($checkoutWindowInfo['is_past_checkout_window'] ?? false);
+                $shiftEndTimeText = \Carbon\Carbon::parse($checkoutWindowInfo['shift_end_time'])->format('H:i');
+                $maxCheckoutTimeText = \Carbon\Carbon::parse($checkoutWindowInfo['max_checkout_time'])->format('H:i');
+            @endphp
+            <div class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg border-l-4 {{ $isPastCheckoutWindow ? 'bg-red-50 border-red-500' : ($isPastShiftEnd ? 'bg-amber-50 border-amber-500' : 'bg-emerald-50 border-emerald-500') }}">
+                <div class="flex items-start gap-3">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <i class="fas {{ $isPastCheckoutWindow ? 'fa-exclamation-triangle text-red-500' : ($isPastShiftEnd ? 'fa-clock text-amber-500' : 'fa-check-circle text-emerald-500') }} text-lg"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold {{ $isPastCheckoutWindow ? 'text-red-800' : ($isPastShiftEnd ? 'text-amber-800' : 'text-emerald-800') }}">
+                            Status Waktu Check-out
+                        </h3>
+                        @if($isPastCheckoutWindow)
+                            <p class="text-sm text-red-700 mt-1">
+                                Anda sudah melewati batas check-out. Jam kerja berakhir pukul <strong>{{ $shiftEndTimeText }}</strong>,
+                                dan batas check-out adalah <strong>{{ $maxCheckoutTimeText }}</strong>.
+                            </p>
+                            <p class="text-xs text-red-700 mt-1">
+                                Silakan hubungi admin untuk koreksi absensi.
+                            </p>
+                        @elseif($isPastShiftEnd)
+                            <p class="text-sm text-amber-700 mt-1">
+                                Jam kerja sudah berakhir pukul <strong>{{ $shiftEndTimeText }}</strong>.
+                                Anda masih dapat check-out sampai <strong>{{ $maxCheckoutTimeText }}</strong>.
+                            </p>
+                        @else
+                            <p class="text-sm text-emerald-700 mt-1">
+                                Jam kerja berakhir pukul <strong>{{ $shiftEndTimeText }}</strong>.
+                                Anda dapat check-out normal hingga batas <strong>{{ $maxCheckoutTimeText }}</strong>.
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <div class="p-0 sm:p-0">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -134,6 +175,7 @@
                                     <i class="fas fa-crosshairs mr-1"></i>
                                     Akurasi: —
                                 </div>
+                                <div id="gpsNotice" class="hidden text-xs mt-2 rounded-md px-2 py-1"></div>
                             </div>
                             <div>
                                 <div id="insideBadge" class="hidden inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"></div>
@@ -158,10 +200,10 @@
                     <div class="mb-6">
                         <label class="block text-sm font-medium text-gray-700 mb-3">
                             Foto Bukti
-                            <span class="text-sm font-normal text-blue-600">(Sangat Direkomendasikan)</span>
+                            <span class="text-sm font-normal text-red-600">(Wajib)</span>
                         </label>
                         <div class="text-xs text-gray-600 mb-3">
-                            📸 Ambil foto selfie atau lingkungan sekitar sebagai bukti check-out Anda
+                            📸 Ambil foto selfie atau lingkungan sekitar sebagai bukti check-out Anda (wajib)
                         </div>
 
                         <!-- Camera Preview -->
@@ -207,6 +249,9 @@
                         </div>
 
                         <input type="hidden" name="photo" id="photo-data">
+                        @error('photo')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <!-- Notes Section -->
@@ -223,7 +268,8 @@
                     <!-- Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
                         <button type="submit" id="btn-submit"
-                                class="w-full sm:flex-1 px-4 sm:px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md transition duration-150">
+                                class="w-full sm:flex-1 px-4 sm:px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md transition duration-150 {{ $isCheckoutExpired ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                {{ $isCheckoutExpired ? 'disabled' : '' }}>
                             <i class="fas fa-sign-out-alt"></i>
                             Konfirmasi Check Out
                         </button>
@@ -400,6 +446,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
         const ACC_THRESHOLD = {{ config('attendance.max_accuracy', 300) }}; // meters
+        const IS_CHECKOUT_EXPIRED = @json($isCheckoutExpired);
 
         function resetLocationInputs() {
             document.getElementById('latitude').value = '';
@@ -458,7 +505,11 @@
 
             // Accuracy validation
             const submit = document.getElementById('btn-submit');
-            if (accuracy && accuracy > ACC_THRESHOLD) {
+            if (IS_CHECKOUT_EXPIRED) {
+                submit.disabled = true;
+                submit.classList.add('opacity-50', 'cursor-not-allowed');
+                document.getElementById('distanceInfo').innerHTML = '<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Batas waktu check-out sudah terlewati';
+            } else if (accuracy && accuracy > ACC_THRESHOLD) {
                 submit.disabled = true;
                 submit.classList.add('opacity-50', 'cursor-not-allowed');
                 document.getElementById('distanceInfo').innerHTML = `<i class="fas fa-exclamation-triangle text-red-500 mr-1"></i>Akurasi kurang baik: ±${Math.round(accuracy)} m`;
@@ -526,35 +577,20 @@
         }
 
         function showNotification(message, type) {
-            // Simple notification system
-            const notification = document.createElement('div');
-            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform translate-x-full`;
+            const notice = document.getElementById('gpsNotice');
+            if (!notice) {
+                return;
+            }
 
-            const bgColor = type === 'success' ? 'bg-green-500' :
-                           type === 'warning' ? 'bg-yellow-500' : 'bg-red-500';
+            const classes = {
+                success: 'text-green-700 bg-green-100 border border-green-200',
+                warning: 'text-amber-700 bg-amber-100 border border-amber-200',
+                error: 'text-red-700 bg-red-100 border border-red-200',
+            };
 
-            notification.classList.add(bgColor, 'text-white');
-            notification.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'times-circle'}"></i>
-                    <span class="text-sm">${message}</span>
-                </div>
-            `;
-
-            document.body.appendChild(notification);
-
-            // Show notification
-            setTimeout(() => {
-                notification.classList.remove('translate-x-full');
-            }, 100);
-
-            // Hide notification
-            setTimeout(() => {
-                notification.classList.add('translate-x-full');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 4000);
+            notice.className = `text-xs mt-2 rounded-md px-2 py-1 ${classes[type] || classes.error}`;
+            notice.textContent = message;
+            notice.classList.remove('hidden');
         }
 
         // Handle Location Select Change

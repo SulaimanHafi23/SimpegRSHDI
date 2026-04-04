@@ -118,7 +118,7 @@
                         <div class="mt-4 space-y-3 text-sm leading-6 text-emerald-50/80">
                             <div class="section-card px-4 py-3">
                                 <p class="font-semibold text-white">Fokus Sistem</p>
-                                <p>Absensi, cuti, lembur, perjalanan dinas, dokumen pegawai, persetujuan atasan, dan notifikasi internal.</p>
+                                <p>Absensi, cuti, perjalanan dinas, dokumen pegawai, persetujuan atasan, dan notifikasi internal.</p>
                             </div>
                             <div class="section-card px-4 py-3">
                                 <p class="font-semibold text-white">Pengguna Utama</p>

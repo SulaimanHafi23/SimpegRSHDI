@@ -49,13 +49,6 @@ graph TB
             DetailShiftSwap["View Detail Shift Swap"]
         end
         
-        subgraph OvertimeMgmt["Manage Overtime"]
-            SubmitOvertime["Submit Overtime Request"]
-            ApproveOvertime["Approve Overtime Request"]
-            DetailOvertime["View Detail Overtime"]
-            ExportOvertime["Export Overtime Data"]
-        end
-        
         subgraph DocumentMgmt["Manage Documents"]
             SubmitDocument["Submit Document"]
             VerifyDocument["Verify Document"]
@@ -66,7 +59,6 @@ graph TB
         subgraph ReportMgmt["Generate Reports"]
             AttendanceReport["Attendance Report"]
             LeaveReport["Leave Report"]
-            OvertimeReport["Overtime Report"]
             SalaryReport["Salary Report"]
         end
         
@@ -81,7 +73,6 @@ graph TB
         
         subgraph SystemConfig["Configure System"]
             ManageHolidays["Manage Holidays"]
-            ManageSalaryComponent["Manage Salary Component"]
             ViewAuditLog["View Audit Log"]
             SystemSettings["System Settings"]
         end
@@ -99,7 +90,6 @@ graph TB
     Pegawai -->|access| DetailLeaveReq
     Pegawai -->|access| SubmitShiftSwap
     Pegawai -->|access| DetailShiftSwap
-    Pegawai -->|access| SubmitOvertime
     Pegawai -->|access| DetailAttendance
     Pegawai -->|access| SubmitDocument
     Pegawai -->|access| DetailDocument
@@ -113,7 +103,6 @@ graph TB
     Manager -->|access| DetailShiftSwap
     Manager -->|access| ApproveShiftSwap
     Manager -->|access| RejectShiftSwap
-    Manager -->|access| DetailOvertime
     Manager -->|access| ReadDept
     Manager -->|access| ReadShift
     
@@ -123,11 +112,9 @@ graph TB
     HR -->|full-access| LeaveMgmt
     HR -->|full-access| AttendanceMgmt
     HR -->|full-access| LeaveReqMgmt
-    HR -->|full-access| OvertimeMgmt
     HR -->|full-access| DocumentMgmt
     HR -->|full-access| ReportMgmt
     HR -->|access| ManageHolidays
-    HR -->|access| ManageSalaryComponent
     HR -->|access| ViewAuditLog
     
     %% ========== ADMIN PERMISSIONS ==========
@@ -178,12 +165,6 @@ graph TB
     ShiftSwapMgmt -->|extend| RejectShiftSwap
     ShiftSwapMgmt -->|extend| DetailShiftSwap
     
-    %% Overtime Management
-    OvertimeMgmt -->|extend| SubmitOvertime
-    OvertimeMgmt -->|extend| ApproveOvertime
-    OvertimeMgmt -->|extend| DetailOvertime
-    OvertimeMgmt -->|extend| ExportOvertime
-    
     %% Document Management
     DocumentMgmt -->|extend| SubmitDocument
     DocumentMgmt -->|extend| VerifyDocument
@@ -193,7 +174,6 @@ graph TB
     %% Report Management
     ReportMgmt -->|extend| AttendanceReport
     ReportMgmt -->|extend| LeaveReport
-    ReportMgmt -->|extend| OvertimeReport
     ReportMgmt -->|extend| SalaryReport
     
     %% User Management
@@ -206,7 +186,6 @@ graph TB
     
     %% System Config
     SystemConfig -->|extend| ManageHolidays
-    SystemConfig -->|extend| ManageSalaryComponent
     SystemConfig -->|extend| ViewAuditLog
     SystemConfig -->|extend| SystemSettings
     
@@ -221,7 +200,6 @@ graph TB
     style AttendanceMgmt fill:#f5f5f5
     style LeaveReqMgmt fill:#f5f5f5
     style ShiftSwapMgmt fill:#f5f5f5
-    style OvertimeMgmt fill:#f5f5f5
     style DocumentMgmt fill:#f5f5f5
     style ReportMgmt fill:#f5f5f5
     style UserMgmt fill:#f5f5f5
@@ -258,7 +236,6 @@ graph TB
 | | Approve | ❌ | ✅ | ✅ | ❌ |
 | | Reject | ❌ | ✅ | ✅ | ❌ |
 | | View Detail | ✅* | ✅** | ✅ | ❌ |
-| **Overtime** | Submit | ✅ | ❌ | ❌ | ❌ |
 | | Approve | ❌ | ❌ | ✅ | ❌ |
 | | View Detail | ✅* | ✅** | ✅ | ❌ |
 | | Export | ❌ | ✅ | ✅ | ❌ |
@@ -274,7 +251,6 @@ graph TB
 | | Reset Password | ❌ | ❌ | ❌ | ✅ |
 | | Assign Role | ❌ | ❌ | ❌ | ✅ |
 | **System** | Manage Holidays | ❌ | ❌ | ✅ | ✅ |
-| | Manage Salary Component | ❌ | ❌ | ✅ | ✅ |
 | | View Audit Log | ❌ | ❌ | ✅ | ✅ |
 | | System Settings | ❌ | ❌ | ❌ | ✅ |
 

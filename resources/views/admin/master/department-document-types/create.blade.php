@@ -12,9 +12,6 @@
     </div>
 
     <div class="bg-white rounded-lg shadow p-4 sm:p-6">
-        @if(session('error'))
-            <div class="mb-4 text-red-600">{{ session('error') }}</div>
-        @endif
 
         @php
             $selectedDepartment = old('department_id', request('department_id'));

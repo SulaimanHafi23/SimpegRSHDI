@@ -19,8 +19,6 @@ Format: Tabel_Asal.fk -> Tabel_Tujuan.pk | Kardinalitas | Penjelasan
 12. leave_requests.approved_by -> users.id | 0..N:1 (dari leave_requests ke users) | aktor
 13. leave_requests.leave_type_id -> leave_types.id | N:1 (dari leave_requests ke leave_types) | referensi
 14. leave_requests.worker_id -> workers.id | N:1 (dari leave_requests ke workers) | referensi
-15. overtime_requests.approved_by -> users.id | 0..N:1 (dari overtime_requests ke users) | aktor
-16. overtime_requests.worker_id -> workers.id | N:1 (dari overtime_requests ke workers) | referensi
 17. shift_day_times.shift_id -> shifts.id | N:1 (dari shift_day_times ke shifts) | referensi
 18. shift_overrides.created_by -> users.id | N:1 (dari shift_overrides ke users) | aktor
 19. shift_overrides.shift_id -> shifts.id | N:1 (dari shift_overrides ke shifts) | referensi
@@ -48,8 +46,8 @@ Format: Tabel_Asal.fk -> Tabel_Tujuan.pk | Kardinalitas | Penjelasan
 
 HIRARKI RINGKAS TABEL (opsional untuk layout ERD)
 Format: Level X: tabel1, tabel2, ...
-Level 0: cache, cache_locks, departments, document_types, failed_jobs, genders, holidays, job_batches, jobs, leave_types, notifications, password_reset_tokens, personal_access_tokens, religions, salary_components, sessions, shift_swap_overrides, shifts
+Level 0: cache, cache_locks, departments, document_types, failed_jobs, genders, holidays, job_batches, jobs, leave_types, notifications, password_reset_tokens, personal_access_tokens, religions, sessions, shift_swap_overrides, shifts
 Level 1: department_document_type, shift_day_times, workers
 Level 2: users, worker_off_days, worker_shifts
-Level 3: attendances, audit_logs, business_trips, leave_requests, overtime_requests, shift_overrides, shift_swap_requests, worker_documents, worker_shift_histories
+Level 3: attendances, audit_logs, business_trips, leave_requests, shift_overrides, shift_swap_requests, worker_documents, worker_shift_histories
 Level 4: attendance_photos, shift_swap_audit_logs

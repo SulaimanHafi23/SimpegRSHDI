@@ -42,7 +42,7 @@
                class="flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 {{ request()->routeIs('workers.schedule') ? 'text-[#1a1a1a] font-semibold shadow-lg' : 'text-[#d1fae5] hover:bg-white/10 hover:text-white' }}"
                @if(request()->routeIs('workers.schedule')) style="background:linear-gradient(135deg,#f5a623,#d97706)" @endif>
                 <i class="fas fa-calendar-alt w-5 text-center"></i>
-                <span>Jadwal Shift</span>
+                <span>Jadwal Pegawai</span>
             </a>
 
             <a href="{{ route('workers.leaves.index') }}"

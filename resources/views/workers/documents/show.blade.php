@@ -83,9 +83,9 @@
                             {{ $document->verified_at?->format('d M Y H:i') }}
                         </p>
                     @elseif($document->status === 'rejected')
-                        <div class="mt-3 p-3 bg-red-50 rounded-lg text-left">
-                            <p class="text-sm font-semibold text-red-900 mb-1">Alasan Penolakan:</p>
-                            <p class="text-sm text-red-700">{{ $document->rejection_reason ?? 'Tidak ada keterangan' }}</p>
+                        <div class="mt-3 rounded-lg border border-red-200 bg-red-50 p-3 text-left">
+                            <p class="text-xs font-semibold uppercase tracking-wide text-red-700 mb-1">Alasan Penolakan</p>
+                            <p class="text-sm leading-relaxed text-red-800">{{ $document->rejection_reason ?? 'Tidak ada keterangan' }}</p>
                         </div>
                     @else
                         <p class="text-sm text-gray-600">

@@ -22,11 +22,6 @@
     </x-page-header>
 
     {{-- Alert Messages --}}
-    @if(session('success'))
-        <x-alert type="success" dismissible>
-            {{ session('success') }}
-        </x-alert>
-    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Left Column: Role Info & Stats --}}

@@ -274,7 +274,6 @@ Create-Directory "$basePath\emails"
 Create-File "$basePath\emails\welcome.blade.php"
 Create-File "$basePath\emails\leave-approved.blade.php"
 Create-File "$basePath\emails\leave-rejected.blade.php"
-Create-File "$basePath\emails\overtime-approved.blade.php"
 Create-File "$basePath\emails\payroll-notification.blade.php"
 
 Write-Host ""

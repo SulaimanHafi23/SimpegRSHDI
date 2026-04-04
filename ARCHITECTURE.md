@@ -121,8 +121,8 @@ graph TB
 │  ┌─────────────────────────────────────────────────┐       │
 │  │           Core Features                          │       │
 │  │  - Attendance (GPS)  - Leave Management         │       │
-│  │  - Overtime Requests - Shift Management         │       │
-│  │  - Document Upload   - Approval Workflows       │       │
+│  │  - Shift Management  - Document Upload          │       │
+│  │  - Approval Workflows                           │       │
 │  └─────────────────────────────────────────────────┘       │
 └─────────────────────────────────────────────────────────────┘
                           ↓

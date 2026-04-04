@@ -30,7 +30,7 @@ flowchart TB
     HR --> HR_DASH["✅ Dashboard Admin"]:::dashboard
     HR --> HR_MASTER["Master Data<br/>✅ Religion, Gender<br/>✅ Department, Location<br/>✅ Shift, Leave Type<br/>✅ Document Type<br/>✅ Holiday"]:::module
     HR --> HR_WORKER["Worker Management<br/>✅ Full CRUD<br/>✅ Attendance<br/>✅ Schedule<br/>✅ Documents"]:::module
-    HR --> HR_APPROVE["Approvals<br/>✅ Leave Manage/Approve<br/>✅ Overtime Manage/Approve<br/>✅ Business Trip"]:::action
+    HR --> HR_APPROVE["Approvals<br/>✅ Leave Manage/Approve<br/>✅ Shift Swap Manage/Approve<br/>✅ Business Trip"]:::action
     HR --> HR_REPORT["Reports<br/>✅ View All<br/>✅ Export"]:::module
     HR --> HR_USER["✅ User Management<br/>❌ No Role Management"]:::module
 
@@ -38,7 +38,7 @@ flowchart TB
     MGR --> MGR_DASH["✅ Dashboard Admin"]:::dashboard
     MGR --> MGR_VIEW["View Access<br/>✅ Workers<br/>✅ Attendance<br/>✅ Departments<br/>✅ Shifts"]:::module
     MGR --> MGR_SCHEDULE["✅ Schedule Management"]:::module
-    MGR --> MGR_APPROVE["Approval Authority<br/>✅ Leave<br/>✅ Overtime<br/>✅ Shift Swap<br/>✅ Business Trip"]:::action
+    MGR --> MGR_APPROVE["Approval Authority<br/>✅ Leave<br/>✅ Shift Swap<br/>✅ Business Trip"]:::action
     MGR --> MGR_REPORT["Reports<br/>✅ View<br/>✅ Export"]:::module
 
     %% Employee Access
@@ -46,7 +46,7 @@ flowchart TB
     EMP --> EMP_PROFILE["Personal Data<br/>✅ View Profile<br/>✅ View Documents"]:::module
     EMP --> EMP_ATT["Attendance<br/>✅ Check In/Out<br/>✅ View Own History"]:::module
     EMP --> EMP_SCHEDULE["✅ View Own Schedule"]:::module
-    EMP --> EMP_REQUEST["Submit Requests<br/>✅ Leave<br/>✅ Overtime<br/>✅ Shift Swap<br/>✅ Business Trip"]:::action
+    EMP --> EMP_REQUEST["Submit Requests<br/>✅ Leave<br/>✅ Shift Swap<br/>✅ Business Trip"]:::action
     EMP --> EMP_VIEW["View Own Requests<br/>✅ All Request History"]:::module
     EMP --> EMP_REPORT["✅ Personal Reports"]:::module
 

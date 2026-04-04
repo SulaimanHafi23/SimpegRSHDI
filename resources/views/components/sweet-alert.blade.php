@@ -1,63 +1,5 @@
-{{-- Sweet Alert Notifications Component --}}
-@if(session('success') || session('error') || session('warning') || session('info'))
+{{-- Sweet Alert helper functions (no automatic flash popups) --}}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    @if(session('success'))
-        Swal.fire({
-            icon: 'success',
-            title: 'Berhasil!',
-            text: '{{ session('success') }}',
-            timer: 5000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end',
-            customClass: {
-                popup: 'colored-toast'
-            }
-        });
-    @endif
-
-    @if(session('error'))
-        Swal.fire({
-            icon: 'error',
-            title: 'Error!',
-            text: '{{ session('error') }}',
-            timer: 7000,
-            timerProgressBar: true,
-            showConfirmButton: true,
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#ef4444'
-        });
-    @endif
-
-    @if(session('warning'))
-        Swal.fire({
-            icon: 'warning',
-            title: 'Peringatan!',
-            text: '{{ session('warning') }}',
-            timer: 6000,
-            timerProgressBar: true,
-            showConfirmButton: true,
-            confirmButtonText: 'OK',
-            confirmButtonColor: '#f59e0b'
-        });
-    @endif
-
-    @if(session('info'))
-        Swal.fire({
-            icon: 'info',
-            title: 'Informasi',
-            text: '{{ session('info') }}',
-            timer: 5000,
-            timerProgressBar: true,
-            showConfirmButton: false,
-            toast: true,
-            position: 'top-end'
-        });
-    @endif
-});
-
 // Helper functions for Sweet Alert
 window.showSuccessAlert = function(title, message) {
     Swal.fire({
@@ -236,4 +178,3 @@ window.showDeleteConfirm = function(confirmCallback) {
     color: #7c3aed !important;
 }
 </style>
-@endif

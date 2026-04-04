@@ -16,7 +16,7 @@ $output = [];
 
 // Test 2: Check required tables
 echo "2️⃣ Checking Database Tables...\n";
-$tables = ['users', 'workers', 'roles', 'permissions', 'departments', 'locations', 'shifts', 'attendances', 'worker_shifts', 'leave_requests', 'overtime_requests', 'worker_documents', 'holidays'];
+$tables = ['users', 'workers', 'roles', 'permissions', 'departments', 'locations', 'shifts', 'attendances', 'worker_shifts', 'leave_requests', 'worker_documents', 'holidays'];
 foreach ($tables as $table) {
     exec("cd /home/yungzhao/Documents/SimpegRSHDI && php artisan tinker --execute=\"echo Schema::hasTable('$table') ? '✅ $table exists' : '❌ $table missing';\"", $output, $return);
     echo $output[0] . "\n";

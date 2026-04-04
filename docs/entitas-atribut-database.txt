@@ -38,11 +38,10 @@ Total entitas (tabel): 43
    - 21. Apakah Lebih Awal Cuti (kolom: is_early_leave)
    - 22. Lebih Awal Cuti Menit (kolom: early_leave_minutes)
    - 23. Apakah Di Luar Radius (kolom: is_outside_radius)
-   - 24. Lembur Menit (kolom: overtime_minutes)
-   - 25. Catatan (kolom: notes)
-   - 26. Dibuat Pada (kolom: created_at)
-   - 27. Diperbarui Pada (kolom: updated_at)
-   - 28. Dihapus Pada (kolom: deleted_at)
+   - 24. Catatan (kolom: notes)
+   - 25. Dibuat Pada (kolom: created_at)
+   - 26. Diperbarui Pada (kolom: updated_at)
+   - 27. Dihapus Pada (kolom: deleted_at)
 
 3. Entitas: Audit Log (tabel: audit_logs)
    Atribut:
@@ -253,23 +252,6 @@ Total entitas (tabel): 43
    - 7. Dibuat Pada (kolom: created_at)
    - 8. Diperbarui Pada (kolom: updated_at)
 
-22. Entitas: Lembur Pengajuan (tabel: overtime_requests)
-   Atribut:
-   - 1. Id (kolom: id)
-   - 2. Pegawai Id (kolom: worker_id)
-   - 3. Lembur Tanggal (kolom: overtime_date)
-   - 4. Mulai Waktu (kolom: start_time)
-   - 5. Selesai Waktu (kolom: end_time)
-   - 6. Total Jam (kolom: total_hours)
-   - 7. Alasan (kolom: reason)
-   - 8. Status (kolom: status)
-   - 9. Disetujui Oleh (kolom: approved_by)
-   - 10. Disetujui Pada (kolom: approved_at)
-   - 11. Rejection Alasan (kolom: rejection_reason)
-   - 12. Dibuat Pada (kolom: created_at)
-   - 13. Diperbarui Pada (kolom: updated_at)
-   - 14. Dihapus Pada (kolom: deleted_at)
-
 23. Entitas: Kata Sandi Reset Token (tabel: password_reset_tokens)
    Atribut:
    - 1. Email (kolom: email)
@@ -317,19 +299,6 @@ Total entitas (tabel): 43
    - 3. Guard Nama (kolom: guard_name)
    - 4. Dibuat Pada (kolom: created_at)
    - 5. Diperbarui Pada (kolom: updated_at)
-
-29. Entitas: Gaji Komponen (tabel: salary_components)
-   Atribut:
-   - 1. Id (kolom: id)
-   - 2. Kode (kolom: code)
-   - 3. Nama (kolom: name)
-   - 4. Tipe (kolom: type)
-   - 5. Deskripsi (kolom: description)
-   - 6. Apakah Kena Pajak (kolom: is_taxable)
-   - 7. Apakah Aktif (kolom: is_active)
-   - 8. Dibuat Pada (kolom: created_at)
-   - 9. Diperbarui Pada (kolom: updated_at)
-   - 10. Dihapus Pada (kolom: deleted_at)
 
 30. Entitas: Sesi (tabel: sessions)
    Atribut:
