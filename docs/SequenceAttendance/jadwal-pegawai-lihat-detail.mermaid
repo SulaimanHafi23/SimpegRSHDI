@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR/Manager
+    participant View as "Web View (admin.schedules.show)"
+    participant C as WorkerShiftController
+    participant WS as "WorkerShift Model"
+    participant WSH as "WorkerShiftHistory Model"
+    participant WOD as "WorkerOffDay Model"
+    participant DB as "Database"
+
+    Admin->>View: Klik detail jadwal pegawai
+    View->>C: GET /admin/worker-shifts/{id}
+
+    C->>WS: Ambil jadwal by id + relasi worker/shift
+    WS->>DB: SELECT worker_shifts WHERE id = ? (+ relations)
+    DB-->>WS: Detail jadwal
+
+    C->>WSH: Ambil riwayat perubahan shift pegawai
+    WSH->>DB: SELECT worker_shift_histories WHERE worker_id = ?
+    DB-->>WSH: Data riwayat
+
+    C->>WOD: Ambil pola hari libur worker (untuk partial kelola libur)
+    WOD->>DB: SELECT worker_off_days WHERE worker_id = ?
+    DB-->>WOD: Data hari libur
+
+    alt Data valid
+        C-->>View: Render detail jadwal + riwayat + panel hari libur
+        View-->>Admin: Tampilkan detail jadwal pegawai
+    else Data tidak valid
+        C-->>View: Redirect ke index + pesan error
+        View-->>Admin: Tampilkan error
+    end

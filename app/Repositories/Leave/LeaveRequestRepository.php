@@ -7,6 +7,7 @@ use App\Models\LeaveRequest;
 use App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 class LeaveRequestRepository implements LeaveRequestRepositoryInterface
 {
@@ -135,8 +136,8 @@ class LeaveRequestRepository implements LeaveRequestRepositoryInterface
         $leaveRequest = $this->model->findOrFail($id);
 
         // Delete attachment if exists
-        if ($leaveRequest->attachment_path && \Storage::exists($leaveRequest->attachment_path)) {
-            \Storage::delete($leaveRequest->attachment_path);
+        if ($leaveRequest->attachment_path && Storage::exists($leaveRequest->attachment_path)) {
+            Storage::delete($leaveRequest->attachment_path);
         }
 
         return $leaveRequest->delete();

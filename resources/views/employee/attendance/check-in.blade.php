@@ -16,7 +16,7 @@
     <!-- Check In Form -->
     <div class="bg-white rounded-lg shadow-lg p-4 sm:p-6">
         <!-- Instructions -->
-        <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
+        {{-- <div class="mb-4 sm:mb-6 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-l-4 border-blue-500">
             <div class="flex items-start">
                 <div class="flex-shrink-0">
                     <i class="fas fa-info-circle text-blue-500 text-lg sm:text-xl mt-0.5"></i>
@@ -32,7 +32,7 @@
                     </ol>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         <form id="checkin-form" action="{{ route('employee.attendance.check-in') }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -666,7 +666,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const statusValue = document.getElementById('status')?.value || 'present';
             if (statusValue === 'present' && acc && acc > ACC_THRESHOLD) {
                 e.preventDefault();
-                alert('Lokasi tidak cukup akurat (±' + Math.round(acc) + ' m). Silakan gunakan ponsel atau pilih lokasi manual.');
+                window.showWarningAlert('Validasi Lokasi', 'Lokasi tidak cukup akurat (±' + Math.round(acc) + ' m). Silakan gunakan ponsel atau pilih lokasi manual.');
                 return false;
             }
         });
@@ -732,7 +732,7 @@ async function startCamera() {
 
     } catch (error) {
         console.error('Error accessing camera:', error);
-        alert('Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
+        window.showErrorAlert('Gagal', 'Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
     }
 }
 

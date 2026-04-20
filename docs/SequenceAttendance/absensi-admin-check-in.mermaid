@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR/Manager
+    participant View as "Web View (admin.attendance.check-in)"
+    participant C as AttendanceController
+    participant W as "Worker Model"
+    participant A as "Attendance Model"
+    participant S as "Shift Model"
+    participant LR as "LeaveRequest Model"
+    participant H as "Holiday Model"
+    participant BT as "BusinessTrip Model"
+    participant AP as "AttendancePhoto Model"
+    participant DB as "Database"
+
+    Admin->>View: Isi form check-in admin untuk pegawai
+    View->>C: POST /admin/attendance/{worker}/check-in
+
+    C->>C: Validasi request (worker_id, note, photo)
+    C->>W: Validasi worker + cek off-day + cek shift efektif
+    W->>DB: SELECT worker + shift/override
+    DB-->>W: Data worker/shift
+
+    C->>A: Cek attendance existing di tanggal bisnis
+    A->>DB: SELECT attendance worker pada tanggal terkait
+    DB-->>A: Attendance existing / null
+
+    C->>LR: Cek leave approved
+    LR->>DB: SELECT leave_requests approved
+    DB-->>LR: Data leave
+
+    C->>H: Cek hari libur nasional
+    H->>DB: SELECT holidays nasional pada hari ini
+    DB-->>H: Data holiday
+
+    C->>BT: Cek business trip approved
+    BT->>DB: SELECT business_trips approved
+    DB-->>BT: Data perjalanan dinas
+
+    alt Data valid
+        C->>A: Simpan check-in attendance (by_admin=true, admin_id)
+        A->>DB: INSERT INTO attendances (...)
+        C->>AP: Simpan foto check-in (jika ada)
+        AP->>DB: INSERT INTO attendance_photos (...)
+        C-->>View: Redirect ke detail absensi + success
+        View-->>Admin: Tampilkan check-in berhasil
+    else Data tidak valid
+        C-->>View: Redirect back + pesan gagal check-in
+        View-->>Admin: Tampilkan error
+    end

@@ -43,11 +43,6 @@ class AppServiceProvider extends ServiceProvider
         );
 
         $this->app->bind(
-            \App\Repositories\Contracts\Attendance\AttendanceRepositoryInterface::class,
-            \App\Repositories\Attendance\AttendanceRepository::class
-        );
-
-        $this->app->bind(
             \App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface::class,
             \App\Repositories\WorkerShift\WorkerShiftRepository::class
         );

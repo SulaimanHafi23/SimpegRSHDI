@@ -1,0 +1,244 @@
+<mxfile host="app.diagrams.net" modified="2026-04-14T00:00:00.000Z" agent="GitHub Copilot" version="24.7.5" type="device">
+  <diagram id="autentikasi" name="Autentikasi">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Pegawai / Manager / HR / Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Auth Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="280" y="160" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="User Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="490" y="160" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Database" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="700" y="160" width="130" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Dashboard / Logout" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="900" y="160" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="Login / Logout" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="450" y="60" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="8" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="absensi" name="Absensi">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Pegawai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Attendance Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="220" y="160" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Attendance Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="460" y="160" width="170" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="GPS + Photo Validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="700" y="160" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="6" value="Attendance DB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="950" y="160" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="7" value="Status + Notif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="1160" y="160" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="8" value="Check-in / Check-out" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1">
+          <mxGeometry x="520" y="60" width="220" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="12" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="13" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="6" target="7"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="cuti" name="Cuti">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Pegawai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="120" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Leave Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="220" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Leave Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="450" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Leave DB / Quota" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="680" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="Manager / HR Approval" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="920" y="160" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="Notif to Pegawai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1160" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="8" value="Ajukan, approve, atau reject" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="470" y="60" width="300" height="30" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="12" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="13" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="6" target="7"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="shift-management" name="Shift Management">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="HR / Manager" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="140" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Shift Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="230" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Schedule Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="460" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Worker Shift DB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="700" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="Calendar / Schedule View" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="930" y="160" width="210" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="Generate, update, override" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="470" y="60" width="260" height="30" as="geometry" /></mxCell>
+        <mxCell id="8" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="shift-swap" name="Shift Swap">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Pegawai A" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="30" y="150" width="120" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Swap Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="200" y="150" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Shift Swap Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="430" y="150" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Validasi lead time / rest / staffing" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="670" y="150" width="240" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="Pegawai B + Manager + HR" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="960" y="150" width="220" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="Execute / Revert / Notif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1230" y="150" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="8" value="Ajukan tukar shift dan approval berlapis" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="500" y="55" width="340" height="30" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="12" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="13" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="6" target="7"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="business-trip" name="Business Trip">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Pegawai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="120" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Trip Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="220" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Trip Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="450" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Trip DB" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="680" y="160" width="130" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="Manager / HR Approval" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="870" y="160" width="220" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="Notif / History" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1140" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="8" value="Ajukan dan proses approval perjalanan dinas" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="470" y="60" width="360" height="30" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="12" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="13" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="6" target="7"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="dokumen" name="Dokumen Pegawai">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Pegawai" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="120" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Document Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="220" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Document Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="460" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Document DB / Storage" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="700" y="160" width="190" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="HR Verification" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="950" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="Download / Reject / Notif" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1160" y="160" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="8" value="Upload, verifikasi, dan unduh dokumen" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="450" y="60" width="360" height="30" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="12" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="13" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="6" target="7"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="master-data" name="Master Data & Hari Libur">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="HR / Super Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="150" width="150" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Master Data Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="230" y="150" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Service & Validation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="480" y="150" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Departments / Shift / Leave Type / Holiday / Doc Type" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="700" y="150" width="320" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="Calendar / Master List" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="1050" y="150" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="CRUD + Bulk/Auto-generate" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="470" y="55" width="300" height="30" as="geometry" /></mxCell>
+        <mxCell id="8" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="reports" name="Reports & Dashboard">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="User Role" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="120" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Dashboard / Report Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="210" y="160" width="210" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Report Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="470" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Aggregated Data / Query" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="690" y="160" width="190" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="Export PDF / Excel / CSV" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="940" y="160" width="200" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="View metrics, filters, and download" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="460" y="60" width="350" height="30" as="geometry" /></mxCell>
+        <mxCell id="8" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="admin" name="Administrasi Sistem">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Super Admin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="130" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Admin Controller" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="220" y="160" width="160" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Role / User Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="450" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="Permission DB / Audit Log" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="690" y="160" width="210" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="Result / Access Control" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="950" y="160" width="180" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="Kelola role, user, dan audit log" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="450" y="60" width="320" height="30" as="geometry" /></mxCell>
+        <mxCell id="8" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="notif" name="Notifikasi & Aktivitas">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1800" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="Trigger: approval / upload / update" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="210" height="60" as="geometry" /></mxCell>
+        <mxCell id="3" value="Notification Service" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1"><mxGeometry x="300" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="4" value="Database Queue / Mail" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1"><mxGeometry x="530" y="160" width="170" height="60" as="geometry" /></mxCell>
+        <mxCell id="5" value="In-app / Email" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1"><mxGeometry x="760" y="160" width="140" height="60" as="geometry" /></mxCell>
+        <mxCell id="6" value="User Inbox" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1"><mxGeometry x="960" y="160" width="140" height="60" as="geometry" /></mxCell>
+        <mxCell id="7" value="Notifikasi mengikuti alur fitur terkait" style="text;html=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="420" y="60" width="340" height="30" as="geometry" /></mxCell>
+        <mxCell id="8" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="9" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="10" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="4" target="5"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="11" style="endArrow=block;html=1;strokeColor=#666666;" edge="1" parent="1" source="5" target="6"><mxGeometry relative="1" as="geometry" /></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

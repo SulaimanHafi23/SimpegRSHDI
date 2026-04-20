@@ -5,23 +5,24 @@
 namespace App\Http\Controllers\Leave;
 
 use App\Http\Controllers\Controller;
-use App\Services\Leave\LeaveRequestService;
-use App\Services\Worker\WorkerService;
-use App\Services\Master\LeaveTypeService;
+use App\Models\LeaveRequest;
+use App\Models\LeaveType;
+use App\Models\Notification;
+use App\Models\User;
+use App\Models\Worker;
 use App\Traits\DepartmentFilterable;
 use App\Http\Requests\Leave\LeaveRequestRequest;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class LeaveRequestController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct(
-        protected LeaveRequestService $leaveRequestService,
-        protected WorkerService $workerService,
-        protected LeaveTypeService $leaveTypeService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         $this->middleware('permission:leave.manage');
     }
@@ -58,16 +59,18 @@ class LeaveRequestController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $leaveRequests = $this->leaveRequestService->getAll($filters);
+        $leaveRequests = $this->buildLeaveQuery($filters)
+            ->latest('start_date')
+            ->paginate($filters['per_page'])
+            ->appends($filters);
 
         // Get workers from user's department if Manager
-        if ($departmentId) {
-            $workers = $this->workerService->getByDepartment($departmentId);
-        } else {
-            $workers = $this->workerService->getAllActive();
-        }
+        $workers = Worker::where('status', 'active')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->with(['department'])
+            ->get();
 
-        $leaveTypes = $this->leaveTypeService->getAllActive();
+        $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
 
         // Statistics - single grouped count query instead of 5 paginated queries
         $statCounts = \App\Models\LeaveRequest::when($departmentId, function ($q) use ($departmentId) {
@@ -93,8 +96,8 @@ class LeaveRequestController extends Controller
 
     public function create()
     {
-        $workers = $this->workerService->getAllActive();
-        $leaveTypes = $this->leaveTypeService->getAllActive();
+        $workers = Worker::where('status', 'active')->with(['department'])->get();
+        $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
 
         return view('admin.leave.create', compact('workers', 'leaveTypes'));
     }
@@ -102,7 +105,77 @@ class LeaveRequestController extends Controller
     public function store(LeaveRequestRequest $request)
     {
         try {
-            $this->leaveRequestService->create($request->validated());
+            $validated = $request->validated();
+
+            $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
+
+            $startDate = Carbon::parse($validated['start_date']);
+            $endDate = Carbon::parse($validated['end_date']);
+            $totalDays = $startDate->diffInDays($endDate) + 1;
+
+            if ($leaveType->max_days_per_year) {
+                $usedDays = LeaveRequest::where('worker_id', $validated['worker_id'])
+                    ->where('leave_type_id', $validated['leave_type_id'])
+                    ->whereYear('start_date', now()->year)
+                    ->whereIn('status', ['approved', 'pending'])
+                    ->sum('total_days');
+
+                $balance = max(0, $leaveType->max_days_per_year - $usedDays);
+                if ($balance < $totalDays) {
+                    throw new \Exception("Sisa cuti tidak mencukupi. Sisa cuti tersedia: {$balance} hari");
+                }
+            }
+
+            $startOfDay = Carbon::parse($validated['start_date'])->startOfDay();
+            $today = now()->startOfDay();
+            $daysUntilStart = $today->diffInDays($startOfDay, false);
+
+            if ($startOfDay->isFuture() && $daysUntilStart < $leaveType->days_notice) {
+                throw new \Exception("Permohonan cuti harus diajukan minimal {$leaveType->days_notice} hari sebelumnya.");
+            }
+
+            if ($startOfDay->isPast()) {
+                throw new \Exception('Tidak dapat mengajukan cuti untuk tanggal yang sudah lewat.');
+            }
+
+            $overlapping = LeaveRequest::where('worker_id', $validated['worker_id'])
+                ->whereIn('status', ['pending', 'approved'])
+                ->where(function ($q) use ($validated) {
+                    $q->whereBetween('start_date', [$validated['start_date'], $validated['end_date']])
+                        ->orWhereBetween('end_date', [$validated['start_date'], $validated['end_date']])
+                        ->orWhere(function ($q2) use ($validated) {
+                            $q2->where('start_date', '<=', $validated['start_date'])
+                                ->where('end_date', '>=', $validated['end_date']);
+                        });
+                })
+                ->exists();
+
+            if ($overlapping) {
+                throw new \Exception('Sudah ada permohonan cuti yang tumpang tindih pada tanggal tersebut.');
+            }
+
+            $attachmentPath = null;
+            if ($request->hasFile('attachment')) {
+                $attachment = $request->file('attachment');
+                $filename = sprintf(
+                    '%s_leave_%s.%s',
+                    $validated['worker_id'],
+                    now()->format('YmdHis'),
+                    $attachment->getClientOriginalExtension()
+                );
+                $attachmentPath = $attachment->storeAs('leave-attachments', $filename, 'public');
+            }
+
+            LeaveRequest::create([
+                'worker_id' => $validated['worker_id'],
+                'leave_type_id' => $validated['leave_type_id'],
+                'start_date' => $validated['start_date'],
+                'end_date' => $validated['end_date'],
+                'total_days' => $totalDays,
+                'reason' => $validated['reason'],
+                'attachment_path' => $attachmentPath,
+                'status' => 'pending',
+            ]);
 
             return redirect()
                 ->route('admin.leave.index')
@@ -116,7 +189,7 @@ class LeaveRequestController extends Controller
 
     public function show(string $id)
     {
-        $leaveRequest = $this->leaveRequestService->getById($id);
+        $leaveRequest = LeaveRequest::with(['worker', 'leaveType', 'approver'])->findOrFail($id);
 
         return view('admin.leave.show', compact('leaveRequest'));
     }
@@ -124,7 +197,17 @@ class LeaveRequestController extends Controller
     public function destroy(string $id)
     {
         try {
-            $this->leaveRequestService->delete($id);
+            $leaveRequest = LeaveRequest::findOrFail($id);
+
+            if ($leaveRequest->attachment_path) {
+                if (Storage::exists($leaveRequest->attachment_path)) {
+                    Storage::delete($leaveRequest->attachment_path);
+                } elseif (Storage::disk('public')->exists($leaveRequest->attachment_path)) {
+                    Storage::disk('public')->delete($leaveRequest->attachment_path);
+                }
+            }
+
+            $leaveRequest->delete();
 
             return redirect()
                 ->route('admin.leave.index')
@@ -137,7 +220,43 @@ class LeaveRequestController extends Controller
     public function approve(string $id)
     {
         try {
-            $this->leaveRequestService->approve($id, Auth::id());
+            $approvedBy = Auth::id();
+            if (!$approvedBy) {
+                throw new \Exception('User tidak terautentikasi.');
+            }
+
+            $leaveRequest = LeaveRequest::findOrFail($id);
+            if ($leaveRequest->status !== 'pending') {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat disetujui.');
+            }
+
+            $leaveRequest->update([
+                'status' => 'approved',
+                'approved_by' => $approvedBy,
+                'approved_at' => now(),
+                'rejection_reason' => null,
+            ]);
+
+            $user = User::where('worker_id', $leaveRequest->worker_id)->first();
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'notifiable_type' => \App\Models\User::class,
+                    'notifiable_id' => $user->id,
+                    'type' => 'leave_approved',
+                    'title' => 'Cuti Disetujui',
+                    'message' => sprintf(
+                        'Permohonan cuti Anda dari %s sampai %s telah disetujui.',
+                        $leaveRequest->start_date,
+                        $leaveRequest->end_date
+                    ),
+                    'data' => [
+                        'leave_id' => $leaveRequest->id,
+                        'type' => 'leave',
+                        'action' => 'approved',
+                    ],
+                ]);
+            }
 
             return back()->with('success', 'Permohonan cuti berhasil disetujui');
         } catch (\Exception $e) {
@@ -152,7 +271,45 @@ class LeaveRequestController extends Controller
         ]);
 
         try {
-            $this->leaveRequestService->reject($id, Auth::id(), $validated['rejection_reason']);
+            $approvedBy = Auth::id();
+            if (!$approvedBy) {
+                throw new \Exception('User tidak terautentikasi.');
+            }
+
+            $leaveRequest = LeaveRequest::findOrFail($id);
+            if ($leaveRequest->status !== 'pending') {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat ditolak.');
+            }
+
+            $leaveRequest->update([
+                'status' => 'rejected',
+                'approved_by' => $approvedBy,
+                'approved_at' => now(),
+                'rejection_reason' => $validated['rejection_reason'],
+            ]);
+
+            $user = User::where('worker_id', $leaveRequest->worker_id)->first();
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'notifiable_type' => \App\Models\User::class,
+                    'notifiable_id' => $user->id,
+                    'type' => 'leave_rejected',
+                    'title' => 'Cuti Ditolak',
+                    'message' => sprintf(
+                        'Permohonan cuti Anda dari %s sampai %s telah ditolak. Alasan: %s',
+                        $leaveRequest->start_date,
+                        $leaveRequest->end_date,
+                        $validated['rejection_reason']
+                    ),
+                    'data' => [
+                        'leave_id' => $leaveRequest->id,
+                        'type' => 'leave',
+                        'action' => 'rejected',
+                        'reason' => $validated['rejection_reason'],
+                    ],
+                ]);
+            }
 
             return back()->with('success', 'Permohonan cuti berhasil ditolak');
         } catch (\Exception $e) {
@@ -163,7 +320,13 @@ class LeaveRequestController extends Controller
     public function cancel(string $id)
     {
         try {
-            $this->leaveRequestService->cancel($id);
+            $leaveRequest = LeaveRequest::findOrFail($id);
+
+            if (!in_array($leaveRequest->status, ['pending', 'approved'], true)) {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending atau approved yang dapat dibatalkan.');
+            }
+
+            $leaveRequest->update(['status' => 'cancelled']);
 
             return back()->with('success', 'Permohonan cuti berhasil dibatalkan');
         } catch (\Exception $e) {
@@ -246,18 +409,65 @@ class LeaveRequestController extends Controller
 
     public function workerLeaveBalance(string $workerId)
     {
-        $worker = $this->workerService->getById($workerId);
-        $leaveTypes = $this->leaveTypeService->getAllActive();
+        $worker = Worker::with(['department', 'user', 'activeWorkerShift.shift'])->findOrFail($workerId);
+        $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
 
         $balances = [];
         foreach ($leaveTypes as $leaveType) {
-            $balances[$leaveType->id] = $this->leaveRequestService->getLeaveBalance(
-                $workerId,
-                $leaveType->id,
-                now()->year
-            );
+            if (!$leaveType->max_days_per_year) {
+                $balances[$leaveType->id] = 0;
+                continue;
+            }
+
+            $usedDays = LeaveRequest::where('worker_id', $workerId)
+                ->where('leave_type_id', $leaveType->id)
+                ->whereYear('start_date', now()->year)
+                ->whereIn('status', ['approved', 'pending'])
+                ->sum('total_days');
+
+            $balances[$leaveType->id] = max(0, $leaveType->max_days_per_year - $usedDays);
         }
 
         return view('admin.leave.balance', compact('worker', 'leaveTypes', 'balances'));
+    }
+
+    private function buildLeaveQuery(array $filters)
+    {
+        $query = LeaveRequest::with(['worker', 'leaveType', 'approver']);
+
+        if (!empty($filters['worker_id'])) {
+            $query->where('worker_id', $filters['worker_id']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['leave_type_id'])) {
+            $query->where('leave_type_id', $filters['leave_type_id']);
+        }
+
+        $dateFrom = $filters['date_from'] ?? null;
+        $dateTo = $filters['date_to'] ?? null;
+
+        if (!empty($dateFrom)) {
+            $query->where('start_date', '>=', $dateFrom);
+        }
+
+        if (!empty($dateTo)) {
+            $query->where('end_date', '<=', $dateTo);
+        }
+
+        if (!empty($filters['year'])) {
+            $query->whereYear('start_date', $filters['year']);
+        }
+
+        return $query;
     }
 }

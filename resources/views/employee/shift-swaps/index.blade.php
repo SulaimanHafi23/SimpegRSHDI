@@ -211,9 +211,9 @@
                 $isTarget = $item->target_worker_id === $currentWorkerId;
 
                 $statusConfig = [
-                    'pending' => ['color' => 'yellow', 'icon' => 'clock', 'text' => 'Menunggu'],
+                    'pending' => ['color' => 'yellow', 'icon' => 'clock', 'text' => 'Pending User'],
                     'accepted' => ['color' => 'green', 'icon' => 'check', 'text' => 'Diterima'],
-                    'awaiting_approval' => ['color' => 'blue', 'icon' => 'hourglass-half', 'text' => 'Menunggu Manager'],
+                    'awaiting_approval' => ['color' => 'blue', 'icon' => 'hourglass-half', 'text' => 'Pending Approval'],
                     'approved' => ['color' => 'green', 'icon' => 'check-double', 'text' => 'Disetujui Manager'],
                     'rejected' => ['color' => 'red', 'icon' => 'times', 'text' => 'Ditolak'],
                     'cancelled' => ['color' => 'gray', 'icon' => 'ban', 'text' => 'Dibatalkan'],
@@ -386,7 +386,7 @@
                             <form action="{{ route('employee.shift-swaps.cancel', $item->id) }}" method="POST" class="inline w-full sm:w-auto">
                                 @csrf
                                 <button type="submit"
-                                    onclick="return confirm('Yakin membatalkan permintaan ini?')"
+                                    onclick="event.preventDefault(); showConfirmAlert('Batalkan Permintaan?', 'Yakin membatalkan permintaan ini?', () => this.closest('form').submit());"
                                     class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition duration-200 shadow-sm">
                                     <i class="fas fa-ban mr-2"></i>
                                     Batalkan

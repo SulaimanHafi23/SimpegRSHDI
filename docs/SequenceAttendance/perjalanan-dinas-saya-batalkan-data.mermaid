@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.business-trips.index/show)"
+    participant Controller as "Employee BusinessTripController"
+    participant Model as "BusinessTrip Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik Batalkan Permohonan
+    View->>Controller: DELETE /employee/business-trips/{id}
+    Controller->>Model: findOrFail(id) + validasi kepemilikan
+    Model->>DB: SELECT business_trips WHERE id = ?
+    DB-->>Model: Data perjalanan dinas
+
+    alt Data valid (status pending dan milik pegawai)
+        Controller->>Model: update(status='cancelled')
+        Model->>DB: UPDATE business_trips SET status='cancelled'
+        DB-->>Model: Cancel success
+        Model-->>Controller: Permohonan dibatalkan
+        Controller->>View: Redirect index + success
+        View-->>Pegawai: Notifikasi pembatalan berhasil
+    else Data tidak valid (status bukan pending / bukan milik pegawai / id invalid)
+        Controller->>View: Back + error
+        View-->>Pegawai: Notifikasi gagal membatalkan permohonan
+    end

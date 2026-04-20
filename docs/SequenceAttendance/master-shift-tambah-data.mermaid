@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR
+    participant View as "Web View (admin.master.shifts.create)"
+    participant C as ShiftController
+    participant S as "Shift Model"
+    participant SDT as "ShiftDayTime Model"
+    participant DB as "Database"
+
+    Admin->>View: Isi form tambah shift lalu submit
+    View->>C: POST /admin/master/shifts
+
+    C->>C: Validasi input (name, time, total_hours, dst)
+
+    alt Data valid
+        C->>S: Simpan shift baru
+        S->>DB: INSERT INTO shifts (...)
+        DB-->>S: shift_id baru
+
+        C->>SDT: Sinkron jadwal per hari (jika per_day_enabled)
+        SDT->>DB: INSERT/UPDATE/DELETE shift_day_times sesuai hari aktif
+
+        C-->>View: Redirect ke index + flash success
+        View-->>Admin: Data shift baru tampil di daftar
+    else Data tidak valid
+        C-->>View: Redirect back + errors + old input
+        View-->>Admin: Tampilkan pesan validasi gagal
+    end

@@ -389,13 +389,13 @@ document.querySelector('form').addEventListener('submit', function(e) {
 
     if (!swapType) {
         e.preventDefault();
-        alert('Pilih jenis tukar shift.');
+        window.showWarningAlert('Validasi', 'Pilih jenis tukar shift.');
         return false;
     }
 
     if (targetWorkerId && !targetShiftId) {
         e.preventDefault();
-        alert('Pilih shift target jika Anda memilih rekan kerja tertentu.');
+        window.showWarningAlert('Validasi', 'Pilih shift target jika Anda memilih rekan kerja tertentu.');
         return false;
     }
 
@@ -422,7 +422,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
         const swapDate = document.getElementById('swap_date').value;
         if (!swapDate) {
             e.preventDefault();
-            alert('Pilih tanggal untuk tukar shift.');
+            window.showWarningAlert('Validasi', 'Pilih tanggal untuk tukar shift.');
             return false;
         }
     } else if (swapType === 'date_range') {
@@ -430,7 +430,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
         const endDate = document.getElementById('swap_end_date').value;
         if (!startDate || !endDate) {
             e.preventDefault();
-            alert('Pilih tanggal mulai dan akhir untuk rentang tukar shift.');
+            window.showWarningAlert('Validasi', 'Pilih tanggal mulai dan akhir untuk rentang tukar shift.');
             return false;
         }
     } else if (swapType === 'recurring') {
@@ -438,7 +438,7 @@ document.querySelector('form').addEventListener('submit', function(e) {
         const hasValidDate = Array.from(dateInputs).some(input => input.value.trim() !== '');
         if (!hasValidDate) {
             e.preventDefault();
-            alert('Pilih minimal satu tanggal untuk tukar shift berulang.');
+            window.showWarningAlert('Validasi', 'Pilih minimal satu tanggal untuk tukar shift berulang.');
             return false;
         }
     }

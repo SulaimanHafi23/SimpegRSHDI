@@ -3,18 +3,18 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Services\Attendance\AttendanceService;
-use App\Services\Export\PdfExportService;
+use App\Models\Attendance;
+use App\Models\AttendancePhoto;
 use App\Services\WorkerOffDay\WorkerOffDayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class AttendanceController extends Controller
 {
     public function __construct(
-        protected AttendanceService $attendanceService,
-        protected PdfExportService $pdfExportService,
         protected WorkerOffDayService $offDayService
     ) {
         $this->middleware('auth');
@@ -55,7 +55,7 @@ class AttendanceController extends Controller
         $worker->load('department', 'shift', 'workerShifts.shift', 'shiftOverrides.shift');
 
         // Get real attendance records as a collection for the filter range
-        $realAttendances = $this->attendanceService->getCollectionByPeriod(
+        $realAttendances = $this->getAttendanceCollectionByPeriod(
             $worker->id,
             $filters['date_from'],
             $filters['date_to'],
@@ -92,7 +92,7 @@ class AttendanceController extends Controller
 
         // Ringkasan absensi untuk periode yang dipilih
         $filterStart = \Carbon\Carbon::parse($filters['date_from']);
-        $monthlySummary = $this->attendanceService->getMonthlyReport(
+        $monthlySummary = $this->getMonthlyAttendanceReport(
             $worker->id,
             $filterStart->month,
             $filterStart->year
@@ -124,7 +124,7 @@ class AttendanceController extends Controller
 
         // Cek apakah ada sesi absensi yang aktif (Check In tapi belum Check Out)
         $today = now()->format('Y-m-d');
-        $activeAttendance = $this->attendanceService->getAll([
+        $activeAttendance = $this->getAttendances([
             'worker_id' => $worker->id,
             'date_from' => $today,
             'date_to' => $today,
@@ -133,7 +133,7 @@ class AttendanceController extends Controller
         // Jika hari ini kosong atau sudah checkout, cek shift malam dari kemarin
         if (!$activeAttendance || $activeAttendance->check_out || ($activeAttendance && $activeAttendance->status !== 'present')) {
             $yesterday = now()->subDay()->format('Y-m-d');
-            $prevAttendance = $this->attendanceService->getAll([
+            $prevAttendance = $this->getAttendances([
                 'worker_id' => $worker->id,
                 'date_from' => $yesterday,
                 'date_to' => $yesterday,
@@ -236,7 +236,7 @@ class AttendanceController extends Controller
 
         // Check if already checked in today
         $today = now()->format('Y-m-d');
-        $existingAttendance = $this->attendanceService->getAll([
+        $existingAttendance = $this->getAttendances([
             'worker_id' => $worker->id,
             'date_from' => $today,
             'date_to' => $today,
@@ -310,7 +310,7 @@ class AttendanceController extends Controller
         $today = now()->format('Y-m-d');
 
         // 1. Cek hari ini
-        $attendance = $this->attendanceService->getAll([
+        $attendance = $this->getAttendances([
             'worker_id' => $worker->id,
             'date_from' => $today,
             'date_to' => $today,
@@ -319,7 +319,7 @@ class AttendanceController extends Controller
         // 2. Jika tidak ada atau sudah checkout, cek hari kemarin (untuk shift malam/overnight)
         if (!$attendance || $attendance->check_out) {
             $yesterday = now()->subDay()->format('Y-m-d');
-            $prevAttendance = $this->attendanceService->getAll([
+            $prevAttendance = $this->getAttendances([
                 'worker_id' => $worker->id,
                 'date_from' => $yesterday,
                 'date_to' => $yesterday,
@@ -461,7 +461,7 @@ class AttendanceController extends Controller
                 'attachment' => $request->file('attachment'),
             ];
 
-            $attendance = $this->attendanceService->checkIn($data);
+            $attendance = $this->performCheckIn($data);
 
             // Clean up temp file if created
             if ($photoFile && file_exists($photoFile->getRealPath())) {
@@ -491,7 +491,7 @@ class AttendanceController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $attendance = $this->attendanceService->getById($id);
+        $attendance = $this->getAttendanceById($id);
         if (!$attendance) {
             return redirect()->route('employee.attendance.index')
                 ->with('error', 'Data absensi tidak ditemukan.');
@@ -581,7 +581,7 @@ class AttendanceController extends Controller
                 'photo' => $photoFile,
             ];
 
-            $updatedAttendance = $this->attendanceService->checkOut($id, $data);
+            $updatedAttendance = $this->performCheckOut($id, $data);
 
             // Clean up temp file if created
             if ($photoFile && file_exists($photoFile->getRealPath())) {
@@ -630,7 +630,7 @@ class AttendanceController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $attendance = $this->attendanceService->getById($id);
+        $attendance = $this->getAttendanceById($id);
 
         // Verify this attendance belongs to the logged-in worker
         if ($attendance->worker_id !== $worker->id) {
@@ -662,7 +662,7 @@ class AttendanceController extends Controller
             abort(404);
         }
 
-        $attendance = $this->attendanceService->getById($id);
+        $attendance = $this->getAttendanceById($id);
         if (!$attendance || $attendance->worker_id !== $worker->id) {
             abort(403, 'Unauthorized');
         }
@@ -955,7 +955,7 @@ class AttendanceController extends Controller
 
         $today = now()->startOfDay();
 
-        $attendances = \App\Models\Attendance::with(['shift', 'location'])
+        $attendances = \App\Models\Attendance::with(['shift'])
             ->where('worker_id', $worker->id)
             ->whereDate('attendance_date', '>=', $startDate->format('Y-m-d'))
             ->whereDate('attendance_date', '<=', $endDate->format('Y-m-d'))
@@ -1102,5 +1102,416 @@ class AttendanceController extends Controller
             'radius' => (int) config('attendance.location.radius', 100),
             'enforce_geofence' => (bool) config('attendance.location.enforce_geofence', true),
         ];
+    }
+
+    private function getAttendances(array $filters = []): \Illuminate\Support\Collection
+    {
+        $query = Attendance::with(['worker.department', 'shift', 'photos']);
+
+        if (!empty($filters['worker_id'])) {
+            $query->where('worker_id', $filters['worker_id']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('attendance_date', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('attendance_date', '<=', $filters['date_to']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = strtolower((string) $filters['search']);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(notes) LIKE ?', ['%' . $search . '%'])
+                    ->orWhereHas('worker', function ($workerQuery) use ($search) {
+                        $workerQuery->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%'])
+                            ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $search . '%'])
+                            ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $search . '%']);
+                    });
+            });
+        }
+
+        return $query->orderByDesc('attendance_date')->orderByDesc('check_in')->get();
+    }
+
+    private function getAttendanceCollectionByPeriod(string $workerId, string $dateFrom, string $dateTo, array $filters = []): \Illuminate\Support\Collection
+    {
+        $filters = array_merge($filters, [
+            'worker_id' => $workerId,
+            'date_from' => $dateFrom,
+            'date_to' => $dateTo,
+        ]);
+
+        return $this->getAttendances($filters);
+    }
+
+    private function getMonthlyAttendanceReport(string $workerId, int $month, int $year): \Illuminate\Support\Collection
+    {
+        return Attendance::with(['shift'])
+            ->where('worker_id', $workerId)
+            ->whereMonth('attendance_date', $month)
+            ->whereYear('attendance_date', $year)
+            ->orderBy('attendance_date')
+            ->get();
+    }
+
+    private function getAttendanceById(string $id): ?Attendance
+    {
+        return Attendance::with(['photos', 'worker.workerShifts.shift', 'worker.department', 'shift'])
+            ->find($id);
+    }
+
+    private function performCheckIn(array $data): Attendance
+    {
+        DB::beginTransaction();
+
+        try {
+            $workerId = (string) $data['worker_id'];
+            $today = now()->format('Y-m-d');
+
+            $worker = \App\Models\Worker::with('department')->find($workerId);
+            if (!$worker) {
+                throw new \Exception('Data pekerja tidak ditemukan.');
+            }
+
+            $offDayCheck = $this->offDayService->canPerformAttendance($worker, $today, 'check_in');
+            if (!($offDayCheck['can_perform'] ?? false)) {
+                throw new \Exception($offDayCheck['message'] ?? 'Hari ini termasuk hari libur Anda.');
+            }
+
+            $existing = Attendance::where('worker_id', $workerId)
+                ->whereDate('attendance_date', $today)
+                ->first();
+            if ($existing) {
+                throw new \Exception('Anda sudah melakukan check-in hari ini.');
+            }
+
+            $holiday = \App\Models\Holiday::where('is_national', true)
+                ->whereDate('date', $today)
+                ->first();
+            if ($holiday) {
+                $deptRequiresAttendance = $worker->department && $worker->department->requires_holiday_attendance;
+                if (!$deptRequiresAttendance) {
+                    throw new \Exception('Hari ini adalah libur nasional (' . $holiday->name . '). Anda tidak perlu melakukan absensi.');
+                }
+            }
+
+            $approvedLeave = \App\Models\LeaveRequest::where('worker_id', $workerId)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->first();
+            if ($approvedLeave) {
+                $leaveTypeName = $approvedLeave->leaveType->name ?? 'Cuti';
+                throw new \Exception('Anda sedang cuti (' . $leaveTypeName . '). Tidak perlu melakukan absensi.');
+            }
+
+            $approvedBusinessTrip = \App\Models\BusinessTrip::where('worker_id', $workerId)
+                ->where('status', 'approved')
+                ->whereDate('start_date', '<=', $today)
+                ->whereDate('end_date', '>=', $today)
+                ->first();
+            if ($approvedBusinessTrip) {
+                throw new \Exception('Anda sedang dalam perjalanan dinas ke ' . $approvedBusinessTrip->destination . '. Tidak perlu melakukan absensi.');
+            }
+
+            $status = $data['status'] ?? 'present';
+            if (in_array($status, ['sick', 'permission'], true) && empty($data['attachment'])) {
+                throw new \Exception('Status sakit/izin wajib melampirkan dokumen pendukung.');
+            }
+
+            if (!empty($data['attachment'])) {
+                $this->saveAttachment($data['attachment'], $workerId, $status);
+            }
+
+            $checkInTime = now();
+            $shiftInfo = method_exists($worker, 'resolveShiftForDate')
+                ? $worker->resolveShiftForDate($today)
+                : ['shift' => null, 'schedule' => null];
+
+            $shift = $shiftInfo['shift'] ?? null;
+            $schedule = $shiftInfo['schedule'] ?? null;
+            if (!$shift || !$schedule) {
+                throw new \Exception('Tidak ada jadwal shift aktif untuk pegawai ini.');
+            }
+
+            $shiftStartDateTime = \Carbon\Carbon::parse($today . ' ' . $schedule['start_time']);
+            if (!empty($schedule['is_overnight'])) {
+                $shiftEndDateTimeToday = \Carbon\Carbon::parse($today . ' ' . $schedule['end_time']);
+                if ($checkInTime->lessThan($shiftEndDateTimeToday)) {
+                    $shiftStartDateTime = $shiftStartDateTime->copy()->subDay();
+                }
+            }
+
+            if ($status === 'present') {
+                $checkInWindowBeforeMinutes = (int) round((float) config('attendance.check_in_window_before_hours', 0.5) * 60);
+                $earlyCheckInGraceMinutes = (int) config('attendance.early_checkin_grace_minutes', 30);
+                $strictTimeWindow = (bool) config('attendance.strict_time_window', false);
+
+                $earliestCheckInTime = $shiftStartDateTime->copy()->subMinutes($checkInWindowBeforeMinutes);
+                $veryEarlyCheckInTime = $earliestCheckInTime->copy()->subMinutes($earlyCheckInGraceMinutes);
+
+                if ($checkInTime->lessThan($veryEarlyCheckInTime)) {
+                    $totalDiffMinutes = $checkInTime->diffInMinutes($shiftStartDateTime);
+                    $hoursDiff = intdiv($totalDiffMinutes, 60);
+                    $minutesDiff = $totalDiffMinutes % 60;
+                    $windowHours = intdiv($checkInWindowBeforeMinutes, 60);
+                    $windowMinutes = $checkInWindowBeforeMinutes % 60;
+                    $windowText = trim(($windowHours > 0 ? $windowHours . ' jam ' : '') . ($windowMinutes > 0 ? $windowMinutes . ' menit' : ''));
+
+                    $message = sprintf(
+                        'Check-in terlalu dini! Anda mencoba check-in %d jam %d menit sebelum shift dimulai (pukul %s). Batas check-in paling awal adalah %s sebelum shift (pukul %s).',
+                        $hoursDiff,
+                        $minutesDiff,
+                        $shiftStartDateTime->format('H:i'),
+                        $windowText,
+                        $earliestCheckInTime->format('H:i')
+                    );
+
+                    if ($strictTimeWindow) {
+                        throw new \Exception($message);
+                    }
+
+                    Log::warning('Very early check-in attempt', [
+                        'worker_id' => $workerId,
+                        'check_in_time' => $checkInTime->format('Y-m-d H:i:s'),
+                        'shift_start' => $shiftStartDateTime->format('Y-m-d H:i:s'),
+                        'earliest_allowed' => $veryEarlyCheckInTime->format('Y-m-d H:i:s'),
+                    ]);
+                }
+            }
+
+            $configuredLocation = $this->getConfiguredLocation();
+            $distance = $this->calculateDistance(
+                (float) $configuredLocation['latitude'],
+                (float) $configuredLocation['longitude'],
+                (float) $data['latitude'],
+                (float) $data['longitude']
+            );
+
+            if ($status === 'present' && $distance > (float) $configuredLocation['radius']) {
+                throw new \Exception('Anda berada di luar radius lokasi absensi. Silakan mendekat ke lokasi yang ditentukan.');
+            }
+
+            if ($status === 'present') {
+                $graceTime = $shiftStartDateTime->copy()->addMinutes((int) ($shift->grace_period_minutes ?? 0));
+                $isLate = $checkInTime->greaterThan($graceTime);
+                $lateMinutes = $isLate ? $checkInTime->diffInMinutes($shiftStartDateTime) : 0;
+            } else {
+                $isLate = false;
+                $lateMinutes = 0;
+            }
+
+            $attendanceBusinessDate = $shiftStartDateTime->copy()->format('Y-m-d');
+
+            $attendance = Attendance::create([
+                'worker_id' => $workerId,
+                'shift_id' => $shift->id,
+                'attendance_date' => $attendanceBusinessDate,
+                'check_in' => $checkInTime->format('Y-m-d H:i:s'),
+                'distance_check_in' => $distance,
+                'check_in_by_admin' => false,
+                'check_in_admin_id' => null,
+                'status' => $status,
+                'is_late' => $isLate,
+                'late_minutes' => $lateMinutes,
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            if (isset($data['photo']) && $data['photo']) {
+                $photoPath = $this->savePhoto($data['photo'], 'check_in', $workerId);
+
+                AttendancePhoto::create([
+                    'attendance_id' => $attendance->id,
+                    'photo_path' => $photoPath,
+                    'photo_type' => 'check_in',
+                    'taken_at' => $checkInTime,
+                ]);
+            }
+
+            DB::commit();
+            return $attendance->fresh(['photos', 'worker.workerShifts.shift', 'worker.department', 'shift']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    private function performCheckOut(string $attendanceId, array $data): Attendance
+    {
+        DB::beginTransaction();
+
+        try {
+            $attendance = $this->getAttendanceById($attendanceId);
+            if (!$attendance) {
+                throw new \Exception('Data absensi tidak ditemukan.');
+            }
+
+            if ($attendance->check_out) {
+                throw new \Exception('Anda sudah melakukan check-out.');
+            }
+
+            if (!$attendance->check_in) {
+                throw new \Exception('Anda belum melakukan check-in. Tidak dapat melakukan check-out.');
+            }
+
+            $checkOutTime = now();
+            $shift = $attendance->shift;
+            if (!$shift) {
+                throw new \Exception('Jadwal shift tidak ditemukan.');
+            }
+
+            $schedule = $shift->getScheduleForDate($attendance->attendance_date);
+            $checkInDateTime = \Carbon\Carbon::parse($attendance->check_in);
+            $shiftBaseDate = $checkInDateTime->copy()->startOfDay();
+            $shiftStartDateTime = \Carbon\Carbon::parse($shiftBaseDate->format('Y-m-d') . ' ' . $schedule['start_time']);
+            $shiftEndDateTime = \Carbon\Carbon::parse($shiftBaseDate->format('Y-m-d') . ' ' . $schedule['end_time']);
+
+            if (!empty($schedule['is_overnight']) && $shiftEndDateTime->lessThanOrEqualTo($shiftStartDateTime)) {
+                $shiftEndDateTime->addDay();
+            }
+
+            $checkOutWindowAfterMinutes = (int) round((float) config('attendance.check_out_window_after_hours', 1.5) * 60);
+            $maxCheckoutTime = $shiftEndDateTime->copy()->addMinutes($checkOutWindowAfterMinutes);
+            if ($checkOutTime->greaterThan($maxCheckoutTime)) {
+                $hoursDiff = $shiftEndDateTime->diffInHours($checkOutTime);
+                throw new \Exception(
+                    "Check-out terlalu terlambat ({$hoursDiff} jam setelah shift berakhir pukul {$shiftEndDateTime->format('H:i')}). " .
+                    "Batas checkout adalah {$maxCheckoutTime->format('d M Y H:i')}. " .
+                    'Silakan hubungi admin untuk koreksi absensi.'
+                );
+            }
+
+            $configuredLocation = $this->getConfiguredLocation();
+            $distance = $this->calculateDistance(
+                (float) $configuredLocation['latitude'],
+                (float) $configuredLocation['longitude'],
+                (float) $data['latitude'],
+                (float) $data['longitude']
+            );
+
+            if ($attendance->status === 'present' && $distance > (float) $configuredLocation['radius']) {
+                throw new \Exception('Anda berada di luar radius lokasi absensi. Silakan mendekat ke lokasi yang ditentukan.');
+            }
+
+            $isEarlyLeave = $checkOutTime->lessThan($shiftEndDateTime);
+            $earlyLeaveMinutes = $isEarlyLeave ? $checkOutTime->diffInMinutes($shiftEndDateTime) : 0;
+
+            if ($isEarlyLeave) {
+                Log::warning('Early check-out detected', [
+                    'worker_id' => $attendance->worker_id,
+                    'attendance_id' => $attendanceId,
+                    'scheduled_end' => $shiftEndDateTime->format('H:i'),
+                    'actual_checkout' => $checkOutTime->format('H:i'),
+                    'early_minutes' => $earlyLeaveMinutes,
+                ]);
+            }
+
+            $existingNotes = trim((string) $attendance->notes);
+            $noteLines = [];
+            if ($isEarlyLeave) {
+                $noteLines[] = "[SYSTEM] Pulang lebih awal: {$earlyLeaveMinutes} menit";
+            }
+            if (!empty($data['notes'])) {
+                $noteLines[] = (string) $data['notes'];
+            }
+            $combinedNotes = trim(implode("\n", array_filter(array_merge([$existingNotes], $noteLines))));
+
+            $attendance->update([
+                'check_out' => $checkOutTime->format('Y-m-d H:i:s'),
+                'distance_check_out' => $distance,
+                'check_out_by_admin' => false,
+                'check_out_admin_id' => null,
+                'is_early_leave' => $isEarlyLeave,
+                'early_leave_minutes' => $earlyLeaveMinutes,
+                'notes' => $combinedNotes,
+            ]);
+
+            if (isset($data['photo']) && $data['photo']) {
+                $photoPath = $this->savePhoto($data['photo'], 'check_out', (string) $attendance->worker_id);
+
+                AttendancePhoto::create([
+                    'attendance_id' => $attendance->id,
+                    'photo_path' => $photoPath,
+                    'photo_type' => 'check_out',
+                    'taken_at' => $checkOutTime,
+                ]);
+            }
+
+            DB::commit();
+            return $attendance->fresh(['photos', 'worker.workerShifts.shift', 'worker.department', 'shift']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
+    }
+
+    private function savePhoto($photo, string $type, string $workerId): string
+    {
+        $ext = strtolower($photo->getClientOriginalExtension() ?? 'jpg');
+        $filename = sprintf('%s_%s_%s.%s', $workerId, $type, now()->format('YmdHis'), $ext);
+
+        try {
+            if (class_exists('Intervention\\Image\\ImageManagerStatic')) {
+                $img = call_user_func(['Intervention\\Image\\ImageManagerStatic', 'make'], $photo->getRealPath());
+                $img->orientate();
+
+                if ($img->width() > 800) {
+                    $img->resize(800, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+
+                $encoded = (string) $img->encode($ext, 70);
+                $path = 'attendance-photos/' . $filename;
+                Storage::disk('public')->put($path, $encoded);
+
+                return $path;
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Image processing failed, storing original: ' . $e->getMessage());
+        }
+
+        return $photo->storeAs('attendance-photos', $filename, 'public');
+    }
+
+    private function saveAttachment($attachment, string $workerId, string $status): string
+    {
+        $filename = sprintf(
+            '%s_%s_attachment_%s.%s',
+            $workerId,
+            $status,
+            now()->format('YmdHis'),
+            $attachment->getClientOriginalExtension()
+        );
+
+        return $attachment->storeAs('attendance-attachments', $filename, 'public');
+    }
+
+    private function calculateDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6371000;
+
+        $latFrom = deg2rad($lat1);
+        $lonFrom = deg2rad($lon1);
+        $latTo = deg2rad($lat2);
+        $lonTo = deg2rad($lon2);
+
+        $latDelta = $latTo - $latFrom;
+        $lonDelta = $lonTo - $lonFrom;
+
+        $a = sin($latDelta / 2) * sin($latDelta / 2)
+            + cos($latFrom) * cos($latTo)
+            * sin($lonDelta / 2) * sin($lonDelta / 2);
+
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+
+        return $earthRadius * $c;
     }
 }

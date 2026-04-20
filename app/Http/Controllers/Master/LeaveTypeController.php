@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use App\Services\Master\LeaveTypeService;
-use App\DTOs\Master\LeaveTypeDTO;
+use App\Models\LeaveType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class LeaveTypeController extends Controller
 {
-    public function __construct(
-        protected LeaveTypeService $leaveTypeService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         $this->middleware('permission:leave-type.manage')->only(['index', 'show']);
         $this->middleware('permission:leave-type.manage')->only(['create', 'store']);
@@ -19,158 +19,180 @@ class LeaveTypeController extends Controller
         $this->middleware('permission:leave-type.manage')->only('destroy');
     }
 
+    /**
+     * Display list of leave types
+     */
     public function index(Request $request)
     {
-        $perPage = $request->per_page ?? 15;
-        
-        if ($request->has('search')) {
-            $leaveTypes = $this->leaveTypeService->search($request->search, $perPage);
-        } else {
-            $leaveTypes = $this->leaveTypeService->getAllPaginated($perPage);
+        $query = LeaveType::query();
+
+        // Search filter
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', "%{$request->search}%")
+                    ->orWhere('code', 'like', "%{$request->search}%")
+                    ->orWhere('description', 'like', "%{$request->search}%");
+            });
         }
+
+        $leaveTypes = $query->latest()->paginate($request->per_page ?? 15);
 
         return view('admin.master.leave-types.index', compact('leaveTypes'));
     }
 
+    /**
+     * Show create form
+     */
     public function create()
     {
         return view('admin.master.leave-types.create');
     }
 
+    /**
+     * Store new leave type
+     */
     public function store(Request $request)
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:leave_types,name',
+            'code' => 'required|string|max:50|unique:leave_types,code',
+            'description' => 'nullable|string',
+            'max_days_per_year' => 'required|integer|min:1',
+            'days_notice' => 'required|integer|min:0',
+            'is_paid' => 'nullable|boolean',
+            'requires_approval' => 'nullable|boolean',
+            'requires_attachment' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+        ]);
+
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:leave_types,name',
-                'code' => 'required|string|max:50|unique:leave_types,code',
-                'description' => 'nullable|string',
-                'max_days_per_year' => 'required|integer|min:1',
-                'days_notice' => 'required|integer|min:0',
-                'is_paid' => 'nullable|boolean',
-                'requires_approval' => 'nullable|boolean',
-                'requires_attachment' => 'nullable|boolean',
-                'is_active' => 'nullable|boolean',
-            ]);
+            DB::beginTransaction();
 
             // Convert checkbox values
-            $validated['is_paid'] = $request->has('is_paid') ? true : false;
-            $validated['requires_approval'] = $request->has('requires_approval') ? true : false;
-            $validated['requires_attachment'] = $request->has('requires_attachment') ? true : false;
-            $validated['is_active'] = $request->has('is_active') ? true : false;
+            $validated['is_paid'] = $request->has('is_paid');
+            $validated['requires_approval'] = $request->has('requires_approval');
+            $validated['requires_attachment'] = $request->has('requires_attachment');
+            $validated['is_active'] = $request->has('is_active');
 
-            $dto = LeaveTypeDTO::fromRequest($validated);
-            $result = $this->leaveTypeService->create($dto);
+            LeaveType::create($validated);
 
-            if ($result['success']) {
-                return redirect()
-                    ->route('admin.master.leave-types.index')
-                    ->with('success', $result['message']);
-            }
+            DB::commit();
 
-            return back()
-                ->withInput()
-                ->with('error', $result['message']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()
-                ->withInput()
-                ->withErrors($e->errors())
-                ->with('error', 'Validasi gagal. Periksa kembali input Anda.');
+            return redirect()
+                ->route('admin.master.leave-types.index')
+                ->with('success', 'Tipe cuti berhasil ditambahkan');
         } catch (\Exception $e) {
-            \Log::error('Error creating leave type: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+            DB::rollBack();
+            Log::error('Error creating leave type: ' . $e->getMessage());
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Show leave type details
+     */
     public function show(string $id)
     {
         try {
-            $leaveType = $this->leaveTypeService->findById($id);
+            $leaveType = LeaveType::findOrFail($id);
             return view('admin.master.leave-types.show', compact('leaveType'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.master.leave-types.index')
-                ->with('error', $e->getMessage());
+                ->with('error', 'Tipe cuti tidak ditemukan');
         }
     }
 
+    /**
+     * Show edit form
+     */
     public function edit(string $id)
     {
         try {
-            $leaveType = $this->leaveTypeService->findById($id);
+            $leaveType = LeaveType::findOrFail($id);
             return view('admin.master.leave-types.edit', compact('leaveType'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.master.leave-types.index')
-                ->with('error', $e->getMessage());
+                ->with('error', 'Tipe cuti tidak ditemukan');
         }
     }
 
+    /**
+     * Update leave type
+     */
     public function update(Request $request, string $id)
     {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:leave_types,name,' . $id,
+            'code' => 'required|string|max:50|unique:leave_types,code,' . $id,
+            'description' => 'nullable|string',
+            'max_days_per_year' => 'required|integer|min:1',
+            'days_notice' => 'required|integer|min:0',
+            'is_paid' => 'nullable|boolean',
+            'requires_approval' => 'nullable|boolean',
+            'requires_attachment' => 'nullable|boolean',
+            'is_active' => 'nullable|boolean',
+        ]);
+
         try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:leave_types,name,' . $id,
-                'code' => 'required|string|max:50|unique:leave_types,code,' . $id,
-                'description' => 'nullable|string',
-                'max_days_per_year' => 'required|integer|min:1',
-                'days_notice' => 'required|integer|min:0',
-                'is_paid' => 'nullable|boolean',
-                'requires_approval' => 'nullable|boolean',
-                'requires_attachment' => 'nullable|boolean',
-                'is_active' => 'nullable|boolean',
-            ]);
+            DB::beginTransaction();
+
+            $leaveType = LeaveType::findOrFail($id);
 
             // Convert checkbox values
-            $validated['is_paid'] = $request->has('is_paid') ? true : false;
-            $validated['requires_approval'] = $request->has('requires_approval') ? true : false;
-            $validated['requires_attachment'] = $request->has('requires_attachment') ? true : false;
-            $validated['is_active'] = $request->has('is_active') ? true : false;
+            $validated['is_paid'] = $request->has('is_paid');
+            $validated['requires_approval'] = $request->has('requires_approval');
+            $validated['requires_attachment'] = $request->has('requires_attachment');
+            $validated['is_active'] = $request->has('is_active');
 
-            $dto = LeaveTypeDTO::fromRequest($validated);
-            $result = $this->leaveTypeService->update($id, $dto);
+            $leaveType->update($validated);
 
-            if ($result['success']) {
-                return redirect()
-                    ->route('admin.master.leave-types.show', $id)
-                    ->with('success', $result['message']);
-            }
+            DB::commit();
 
-            return back()
-                ->withInput()
-                ->with('error', $result['message']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return back()
-                ->withInput()
-                ->withErrors($e->errors())
-                ->with('error', 'Validasi gagal. Periksa kembali input Anda.');
+            return redirect()
+                ->route('admin.master.leave-types.show', $id)
+                ->with('success', 'Tipe cuti berhasil diperbarui');
         } catch (\Exception $e) {
-            \Log::error('Error updating leave type: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+            DB::rollBack();
+            Log::error('Error updating leave type: ' . $e->getMessage());
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Delete leave type
+     */
     public function destroy(string $id)
     {
         try {
-            $result = $this->leaveTypeService->delete($id);
+            DB::beginTransaction();
 
-            if ($result['success']) {
-                return redirect()
-                    ->route('admin.master.leave-types.index')
-                    ->with('success', $result['message']);
+            $leaveType = LeaveType::findOrFail($id);
+
+            // Check if leave type is used
+            if ($leaveType->leaveRequests()->exists()) {
+                throw new \Exception('Tidak dapat menghapus tipe cuti yang masih digunakan');
             }
 
-            return back()->with('error', $result['message']);
+            $leaveType->delete();
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.master.leave-types.index')
+                ->with('success', 'Tipe cuti berhasil dihapus');
         } catch (\Exception $e) {
-            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Error deleting leave type: ' . $e->getMessage());
+
+            return back()->with('error', $e->getMessage());
         }
     }
 }

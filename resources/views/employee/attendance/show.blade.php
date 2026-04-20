@@ -568,7 +568,7 @@
                         @csrf
                         <button type="submit"
                                 class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-all duration-200"
-                                onclick="return confirm('Check-out cepat tanpa foto. Lanjutkan?')">
+                                onclick="event.preventDefault(); showConfirmAlert('Quick Check Out?', 'Check-out cepat tanpa foto. Lanjutkan?', () => this.closest('form').submit());">
                             <i class="fas fa-running"></i>
                             Quick Check Out
                         </button>

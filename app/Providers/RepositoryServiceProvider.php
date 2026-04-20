@@ -20,17 +20,6 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Repositories\Worker\WorkerRepository::class
         );
 
-        // Attendance
-        $this->app->bind(
-            \App\Repositories\Contracts\Attendance\AttendanceRepositoryInterface::class,
-            \App\Repositories\Attendance\AttendanceRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Attendance\AttendancePhotoRepositoryInterface::class,
-            \App\Repositories\Attendance\AttendancePhotoRepository::class
-        );
-
         // Worker Shift
         $this->app->bind(
             \App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface::class,

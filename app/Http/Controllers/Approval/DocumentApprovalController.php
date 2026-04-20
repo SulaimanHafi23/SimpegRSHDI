@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\WorkerDocument;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DocumentApprovalController extends Controller
 {
@@ -30,7 +31,7 @@ class DocumentApprovalController extends Controller
             'per_page' => $request->input('per_page', 20),
         ];
 
-        $query = WorkerDocument::with(['worker.department', 'worker.position', 'documentType']);
+        $query = WorkerDocument::with(['worker.department', 'documentType']);
 
         // Filter by manager's department
         if ($departmentId) {
@@ -113,7 +114,7 @@ class DocumentApprovalController extends Controller
             ->findOrFail($id);
 
         // Check if manager can view this document
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->hasRole('Manager') && $user->worker) {
             if ($document->worker->department_id !== $user->worker->department_id) {
                 abort(403, 'Unauthorized');
@@ -133,7 +134,7 @@ class DocumentApprovalController extends Controller
             $document = WorkerDocument::findOrFail($id);
 
             // Check permission for manager
-            $user = auth()->user();
+            $user = Auth::user();
             if ($user->hasRole('Manager') && $user->worker) {
                 if ($document->worker->department_id !== $user->worker->department_id) {
                     return back()->with('error', 'Anda tidak memiliki akses untuk memverifikasi dokumen ini.');
@@ -142,7 +143,7 @@ class DocumentApprovalController extends Controller
 
             $document->update([
                 'status' => 'verified',
-                'verified_by' => auth()->id(),
+                'verified_by' => Auth::id(),
                 'verified_at' => now(),
                 'verification_notes' => $request->input('verification_notes'),
             ]);
@@ -165,7 +166,7 @@ class DocumentApprovalController extends Controller
             $document = WorkerDocument::findOrFail($id);
 
             // Check permission for manager
-            $user = auth()->user();
+            $user = Auth::user();
             if ($user->hasRole('Manager') && $user->worker) {
                 if ($document->worker->department_id !== $user->worker->department_id) {
                     return back()->with('error', 'Anda tidak memiliki akses untuk menolak dokumen ini.');
@@ -174,7 +175,7 @@ class DocumentApprovalController extends Controller
 
             $document->update([
                 'status' => 'rejected',
-                'verified_by' => auth()->id(),
+                'verified_by' => Auth::id(),
                 'verified_at' => now(),
                 'rejection_reason' => $request->input('rejection_reason'),
             ]);

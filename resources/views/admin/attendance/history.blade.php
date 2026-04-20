@@ -243,6 +243,7 @@
                     $date = $dayData['date'];
                     $attendance = $dayData['attendance'];
                     $shift = $dayData['shift'];
+                    $shiftSchedule = $dayData['shiftSchedule'] ?? null;
                     $isWeekend = $dayData['isWeekend'];
                     $isToday = $date->isToday();
 
@@ -284,12 +285,17 @@
                             </div>
                             <div class="text-xs text-gray-600 flex items-center justify-between">
                                 <span class="flex items-center">
-                                    <i class="fas fa-sign-in-alt text-green-600 mr-1"></i>{{ \Carbon\Carbon::parse($shift->start_time)->format('H:i') }}
+                                    <i class="fas fa-sign-in-alt text-green-600 mr-1"></i>{{ \Carbon\Carbon::parse($shiftSchedule['start_time'] ?? $shift->start_time)->format('H:i') }}
                                 </span>
                                 <span class="flex items-center">
-                                    <i class="fas fa-sign-out-alt text-red-600 mr-1"></i>{{ \Carbon\Carbon::parse($shift->end_time)->format('H:i') }}
+                                    <i class="fas fa-sign-out-alt text-red-600 mr-1"></i>{{ \Carbon\Carbon::parse($shiftSchedule['end_time'] ?? $shift->end_time)->format('H:i') }}
                                 </span>
                             </div>
+                            @if(!empty($dayData['shiftDateTimeRange']))
+                                <div class="text-[11px] text-gray-500 mt-1 break-words">
+                                    <i class="fas fa-history mr-1"></i>{{ $dayData['shiftDateTimeRange'] }}
+                                </div>
+                            @endif
                         </div>
                     @endif
 

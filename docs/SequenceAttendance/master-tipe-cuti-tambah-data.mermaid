@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR
+    participant View as "Web View (admin.master.leave-types.create)"
+    participant C as LeaveTypeController
+    participant LT as "LeaveType Model"
+    participant DB as "Database"
+
+    Admin->>View: Isi form tambah tipe cuti lalu submit
+    View->>C: POST /admin/master/leave-types
+
+    C->>C: Validasi input (name, code, max_days, days_notice, dst)
+
+    alt Data valid
+        C->>LT: Simpan tipe cuti baru
+        LT->>DB: INSERT INTO leave_types (...)
+        DB-->>LT: ID leave type baru
+
+        C-->>View: Redirect ke index + flash success
+        View-->>Admin: Data tipe cuti baru tampil di daftar
+    else Data tidak valid
+        C-->>View: Redirect back + errors + old input
+        View-->>Admin: Tampilkan pesan validasi gagal
+    end

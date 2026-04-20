@@ -5,22 +5,22 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Data Absensi" 
+    <x-page-header
+        title="Data Absensi"
         description="Kelola data kehadiran pegawai"
         icon="fas fa-calendar-check">
         <x-slot:actions>
             @can('view-attendance')
-                <x-button 
-                    variant="primary" 
+                <x-button
+                    variant="primary"
                     icon="fas fa-chart-bar"
                     onclick="window.location.href='{{ route('admin.absents.report') }}'">
                     Laporan
                 </x-button>
             @endcan
             @can('create-attendance')
-                <x-button 
-                    variant="success" 
+                <x-button
+                    variant="success"
                     icon="fas fa-plus"
                     onclick="window.location.href='{{ route('admin.absents.create') }}'">
                     Absen Manual
@@ -31,59 +31,59 @@
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <x-stats-card 
-            title="Hadir" 
-            :value="$stats['present'] ?? 0" 
-            icon="fas fa-check-circle" 
+        <x-stats-card
+            title="Hadir"
+            :value="$stats['present'] ?? 0"
+            icon="fas fa-check-circle"
             color="green" />
-        
-        <x-stats-card 
-            title="Cuti" 
-            :value="$stats['leave'] ?? 0" 
-            icon="fas fa-plane" 
+
+        <x-stats-card
+            title="Cuti"
+            :value="$stats['leave'] ?? 0"
+            icon="fas fa-plane"
             color="blue" />
-        
-        <x-stats-card 
-            title="Terlambat" 
-            :value="$stats['late'] ?? 0" 
-            icon="fas fa-clock" 
+
+        <x-stats-card
+            title="Terlambat"
+            :value="$stats['late'] ?? 0"
+            icon="fas fa-clock"
             color="yellow" />
-        
-        <x-stats-card 
-            title="Sakit" 
-            :value="$stats['sick'] ?? 0" 
-            icon="fas fa-user-md" 
+
+        <x-stats-card
+            title="Sakit"
+            :value="$stats['sick'] ?? 0"
+            icon="fas fa-user-md"
             color="purple" />
-        
-        <x-stats-card 
-            title="Alpha" 
-            :value="$stats['absent'] ?? 0" 
-            icon="fas fa-times-circle" 
+
+        <x-stats-card
+            title="Alpha"
+            :value="$stats['absent'] ?? 0"
+            icon="fas fa-times-circle"
             color="red" />
     </div>
 
     {{-- Filter Section --}}
     <x-filter-section action="{{ route('admin.absents.index') }}">
-        <x-form.input 
-            name="search" 
-            label="Pencarian" 
+        <x-form.input
+            name="search"
+            label="Pencarian"
             placeholder="Cari nama pegawai..."
             :value="$filters['search'] ?? ''" />
 
-        <x-form.input 
-            name="start_date" 
-            label="Dari Tanggal" 
+        <x-form.input
+            name="start_date"
+            label="Dari Tanggal"
             type="date"
             :value="$filters['start_date'] ?? ''" />
 
-        <x-form.input 
-            name="end_date" 
-            label="Sampai Tanggal" 
+        <x-form.input
+            name="end_date"
+            label="Sampai Tanggal"
             type="date"
             :value="$filters['end_date'] ?? ''" />
 
-        <x-form.select 
-            name="status" 
+        <x-form.select
+            name="status"
             label="Status Kehadiran"
             :options="[
                 'Present' => 'Hadir',
@@ -99,7 +99,7 @@
     {{-- Attendance Table --}}
     <x-card>
         @if(isset($attendances) && $attendances->isEmpty())
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-calendar-check"
                 title="Data absensi akan ditampilkan di sini"
                 description="Gunakan filter di atas untuk melihat data absensi"
@@ -147,8 +147,8 @@
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
                                 @can('view-attendance')
-                                    <a href="{{ route('admin.absents.show', $attendance->id) }}" 
-                                       class="text-blue-600 hover:text-blue-900" 
+                                    <a href="{{ route('admin.absents.show', $attendance->id) }}"
+                                       class="text-blue-600 hover:text-blue-900"
                                        title="Detail">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -161,10 +161,10 @@
                                     <form action="{{ route('admin.absents.destroy', $attendance->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" 
-                                                class="text-red-600 hover:text-red-900" 
+                                        <button type="submit"
+                                                class="text-red-600 hover:text-red-900"
                                                 title="Hapus"
-                                                onclick="return confirm('Yakin ingin menghapus data absensi ini?')">
+                                                onclick="event.preventDefault(); showDeleteConfirm(() => this.closest('form').submit());">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                             </svg>
@@ -184,7 +184,7 @@
                 </div>
             @endif
         @else
-            <x-empty-state 
+            <x-empty-state
                 icon="fas fa-calendar-check"
                 title="Data absensi akan ditampilkan di sini"
                 description="Gunakan filter di atas untuk melihat data absensi" />

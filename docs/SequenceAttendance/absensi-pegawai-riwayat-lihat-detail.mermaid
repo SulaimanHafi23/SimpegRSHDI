@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR/Manager
+    participant View as "Web View (detail dari riwayat)"
+    participant C as AttendanceController
+    participant A as "Attendance Model"
+    participant W as "Worker Model"
+    participant S as "Shift Model"
+    participant AP as "AttendancePhoto Model"
+    participant U as "User Model"
+    participant DB as "Database"
+
+    Admin->>View: Pilih salah satu tanggal riwayat lalu buka detail
+    View->>C: GET /admin/attendance/{attendanceId}
+
+    C->>A: Ambil attendance historis by id + relasi
+    A->>DB: SELECT attendances + worker + shift + photos + admin
+    DB-->>A: Detail attendance historis
+
+    alt Data valid
+        C-->>View: Render detail riwayat absensi
+        View-->>Admin: Tampilkan detail status, jam masuk/pulang, foto, catatan
+    else Data tidak valid
+        C-->>View: Redirect ke riwayat/index + error
+        View-->>Admin: Tampilkan pesan error
+    end

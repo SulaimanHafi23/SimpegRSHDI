@@ -6,6 +6,7 @@ use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Worker\WorkerRequest;
+use App\Models\Attendance;
 use App\Services\Worker\WorkerService;
 use App\Services\Master\DepartmentService;
 use App\Services\Role\RoleService;
@@ -66,12 +67,11 @@ class WorkerController extends Controller
             // Attendance this month
             $month = now()->month;
             $year = now()->year;
-            $attendanceService = app(\App\Services\Attendance\AttendanceService::class);
-            $attendances = $attendanceService->getByWorkerId($worker->id, [
-                'month' => $month,
-                'year' => $year,
-            ]);
-            $attendanceThisMonth = $attendances->count();
+            $attendanceThisMonth = Attendance::query()
+                ->where('worker_id', $worker->id)
+                ->whereMonth('attendance_date', $month)
+                ->whereYear('attendance_date', $year)
+                ->count();
 
             // Recent Leave Requests (last 5)
             $leaveService = app(\App\Services\Leave\LeaveRequestService::class);
@@ -109,23 +109,18 @@ class WorkerController extends Controller
             $month = $request->input('month', now()->month);
             $year = $request->input('year', now()->year);
 
-            // Get attendance data for the month using getAll with filters
-            $attendanceService = app(\App\Services\Attendance\AttendanceService::class);
-
             // Create date range for the month
             $startDate = \Carbon\Carbon::create($year, $month, 1)->startOfMonth();
             $endDate = \Carbon\Carbon::create($year, $month, 1)->endOfMonth();
 
-            // Get attendances using getAll method with proper filters
-            $attendancePaginated = $attendanceService->getAll([
-                'worker_id' => $worker->id,
-                'date_from' => $startDate->format('Y-m-d'),
-                'date_to' => $endDate->format('Y-m-d'),
-                'per_page' => 999,
-            ]);
-
-            // Extract items from paginator - these are already loaded with relations
-            $attendances = collect($attendancePaginated->items());
+            $attendances = Attendance::query()
+                ->with(['worker.department', 'shift'])
+                ->where('worker_id', $worker->id)
+                ->whereDate('attendance_date', '>=', $startDate->format('Y-m-d'))
+                ->whereDate('attendance_date', '<=', $endDate->format('Y-m-d'))
+                ->orderByDesc('attendance_date')
+                ->orderByDesc('check_in')
+                ->get();
 
             // Calculate statistics
             $totalPresent = $attendances->whereIn('status', ['present', 'late'])->count();
@@ -157,12 +152,32 @@ class WorkerController extends Controller
 
                 // Get shift schedule for this date
                 $shift = null;
-                if (method_exists($worker, 'getShiftForDate')) {
+                $shiftSchedule = null;
+                $shiftDateTimeRange = null;
+
+                if (method_exists($worker, 'resolveShiftForDate')) {
+                    $shiftInfo = $worker->resolveShiftForDate($date);
+                    $shift = $shiftInfo['shift'] ?? null;
+                    $shiftSchedule = $shiftInfo['schedule'] ?? null;
+                } elseif (method_exists($worker, 'getShiftForDate')) {
                     $shiftId = $worker->getShiftForDate($date);
                     $shift = $shiftId ? \App\Models\Shift::find($shiftId) : null;
+                    $shiftSchedule = $shift ? $shift->getScheduleForDate($date) : null;
                 } elseif ($worker->activeWorkerShift && $worker->activeWorkerShift->shift) {
                     // Fallback: use active shift if getShiftForDate doesn't exist
                     $shift = $worker->activeWorkerShift->shift;
+                    $shiftSchedule = $shift->getScheduleForDate($date);
+                }
+
+                if ($shift && $shiftSchedule) {
+                    $shiftStart = \Carbon\Carbon::parse($date->format('Y-m-d') . ' ' . $shiftSchedule['start_time']);
+                    $shiftEnd = \Carbon\Carbon::parse($date->format('Y-m-d') . ' ' . $shiftSchedule['end_time']);
+
+                    if (($shiftSchedule['is_overnight'] ?? false) || $shiftEnd->lte($shiftStart)) {
+                        $shiftEnd->addDay();
+                    }
+
+                    $shiftDateTimeRange = $shiftStart->format('Y-m-d H:i:s') . ' - ' . $shiftEnd->format('Y-m-d H:i:s');
                 }
 
                 $calendarData[] = [
@@ -171,6 +186,8 @@ class WorkerController extends Controller
                     'dayName' => $date->translatedFormat('l'),
                     'attendance' => $dayAttendance,
                     'shift' => $shift,
+                    'shiftSchedule' => $shiftSchedule,
+                    'shiftDateTimeRange' => $shiftDateTimeRange,
                     'isWeekend' => $date->isSunday(), // Only Sunday is weekend
                 ];
             }

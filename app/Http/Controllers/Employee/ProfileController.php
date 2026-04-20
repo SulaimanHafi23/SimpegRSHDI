@@ -3,24 +3,20 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Services\Worker\WorkerService;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class ProfileController extends Controller
 {
-    protected $workerService;
-
-    public function __construct(WorkerService $workerService)
-    {
-        $this->workerService = $workerService;
-    }
+    public function __construct() {}
 
     public function show()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -32,7 +28,7 @@ class ProfileController extends Controller
 
     public function edit()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -44,7 +40,10 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(403, 'Pengguna tidak valid');
+        }
         $worker = $user->worker;
 
         if (!$worker) {
@@ -76,7 +75,7 @@ class ProfileController extends Controller
                 if ($worker->photo_url) {
                     Storage::disk('public')->delete($worker->photo_url);
                 }
-                
+
                 $photoPath = $request->file('photo')->store('workers/photos', 'public');
                 $worker->photo_url = $photoPath;
             }
@@ -100,7 +99,10 @@ class ProfileController extends Controller
             'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $user = auth()->user();
+        $user = Auth::user();
+        if (!$user instanceof User) {
+            abort(403, 'Pengguna tidak valid');
+        }
 
         // Check current password
         if (!Hash::check($request->current_password, $user->password)) {

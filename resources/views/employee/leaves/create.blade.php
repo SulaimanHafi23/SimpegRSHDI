@@ -28,7 +28,7 @@
         </div>
     @endif
 
-    <form action="{{ route('employee.leaves.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4 sm:space-y-5">
+    <form id="leaveRequestForm" action="{{ route('employee.leaves.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4 sm:space-y-5">
         @csrf
 
         {{-- Card 1: Jenis Cuti --}}
@@ -121,6 +121,7 @@
                     </label>
                     <input type="date" name="start_date" id="start_date" required
                            value="{{ old('start_date') }}"
+                              oninput="handleLeaveDateInput(this)"
                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm sm:text-base @error('start_date') border-red-400 bg-red-50 @enderror">
                     @error('start_date')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -132,6 +133,7 @@
                     </label>
                     <input type="date" name="end_date" id="end_date" required
                            value="{{ old('end_date') }}"
+                              oninput="handleLeaveDateInput(this)"
                            class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition text-sm sm:text-base @error('end_date') border-red-400 bg-red-50 @enderror">
                     @error('end_date')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -144,6 +146,7 @@
                 </svg>
                 <span class="text-sm text-emerald-800">Durasi cuti: <strong id="dayCount" class="font-bold"></strong></span>
             </div>
+            <p class="text-xs text-gray-500 mt-2">Tanggal dengan pengajuan cuti pending/disetujui tidak dapat dipilih kembali.</p>
         </div>
 
         {{-- Card 3: Alasan --}}
@@ -228,6 +231,27 @@
 </div>
 
 <script>
+const blockedLeaveDates = new Set(@json($blockedLeaveDates ?? []));
+
+function isBlockedLeaveDate(dateString) {
+    return Boolean(dateString) && blockedLeaveDates.has(dateString);
+}
+
+function handleLeaveDateInput(input) {
+    if (!input || !input.value) {
+        return true;
+    }
+
+    if (isBlockedLeaveDate(input.value)) {
+        window.showWarningAlert('Validasi', 'Tanggal tersebut sudah diajukan pada cuti pending/disetujui. Silakan pilih tanggal lain.');
+        input.value = '';
+        input.focus();
+        return false;
+    }
+
+    return true;
+}
+
 function handleFileSelect(input) {
     const placeholder = document.getElementById('uploadPlaceholder');
     const fileBox     = document.getElementById('uploadFileName');
@@ -247,8 +271,13 @@ function handleFileSelect(input) {
 document.addEventListener('DOMContentLoaded', function () {
     const startInput = document.getElementById('start_date');
     const endInput   = document.getElementById('end_date');
+    const form       = document.getElementById('leaveRequestForm');
     const counter    = document.getElementById('dayCounter');
     const countText  = document.getElementById('dayCount');
+    const today      = new Date().toISOString().split('T')[0];
+
+    startInput.min = today;
+    endInput.min = today;
 
     function updateCounter() {
         if (startInput.value && endInput.value) {
@@ -267,11 +296,45 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     startInput.addEventListener('change', function () {
+        if (!handleLeaveDateInput(this)) {
+            endInput.min = today;
+            updateCounter();
+            return;
+        }
+
         endInput.min = this.value;
         if (endInput.value && new Date(endInput.value) < new Date(this.value)) endInput.value = '';
         updateCounter();
     });
-    endInput.addEventListener('change', updateCounter);
+    endInput.addEventListener('change', function () {
+        if (!handleLeaveDateInput(this)) {
+            updateCounter();
+            return;
+        }
+
+        updateCounter();
+    });
+
+    form.addEventListener('submit', function (event) {
+        if (!handleLeaveDateInput(startInput) || !handleLeaveDateInput(endInput)) {
+            event.preventDefault();
+            return;
+        }
+
+        if (startInput.value && endInput.value) {
+            const start = new Date(startInput.value);
+            const end = new Date(endInput.value);
+
+            for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
+                const dateString = cursor.toISOString().split('T')[0];
+                if (isBlockedLeaveDate(dateString)) {
+                    event.preventDefault();
+                    window.showWarningAlert('Validasi', 'Rentang tanggal cuti memuat tanggal yang sudah diajukan sebelumnya (pending/disetujui). Silakan pilih rentang lain.');
+                    return;
+                }
+            }
+        }
+    });
 
     const reason = document.getElementById('reason');
     if (reason.value) document.getElementById('reasonCount').textContent = reason.value.length + ' karakter';

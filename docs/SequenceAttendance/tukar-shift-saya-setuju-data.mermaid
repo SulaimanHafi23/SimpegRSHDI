@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.shift-swaps.index / accept-open)"
+    participant Controller as "Employee ShiftSwapController"
+    participant Model as "ShiftSwapRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik Terima / Setuju pada request tukar shift
+    View->>Controller: POST /employee/shift-swaps/{id}/accept atau /accept-open
+    Controller->>Controller: Validasi kepemilikan target shift
+    Controller->>Model: acceptRequest(id, worker_id) / acceptOpenRequest(id, worker_id, target_shift_id)
+    Model->>DB: SELECT shift_swap_requests + update status
+    DB-->>Model: Data request
+
+    alt Data valid (request dapat diterima)
+        Controller->>View: Redirect index + success
+        View-->>Pegawai: Notifikasi permintaan diterima
+    else Data tidak valid (bukan target / request tidak tersedia / validasi gagal)
+        Controller->>View: Back + error
+        View-->>Pegawai: Notifikasi gagal menerima permintaan
+    end

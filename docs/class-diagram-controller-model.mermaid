@@ -1,0 +1,1028 @@
+﻿classDiagram
+direction LR
+
+%% MODEL CLASSES
+class M_Attendance as Attendance {
++worker_id
++shift_id
++attendance_date
++check_in
++check_out
++distance_check_in
++distance_check_out
++check_in_by_admin
++check_in_admin_id
++check_out_by_admin
++check_out_admin_id
++status
++is_late
++late_minutes
++is_early_leave
++early_leave_minutes
++notes
+#cast_attendance_date
+#cast_check_in
+#cast_check_out
+#cast_distance_check_in
+#cast_distance_check_out
+#cast_check_in_by_admin
+#cast_check_out_by_admin
+#cast_is_late
+#cast_late_minutes
+#cast_is_early_leave
+#cast_early_leave_minutes
++worker()
++shift()
++checkInAdmin()
++checkOutAdmin()
++photos()
++checkInPhoto()
++checkOutPhoto()
+}
+class M_AttendancePhoto as AttendancePhoto {
++attendance_id
++photo_path
++photo_type
++taken_at
++created_at
+#cast_taken_at
+#cast_created_at
++attendance()
+}
+class M_AuditLog as AuditLog {
++user_id
++user_name
++action
++auditable_type
++auditable_id
++description
++old_values
++new_values
++ip_address
++user_agent
++url
+#cast_old_values
+#cast_new_values
++user()
++auditable()
++scopeForModel()
++scopeByUser()
++scopeByAction()
++scopeRecent()
++getModelNameAttribute()
++getActionBadgeAttribute()
+}
+class M_BusinessTrip as BusinessTrip {
++worker_id
++destination
++purpose
++start_date
++end_date
++trip_duration_type
++half_day_session
++transportation
++accommodation
++notes
++supporting_document_path
++estimated_cost
++status
++approved_by
++approved_at
++rejection_reason
+#cast_start_date
+#cast_end_date
+#cast_estimated_cost
+#cast_approved_at
++worker()
++approvedBy()
++getHalfDaySessionLabelAttribute()
++getDurationValueAttribute()
++getDurationLabelAttribute()
+}
+class M_Department as Department {
++name
++code
++description
++is_active
++requires_holiday_attendance
++parent_id
++manager_id
+#cast_is_active
+#cast_requires_holiday_attendance
++workers()
++parent()
++children()
++manager()
++documentTypes()
+}
+class M_DepartmentDocumentType as DepartmentDocumentType {
++department_id
++document_type_id
++department()
++documentType()
+}
+class M_DocumentType as DocumentType {
++name
++description
++file_format
++max_file_size
++is_required
++is_universal
++is_active
+#cast_is_required
+#cast_is_universal
+#cast_is_active
++workerDocuments()
++departments()
+}
+class M_Holiday as Holiday {
++name
++date
++description
++is_national
+#cast_date
+#cast_is_national
++scopeNational()
++scopeDateRange()
++scopeYear()
+}
+class M_LeaveRequest as LeaveRequest {
++worker_id
++leave_type_id
++start_date
++end_date
++total_days
++reason
++attachment_path
++status
++approved_by
++approved_at
++rejection_reason
+#cast_start_date
+#cast_end_date
+#cast_total_days
+#cast_approved_at
++worker()
++leaveType()
++approver()
+}
+class M_LeaveType as LeaveType {
++name
++code
++max_days_per_year
++requires_approval
++requires_attachment
++days_notice
++is_active
+#cast_max_days_per_year
+#cast_requires_approval
+#cast_requires_attachment
+#cast_days_notice
+#cast_is_active
++leaveRequests()
+}
+class M_Notification as Notification {
++user_id
++notifiable_type
++notifiable_id
++type
++title
++message
++data
++read_at
+#cast_data
+#cast_read_at
++user()
++isRead()
++markAsRead()
++scopeUnread()
++scopeRead()
++getTitleAttribute()
++getMessageAttribute()
++getIsReadAttribute()
+}
+class M_Shift as Shift {
++name
++start_time
++end_time
++total_hours
++grace_period_minutes
++is_overnight
++is_active
+#cast_start_time
+#cast_end_time
+#cast_total_hours
+#cast_grace_period_minutes
+#cast_is_overnight
+#cast_is_active
++workerShifts()
++dayTimes()
++shiftOverrides()
++attendances()
++getScheduleForDate()
+}
+class M_ShiftDayTime as ShiftDayTime {
++shift_id
++day_of_week
++start_time
++end_time
+#cast_day_of_week
+#cast_start_time
+#cast_end_time
++shift()
+}
+class M_ShiftOverride as ShiftOverride {
++worker_id
++shift_id
++override_date
++reason
++created_by
++shift_swap_request_id
+#cast_override_date
++worker()
++shift()
++creator()
++shiftSwapRequest()
+}
+class M_ShiftSwapAuditLog as ShiftSwapAuditLog {
++shift_swap_request_id
++user_id
++action
++old_status
++new_status
++notes
++metadata
++user_agent
+#cast_metadata
++shiftSwapRequest()
++user()
+}
+class M_ShiftSwapRequest as ShiftSwapRequest {
++requester_id
++target_worker_id
++requester_shift_id
++target_shift_id
++swap_type
++swap_start_date
++swap_end_date
++swap_dates
++status
++requires_manager_approval
++manager_id
++manager_approved_at
++reason
++metadata
++requested_at
++executed_by
++executed_at
+#cast_requires_manager_approval
+#cast_metadata
+#cast_swap_dates
+#cast_swap_start_date
+#cast_swap_end_date
+#cast_requested_at
+#cast_manager_approved_at
+#cast_executed_at
++getSwapDateAttribute()
++setSwapDateAttribute()
++requester()
++targetWorker()
++requesterShift()
++targetShift()
++manager()
++executedBy()
++auditLogs()
+}
+class M_User as User {
++worker_id
++email
++username
++password
++email_verified_at
++last_login
++is_active
+#cast_email_verified_at
+#cast_last_login
+#cast_is_active
+#cast_password
++worker()
++createdShiftOverrides()
++verifiedDocuments()
++approvedLeaveRequests()
+}
+class M_Worker as Worker {
++nip
++name
++email
++phone_number
++address
++birth_date
++birth_place
++gender
++religion
++department_id
++shift_id
++hire_date
++resign_date
++employment_status
++status
++photo_url
+#cast_birth_date
+#cast_hire_date
+#cast_resign_date
+#cast_gender
+#cast_religion
++department()
++shift()
++user()
++workerShifts()
++shiftOverrides()
++shiftHistories()
++attendances()
++workerDocuments()
++leaveRequests()
++shiftSwapRequestsAsRequester()
++shiftSwapRequestsAsTarget()
++offDays()
++activeWorkerShift()
++getShiftForDate()
++isOffDay()
++canCheckOutOnDate()
++getCurrentShift()
++resolveShiftForDate()
+}
+class M_WorkerDocument as WorkerDocument {
++worker_id
++document_type_id
++department_document_type_id
++file_name
++file_path
++file_size
++expired_date
++status
++verified_by
++verified_at
++notes
+#cast_file_size
+#cast_expired_date
+#cast_verified_at
++worker()
++documentType()
++departmentDocumentType()
++verifier()
++isExpired()
++getFileSizeHumanAttribute()
+}
+class M_WorkerOffDay as WorkerOffDay {
++worker_id
++day_of_week
++effective_from
++effective_until
++reason
++created_by
+#cast_day_of_week
+#cast_effective_from
+#cast_effective_until
++worker()
++createdBy()
+}
+class M_WorkerShift as WorkerShift {
++worker_id
++shift_id
++effective_from
++effective_until
++is_active
++notes
+#cast_effective_from
+#cast_effective_until
+#cast_is_active
++getStartDateAttribute()
++getEndDateAttribute()
++worker()
++shift()
++getShiftForDate()
++isActiveOnDate()
+}
+class M_WorkerShiftHistory as WorkerShiftHistory {
++worker_id
++shift_id
++effective_from
++effective_until
++changed_at
++change_reason
++changed_by
++notes
+#cast_effective_from
+#cast_effective_until
+#cast_changed_at
++worker()
++shift()
++changedByUser()
+}
+
+%% CONTROLLER CLASSES
+class C_Admin\AuditLogController["AuditLogController\\n[Admin\AuditLogController]"]
+class C_Admin\AuditLogController {
+-<stateless_controller>
++index()
++show()
+}
+class C_Admin\DashboardController["DashboardController\\n[Admin\DashboardController]"]
+class C_Admin\DashboardController {
+-<stateless_controller>
++__construct()
++index()
++getMonthlyAttendanceStats()
++getLeaveStatsByType()
++getDepartmentStats()
++getTodayAttendanceSummary()
++getPendingApprovalsCount()
+}
+class C_Admin\HolidayController["HolidayController\\n[Admin\HolidayController]"]
+class C_Admin\HolidayController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++edit()
++update()
++destroy()
++bulkCreate()
++bulkStore()
++autoGenerate()
++storeAutoGenerate()
++getIndonesianNationalHolidays()
++getAvailableYearsForGeneration()
+}
+class C_Api\WorkerShiftApiController["WorkerShiftApiController\\n[Api\WorkerShiftApiController]"]
+class C_Api\WorkerShiftApiController {
+-<stateless_controller>
++__construct()
++getShiftTime()
++getFutureShifts()
+}
+class C_Approval\BusinessTripApprovalController["BusinessTripApprovalController\\n[Approval\BusinessTripApprovalController]"]
+class C_Approval\BusinessTripApprovalController {
+-<stateless_controller>
++__construct()
++index()
++show()
++approve()
++reject()
++destroy()
++export()
+}
+class C_Approval\DocumentApprovalController["DocumentApprovalController\\n[Approval\DocumentApprovalController]"]
+class C_Approval\DocumentApprovalController {
+-<stateless_controller>
++__construct()
++index()
++show()
++verify()
++reject()
+}
+class C_Approval\LeaveApprovalController["LeaveApprovalController\\n[Approval\LeaveApprovalController]"]
+class C_Approval\LeaveApprovalController {
+-<stateless_controller>
++__construct()
++index()
++show()
++approve()
++reject()
+}
+class C_Attendance\AttendanceController["AttendanceController\\n[Attendance\AttendanceController]"]
+class C_Attendance\AttendanceController {
+-<stateless_controller>
++__construct()
++index()
++create()
++checkInForm()
++checkIn()
++checkOutForm()
++checkOut()
++show()
++edit()
++getConfiguredLocation()
++update()
++destroy()
++dailyReport()
++monthlyReport()
++export()
++workerList()
++history()
++exportWorkerAttendance()
++exportWorkerHistory()
++workerStats()
++calculateWorkerStats()
++buildWorkerAttendanceCalendarRows()
++getWorkingDaysCount()
++exportStatsPdf()
++exportStatsExcel()
++exportTodayAttendance()
++getAttendanceDetail()
+}
+class C_Auth\ForgotPasswordController["ForgotPasswordController\\n[Auth\ForgotPasswordController]"]
+class C_Auth\ForgotPasswordController {
+-<stateless_controller>
++showLinkRequestForm()
++sendResetLinkEmail()
++getStatusMessage()
+}
+class C_Auth\LoginController["LoginController\\n[Auth\LoginController]"]
+class C_Auth\LoginController {
+-<stateless_controller>
++__construct()
++showLoginForm()
++login()
++logout()
+}
+class C_Auth\ResetPasswordController["ResetPasswordController\\n[Auth\ResetPasswordController]"]
+class C_Auth\ResetPasswordController {
+-<stateless_controller>
++showResetForm()
++reset()
++getStatusMessage()
+}
+class C_Document\BerkasController["BerkasController\\n[Document\BerkasController]"]
+class C_Document\BerkasController {
+-<stateless_controller>
++__construct()
++index()
++show()
++create()
++store()
++edit()
++update()
++destroy()
++verify()
++reject()
++pending()
++workerDocuments()
++checkCompleteness()
++download()
++preview()
+}
+class C_Employee\AttendanceController["AttendanceController\\n[Employee\AttendanceController]"]
+class C_Employee\AttendanceController {
+-<stateless_controller>
++__construct()
++index()
++checkInForm()
++checkOutForm()
++checkIn()
++checkOut()
++show()
++photo()
++export()
++exportPdf()
++computeVirtualAbsentDays()
++buildMonthlyExportRows()
++getConfiguredLocation()
+}
+class C_Employee\BusinessTripController["BusinessTripController\\n[Employee\BusinessTripController]"]
+class C_Employee\BusinessTripController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++cancel()
++export()
++notifyApprovers()
+}
+class C_Employee\CalendarController["CalendarController\\n[Employee\CalendarController]"]
+class C_Employee\CalendarController {
+-<stateless_controller>
++__construct()
++index()
++events()
++getLeaveColor()
++getBusinessTripColor()
+}
+class C_Employee\DashboardController["DashboardController\\n[Employee\DashboardController]"]
+class C_Employee\DashboardController {
+-<stateless_controller>
++__construct()
++index()
+}
+class C_Employee\DocumentController["DocumentController\\n[Employee\DocumentController]"]
+class C_Employee\DocumentController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++getAllowedDocumentTypes()
++download()
++preview()
++destroy()
+}
+class C_Employee\LeaveController["LeaveController\\n[Employee\LeaveController]"]
+class C_Employee\LeaveController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++cancel()
++export()
++exportPdf()
+}
+class C_Employee\NotificationController["NotificationController\\n[Employee\NotificationController]"]
+class C_Employee\NotificationController {
+-<stateless_controller>
++__construct()
++index()
++getUnreadCount()
++getUnread()
++markAsRead()
++markAllAsRead()
++destroy()
+}
+class C_Employee\ProfileController["ProfileController\\n[Employee\ProfileController]"]
+class C_Employee\ProfileController {
+-workerService
++__construct()
++show()
++edit()
++update()
++updatePassword()
+}
+class C_Employee\ShiftController["ShiftController\\n[Employee\ShiftController]"]
+class C_Employee\ShiftController {
+-<stateless_controller>
++__construct()
++index()
++show()
++buildCalendar()
+}
+class C_Employee\ShiftSwapController["ShiftSwapController\\n[Employee\ShiftSwapController]"]
+class C_Employee\ShiftSwapController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++accept()
++reject()
++cancel()
++showAcceptOpen()
++acceptOpen()
++export()
+}
+class C_HR\HRDashboardController["HRDashboardController\\n[HR\HRDashboardController]"]
+class C_HR\HRDashboardController {
+-<stateless_controller>
++__construct()
++index()
+}
+class C_Leave\LeaveRequestController["LeaveRequestController\\n[Leave\LeaveRequestController]"]
+class C_Leave\LeaveRequestController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++destroy()
++approve()
++reject()
++cancel()
++export()
++workerLeaveBalance()
+}
+class C_Manager\ManagerDashboardController["ManagerDashboardController\\n[Manager\ManagerDashboardController]"]
+class C_Manager\ManagerDashboardController {
+-<stateless_controller>
++__construct()
++index()
+}
+class C_Manager\ShiftSwapApprovalController["ShiftSwapApprovalController\\n[Manager\ShiftSwapApprovalController]"]
+class C_Manager\ShiftSwapApprovalController {
+-<stateless_controller>
++__construct()
++index()
++show()
++approve()
++reject()
++execute()
++revert()
++export()
+}
+class C_Master\DepartmentController["DepartmentController\\n[Master\DepartmentController]"]
+class C_Master\DepartmentController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class C_Master\DepartmentDocumentTypeController["DepartmentDocumentTypeController\\n[Master\DepartmentDocumentTypeController]"]
+class C_Master\DepartmentDocumentTypeController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++edit()
++update()
++show()
++destroy()
+}
+class C_Master\DocumentTypeController["DocumentTypeController\\n[Master\DocumentTypeController]"]
+class C_Master\DocumentTypeController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class C_Master\LeaveTypeController["LeaveTypeController\\n[Master\LeaveTypeController]"]
+class C_Master\LeaveTypeController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class C_Master\ShiftController["ShiftController\\n[Master\ShiftController]"]
+class C_Master\ShiftController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
++syncDayTimes()
+}
+class C_NotificationController["NotificationController\\n[NotificationController]"]
+class C_NotificationController {
+-<stateless_controller>
++__construct()
++index()
++unread()
++unreadCount()
++markAsRead()
++markAllAsRead()
++destroy()
+}
+class C_ProfileController["ProfileController\\n[ProfileController]"]
+class C_ProfileController {
+-<stateless_controller>
++__construct()
++show()
++edit()
++update()
++updatePassword()
+}
+class C_Report\AttendanceReportController["AttendanceReportController\\n[Report\AttendanceReportController]"]
+class C_Report\AttendanceReportController {
+-<stateless_controller>
++__construct()
++index()
++calculateWorkingDays()
+}
+class C_Report\ReportController["ReportController\\n[Report\ReportController]"]
+class C_Report\ReportController {
+-<stateless_controller>
++__construct()
++attendance()
++leaves()
++workerDocuments()
++workers()
++exportAttendance()
++exportLeaves()
++exportWorkerDocuments()
+}
+class C_Role\RoleController["RoleController\\n[Role\RoleController]"]
+class C_Role\RoleController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class C_Schedule\WorkerShiftScheduleController["WorkerShiftScheduleController\\n[Schedule\WorkerShiftScheduleController]"]
+class C_Schedule\WorkerShiftScheduleController {
+-<stateless_controller>
++__construct()
++index()
++show()
++create()
++store()
++edit()
++update()
++destroy()
++workerSchedule()
++bulkCreate()
++calendar()
+}
+class C_ShiftOverride\ShiftOverrideController["ShiftOverrideController\\n[ShiftOverride\ShiftOverrideController]"]
+class C_ShiftOverride\ShiftOverrideController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++bulkCreate()
++destroy()
+}
+class C_User\UserController["UserController\\n[User\UserController]"]
+class C_User\UserController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class C_Worker\WorkerController["WorkerController\\n[Worker\WorkerController]"]
+class C_Worker\WorkerController {
+-<stateless_controller>
++__construct()
++index()
++show()
++attendanceHistory()
++create()
++store()
++edit()
++update()
++destroy()
++resign()
++export()
++import()
++downloadTemplate()
+}
+class C_Worker\WorkerOffDayController["WorkerOffDayController\\n[Worker\WorkerOffDayController]"]
+class C_Worker\WorkerOffDayController {
+-<stateless_controller>
++__construct()
++index()
++storePattern()
++destroyPattern()
++checkDate()
++getRange()
+}
+class C_WorkerDocument\WorkerDocumentController["WorkerDocumentController\\n[WorkerDocument\WorkerDocumentController]"]
+class C_WorkerDocument\WorkerDocumentController {
+-<stateless_controller>
++__construct()
++index()
++create()
++store()
++documentTypesForWorker()
++show()
++verify()
++reject()
++download()
++workerDocuments()
++expired()
++expiring()
+}
+class C_WorkerShift\WorkerShiftController["WorkerShiftController\\n[WorkerShift\WorkerShiftController]"]
+class C_WorkerShift\WorkerShiftController {
+-<stateless_controller>
++__construct()
++index()
++create()
++generate()
++generateStore()
++store()
++show()
++edit()
++update()
++destroy()
++workerShifts()
++calendarData()
+}
+
+%% MODEL RELATIONSHIPS
+M_Attendance --> M_Worker : belongsTo
+M_Attendance --> M_Shift : belongsTo
+M_Attendance --> M_User : belongsTo
+M_Attendance --> "*" M_AttendancePhoto : hasMany
+M_AttendancePhoto --> M_Attendance : belongsTo
+M_AuditLog --> M_User : belongsTo
+M_BusinessTrip --> M_Worker : belongsTo
+M_BusinessTrip --> M_User : belongsTo
+M_Department --> "*" M_Worker : hasMany
+M_Department --> M_Department : belongsTo
+M_Department --> "*" M_Department : hasMany
+M_Department --> M_User : belongsTo
+M_DepartmentDocumentType --> M_Department : belongsTo
+M_DepartmentDocumentType --> M_DocumentType : belongsTo
+M_DocumentType --> "*" M_WorkerDocument : hasMany
+M_DocumentType "*" --> "*" M_Department : belongsToMany
+M_LeaveRequest --> M_Worker : belongsTo
+M_LeaveRequest --> M_LeaveType : belongsTo
+M_LeaveRequest --> M_User : belongsTo
+M_LeaveType --> "*" M_LeaveRequest : hasMany
+M_Notification --> M_User : belongsTo
+M_Shift --> "*" M_WorkerShift : hasMany
+M_Shift --> "*" M_ShiftDayTime : hasMany
+M_Shift --> "*" M_ShiftOverride : hasMany
+M_Shift --> "*" M_Attendance : hasMany
+M_ShiftDayTime --> M_Shift : belongsTo
+M_ShiftOverride --> M_Worker : belongsTo
+M_ShiftOverride --> M_Shift : belongsTo
+M_ShiftOverride --> M_User : belongsTo
+M_ShiftOverride --> M_ShiftSwapRequest : belongsTo
+M_ShiftSwapAuditLog --> M_ShiftSwapRequest : belongsTo
+M_ShiftSwapAuditLog --> M_User : belongsTo
+M_ShiftSwapRequest --> M_Worker : belongsTo
+M_ShiftSwapRequest --> M_WorkerShift : belongsTo
+M_ShiftSwapRequest --> M_User : belongsTo
+M_ShiftSwapRequest --> "*" M_ShiftSwapAuditLog : hasMany
+M_User --> M_Worker : belongsTo
+M_User --> "*" M_ShiftOverride : hasMany
+M_User --> "*" M_WorkerDocument : hasMany
+M_User --> "*" M_LeaveRequest : hasMany
+M_Worker --> M_Department : belongsTo
+M_Worker --> M_Shift : belongsTo
+M_Worker --> M_User : hasOne
+M_Worker --> "*" M_WorkerShift : hasMany
+M_Worker --> "*" M_ShiftOverride : hasMany
+M_Worker --> "*" M_WorkerShiftHistory : hasMany
+M_Worker --> "*" M_Attendance : hasMany
+M_Worker --> "*" M_WorkerDocument : hasMany
+M_Worker --> "*" M_LeaveRequest : hasMany
+M_Worker --> "*" M_ShiftSwapRequest : hasMany
+M_Worker --> "*" M_WorkerOffDay : hasMany
+M_Worker --> M_WorkerShift : hasOne
+M_WorkerDocument --> M_Worker : belongsTo
+M_WorkerDocument --> M_DocumentType : belongsTo
+M_WorkerDocument --> M_DepartmentDocumentType : belongsTo
+M_WorkerDocument --> M_User : belongsTo
+M_WorkerOffDay --> M_Worker : belongsTo
+M_WorkerOffDay --> M_User : belongsTo
+M_WorkerShift --> M_Worker : belongsTo
+M_WorkerShift --> M_Shift : belongsTo
+M_WorkerShiftHistory --> M_Worker : belongsTo
+M_WorkerShiftHistory --> M_Shift : belongsTo
+M_WorkerShiftHistory --> M_User : belongsTo
+
+%% CONTROLLER -> MODEL DEPENDENCIES
+C_Admin\AuditLogController ..> M_AuditLog : uses
+C_Admin\DashboardController ..> M_Worker : uses
+C_Admin\DashboardController ..> M_Attendance : uses
+C_Admin\DashboardController ..> M_LeaveRequest : uses
+C_Admin\HolidayController ..> M_Holiday : uses
+C_Api\WorkerShiftApiController ..> M_Worker : uses
+C_Approval\BusinessTripApprovalController ..> M_BusinessTrip : uses
+C_Approval\BusinessTripApprovalController ..> M_Worker : uses
+C_Approval\DocumentApprovalController ..> M_WorkerDocument : uses
+C_Approval\LeaveApprovalController ..> M_LeaveRequest : uses
+C_Auth\ForgotPasswordController ..> M_User : uses
+C_Auth\ForgotPasswordController ..> M_Worker : uses
+C_Auth\LoginController ..> M_AuditLog : uses
+C_Employee\BusinessTripController ..> M_BusinessTrip : uses
+C_Employee\BusinessTripController ..> M_User : uses
+C_Employee\CalendarController ..> M_BusinessTrip : uses
+C_Employee\CalendarController ..> M_Holiday : uses
+C_Employee\DocumentController ..> M_DocumentType : uses
+C_Employee\DocumentController ..> M_WorkerDocument : uses
+C_HR\HRDashboardController ..> M_Worker : uses
+C_HR\HRDashboardController ..> M_Attendance : uses
+C_HR\HRDashboardController ..> M_LeaveRequest : uses
+C_HR\HRDashboardController ..> M_WorkerDocument : uses
+C_Manager\ManagerDashboardController ..> M_Worker : uses
+C_Manager\ManagerDashboardController ..> M_Attendance : uses
+C_Manager\ManagerDashboardController ..> M_LeaveRequest : uses
+C_Manager\ManagerDashboardController ..> M_ShiftSwapRequest : uses
+C_Master\DepartmentDocumentTypeController ..> M_Department : uses
+C_Master\DepartmentDocumentTypeController ..> M_DocumentType : uses
+C_Master\DepartmentDocumentTypeController ..> M_DepartmentDocumentType : uses
+C_Report\AttendanceReportController ..> M_Attendance : uses
+C_Report\AttendanceReportController ..> M_Worker : uses
+C_Report\AttendanceReportController ..> M_Department : uses
+C_Report\ReportController ..> M_Worker : uses
+C_Report\ReportController ..> M_DocumentType : uses
+C_Worker\WorkerController ..> M_Department : uses
+C_Worker\WorkerController ..> M_Worker : uses
+C_Worker\WorkerOffDayController ..> M_Worker : uses

@@ -8,6 +8,7 @@ use App\Models\WorkerDocument;
 use App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 class WorkerDocumentRepository implements WorkerDocumentRepositoryInterface
 {
@@ -100,8 +101,8 @@ class WorkerDocumentRepository implements WorkerDocumentRepositoryInterface
         $document = $this->model->findOrFail($id);
 
         // Delete file if exists
-        if ($document->file_path && \Storage::exists($document->file_path)) {
-            \Storage::delete($document->file_path);
+        if ($document->file_path && Storage::exists($document->file_path)) {
+            Storage::delete($document->file_path);
         }
 
         return $document->delete();

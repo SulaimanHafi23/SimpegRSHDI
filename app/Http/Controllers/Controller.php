@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Closure;
 
@@ -19,7 +20,7 @@ abstract class Controller extends BaseController
 
     /**
      * Define middleware for controller (Laravel 11 style compatibility)
-     * 
+     *
      * @param array|string|Closure $middleware
      * @param array $options
      * @return \Illuminate\Routing\ControllerMiddlewareOptions|\App\Http\Controllers\ControllerMiddlewareOptions
@@ -32,20 +33,20 @@ abstract class Controller extends BaseController
             $this->middlewareDefinitions[] = $middlewareOptions;
             return $middlewareOptions;
         }
-        
+
         // Handle Laravel 12 style (with options array)
         $middlewareOptions = new ControllerMiddlewareOptions($middleware);
-        
+
         if (isset($options['only'])) {
             $middlewareOptions->only($options['only']);
         }
-        
+
         if (isset($options['except'])) {
             $middlewareOptions->except($options['except']);
         }
-        
+
         $this->middlewareDefinitions[] = $middlewareOptions;
-        
+
         return $middlewareOptions;
     }
 
@@ -62,11 +63,11 @@ abstract class Controller extends BaseController
      */
     protected function authorizePermission(string $permission): void
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             abort(401, 'Anda harus login terlebih dahulu.');
         }
 
-        if (!auth()->user()->can($permission)) {
+        if (!Gate::allows($permission)) {
             abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
         }
     }
@@ -76,11 +77,11 @@ abstract class Controller extends BaseController
      */
     protected function authorizeAnyPermission(array $permissions): void
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             abort(401, 'Anda harus login terlebih dahulu.');
         }
 
-        if (!auth()->user()->hasAnyPermission($permissions)) {
+        if (!Gate::any($permissions)) {
             abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
         }
     }
@@ -90,12 +91,14 @@ abstract class Controller extends BaseController
      */
     protected function authorizeAllPermissions(array $permissions): void
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             abort(401, 'Anda harus login terlebih dahulu.');
         }
 
-        if (!auth()->user()->hasAllPermissions($permissions)) {
-            abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+        foreach ($permissions as $permission) {
+            if (!Gate::allows($permission)) {
+                abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
+            }
         }
     }
 
@@ -104,11 +107,16 @@ abstract class Controller extends BaseController
      */
     protected function authorizeRole(string $role): void
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             abort(401, 'Anda harus login terlebih dahulu.');
         }
 
-        if (!auth()->user()->hasRole($role)) {
+        $user = Auth::user();
+        $hasRole = $user && method_exists($user, 'hasRole')
+            ? (bool) call_user_func([$user, 'hasRole'], $role)
+            : false;
+
+        if (!$hasRole) {
             abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
         }
     }
@@ -118,11 +126,11 @@ abstract class Controller extends BaseController
      */
     protected function isOwnData(?string $workerId): bool
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             return false;
         }
 
-        return auth()->user()->worker_id === $workerId;
+        return (string) data_get(Auth::user(), 'worker_id', '') === (string) $workerId;
     }
 
     /**
@@ -130,11 +138,11 @@ abstract class Controller extends BaseController
      */
     protected function authorizeOwnOrPermission(string $workerId, string $permission): void
     {
-        if (!auth()->check()) {
+        if (!Auth::check()) {
             abort(401, 'Anda harus login terlebih dahulu.');
         }
 
-        if (!$this->isOwnData($workerId) && !auth()->user()->can($permission)) {
+        if (!$this->isOwnData($workerId) && !Gate::allows($permission)) {
             abort(403, 'Anda tidak memiliki akses untuk melakukan aksi ini.');
         }
     }

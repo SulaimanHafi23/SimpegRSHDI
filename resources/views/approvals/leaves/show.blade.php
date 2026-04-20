@@ -179,17 +179,49 @@
                             </div>
                         </div>
 
-                        @if($leave->document_path)
+                        @php
+                            $leaveDocumentPath = $leave->attachment_path ?? $leave->attachment ?? $leave->document_path ?? null;
+                        @endphp
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-500 mb-2">Dokumen Pendukung</label>
-                            <a href="{{ Storage::url($leave->document_path) }}" target="_blank"
-                               class="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition">
-                                <i class="fas fa-file-pdf text-red-500 mr-2"></i>
-                                <span class="text-sm text-gray-700">Lihat Dokumen</span>
-                                <i class="fas fa-external-link-alt text-gray-400 ml-2 text-xs"></i>
-                            </a>
+                            @if($leaveDocumentPath)
+                        @php
+                            $attachmentUrl = Storage::disk('public')->url($leaveDocumentPath);
+                            $attachmentExtension = strtolower(pathinfo($leaveDocumentPath, PATHINFO_EXTENSION));
+                            $isImageAttachment = in_array($attachmentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true);
+                            $isPdfAttachment = $attachmentExtension === 'pdf';
+                        @endphp
+                            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <p class="text-sm font-medium text-gray-700">{{ basename($leaveDocumentPath) }}</p>
+                                    <a href="{{ $attachmentUrl }}" target="_blank"
+                                       class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm font-semibold">
+                                        <i class="fas fa-external-link-alt mr-2"></i>
+                                        Buka Dokumen
+                                    </a>
+                                </div>
+
+                                @if($isImageAttachment)
+                                    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                        <img src="{{ $attachmentUrl }}" alt="Preview dokumen pendukung" class="w-full object-contain" style="height: clamp(34rem, 85vh, 78rem);">
+                                    </div>
+
+                                @elseif($isPdfAttachment)
+                                    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                        <iframe src="{{ $attachmentUrl }}#zoom=100" class="w-full" style="height: clamp(46rem, 96vh, 96rem);" title="Preview dokumen pendukung PDF"></iframe>
+                                    </div>
+                                @else
+                                    <div class="rounded-lg border border-dashed border-gray-300 bg-white p-3 text-sm text-gray-600">
+                                        Jenis file ini belum bisa dipreview langsung. Silakan klik tombol Buka Dokumen.
+                                    </div>
+                                @endif
+                            </div>
+                            @else
+                                <div class="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-sm text-gray-600">
+                                    Belum ada dokumen pendukung pada pengajuan cuti ini.
+                                </div>
+                            @endif
                         </div>
-                        @endif
 
                         <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Diajukan Pada</label>

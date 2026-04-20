@@ -253,7 +253,7 @@
                         <form action="{{ route('employee.documents.destroy', $document->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition" onclick="return confirm('Yakin ingin menghapus dokumen ini?')">
+                            <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition" onclick="event.preventDefault(); showDeleteConfirm(() => this.closest('form').submit());">
                                 <i class="fas fa-trash mr-2"></i>Hapus
                             </button>
                         </form>
@@ -341,7 +341,7 @@
                                             <button type="submit"
                                                     class="text-red-600 hover:text-red-900"
                                                     title="Hapus"
-                                                    onclick="return confirm('Yakin ingin menghapus dokumen ini?')">
+                                                    onclick="event.preventDefault(); showDeleteConfirm(() => this.closest('form').submit());">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                                                 </svg>

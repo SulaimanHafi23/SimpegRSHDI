@@ -18,10 +18,10 @@
                 <i class="fas fa-magic mr-2"></i>
                 Auto Generate
             </a>
-            <a href="{{ route('admin.holidays.bulk-create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 shadow-md">
+            {{-- <a href="{{ route('admin.holidays.bulk-create') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition duration-200 shadow-md">
                 <i class="fas fa-layer-group mr-2"></i>
                 Tambah Bulk
-            </a>
+            </a> --}}
             <a href="{{ route('admin.holidays.create') }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition duration-200 shadow-md">
                 <i class="fas fa-plus mr-2"></i>
                 Tambah Libur

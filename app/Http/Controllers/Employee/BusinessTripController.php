@@ -6,8 +6,8 @@ use App\Exports\EmployeeBusinessTripExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BusinessTrip\BusinessTripRequest;
 use App\Models\BusinessTrip;
+use App\Models\Notification;
 use App\Models\User;
-use App\Services\Notification\NotificationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +16,8 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class BusinessTripController extends Controller
 {
-    public function __construct(
-        protected NotificationService $notificationService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
@@ -197,8 +196,10 @@ class BusinessTripController extends Controller
             ->unique('id');
 
         foreach ($recipients as $recipient) {
-            $this->notificationService->create([
+            Notification::create([
                 'user_id' => $recipient->id,
+                'notifiable_type' => \App\Models\User::class,
+                'notifiable_id' => $recipient->id,
                 'type' => 'business_trip_submitted',
                 'title' => 'Pengajuan Perjalanan Dinas Baru',
                 'message' => sprintf(

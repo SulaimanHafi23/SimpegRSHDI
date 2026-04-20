@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Admin as "Manager/HR"
+    participant View as "Web View (approvals.business-trips.index)"
+    participant Controller as "BusinessTripApprovalController"
+    participant Model as "BusinessTrip Model"
+    participant DB as "Database"
+
+    Admin->>View: Klik tombol Hapus
+    View->>Controller: DELETE /approvals/business-trips/{id}
+    Controller->>Model: findOrFail(id)
+    Model->>DB: SELECT business_trips WHERE id = ?
+    DB-->>Model: Data pengajuan
+
+    alt Data valid (id ditemukan dan akses valid)
+        Controller->>Model: delete()
+        Model->>DB: DELETE FROM business_trips WHERE id = ?
+        DB-->>Model: Delete success
+        Model-->>Controller: Deleted
+        Controller->>View: Redirect index + success
+        View-->>Admin: Notifikasi pengajuan berhasil dihapus
+    else Data tidak valid (id tidak ada/tidak punya akses)
+        Controller->>View: Back + error
+        View-->>Admin: Notifikasi gagal menghapus
+    end

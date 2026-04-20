@@ -343,19 +343,18 @@ app/
 │   ├── AuthServiceProvider.php
 │   └── RouteServiceProvider.php
 ├── Repositories/         # Data access layer
-│   ├── Attendance/
-│   │   └── AttendanceRepository.php
 │   ├── Worker/
 │   │   └── WorkerRepository.php
 │   └── Leave/
 │       └── LeaveRepository.php
 ├── Services/             # Business logic
-│   ├── Attendance/
-│   │   └── AttendanceService.php
 │   ├── Worker/
 │   │   └── WorkerService.php
 │   └── Leave/
 │       └── LeaveService.php
+├── Helpers/              # Lightweight domain utilities
+│   ├── PermissionHelper.php
+│   └── AttendanceHelper.php
 └── Traits/               # Reusable traits
     └── HasUuid.php
 ```

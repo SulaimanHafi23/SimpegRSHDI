@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.shifts.index)"
+    participant Controller as "Employee ShiftController"
+    participant Model as "WorkerShift Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Buka menu Jadwal Pegawai
+    View->>Controller: GET /employee/shifts?month&year
+    Controller->>Model: Ambil shift aktif, override, cuti, holiday
+    Model->>DB: SELECT worker_shifts + shift_overrides + leave_requests + holidays
+    DB-->>Model: Data kalender jadwal
+    Model-->>Controller: Struktur kalender per hari
+
+    alt Data valid (worker ditemukan & query berhasil)
+        Controller->>View: Render kalender jadwal kerja
+        View-->>Pegawai: Jadwal pegawai saya tampil
+    else Data tidak valid (worker tidak ditemukan/error query)
+        Controller->>View: Redirect dashboard/back + error
+        View-->>Pegawai: Notifikasi gagal memuat jadwal
+    end

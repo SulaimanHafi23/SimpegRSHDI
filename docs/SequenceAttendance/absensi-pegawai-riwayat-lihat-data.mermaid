@@ -1,0 +1,38 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR/Manager
+    participant View as "Web View (admin.attendance.history)"
+    participant C as AttendanceController
+    participant W as "Worker Model"
+    participant A as "Attendance Model"
+    participant S as "Shift Model"
+    participant LR as "LeaveRequest Model"
+    participant H as "Holiday Model"
+    participant DB as "Database"
+
+    Admin->>View: Buka riwayat absensi pegawai (bulan/tahun)
+    View->>C: GET /admin/attendance/history/{worker}?month=...&year=...
+
+    C->>W: Ambil data worker + relasi shift aktif
+    W->>DB: SELECT workers + relasi
+    DB-->>W: Data worker
+
+    C->>A: Ambil attendance worker pada rentang bulan
+    A->>DB: SELECT attendances WHERE worker_id = ? AND date range
+    DB-->>A: Data riwayat attendance
+
+    C->>LR: Ambil leave approved pada rentang bulan
+    LR->>DB: SELECT leave_requests approved
+    DB-->>LR: Data leave
+
+    C->>H: Ambil hari libur nasional
+    H->>DB: SELECT holidays nasional pada rentang bulan
+    DB-->>H: Data holiday
+
+    alt Data valid
+        C-->>View: Render kalender riwayat + statistik (hadir, terlambat, absen, cuti)
+        View-->>Admin: Tampilkan riwayat absensi pegawai
+    else Data tidak valid
+        C-->>View: Redirect/back + error "Pegawai tidak ditemukan"
+        View-->>Admin: Tampilkan pesan error
+    end

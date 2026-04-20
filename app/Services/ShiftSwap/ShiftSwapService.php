@@ -4,6 +4,8 @@ namespace App\Services\ShiftSwap;
 
 use App\DTOs\ShiftSwapRequestDTO;
 use App\Models\Attendance;
+use App\Models\BusinessTrip;
+use App\Models\LeaveRequest;
 use App\Models\ShiftSwapAuditLog;
 use App\Models\ShiftSwapRequest;
 use App\Models\ShiftOverride;
@@ -11,6 +13,7 @@ use App\Models\Worker;
 use App\Models\WorkerShift;
 use App\Notifications\ShiftSwapNotification;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -40,7 +43,7 @@ class ShiftSwapService
             // Here we will not block if the effective_from is in the past, but you can refine later
         }
 
-        $requiresManager = false;
+        $requiresManager = true;
 
         // Validate swap dates
         $this->validateSwapDates($dto);
@@ -79,6 +82,9 @@ class ShiftSwapService
         // 3b. Prevent duplicate swap on same date (worker cannot swap again on a date that already has active swap)
         $this->validateNoDuplicateSwapDate($requester, $dto);
 
+        // 3c. Prevent swap on dates that already have pending/approved leave or business trip
+        $this->validateNoLeaveOrBusinessTripConflict($requester, $dto, 'mengajukan tukar shift');
+
         // 4. Minimum Staffing Validation
         $this->validateMinimumStaffing($requesterShift);
 
@@ -106,14 +112,14 @@ class ShiftSwapService
                 shiftSwapRequestId: $swap->id,
                 action: 'created',
                 newStatus: 'pending',
-                userId: auth()->id(),
+                userId: Auth::id(),
                 notes: 'Swap request created',
                 metadata: [
                     'requester_id' => $requester->id,
                     'requester_name' => $requester->name,
                     'target_worker_id' => $targetWorker?->id,
                     'target_worker_name' => $targetWorker?->name,
-                    'requires_manager_approval' => false,
+                    'requires_manager_approval' => true,
                 ]
             );
 
@@ -121,7 +127,7 @@ class ShiftSwapService
                 'swap_id' => $swap->id,
                 'requester_id' => $requester->id,
                 'target_worker_id' => $targetWorker?->id,
-                'requires_manager_approval' => false,
+                'requires_manager_approval' => true,
             ]);
 
             // Send notification to target worker
@@ -222,7 +228,6 @@ class ShiftSwapService
 
         return WorkerShift::where('worker_id', $workerId)
             ->where('is_active', true)
-            ->where('effective_from', '<=', $today)
             ->where(function($query) use ($today) {
                 $query->whereNull('effective_until')
                       ->orWhere('effective_until', '>=', $today);
@@ -536,15 +541,21 @@ class ShiftSwapService
             throw new \Exception('Open request hanya dapat diterima oleh pegawai dari departemen yang sama.');
         }
 
+        $this->validateWorkerNoAbsenceConflicts(
+            $workerId,
+            $this->getSwapDates($swap),
+            'menerima open request tukar shift'
+        );
+
         DB::beginTransaction();
         try {
             $oldStatus = $swap->status;
 
-            // Update swap request with target worker info
+            // Update swap request with target worker info and move to approval queue
             $swap->target_worker_id = $workerId;
             $swap->target_shift_id = $targetShiftId;
-            $swap->status = 'accepted';
-            $swap->requires_manager_approval = false;
+            $swap->status = 'awaiting_approval';
+            $swap->requires_manager_approval = true;
             $swap->save();
 
             // Audit log
@@ -552,13 +563,13 @@ class ShiftSwapService
                 shiftSwapRequestId: $swap->id,
                 action: 'open_request_accepted',
                 newStatus: $swap->status,
-                userId: auth()->id(),
+                userId: Auth::id(),
                 oldStatus: $oldStatus,
                 notes: 'Open request accepted by another worker',
                 metadata: [
                     'target_worker_id' => $workerId,
                     'target_shift_id' => $targetShiftId,
-                    'requires_manager_approval' => false,
+                    'requires_manager_approval' => true,
                 ]
             );
 
@@ -566,7 +577,7 @@ class ShiftSwapService
                 'swap_id' => $swapId,
                 'target_worker_id' => $workerId,
                 'target_shift_id' => $targetShiftId,
-                'requires_manager_approval' => false,
+                'requires_manager_approval' => true,
             ]);
 
             // Notify requester
@@ -574,9 +585,11 @@ class ShiftSwapService
                 $swap->requester->user->notify(new ShiftSwapNotification($swap, 'open_request_accepted'));
             }
 
+            $this->notifyFinalApprovers($swap);
+
             DB::commit();
 
-            return $this->executeSwap($swapId, auth()->id());
+            return $swap;
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to accept open request', [
@@ -605,14 +618,17 @@ class ShiftSwapService
             throw new \Exception('Swap request ini tidak dalam status pending.');
         }
 
+        $this->validateWorkerNoAbsenceConflicts(
+            $workerId,
+            $this->getSwapDates($swap),
+            'menerima permintaan tukar shift'
+        );
+
         DB::beginTransaction();
         try {
             $oldStatus = $swap->status;
-            if ($swap->requires_manager_approval) {
-                $swap->status = 'awaiting_approval';
-            } else {
-                $swap->status = 'accepted';
-            }
+            $swap->status = 'awaiting_approval';
+            $swap->requires_manager_approval = true;
 
             $swap->save();
 
@@ -621,12 +637,12 @@ class ShiftSwapService
                 shiftSwapRequestId: $swap->id,
                 action: 'accepted',
                 newStatus: $swap->status,
-                userId: auth()->id(),
+                userId: Auth::id(),
                 oldStatus: $oldStatus,
                 notes: 'Target worker accepted the swap request',
                 metadata: [
                     'target_worker_id' => $workerId,
-                    'requires_manager_approval' => $swap->requires_manager_approval,
+                    'requires_manager_approval' => true,
                 ]
             );
 
@@ -641,30 +657,9 @@ class ShiftSwapService
                 $swap->requester->user->notify(new ShiftSwapNotification($swap, 'accepted'));
             }
 
-            // If requires manager approval, notify manager
-            if ($swap->requires_manager_approval) {
-                // Get department manager(s)
-                $department = $swap->requester->department;
-                if ($department) {
-                    // Find users with manager role in this department
-                    $managers = \App\Models\User::whereHas('worker', function($q) use ($department) {
-                        $q->where('department_id', $department->id);
-                    })->whereHas('roles', function($q) {
-                        $q->where('name', 'Manager');
-                    })->get();
-
-                    foreach ($managers as $manager) {
-                        $manager->notify(new ShiftSwapNotification($swap, 'manager_approval_needed'));
-                    }
-                }
-            }
+            $this->notifyFinalApprovers($swap);
 
             DB::commit();
-
-            // Auto-execute if no manager approval required (same department)
-            if (!$swap->requires_manager_approval && $swap->status === 'accepted') {
-                return $this->executeSwap($swapId, auth()->id());
-            }
 
             return $swap;
         } catch (\Exception $e) {
@@ -711,7 +706,7 @@ class ShiftSwapService
                 shiftSwapRequestId: $swap->id,
                 action: 'rejected',
                 newStatus: 'rejected',
-                userId: auth()->id(),
+                userId: Auth::id(),
                 oldStatus: $oldStatus,
                 notes: $reason ?? 'Target worker rejected the swap request',
                 metadata: [
@@ -746,6 +741,11 @@ class ShiftSwapService
     public function approveByManager(string $swapId, string $managerId, ?string $notes = null): ShiftSwapRequest
     {
         $swap = ShiftSwapRequest::findOrFail($swapId);
+        $approver = \App\Models\User::findOrFail($managerId);
+
+        if (!$approver->hasRole('Manager') && !$approver->hasRole('HR') && !$approver->hasRole('Super Admin')) {
+            throw new \Exception('Anda tidak berhak menyetujui permintaan tukar shift ini.');
+        }
 
         // Check status
         if ($swap->status !== 'awaiting_approval') {
@@ -816,6 +816,11 @@ class ShiftSwapService
     public function rejectByManager(string $swapId, string $managerId, string $reason): ShiftSwapRequest
     {
         $swap = ShiftSwapRequest::findOrFail($swapId);
+        $approver = \App\Models\User::findOrFail($managerId);
+
+        if (!$approver->hasRole('Manager') && !$approver->hasRole('HR') && !$approver->hasRole('Super Admin')) {
+            throw new \Exception('Anda tidak berhak menolak permintaan tukar shift ini.');
+        }
 
         // Check status
         if ($swap->status !== 'awaiting_approval') {
@@ -902,7 +907,7 @@ class ShiftSwapService
                 shiftSwapRequestId: $swap->id,
                 action: 'cancelled',
                 newStatus: 'cancelled',
-                userId: auth()->id(),
+                userId: Auth::id(),
                 oldStatus: $oldStatus,
                 notes: 'Requester cancelled the swap request',
                 metadata: [
@@ -1183,11 +1188,11 @@ class ShiftSwapService
         // Build base query
         $query = ShiftSwapRequest::with(['requester', 'targetWorker', 'requesterShift.shift', 'targetShift.shift']);
 
-        // For Manager (not Super Admin), filter by department
-        // Super Admin can see all data
-        $isSuperAdmin = $manager->hasRole('Super Admin');
+        // Super Admin and HR can see all data.
+        // Manager is scoped to their department.
+        $canViewAllDepartments = $manager->hasRole('Super Admin') || $manager->hasRole('HR');
 
-        if ($worker && !$isSuperAdmin) {
+        if ($worker && !$canViewAllDepartments) {
             $query->where(function($q) use ($worker) {
                 $q->whereHas('requester', function($query) use ($worker) {
                     $query->where('department_id', $worker->department_id);
@@ -1203,8 +1208,8 @@ class ShiftSwapService
             // Explicit status filter selected
             $query->where('status', $filters['status']);
         } elseif (!isset($filters['status'])) {
-            // No filter applied, show only items needing approval (default view)
-            $query->whereIn('status', ['pending', 'awaiting_approval'])
+            // No filter applied, show only items waiting final approval (default view)
+            $query->where('status', 'awaiting_approval')
                   ->where('requires_manager_approval', true);
         }
         // If status is empty string '', show all statuses
@@ -1313,6 +1318,120 @@ class ShiftSwapService
             if ($existingAsTarget) {
                 throw new \Exception("Anda sudah menjadi target tukar shift pada tanggal {$formattedDate}. Tidak dapat mengajukan tukar shift lagi pada tanggal tersebut.");
             }
+        }
+    }
+
+    /**
+     * Prevent creating swap requests on dates that already have pending/approved leave or business trip.
+     */
+    protected function validateNoLeaveOrBusinessTripConflict(Worker $worker, ShiftSwapRequestDTO $dto, string $action): void
+    {
+        $swapDates = $this->extractSwapDatesFromDto($dto);
+        $this->validateWorkerNoAbsenceConflicts($worker->id, $swapDates, $action);
+    }
+
+    /**
+     * Validate worker has no pending/approved leave or business trip on the given dates.
+     */
+    protected function validateWorkerNoAbsenceConflicts(string $workerId, array $dateStrings, string $action): void
+    {
+        if (empty($dateStrings)) {
+            return;
+        }
+
+        foreach (array_unique($dateStrings) as $dateStr) {
+            $formattedDate = Carbon::parse($dateStr)->format('d M Y');
+
+            $hasLeave = LeaveRequest::where('worker_id', $workerId)
+                ->whereIn('status', ['pending', 'approved'])
+                ->whereDate('start_date', '<=', $dateStr)
+                ->whereDate('end_date', '>=', $dateStr)
+                ->exists();
+
+            if ($hasLeave) {
+                throw new \Exception("Tidak dapat {$action} pada tanggal {$formattedDate} karena Anda memiliki pengajuan cuti pending/disetujui pada tanggal tersebut.");
+            }
+
+            $hasBusinessTrip = BusinessTrip::where('worker_id', $workerId)
+                ->whereIn('status', ['pending', 'approved'])
+                ->whereDate('start_date', '<=', $dateStr)
+                ->whereDate('end_date', '>=', $dateStr)
+                ->exists();
+
+            if ($hasBusinessTrip) {
+                throw new \Exception("Tidak dapat {$action} pada tanggal {$formattedDate} karena Anda memiliki pengajuan perjalanan dinas pending/disetujui pada tanggal tersebut.");
+            }
+        }
+    }
+
+    /**
+     * Normalize swap dates from DTO to YYYY-MM-DD list.
+     */
+    private function extractSwapDatesFromDto(ShiftSwapRequestDTO $dto): array
+    {
+        $swapDates = [];
+
+        switch ($dto->swap_type ?? 'single_date') {
+            case 'single_date':
+                $singleDate = $this->resolveSingleSwapDate($dto);
+                if ($singleDate) {
+                    $swapDates[] = Carbon::parse($singleDate)->format('Y-m-d');
+                }
+                break;
+
+            case 'date_range':
+                if ($dto->swap_start_date && $dto->swap_end_date) {
+                    $start = Carbon::parse($dto->swap_start_date);
+                    $end = Carbon::parse($dto->swap_end_date);
+
+                    while ($start->lte($end)) {
+                        $swapDates[] = $start->format('Y-m-d');
+                        $start->addDay();
+                    }
+                }
+                break;
+
+            case 'recurring':
+                foreach (($dto->swap_dates ?? []) as $date) {
+                    if ($date) {
+                        $swapDates[] = Carbon::parse($date)->format('Y-m-d');
+                    }
+                }
+                break;
+        }
+
+        return $swapDates;
+    }
+
+    /**
+     * Notify authorized final approvers (Manager departemen, HR, Super Admin).
+     */
+    protected function notifyFinalApprovers(ShiftSwapRequest $swap): void
+    {
+        $swap->loadMissing(['requester.department']);
+        $departmentId = $swap->requester?->department_id;
+
+        $approvers = \App\Models\User::query()
+            ->where(function ($query) use ($departmentId) {
+                $query->whereHas('roles', function ($roleQuery) {
+                    $roleQuery->whereIn('name', ['HR', 'Super Admin']);
+                });
+
+                if ($departmentId) {
+                    $query->orWhere(function ($managerQuery) use ($departmentId) {
+                        $managerQuery->whereHas('roles', function ($roleQuery) {
+                            $roleQuery->where('name', 'Manager');
+                        })->whereHas('worker', function ($workerQuery) use ($departmentId) {
+                            $workerQuery->where('department_id', $departmentId);
+                        });
+                    });
+                }
+            })
+            ->get()
+            ->unique('id');
+
+        foreach ($approvers as $approver) {
+            $approver->notify(new ShiftSwapNotification($swap, 'manager_approval_needed'));
         }
     }
 

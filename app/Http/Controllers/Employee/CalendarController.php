@@ -5,15 +5,13 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\BusinessTrip;
 use App\Models\Holiday;
-use App\Services\Leave\LeaveRequestService;
+use App\Models\LeaveRequest;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class CalendarController extends Controller
 {
-    public function __construct(
-        protected LeaveRequestService $leaveService
-    ) {}
+    public function __construct() {}
 
     /**
      * Redirect the old calendar URL to the merged shift schedule page.
@@ -41,11 +39,12 @@ class CalendarController extends Controller
         $end = $request->get('end', now()->endOfMonth()->format('Y-m-d'));
 
         // Get leave requests
-        $leaves = $this->leaveService->getAll([
-            'worker_id' => $workerId,
-            'start_date' => $start,
-            'end_date' => $end,
-        ]);
+        $leaves = LeaveRequest::with(['worker', 'leaveType', 'approver'])
+            ->where('worker_id', $workerId)
+            ->where('start_date', '>=', $start)
+            ->where('end_date', '<=', $end)
+            ->latest('start_date')
+            ->paginate(15);
 
         // Get holidays
         $holidays = Holiday::dateRange($start, $end)->get();

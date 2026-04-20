@@ -816,7 +816,7 @@
             </a>
         </div>
 
-        <div class="stats-bar">
+        {{-- <div class="stats-bar">
             <div class="stat-item">
                 <div class="stat-num" id="stat-staff">100+</div>
                 <div class="stat-label">Pegawai Aktif</div>
@@ -830,7 +830,7 @@
             <div class="stat-item">
                 <div class="stat-num">24/7</div>
                 <div class="stat-label">Dukungan</div>
-            </div>
+            </div> --}}
             <!-- <div class="stats-divider"></div>
             <div class="stat-item">
                 <div class="stat-num">v2.0</div>

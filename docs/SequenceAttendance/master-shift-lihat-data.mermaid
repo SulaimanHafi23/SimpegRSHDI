@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR
+    participant View as "Web View (admin.master.shifts.index)"
+    participant C as ShiftController
+    participant S as "Shift Model"
+    participant WS as "WorkerShift Model"
+    participant DB as "Database"
+
+    Admin->>View: Buka halaman Data Master Shift
+    View->>C: GET /admin/master/shifts (dengan/without search)
+
+    C->>S: Ambil data shift + worker_shifts_count
+    S->>DB: SELECT shifts + COUNT worker_shifts + pagination
+    DB-->>S: Hasil query
+
+    alt Data valid
+        C-->>View: Render daftar shift
+        View-->>Admin: Tampilkan list, filter, pagination
+    else Data tidak valid
+        C-->>View: Redirect/back + pesan error
+        View-->>Admin: Tampilkan error
+    end

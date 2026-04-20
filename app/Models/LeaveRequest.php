@@ -34,6 +34,16 @@ class LeaveRequest extends Model
         'approved_at' => 'datetime',
     ];
 
+    public function getAttachmentAttribute(): ?string
+    {
+        return $this->attachment_path;
+    }
+
+    public function setAttachmentAttribute($value): void
+    {
+        $this->attributes['attachment_path'] = $value;
+    }
+
     public function worker(): BelongsTo
     {
         return $this->belongsTo(Worker::class);

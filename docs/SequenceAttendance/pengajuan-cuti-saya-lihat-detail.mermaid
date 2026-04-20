@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.leaves.show)"
+    participant Controller as "Employee LeaveController"
+    participant Model as "LeaveRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik detail pengajuan cuti
+    View->>Controller: GET /employee/leaves/{id}
+    Controller->>Model: getById(id) + validasi kepemilikan
+    Model->>DB: SELECT leave_request + leave_type + approver
+    DB-->>Model: Data detail cuti
+    Model-->>Controller: Entitas pengajuan cuti
+
+    alt Data valid (id milik pegawai login)
+        Controller->>View: Render halaman detail cuti
+        View-->>Pegawai: Detail cuti tampil
+    else Data tidak valid (id tidak ada/tidak berhak akses)
+        Controller->>View: 403/redirect + error
+        View-->>Pegawai: Notifikasi gagal melihat detail
+    end

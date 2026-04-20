@@ -693,7 +693,7 @@
 
         } catch (error) {
             console.error('Error accessing camera:', error);
-            alert('Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
+            window.showErrorAlert('Gagal', 'Gagal mengakses kamera. Pastikan Anda memberikan izin akses kamera.');
         }
     }
 

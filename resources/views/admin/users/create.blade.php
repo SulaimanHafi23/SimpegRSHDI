@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function () {
 				const maxBytes = 10 * 1024 * 1024; // 10 MB
 				if (fileInput.files[0].size > maxBytes) {
 					e.preventDefault();
-					alert('Ukuran file terlalu besar. Maks 10 MB.');
+					window.showWarningAlert('Validasi', 'Ukuran file terlalu besar. Maks 10 MB.');
 					return false;
 				}
 			}

@@ -21,7 +21,7 @@ class AttendanceExport implements FromCollection, WithHeadings, WithMapping, Wit
 
     public function collection()
     {
-        $query = Attendance::with(['worker', 'shift', 'location']);
+        $query = Attendance::with(['worker', 'shift']);
 
         // Apply filters
         if (!empty($this->filters['worker_id'])) {

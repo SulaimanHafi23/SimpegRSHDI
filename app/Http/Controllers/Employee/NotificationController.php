@@ -3,29 +3,32 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Services\Notification\NotificationService;
+use App\Models\Notification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    public function __construct(
-        protected NotificationService $notificationService
-    ) {}
+    public function __construct() {}
 
     /**
      * Display a listing of notifications
      */
     public function index(Request $request)
     {
-        $filters = [
-            'is_read' => $request->input('is_read'),
-            'per_page' => 15
-        ];
+        $query = Notification::query()
+            ->where('user_id', Auth::id())
+            ->orderBy('created_at', 'desc');
 
-        $notifications = $this->notificationService->getByUserId(
-            auth()->id(),
-            $filters
-        );
+        if ($request->filled('is_read')) {
+            if ($request->boolean('is_read')) {
+                $query->whereNotNull('read_at');
+            } else {
+                $query->whereNull('read_at');
+            }
+        }
+
+        $notifications = $query->paginate(15);
 
         return view('employee.notifications.index', compact('notifications'));
     }
@@ -35,7 +38,7 @@ class NotificationController extends Controller
      */
     public function getUnreadCount()
     {
-        $count = $this->notificationService->getUnreadCount(auth()->id());
+        $count = Notification::where('user_id', Auth::id())->whereNull('read_at')->count();
         return response()->json(['count' => $count]);
     }
 
@@ -44,7 +47,11 @@ class NotificationController extends Controller
      */
     public function getUnread()
     {
-        $notifications = $this->notificationService->getUnreadByUserId(auth()->id());
+        $notifications = Notification::where('user_id', Auth::id())
+            ->whereNull('read_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
         return response()->json($notifications);
     }
 
@@ -54,7 +61,8 @@ class NotificationController extends Controller
     public function markAsRead($id)
     {
         try {
-            $this->notificationService->markAsRead($id);
+            $notification = Notification::where('user_id', Auth::id())->findOrFail($id);
+            $notification->markAsRead();
             return response()->json(['message' => 'Notifikasi ditandai sudah dibaca']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal menandai notifikasi'], 500);
@@ -67,7 +75,9 @@ class NotificationController extends Controller
     public function markAllAsRead()
     {
         try {
-            $this->notificationService->markAllAsRead(auth()->id());
+            Notification::where('user_id', Auth::id())
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
             return response()->json(['message' => 'Semua notifikasi ditandai sudah dibaca']);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal menandai notifikasi'], 500);
@@ -80,7 +90,7 @@ class NotificationController extends Controller
     public function destroy($id)
     {
         try {
-            $this->notificationService->delete($id);
+            Notification::where('user_id', Auth::id())->findOrFail($id)->delete();
             return redirect()->route('employee.notifications.index')
                 ->with('success', 'Notifikasi berhasil dihapus');
         } catch (\Exception $e) {

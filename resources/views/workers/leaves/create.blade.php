@@ -185,7 +185,7 @@ function calculateDays() {
             document.getElementById('total_days').value = diffDays;
         } else {
             document.getElementById('total_days').value = 0;
-            alert('Tanggal selesai harus lebih besar atau sama dengan tanggal mulai');
+            window.showWarningAlert('Validasi', 'Tanggal selesai harus lebih besar atau sama dengan tanggal mulai');
         }
     }
 }

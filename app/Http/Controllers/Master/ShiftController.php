@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
-use App\Services\Master\ShiftService;
-use App\DTOs\Master\ShiftDTO;
+use App\Models\Shift;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ShiftController extends Controller
 {
-    public function __construct(
-        protected ShiftService $shiftService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         $this->middleware('permission:shift.manage');
     }
@@ -19,12 +21,13 @@ class ShiftController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->per_page ?? 15;
-        
-        if ($request->has('search')) {
-            $shifts = $this->shiftService->search($request->search, $perPage);
-        } else {
-            $shifts = $this->shiftService->getAllPaginated($perPage);
+
+        $query = Shift::withCount('workerShifts');
+        if ($request->filled('search')) {
+            $query->where('name', 'like', "%{$request->search}%");
         }
+
+        $shifts = $query->latest()->paginate($perPage);
 
         return view('admin.master.shifts.index', compact('shifts'));
     }
@@ -56,8 +59,26 @@ class ShiftController extends Controller
             $validated['is_active'] = $request->has('is_active') ? true : false;
             $validated['is_overnight'] = $request->has('is_overnight') ? true : false;
 
-            $dto = ShiftDTO::fromRequest($validated);
-            $result = $this->shiftService->create($dto);
+            DB::beginTransaction();
+
+            if (!$this->isValidTimeRange($validated['start_time'], $validated['end_time'])) {
+                throw new \Exception('Jam selesai harus lebih besar dari jam mulai');
+            }
+
+            if (Shift::where('name', $validated['name'])->exists()) {
+                throw new \Exception('Nama shift sudah digunakan');
+            }
+
+            $shift = Shift::create($validated);
+
+            DB::commit();
+            Cache::forget('master_shifts_active');
+
+            $result = [
+                'success' => true,
+                'message' => 'Shift berhasil ditambahkan',
+                'data' => $shift,
+            ];
 
             if ($result['success']) {
                 $perDayEnabled = $request->boolean('per_day_enabled');
@@ -84,9 +105,10 @@ class ShiftController extends Controller
                 ->withErrors($e->errors())
                 ->with('error', 'Validasi gagal. Periksa kembali input Anda.');
         } catch (\Exception $e) {
-            \Log::error('Error creating shift: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+            DB::rollBack();
+            Log::error('Error creating shift: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -96,8 +118,11 @@ class ShiftController extends Controller
     public function show(string $id)
     {
         try {
-            $shift = $this->shiftService->findById($id);
-            $statistics = $this->shiftService->getShiftStatistics($id);
+            $shift = Shift::with(['workerShifts', 'dayTimes'])->withCount('workerShifts')->find($id);
+            if (!$shift) {
+                throw new \Exception('Shift tidak ditemukan');
+            }
+            $statistics = $this->getShiftStatistics($shift);
 
             return view('admin.master.shifts.show', compact('shift', 'statistics'));
         } catch (\Exception $e) {
@@ -110,7 +135,10 @@ class ShiftController extends Controller
     public function edit(string $id)
     {
         try {
-            $shift = $this->shiftService->findById($id);
+            $shift = Shift::with(['workerShifts', 'dayTimes'])->withCount('workerShifts')->find($id);
+            if (!$shift) {
+                throw new \Exception('Shift tidak ditemukan');
+            }
             return view('admin.master.shifts.edit', compact('shift'));
         } catch (\Exception $e) {
             return redirect()
@@ -137,8 +165,34 @@ class ShiftController extends Controller
         ]);
 
         try {
-            $dto = ShiftDTO::fromRequest($validated);
-            $result = $this->shiftService->update($id, $dto);
+            DB::beginTransaction();
+
+            $shift = Shift::with(['workerShifts', 'dayTimes'])->withCount('workerShifts')->find($id);
+            if (!$shift) {
+                throw new \Exception('Shift tidak ditemukan');
+            }
+
+            if (!$this->isValidTimeRange($validated['start_time'], $validated['end_time'])) {
+                throw new \Exception('Jam selesai harus lebih besar dari jam mulai');
+            }
+
+            $existingByName = Shift::where('name', $validated['name'])->first();
+            if ($existingByName && $existingByName->id !== $id) {
+                throw new \Exception('Nama shift sudah digunakan');
+            }
+
+            $validated['is_active'] = $request->has('is_active') ? true : false;
+            $validated['is_overnight'] = $request->has('is_overnight') ? true : false;
+            $shift->update($validated);
+
+            DB::commit();
+            Cache::forget('master_shifts_active');
+
+            $result = [
+                'success' => true,
+                'message' => 'Shift berhasil diperbarui',
+                'data' => $shift,
+            ];
 
             if ($result['success']) {
                 $perDayEnabled = $request->boolean('per_day_enabled');
@@ -160,6 +214,7 @@ class ShiftController extends Controller
                 ->withInput()
                 ->with('error', $result['message']);
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -169,7 +224,26 @@ class ShiftController extends Controller
     public function destroy(string $id)
     {
         try {
-            $result = $this->shiftService->delete($id);
+            DB::beginTransaction();
+
+            $shift = Shift::with(['workerShifts', 'dayTimes'])->withCount('workerShifts')->find($id);
+            if (!$shift) {
+                throw new \Exception('Shift tidak ditemukan');
+            }
+
+            if ($shift->workerShifts()->exists()) {
+                throw new \Exception('Shift tidak dapat dihapus karena masih digunakan oleh pegawai');
+            }
+
+            $shift->delete();
+
+            DB::commit();
+            Cache::forget('master_shifts_active');
+
+            $result = [
+                'success' => true,
+                'message' => 'Shift berhasil dihapus',
+            ];
 
             if ($result['success']) {
                 return redirect()
@@ -179,8 +253,32 @@ class ShiftController extends Controller
 
             return back()->with('error', $result['message']);
         } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    private function isValidTimeRange(string $startTime, string $endTime): bool
+    {
+        $start = Carbon::createFromFormat('H:i', $startTime);
+        $end = Carbon::createFromFormat('H:i', $endTime);
+
+        if ($end->lessThan($start)) {
+            return true;
+        }
+
+        return $end->greaterThan($start);
+    }
+
+    private function getShiftStatistics(Shift $shift): array
+    {
+        return [
+            'total_workers' => $shift->workerShifts()->count(),
+            'active_workers' => $shift->workerShifts()->where('is_active', true)->count(),
+            'total_attendances_today' => $shift->attendances()
+                ->whereDate('attendance_date', now())
+                ->count(),
+        ];
     }
 
     private function syncDayTimes($shift, array $dayTimes, array $activeDays): void

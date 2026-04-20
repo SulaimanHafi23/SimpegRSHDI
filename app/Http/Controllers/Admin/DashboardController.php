@@ -6,25 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Models\Worker;
 use App\Models\Attendance;
 use App\Models\LeaveRequest;
-use App\Services\Attendance\AttendanceService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     use DepartmentFilterable;
 
-    protected AttendanceService $attendanceService;
-
-    public function __construct(
-        AttendanceService $attendanceService
-    )
+    public function __construct()
     {
         $this->middleware('auth');
         $this->middleware('permission:dashboard.admin');
-
-        $this->attendanceService = $attendanceService;
     }
 
     public function index()
@@ -32,7 +26,7 @@ class DashboardController extends Controller
         // Check if user should be redirected to employee dashboard.
         // Prefer explicit admin/superadmin roles; only redirect users who are
         // employees/workers and do NOT have higher-privilege roles.
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user && $user->roles->isNotEmpty()) {
             // normalize role names to lowercase for robust checks
             $roles = $user->roles->pluck('name')->map(fn($r) => strtolower($r))->toArray();
@@ -137,7 +131,7 @@ class DashboardController extends Controller
         // ========== PENDING CHECKOUTS ==========
 
         // Get workers who need to checkout (shift ended but still no checkout)
-        $pendingCheckouts = $this->attendanceService->getPendingCheckouts();
+        $pendingCheckouts = $this->getPendingCheckouts();
 
         // ========== PREPARE VIEW DATA SHAPES EXPECTED BY BLADE ==========
 
@@ -356,5 +350,117 @@ class DashboardController extends Controller
         ];
 
         return response()->json($count);
+    }
+
+    private function getPendingCheckouts(?string $workerId = null, int $hoursThreshold = 0, bool $onlyActionable = false)
+    {
+        $now = now();
+
+        $query = Attendance::with([
+            'worker.department',
+            'worker.workerShifts.shift',
+            'worker.shiftOverrides.shift',
+        ])
+            ->whereNotNull('check_in')
+            ->whereNull('check_out')
+            ->where('status', 'present');
+
+        if ($workerId) {
+            $query->where('worker_id', $workerId);
+        }
+
+        $pendingAttendances = $query->get();
+        $pendingCheckouts = collect();
+
+        foreach ($pendingAttendances as $attendance) {
+            $worker = $attendance->worker;
+            if (!$worker) {
+                continue;
+            }
+
+            $attendanceDate = Carbon::parse($attendance->attendance_date);
+
+            $shiftOverride = $worker->shiftOverrides->first(function ($override) use ($attendanceDate) {
+                $overrideDate = $override->override_date instanceof Carbon
+                    ? $override->override_date->format('Y-m-d')
+                    : $override->override_date;
+                return $overrideDate === $attendanceDate->format('Y-m-d');
+            });
+
+            $shift = null;
+            if ($shiftOverride && $shiftOverride->shift) {
+                $shift = $shiftOverride->shift;
+            } else {
+                $activeShift = $worker->workerShifts->first(function ($workerShift) use ($attendanceDate) {
+                    return $workerShift->isActiveOnDate($attendanceDate);
+                });
+
+                if ($activeShift) {
+                    $shift = $activeShift->shift;
+                }
+            }
+
+            if (!$shift) {
+                continue;
+            }
+
+            $schedule = $shift->getScheduleForDate($attendanceDate);
+            $shiftEndTime = Carbon::parse($attendanceDate->format('Y-m-d') . ' ' . $schedule['end_time']);
+
+            if ($schedule['is_overnight']) {
+                $shiftEndTime->addDay();
+            }
+
+            $thresholdTime = $shiftEndTime->copy()->addHours($hoursThreshold);
+
+            if ($now->greaterThan($thresholdTime)) {
+                $hoursLate = $now->diffInHours($shiftEndTime);
+
+                $checkOutWindowAfterMinutes = (int) round((float) config('attendance.check_out_window_after_hours', 1.5) * 60);
+                $maxCheckoutTime = $shiftEndTime->copy()->addMinutes($checkOutWindowAfterMinutes);
+                $isWindowExpired = $now->greaterThan($maxCheckoutTime);
+
+                if ($onlyActionable && $isWindowExpired) {
+                    continue;
+                }
+
+                $pendingCheckouts->push([
+                    'attendance_id' => $attendance->id,
+                    'worker_id' => $worker->id,
+                    'worker_name' => $worker->name,
+                    'position' => $worker->department->name ?? '-',
+                    'attendance_date' => $attendanceDate->format('Y-m-d'),
+                    'check_in_time' => Carbon::parse($attendance->check_in)->format('H:i'),
+                    'shift_name' => $shift->name,
+                    'shift_end_time' => $shiftEndTime->format('Y-m-d H:i'),
+                    'hours_late' => $hoursLate,
+                    'formatted_late' => $this->formatHoursLate($hoursLate),
+                    'max_checkout_time' => $maxCheckoutTime->format('Y-m-d H:i'),
+                    'is_window_expired' => $isWindowExpired,
+                    'can_checkout' => !$isWindowExpired,
+                ]);
+            }
+        }
+
+        return $pendingCheckouts->sortByDesc('hours_late');
+    }
+
+    private function formatHoursLate(int $hours): string
+    {
+        if ($hours < 1) {
+            return 'Baru berakhir';
+        }
+
+        if ($hours < 24) {
+            return $hours . ' jam yang lalu';
+        }
+
+        $days = floor($hours / 24);
+        $remainingHours = $hours % 24;
+        if ($remainingHours > 0) {
+            return $days . ' hari ' . $remainingHours . ' jam yang lalu';
+        }
+
+        return $days . ' hari yang lalu';
     }
 }

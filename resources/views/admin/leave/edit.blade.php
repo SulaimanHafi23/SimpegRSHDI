@@ -10,18 +10,6 @@
         description="Perbarui informasi pengajuan cuti"
         icon="fas fa-edit" />
 
-    {{-- Alert Messages --}}
-    @if($errors->any())
-        <x-alert type="danger" dismissible>
-            <strong>Terdapat kesalahan:</strong>
-            <ul class="mt-2 ml-4 list-disc">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </x-alert>
-    @endif
-
     {{-- Form --}}
     <form action="{{ route('admin.leave.update', $leaveRequest->id) }}" method="POST" enctype="multipart/form-data" x-data="leaveForm()">
         @csrf

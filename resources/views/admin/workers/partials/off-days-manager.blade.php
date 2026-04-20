@@ -267,7 +267,16 @@ function offDayManager(workerId) {
         },
 
         async deletePattern(patternId) {
-            if (!confirm('Yakin ingin menghapus hari libur ini?')) return;
+            const result = await window.showConfirmDialog({
+                title: 'Hapus Hari Libur?',
+                text: 'Yakin ingin menghapus hari libur ini?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                confirmButtonText: 'Ya, Hapus!'
+            });
+
+            if (!result.isConfirmed) return;
 
             this.loading = true;
             try {

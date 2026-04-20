@@ -302,7 +302,7 @@
                 const defaultStart = startTimeInput.value;
                 const defaultEnd = endTimeInput.value;
                 if (!defaultStart || !defaultEnd) {
-                    alert('Isi Jam Masuk dan Jam Keluar default terlebih dahulu.');
+                    window.showWarningAlert('Validasi', 'Isi Jam Masuk dan Jam Keluar default terlebih dahulu.');
                     return;
                 }
 

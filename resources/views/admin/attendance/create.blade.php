@@ -408,7 +408,7 @@
             form.addEventListener('submit', function(e) {
                 if (!validateLocation()) {
                     e.preventDefault();
-                    alert('Anda harus berada dalam radius lokasi yang dipilih untuk melakukan check-in.');
+                    window.showWarningAlert('Validasi Lokasi', 'Anda harus berada dalam radius lokasi yang dipilih untuk melakukan check-in.');
                     return false;
                 }
             });
@@ -448,7 +448,7 @@
                 }
             } catch (error) {
                 console.error('Error compressing image:', error);
-                alert('Gagal mengompres foto. Silakan coba lagi dengan foto yang lebih kecil.');
+                window.showErrorAlert('Gagal', 'Gagal mengompres foto. Silakan coba lagi dengan foto yang lebih kecil.');
                 photoInput.value = '';
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnHTML;
@@ -489,7 +489,7 @@
                     }, 2000);
                 },
                 function(error) {
-                    alert('Tidak dapat mengakses lokasi: ' + error.message);
+                    window.showErrorAlert('Gagal', 'Tidak dapat mengakses lokasi: ' + error.message);
                     button.disabled = false;
                     button.innerHTML = '<i class="fas fa-location-arrow"></i><span>Dapatkan Lokasi Saya</span>';
                 },

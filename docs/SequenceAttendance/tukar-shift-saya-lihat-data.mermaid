@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.shift-swaps.index)"
+    participant Controller as "Employee ShiftSwapController"
+    participant Model as "ShiftSwapRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Buka menu Tukar Shift
+    View->>Controller: GET /employee/shift-swaps
+    Controller->>Model: listForWorker(worker_id) + getOpenRequests(worker_id)
+    Model->>DB: SELECT shift_swap_requests + relasi requester/target/shift
+    DB-->>Model: Data tukar shift
+    Model-->>Controller: Item, open request, summary
+
+    alt Data valid (data berhasil diambil)
+        Controller->>View: Render daftar, ringkasan, open request
+        View-->>Pegawai: Daftar tukar shift tampil
+    else Data tidak valid (worker tidak ditemukan atau query error)
+        Controller->>View: Redirect dashboard/back + error
+        View-->>Pegawai: Notifikasi gagal memuat tukar shift
+    end

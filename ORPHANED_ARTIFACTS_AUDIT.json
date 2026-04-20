@@ -1,0 +1,211 @@
+{
+  "audit_metadata": {
+    "timestamp": "2026-04-20T00:00:00Z",
+    "workspace": "c:\\laragon\\www\\SimpegRSHDI",
+    "total_orphaned_artifacts": 11,
+    "categories_analyzed": 10
+  },
+  "orphaned_artifacts": [
+    {
+      "category": "Form Requests",
+      "path": "app/Http/Requests/User/UpdateRolesRequest.php",
+      "name": "UpdateRolesRequest",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but never imported or used in any controller. No controller method accepts this request."
+    },
+    {
+      "category": "Form Requests",
+      "path": "app/Http/Requests/BusinessTrip/BusinessTripReportRequest.php",
+      "name": "BusinessTripReportRequest",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but never imported or used in any controller. No controller method accepts this request."
+    },
+    {
+      "category": "Form Requests",
+      "path": "app/Http/Requests/Master/ShiftPatternRequest.php",
+      "name": "ShiftPatternRequest",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but never imported or used in any controller. No controller method accepts this request."
+    },
+    {
+      "category": "Form Requests",
+      "path": "app/Http/Requests/Master/PositionRequest.php",
+      "name": "PositionRequest",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but never imported or used in any controller. No controller method accepts this request."
+    },
+    {
+      "category": "Form Requests",
+      "path": "app/Http/Requests/Master/FileRequirementRequest.php",
+      "name": "FileRequirementRequest",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but never imported or used in any controller. No controller method accepts this request."
+    },
+    {
+      "category": "Form Requests",
+      "path": "app/Http/Requests/Overtime/",
+      "name": "OvertimeRequest (directory is empty)",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Overtime requests directory exists but is completely empty. No form request classes for overtime feature."
+    },
+    {
+      "category": "Mail",
+      "path": "app/Mail/LeaveApprovedMail.php",
+      "name": "LeaveApprovedMail",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but NEVER sent anywhere. System uses NotificationService with database notifications instead. Mail class is never imported or used in any controller or service."
+    },
+    {
+      "category": "Mail",
+      "path": "app/Mail/LeaveRejectedMail.php",
+      "name": "LeaveRejectedMail",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but NEVER sent anywhere. System uses NotificationService with database notifications instead. Mail class is never imported or used in any controller or service."
+    },
+    {
+      "category": "Mail",
+      "path": "app/Mail/BusinessTripApprovedMail.php",
+      "name": "BusinessTripApprovedMail",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but NEVER sent anywhere. System uses NotificationService with database notifications instead. Mail class is never imported or used in any controller or service."
+    },
+    {
+      "category": "Mail",
+      "path": "app/Mail/BusinessTripRejectedMail.php",
+      "name": "BusinessTripRejectedMail",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Defined but NEVER sent anywhere. System uses NotificationService with database notifications instead. Mail class is never imported or used in any controller or service."
+    },
+    {
+      "category": "Repositories",
+      "path": "app/Repositories/Attendance/",
+      "name": "Attendance (empty directory)",
+      "usage_count": 0,
+      "status": "orphaned",
+      "note": "Attendance repository directory exists but is completely empty. No AttendanceRepository class. Attendance operations are handled directly in controllers without a dedicated repository."
+    }
+  ],
+  "active_artifacts_summary": {
+    "DTOs": {
+      "total": 15,
+      "used": 15,
+      "orphaned": 0,
+      "note": "All DTOs are actively used: LeaveRequestDTO, WorkerShiftDTO, ShiftOverrideDTO, NotificationDTO, UserDTO, WorkerDocumentDTO, WorkerDTO, DepartmentDTO, DocumentTypeDTO, LeaveTypeDTO, ShiftDTO, LoginDTO, WorkerOffDayDTO, RoleDTO, ShiftSwapRequestDTO"
+    },
+    "Repositories": {
+      "total": 13,
+      "used": 13,
+      "orphaned": 1,
+      "note": "1 empty directory (Attendance/). All other repositories are actively injected in services: LeaveRequestRepository, NotificationRepository, ShiftOverrideRepository, WorkerShiftRepository, RoleRepository, DocumentTypeRepository, DepartmentRepository, LeaveTypeRepository, ShiftRepository, WorkerDocumentRepository, UserRepository, WorkerRepository, PermissionRepository"
+    },
+    "Services": {
+      "total": 16,
+      "used": 16,
+      "orphaned": 0,
+      "note": "All services are actively used: LeaveRequestService, AuthService, DashboardService, EmployeeDashboardService, UserService, NotificationService, ShiftSwapService, WorkerService, PermissionService, RoleService, ShiftOverrideService, WorkerDocumentService, WorkerShiftService, WorkerOffDayService, PdfExportService, DocumentTypeService. 2 empty directories: Services/Attendance/, Services/Overtime/"
+    },
+    "Exports": {
+      "total": 18,
+      "used": 18,
+      "orphaned": 0,
+      "note": "All Export classes are actively imported and used in controllers: AttendanceExport, AttendanceStatsExport, BusinessTripExport, EmployeeBusinessTripExport, EmployeeLeaveExport, EmployeeShiftSwapExport, LeaveExport, LeaveRecapExport, LeaveRecapSummarySheet, LeavesExport, ReportAttendanceExport, ReportLeavesExport, ReportWorkerDocumentsExport, ShiftSwapExport, TodayAttendanceExport, WorkerAttendanceCalendarExport, WorkersExport, WorkersTemplateExport"
+    },
+    "Traits": {
+      "total": 3,
+      "used": 3,
+      "orphaned": 0,
+      "note": "All traits are actively used: Auditable (used in DocumentType, DepartmentDocumentType, LeaveType models), DepartmentFilterable (used in 6+ controllers), HasUuid (custom trait wrapping Illuminate HasUuids, used in models)"
+    },
+    "Helpers": {
+      "total": 1,
+      "used": 1,
+      "orphaned": 0,
+      "note": "PermissionHelper is actively used in LoginController for getDefaultRoute()"
+    },
+    "Notifications": {
+      "total": 1,
+      "used": 1,
+      "orphaned": 0,
+      "note": "ShiftSwapNotification is actively sent 20+ times across controllers and services"
+    },
+    "Models": {
+      "total": 22,
+      "used": 22,
+      "orphaned": 0,
+      "note": "All models are actively used with migrations and relationships: Attendance, AttendancePhoto, AuditLog, BusinessTrip, Department, DepartmentDocumentType, DocumentType, Holiday, LeaveRequest, LeaveType, Notification, Shift, ShiftDayTime, ShiftOverride, ShiftSwapAuditLog, ShiftSwapRequest, User, Worker, WorkerDocument, WorkerOffDay, WorkerShift, WorkerShiftHistory"
+    },
+    "Form Requests": {
+      "total": 13,
+      "used": 8,
+      "orphaned": 6,
+      "note": "5 form requests are orphaned. Active: AttendanceRequest, LeaveRequestRequest, BusinessTripRequest, WorkerShiftScheduleRequest, LoginRequest, RoleRequest, UserRequest, WorkerRequest, BerkasRequest, UpdatePasswordRequest, UpdateProfileRequest, ShiftSwapRequestRequest, DocumentTypeRequest. Empty directories: Overtime/"
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "HIGH",
+      "action": "Delete Mail Classes",
+      "reason": "All 4 mail classes (LeaveApprovedMail, LeaveRejectedMail, BusinessTripApprovedMail, BusinessTripRejectedMail) are completely orphaned and never used. The system uses NotificationService with database notifications instead.",
+      "files_to_delete": [
+        "app/Mail/LeaveApprovedMail.php",
+        "app/Mail/LeaveRejectedMail.php",
+        "app/Mail/BusinessTripApprovedMail.php",
+        "app/Mail/BusinessTripRejectedMail.php"
+      ]
+    },
+    {
+      "priority": "HIGH",
+      "action": "Delete Unused Form Request Classes",
+      "reason": "5 form request classes are defined but never imported or used in any controller method signatures.",
+      "files_to_delete": [
+        "app/Http/Requests/User/UpdateRolesRequest.php",
+        "app/Http/Requests/BusinessTrip/BusinessTripReportRequest.php",
+        "app/Http/Requests/Master/ShiftPatternRequest.php",
+        "app/Http/Requests/Master/PositionRequest.php",
+        "app/Http/Requests/Master/FileRequirementRequest.php"
+      ]
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Remove Empty Repository Directory",
+      "reason": "The Repositories/Attendance/ directory is empty. Attendance operations are handled directly in controllers without a dedicated repository pattern.",
+      "path": "app/Repositories/Attendance/"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Remove Empty Service Directory",
+      "reason": "The Services/Overtime/ directory is empty. There are no overtime services implemented.",
+      "path": "app/Services/Overtime/"
+    },
+    {
+      "priority": "MEDIUM",
+      "action": "Document Missing Overtime Feature",
+      "reason": "While app/Http/Requests/Overtime/ and app/Services/Overtime/ directories exist empty, there are create-views.ps1 scripts that reference overtime views. Either complete the overtime feature or remove these references.",
+      "note": "Overtime views are referenced in documentation and PowerShell scripts but no backend implementation exists"
+    },
+    {
+      "priority": "LOW",
+      "action": "Consider Repository Pattern for Attendance",
+      "reason": "While not orphaned per se, Attendance does not follow the repository pattern like other models. For consistency, consider creating AttendanceRepository or documenting why it's handled differently.",
+      "note": "This is architectural consistency, not a functional issue"
+    }
+  ],
+  "code_health_score": "B+",
+  "summary": {
+    "total_app_artifacts": 108,
+    "orphaned_count": 11,
+    "orphaned_percentage": "10.2%",
+    "health_assessment": "Good. Code is relatively clean with minimal orphaned artifacts. Main cleanup needed is removing unused Mail classes and 5 Form Request classes that were likely created for features that changed directions. Two empty directories (Attendance and Overtime repositories/services) should be removed for clarity.",
+    "immediate_actions": "Delete 4 mail classes and 5 form request classes (9 files total). These are completely unused and cluttering the codebase."
+  }
+}

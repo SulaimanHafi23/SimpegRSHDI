@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.shift-swaps.index)"
+    participant Controller as "Employee ShiftSwapController"
+    participant Model as "ShiftSwapRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik Batalkan Permintaan
+    View->>Controller: POST /employee/shift-swaps/{id}/cancel
+    Controller->>Model: cancelRequest(id, worker_id)
+    Model->>DB: SELECT shift_swap_requests by id
+    DB-->>Model: Data permintaan
+
+    alt Data valid (status masih pending dan milik pegawai)
+        Controller->>Model: Hapus/batalkan permintaan
+        Model->>DB: UPDATE/DELETE shift_swap_requests
+        DB-->>Model: Cancel success
+        Model-->>Controller: Permintaan dibatalkan
+        Controller->>View: Redirect index + success
+        View-->>Pegawai: Notifikasi pembatalan berhasil
+    else Data tidak valid (status tidak bisa dibatalkan / bukan milik pegawai / id invalid)
+        Controller->>View: Back + error
+        View-->>Pegawai: Notifikasi gagal membatalkan permintaan
+    end

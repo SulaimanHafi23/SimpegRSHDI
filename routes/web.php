@@ -1,5 +1,7 @@
 <?php
 
+
+
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -394,8 +396,6 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/{worker}/check-out', [AttendanceController::class, 'checkOutForm'])->name('check-out-form');
         Route::post('/{worker}/check-out', [AttendanceController::class, 'checkOut'])->name('check-out');
         Route::get('/{id}', [AttendanceController::class, 'show'])->name('show');
-        Route::get('/{id}/edit', [AttendanceController::class, 'edit'])->name('edit');
-        Route::put('/{id}', [AttendanceController::class, 'update'])->name('update');
         Route::delete('/{id}', [AttendanceController::class, 'destroy'])->name('destroy');
         Route::get('/report/daily', [AttendanceController::class, 'dailyReport'])->name('report.daily');
         Route::get('/report/monthly', [AttendanceController::class, 'monthlyReport'])->name('report.monthly');

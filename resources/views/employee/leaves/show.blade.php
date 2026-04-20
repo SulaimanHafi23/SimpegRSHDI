@@ -87,26 +87,59 @@
         </div>
 
         {{-- Card 3: Dokumen Pendukung --}}
-        @if($leave->attachment_path)
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
-                <div class="flex items-center gap-2.5 mb-4">
-                    <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
-                        <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                        </svg>
-                    </div>
-                    <h2 class="text-sm sm:text-base font-semibold text-gray-800">Dokumen Pendukung</h2>
-                </div>
-                <a href="{{ Storage::url($leave->attachment_path) }}"
-                   target="_blank"
-                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-medium rounded-xl transition border border-emerald-200">
-                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        @php
+            $leaveDocumentPath = $leave->attachment_path ?? $leave->attachment ?? $leave->document_path ?? null;
+        @endphp
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+            <div class="flex items-center gap-2.5 mb-4">
+                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
                     </svg>
-                    Lihat Dokumen
-                </a>
+                </div>
+                <h2 class="text-sm sm:text-base font-semibold text-gray-800">Dokumen Pendukung</h2>
             </div>
-        @endif
+
+            @if($leaveDocumentPath)
+                @php
+                    $attachmentUrl = Storage::disk('public')->url($leaveDocumentPath);
+                    $attachmentExtension = strtolower(pathinfo($leaveDocumentPath, PATHINFO_EXTENSION));
+                    $isImageAttachment = in_array($attachmentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true);
+                    $isPdfAttachment = $attachmentExtension === 'pdf';
+                @endphp
+                <div class="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <p class="text-xs sm:text-sm font-medium text-gray-700">{{ basename($leaveDocumentPath) }}</p>
+                        <a href="{{ $attachmentUrl }}"
+                           target="_blank"
+                           class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-medium rounded-xl transition border border-emerald-200">
+                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6m0 0v6m0-6L10 14"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5v14h14v-5"/>
+                            </svg>
+                            Buka Dokumen
+                        </a>
+                    </div>
+
+                    @if($isImageAttachment)
+                        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <img src="{{ $attachmentUrl }}" alt="Preview dokumen pendukung" class="w-full object-contain" style="height: clamp(34rem, 85vh, 78rem);">
+                        </div>
+                    @elseif($isPdfAttachment)
+                        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <iframe src="{{ $attachmentUrl }}#zoom=150" class="w-full" style="height: clamp(34rem, 85vh, 78rem);" title="Preview dokumen pendukung PDF"></iframe>
+                        </div>
+                    @else
+                        <div class="rounded-lg border border-dashed border-gray-300 bg-white p-3 text-xs sm:text-sm text-gray-600">
+                            Jenis file ini belum bisa dipreview langsung. Silakan klik tombol Buka Dokumen.
+                        </div>
+                    @endif
+                </div>
+            @else
+                <div class="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
+                    <p class="text-sm text-gray-600">Belum ada dokumen pendukung pada pengajuan cuti ini.</p>
+                </div>
+            @endif
+        </div>
 
         {{-- Card 4: Informasi Persetujuan --}}
         @if($leave->status !== 'pending')
@@ -148,7 +181,7 @@
                     @method('DELETE')
                     <button type="submit"
                             class="inline-flex items-center gap-2 px-5 py-3 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
-                            onclick="return confirm('Yakin ingin membatalkan permohonan cuti ini?')">
+                            onclick="event.preventDefault(); showConfirmAlert('Batalkan Permohonan?', 'Yakin ingin membatalkan permohonan cuti ini?', () => this.closest('form').submit());">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>

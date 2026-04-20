@@ -67,23 +67,6 @@
                 <!-- Card Content -->
                 <div class="card animate-fade-in">
                     <div class="p-8 sm:p-10">
-                        @if(session('error'))
-                            <x-ui.alert type="error" :message="session('error')" />
-                        @endif
-
-                        @if(session('success'))
-                            <x-ui.alert type="success" :message="session('success')" :auto-dismiss="true" :dismiss-after="4500" />
-                        @endif
-
-                        @if(session('warning'))
-                            <x-ui.alert type="warning" :message="session('warning')" :auto-dismiss="true" :dismiss-after="6000" />
-                        @endif
-
-                        @if(session('info'))
-                            <x-ui.alert type="info" :message="session('info')" :auto-dismiss="true" :dismiss-after="4500" />
-                        @endif
-
-                        <!-- Sweet Alert for notifications -->
                         <x-sweet-alert />
 
                         @yield('content')

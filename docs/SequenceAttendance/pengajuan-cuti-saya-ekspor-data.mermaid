@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.leaves.index)"
+    participant Controller as "Employee LeaveController"
+    participant Model as "LeaveRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik Export (PDF/Excel/CSV)
+    View->>Controller: GET /employee/leaves/export?filter&format
+    Controller->>Model: Build filter export sesuai pegawai login
+    Model->>DB: SELECT leave_requests + relasi leave_type/approver
+    DB-->>Model: Dataset export
+    Model-->>Controller: Data siap diekspor
+
+    alt Data valid (format valid & data tersedia)
+        Controller->>View: Return file pdf/xlsx/csv
+        View-->>Pegawai: File cuti berhasil diunduh
+    else Data tidak valid (worker tidak ada/filter error/format invalid)
+        Controller->>View: Redirect back + error
+        View-->>Pegawai: Notifikasi gagal ekspor cuti
+    end

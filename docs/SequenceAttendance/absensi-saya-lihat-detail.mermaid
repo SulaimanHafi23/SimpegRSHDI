@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.attendance.show)"
+    participant Controller as "Employee AttendanceController"
+    participant Model as "Attendance Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik detail absensi
+    View->>Controller: GET /employee/attendance/{id}
+    Controller->>Model: getById(id) + validasi kepemilikan data
+    Model->>DB: SELECT attendance + photos + worker-shift
+    DB-->>Model: Data detail absensi
+    Model-->>Controller: Entitas absensi
+
+    alt Data valid (id milik pegawai login)
+        Controller->>View: Render detail absensi
+        View-->>Pegawai: Detail check-in/out dan foto tampil
+    else Data tidak valid (id tidak ada/tidak berhak akses)
+        Controller->>View: 403/redirect + error
+        View-->>Pegawai: Notifikasi gagal melihat detail
+    end

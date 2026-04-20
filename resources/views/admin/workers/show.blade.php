@@ -23,7 +23,7 @@
                 <x-button
                     variant="danger"
                     icon="fas fa-trash"
-                    onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()">
+                    onclick="showDeleteConfirm(() => document.getElementById('delete-form').submit())">
                     Hapus
                 </x-button>
             @endif

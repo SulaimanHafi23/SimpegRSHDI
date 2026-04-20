@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.attendance.index)"
+    participant Controller as "Employee AttendanceController"
+    participant Model as "Attendance Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Buka menu Absensi Saya
+    View->>Controller: GET /employee/attendance
+    Controller->>Model: Build filter (periode, status, search)
+    Model->>DB: SELECT attendance by worker + relasi pendukung
+    DB-->>Model: Data absensi + metadata
+    Model-->>Controller: Koleksi absensi terfilter
+
+    alt Data valid (data berhasil diambil)
+        Controller->>View: Render riwayat, ringkasan, tombol aksi
+        View-->>Pegawai: Daftar absensi saya tampil
+    else Data tidak valid (worker/data tidak ditemukan atau error)
+        Controller->>View: Redirect dashboard/back + error
+        View-->>Pegawai: Notifikasi gagal memuat absensi
+    end

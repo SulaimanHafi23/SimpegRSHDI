@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Manager as "Manager/HR"
+    participant View as "Web View (manager.shift-swap-approvals.index)"
+    participant Controller as "ShiftSwapApprovalController"
+    participant Model as "ShiftSwapRequest Model"
+    participant DB as "Database"
+
+    Manager->>View: Klik Export (PDF/Excel/CSV)
+    View->>Controller: GET /manager/shift-swap-approvals/export?filter&format
+    Controller->>Model: Build filter export
+    Model->>DB: SELECT shift_swap_requests + relasi sesuai filter
+    DB-->>Model: Dataset export
+    Model-->>Controller: Data siap ekspor
+
+    alt Data valid (format & data valid)
+        Controller->>View: Return file (pdf/xlsx/csv)
+        View-->>Manager: File unduhan berhasil
+    else Data tidak valid (format tidak valid/query gagal)
+        Controller->>View: Back + error
+        View-->>Manager: Notifikasi gagal ekspor
+    end

@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Pengguna
+    participant View as "Web View (sidebar/navbar)"
+    participant C as LoginController
+    participant A as "AuditLog Model"
+    participant U as "User Model"
+    participant DB as "Database"
+
+    Pengguna->>View: Klik tombol Logout (POST /logout)
+    View->>C: logout()
+
+    C->>C: Validasi sesi autentikasi
+    alt Data valid (sesi aktif)
+        C->>A: Catat audit logout
+        A->>DB: INSERT INTO audit_logs(action='logout', user_id, ...)
+        C->>U: authService->logout(user)
+        U->>DB: DELETE token API (jika ada)
+        C->>DB: Invalidate session + regenerate CSRF token
+        C-->>View: Redirect ke login + flash success
+        View-->>Pengguna: Tampil halaman login
+    else Data tidak valid (sesi tidak aktif)
+        C-->>View: Redirect ke login
+        View-->>Pengguna: Tampil halaman login
+    end

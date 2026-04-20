@@ -3,21 +3,19 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use App\Services\User\UserService;
-use App\Services\Worker\WorkerService;
-use App\Services\Role\RoleService;
-use App\DTOs\UserDTO;
-use App\Http\Requests\User\UserRequest;
+use App\Models\User;
+use App\Models\Worker;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function __construct(
-        protected UserService $userService,
-        protected WorkerService $workerService,
-        protected RoleService $roleService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         // Enforce permissions by middleware to match RolePermissionSeeder
         $this->middleware('permission:user.manage')->only(['index', 'show']);
@@ -30,6 +28,30 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
+        $query = User::with(['worker', 'roles']);
+
+        if ($request->filled('is_active')) {
+            $query->where('is_active', (bool) $request->is_active);
+        }
+
+        if ($request->filled('role')) {
+            $query->whereHas('roles', function ($roleQuery) use ($request) {
+                $roleQuery->where('name', $request->role);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $searchTerm = strtolower($request->search);
+            $query->where(function ($subQuery) use ($searchTerm) {
+                $subQuery->whereRaw('LOWER(username) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereHas('worker', function ($workerQuery) use ($searchTerm) {
+                        $workerQuery->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                            ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $searchTerm . '%']);
+                    });
+            });
+        }
+
         $filters = [
             'search' => $request->search,
             'role' => $request->role,
@@ -37,35 +59,80 @@ class UserController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $users = $this->userService->getAll($filters);
-        $roles = $this->roleService->getAll();
+        $users = $query->latest()->paginate($filters['per_page'])->appends($filters);
+        $roles = Role::with('permissions')->orderBy('name')->get();
 
         return view('admin.users.index', compact('users', 'roles', 'filters'));
     }
 
     public function create()
     {
-        $workers = $this->workerService->getAllActive();
-        $roles = $this->roleService->getAll();
+        $workers = Worker::where('status', 'active')->orderBy('name')->get();
+        $roles = Role::with('permissions')->orderBy('name')->get();
 
         return view('admin.users.create', compact('workers', 'roles'));
     }
 
-    public function store(UserRequest $request)
+    public function store(Request $request)
     {
         try {
-            $validated = $request->validated();
-            // Password will be hashed in the service layer
-            // Ensure roles are integers so spatie/laravel-permission treats them as IDs
+            $validated = $request->validate([
+                'worker_id' => ['required', 'uuid', Rule::exists('workers', 'id')],
+                'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+                'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')],
+                'password' => 'required|string|min:8|confirmed',
+                'password_confirmation' => 'required|string|min:8',
+                'is_active' => 'boolean',
+                'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:10240',
+                'roles' => 'nullable|array',
+                'roles.*' => 'integer|exists:roles,id',
+            ]);
+
             if (!empty($validated['roles']) && is_array($validated['roles'])) {
-                $validated['roles'] = array_map(fn($r) => is_numeric($r) ? (int) $r : $r, $validated['roles']);
+                $validated['roles'] = array_map(fn ($roleId) => is_numeric($roleId) ? (int) $roleId : $roleId, $validated['roles']);
             }
-            $user = $this->userService->create($validated);
+
+            DB::beginTransaction();
+
+            if (User::where('username', $validated['username'])->exists()) {
+                throw new \Exception('Username already exists.');
+            }
+
+            if (Worker::where('id', $validated['worker_id'])->exists() && User::where('worker_id', $validated['worker_id'])->exists()) {
+                throw new \Exception('A user is already associated with the selected worker.');
+            }
+
+            if (!empty($validated['email'])) {
+                $workerEmailConflict = Worker::where('email', $validated['email'])
+                    ->where('id', '!=', $validated['worker_id'])
+                    ->exists();
+
+                if ($workerEmailConflict) {
+                    throw new \Exception('Email already exists.');
+                }
+            }
+
+            $user = User::create([
+                'worker_id' => $validated['worker_id'],
+                'email' => $validated['email'],
+                'username' => $validated['username'],
+                'password' => Hash::make($validated['password']),
+                'is_active' => $request->boolean('is_active'),
+            ]);
+
+            if (!empty($validated['roles'])) {
+                $user->assignRole($validated['roles']);
+            }
+
+            DB::commit();
 
             return redirect()
                 ->route('admin.users.index')
                 ->with('success', 'User berhasil ditambahkan');
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating user: ' . $e->getMessage());
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -75,52 +142,97 @@ class UserController extends Controller
     public function show(string $id)
     {
         try {
-            $user = $this->userService->getById($id);
+            $user = User::with(['worker', 'roles.permissions'])->findOrFail($id);
             return view('admin.users.show', compact('user'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', $e->getMessage());
+                ->with('error', 'User tidak ditemukan');
         }
     }
 
     public function edit(string $id)
     {
         try {
-            $user = $this->userService->getById($id);
-            $workers = $this->workerService->getAllActive();
-            $roles = $this->roleService->getAll();
+            $user = User::with(['worker', 'roles.permissions'])->findOrFail($id);
+            $workers = Worker::where('status', 'active')->orderBy('name')->get();
+            $roles = Role::with('permissions')->orderBy('name')->get();
 
             return view('admin.users.edit', compact('user', 'workers', 'roles'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.users.index')
-                ->with('error', $e->getMessage());
+                ->with('error', 'User tidak ditemukan');
         }
     }
 
-    public function update(UserRequest $request, string $id)
+    public function update(Request $request, string $id)
     {
         try {
-            $validated = $request->validated();
-            // Password will be hashed in the service layer; remove if empty
-            if (!empty($validated['password'])) {
-                // keep as-is, service will hash
-            } else {
-                unset($validated['password']);
-            }
+            $validated = $request->validate([
+                'worker_id' => ['nullable', 'uuid', Rule::exists('workers', 'id')],
+                'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($id)],
+                'username' => ['required', 'string', 'max:255', Rule::unique('users', 'username')->ignore($id)],
+                'password' => 'nullable|string|min:8|confirmed',
+                'password_confirmation' => 'nullable|string|min:8',
+                'is_active' => 'boolean',
+                'photo' => 'nullable|image|mimes:jpeg,jpg,png|max:10240',
+                'roles' => 'nullable|array',
+                'roles.*' => 'integer|exists:roles,id',
+            ]);
 
-            // Ensure roles are integers so spatie/laravel-permission treats them as IDs
             if (isset($validated['roles']) && is_array($validated['roles'])) {
-                $validated['roles'] = array_map(fn($r) => is_numeric($r) ? (int) $r : $r, $validated['roles']);
+                $validated['roles'] = array_map(fn ($roleId) => is_numeric($roleId) ? (int) $roleId : $roleId, $validated['roles']);
             }
 
-            $user = $this->userService->update($id, $validated);
+            DB::beginTransaction();
+
+            $existingUser = User::with('worker')->findOrFail($id);
+
+            if (!empty($validated['email']) && $validated['email'] !== $existingUser->email) {
+                $emailOwner = User::where('email', $validated['email'])->first();
+                $workerEmailConflict = Worker::where('email', $validated['email'])
+                    ->when($existingUser->worker_id, function ($query) use ($existingUser) {
+                        $query->where('id', '!=', $existingUser->worker_id);
+                    })
+                    ->exists();
+
+                if (($emailOwner && $emailOwner->id !== $id) || $workerEmailConflict) {
+                    throw new \Exception('Email already exists.');
+                }
+            }
+
+            $payload = [
+                'worker_id' => $validated['worker_id'] ?? null,
+                'email' => $validated['email'],
+                'username' => $validated['username'],
+                'is_active' => $request->boolean('is_active'),
+            ];
+
+            if (!empty($validated['password'])) {
+                $payload['password'] = Hash::make($validated['password']);
+            }
+
+            $payload = array_filter($payload, function ($value) {
+                return $value !== '' && $value !== null && $value !== [];
+            });
+
+            $user = User::findOrFail($id);
+            $user->update($payload);
+
+            if (!empty($validated['roles'])) {
+                $user->syncRoles($validated['roles']);
+            }
+
+            DB::commit();
 
             return redirect()
                 ->route('admin.users.show', $id)
                 ->with('success', 'User berhasil diupdate');
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating user: ' . $e->getMessage());
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -130,12 +242,14 @@ class UserController extends Controller
     public function destroy(string $id)
     {
         try {
-            $this->userService->delete($id);
+            User::findOrFail($id)->delete();
 
             return redirect()
                 ->route('admin.users.index')
                 ->with('success', 'User berhasil dihapus');
         } catch (\Exception $e) {
+            Log::error('Error deleting user: ' . $e->getMessage());
+
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }

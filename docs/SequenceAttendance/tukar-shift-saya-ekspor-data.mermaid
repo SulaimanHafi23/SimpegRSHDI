@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.shift-swaps.index)"
+    participant Controller as "Employee ShiftSwapController"
+    participant Model as "ShiftSwapRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik Export (PDF/Excel/CSV)
+    View->>Controller: GET /employee/shift-swaps/export?filter&format
+    Controller->>Model: listForWorker(worker_id) + filter tanggal/rekan
+    Model->>DB: SELECT shift_swap_requests + relasi terkait
+    DB-->>Model: Dataset export
+    Model-->>Controller: Data siap diekspor
+
+    alt Data valid (format valid dan data tersedia)
+        Controller->>View: Return file pdf/xlsx/csv
+        View-->>Pegawai: File tukar shift berhasil diunduh
+    else Data tidak valid (worker tidak ditemukan / filter error / format invalid)
+        Controller->>View: Redirect back + error
+        View-->>Pegawai: Notifikasi gagal ekspor tukar shift
+    end

@@ -3,7 +3,7 @@
 @section('title', 'Detail Perjalanan Dinas')
 
 @section('content')
-<div class="space-y-6" x-data="{ showApproveModal: false, showRejectModal: false, approvalNotes: '', rejectionReason: '' }">
+<div class="space-y-6" x-data="{ showApproveModal: false, showRejectModal: false, rejectionReason: '' }">
     <!-- Breadcrumb -->
     <nav class="flex" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -26,10 +26,10 @@
         @if($trip->status === 'pending')
         <div class="flex gap-2">
             <button @click="showApproveModal = true" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                <i class="fas fa-check mr-2"></i>Approve
+                <i class="fas fa-check mr-2"></i>Setujui
             </button>
             <button @click="showRejectModal = true" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                <i class="fas fa-times mr-2"></i>Reject
+                <i class="fas fa-times mr-2"></i>Tolak
             </button>
         </div>
         @endif
@@ -159,7 +159,7 @@
                                 </span>
                             @elseif($trip->status === 'approved')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-semibold">
-                                    <i class="fas fa-check mr-2"></i>Approved
+                                    <i class="fas fa-check mr-2"></i>Disetujui
                                 </span>
                             @elseif($trip->status === 'rejected')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-800 font-semibold">
@@ -193,6 +193,41 @@
                                 <p class="text-base font-semibold text-red-600">Tidak ada lampiran</p>
                             @endif
                         </div>
+
+                        @if($trip->supporting_document_path)
+                        @php
+                            $supportingDocUrl = Storage::disk('public')->url($trip->supporting_document_path);
+                            $supportingDocExtension = strtolower(pathinfo($trip->supporting_document_path, PATHINFO_EXTENSION));
+                            $isSupportingImage = in_array($supportingDocExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true);
+                            $isSupportingPdf = $supportingDocExtension === 'pdf';
+                        @endphp
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-500 mb-2">Preview Dokumen Pendukung</label>
+                            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <p class="text-sm font-medium text-gray-700">{{ basename($trip->supporting_document_path) }}</p>
+                                    <a href="{{ $supportingDocUrl }}" target="_blank" rel="noopener"
+                                       class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition">
+                                        <i class="fas fa-external-link-alt mr-2"></i>Buka File
+                                    </a>
+                                </div>
+
+                                @if($isSupportingImage)
+                                    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                        <img src="{{ $supportingDocUrl }}" alt="Preview dokumen pendukung" class="w-full object-contain" style="height: clamp(40rem, 92vh, 88rem);">
+                                    </div>
+                                @elseif($isSupportingPdf)
+                                    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                        <iframe src="{{ $supportingDocUrl }}#zoom=100" class="w-full" style="height: clamp(40rem, 92vh, 88rem);" title="Preview dokumen pendukung PDF"></iframe>
+                                    </div>
+                                @else
+                                    <div class="rounded-lg border border-dashed border-gray-300 bg-white p-3 text-sm text-gray-600">
+                                        Jenis file ini belum bisa dipreview langsung. Silakan klik tombol Buka File.
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                        @endif
 
                         <div class="md:col-span-2">
                             <label class="block text-sm font-medium text-gray-500 mb-1">Tujuan Perjalanan</label>
@@ -312,14 +347,9 @@
         <div class="flex items-center justify-center min-h-screen px-4">
             <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showApproveModal = false"></div>
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
-                <h3 class="text-lg font-semibold mb-4">Approve Permohonan</h3>
+                <h3 class="text-lg font-semibold mb-4">Setujui Permohonan</h3>
                 <form method="POST" action="{{ route('approvals.business-trips.approve', $trip->id) }}">
                     @csrf
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Catatan (Opsional)</label>
-                        <textarea x-model="approvalNotes" name="approval_notes" rows="3"
-                                  class="w-full rounded-lg border-gray-300 focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
-                    </div>
                     <div class="flex justify-end gap-2">
                         <button type="button" @click="showApproveModal = false"
                                 class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
@@ -350,7 +380,7 @@
                         </label>
                         <textarea x-model="rejectionReason" name="rejection_reason" rows="4" required
                                   class="w-full rounded-lg border-gray-300 text-sm focus:border-red-500 focus:ring focus:ring-red-200"
-                                  placeholder="Contoh: Dokumen pendukung belum lengkap, mohon lengkapi STR/SIP terbaru."></textarea>
+                                  placeholder="Isi alasan penolakan."></textarea>
                         <p class="text-xs text-gray-500 mt-2">Alasan ini akan ditampilkan ke pegawai sebagai catatan penolakan.</p>
                     </div>
                     <div class="flex justify-end gap-2">

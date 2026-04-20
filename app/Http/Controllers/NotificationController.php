@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Notification\NotificationService;
 use Illuminate\Http\Request;
+use App\Models\Notification;
+use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
-    public function __construct(
-        protected NotificationService $notificationService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
@@ -18,15 +18,23 @@ class NotificationController extends Controller
      */
     public function index(Request $request)
     {
-        $userId = auth()->id();
-        $filters = [
-            'is_read' => $request->input('is_read'),
-            'type' => $request->input('type'),
-            'per_page' => 15
-        ];
+        $userId = Auth::id();
+        $query = Notification::query()->with('user')->where('user_id', $userId)->orderBy('created_at', 'desc');
 
-        $notifications = $this->notificationService->getByUserId($userId, $filters);
-        $unreadCount = $this->notificationService->getUnreadCount($userId);
+        if ($request->filled('type')) {
+            $query->where('type', $request->input('type'));
+        }
+
+        if ($request->filled('is_read')) {
+            if ($request->boolean('is_read')) {
+                $query->whereNotNull('read_at');
+            } else {
+                $query->whereNull('read_at');
+            }
+        }
+
+        $notifications = $query->paginate(15);
+        $unreadCount = Notification::where('user_id', $userId)->whereNull('read_at')->count();
 
         return view('notifications.index', compact('notifications', 'unreadCount'));
     }
@@ -36,9 +44,13 @@ class NotificationController extends Controller
      */
     public function unread()
     {
-        $userId = auth()->id();
-        $notifications = $this->notificationService->getUnreadByUserId($userId);
-        $unreadCount = $this->notificationService->getUnreadCount($userId);
+        $userId = Auth::id();
+        $notifications = Notification::where('user_id', $userId)
+            ->whereNull('read_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+        $unreadCount = Notification::where('user_id', $userId)->whereNull('read_at')->count();
 
         return response()->json([
             'notifications' => $notifications,
@@ -52,7 +64,7 @@ class NotificationController extends Controller
     public function unreadCount()
     {
         return response()->json([
-            'count' => $this->notificationService->getUnreadCount(auth()->id()),
+            'count' => Notification::where('user_id', Auth::id())->whereNull('read_at')->count(),
         ]);
     }
 
@@ -61,7 +73,8 @@ class NotificationController extends Controller
      */
     public function markAsRead(string $id)
     {
-        $this->notificationService->markAsRead($id);
+        $notification = Notification::findOrFail($id);
+        $notification->markAsRead();
 
         if (request()->wantsJson()) {
             return response()->json(['success' => true]);
@@ -75,8 +88,10 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        $userId = auth()->id();
-        $this->notificationService->markAllAsRead($userId);
+        $userId = Auth::id();
+        Notification::where('user_id', $userId)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
 
         if (request()->wantsJson()) {
             return response()->json(['success' => true]);
@@ -90,7 +105,7 @@ class NotificationController extends Controller
      */
     public function destroy(string $id)
     {
-        $this->notificationService->delete($id);
+        Notification::findOrFail($id)->delete();
 
         if (request()->wantsJson()) {
             return response()->json(['success' => true]);

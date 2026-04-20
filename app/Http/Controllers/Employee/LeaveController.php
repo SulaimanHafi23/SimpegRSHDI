@@ -3,23 +3,21 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Services\Leave\LeaveRequestService;
-use App\Services\Master\LeaveTypeService;
-use App\Services\Export\PdfExportService;
 use App\Exports\EmployeeLeaveExport;
-use App\DTOs\LeaveRequestDTO;
+use App\Models\LeaveRequest;
+use App\Models\LeaveType;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
-use Carbon\Carbon;
 
 class LeaveController extends Controller
 {
-    public function __construct(
-        protected LeaveRequestService $leaveService,
-        protected LeaveTypeService $leaveTypeService,
-        protected PdfExportService $pdfExportService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
@@ -47,8 +45,11 @@ class LeaveController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $leaveRequests = $this->leaveService->getAll($filters);
-        $leaveTypes = $this->leaveTypeService->getActive();
+        $leaveRequests = $this->buildLeaveQuery($filters)
+            ->latest('start_date')
+            ->paginate($filters['per_page'])
+            ->appends($filters);
+        $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
 
         // Calculate leave summary (1 query instead of 4)
         $year = $filters['year'];
@@ -85,7 +86,7 @@ class LeaveController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $leaveTypes = $this->leaveTypeService->getActive();
+        $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get();
 
         // Calculate days used per leave type this year (approved + pending)
         $usedDays = \App\Models\LeaveRequest::where('worker_id', $worker->id)
@@ -95,7 +96,21 @@ class LeaveController extends Controller
             ->selectRaw('leave_type_id, COALESCE(SUM(total_days), 0) as used_days')
             ->pluck('used_days', 'leave_type_id');
 
-        return view('employee.leaves.create', compact('leaveTypes', 'usedDays'));
+        $blockedLeaveDates = [];
+        $pendingOrApprovedLeaves = \App\Models\LeaveRequest::where('worker_id', $worker->id)
+            ->whereIn('status', ['approved', 'pending'])
+            ->get(['start_date', 'end_date']);
+
+        foreach ($pendingOrApprovedLeaves as $leave) {
+            $period = CarbonPeriod::create($leave->start_date, $leave->end_date);
+            foreach ($period as $date) {
+                $blockedLeaveDates[] = $date->format('Y-m-d');
+            }
+        }
+
+        $blockedLeaveDates = array_values(array_unique($blockedLeaveDates));
+
+        return view('employee.leaves.create', compact('leaveTypes', 'usedDays', 'blockedLeaveDates'));
     }
 
     /**
@@ -120,10 +135,46 @@ class LeaveController extends Controller
         ]);
 
         try {
-            // Calculate total days
-            $startDate = \Carbon\Carbon::parse($validated['start_date']);
-            $endDate = \Carbon\Carbon::parse($validated['end_date']);
+            $leaveType = LeaveType::findOrFail($validated['leave_type_id']);
+
+            // Calculate total days (server-side only)
+            $startDate = Carbon::parse($validated['start_date']);
+            $endDate = Carbon::parse($validated['end_date']);
             $totalDays = $startDate->diffInDays($endDate) + 1;
+
+            // Validate leave balance
+            if ($leaveType->max_days_per_year) {
+                $usedDays = LeaveRequest::where('worker_id', $worker->id)
+                    ->where('leave_type_id', $validated['leave_type_id'])
+                    ->whereYear('start_date', now()->year)
+                    ->whereIn('status', ['approved', 'pending'])
+                    ->sum('total_days');
+
+                $balance = max(0, $leaveType->max_days_per_year - $usedDays);
+                if ($balance < $totalDays) {
+                    return back()
+                        ->withInput()
+                        ->with('error', "Sisa cuti tidak mencukupi. Sisa cuti tersedia: {$balance} hari");
+                }
+            }
+
+            // Validate days notice
+            $startOfDay = Carbon::parse($validated['start_date'])->startOfDay();
+            $today = now()->startOfDay();
+            $daysUntilStart = $today->diffInDays($startOfDay, false);
+
+            if ($startOfDay->isFuture() && $daysUntilStart < $leaveType->days_notice) {
+                return back()
+                    ->withInput()
+                    ->with('error', "Permohonan cuti harus diajukan minimal {$leaveType->days_notice} hari sebelumnya.");
+            }
+
+            // Don't allow backdated leave requests
+            if ($startOfDay->isPast()) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Tidak dapat mengajukan cuti untuk tanggal yang sudah lewat.');
+            }
 
             $hasOverlappingLeave = \App\Models\LeaveRequest::where('worker_id', $worker->id)
                 ->whereIn('status', ['pending', 'approved'])
@@ -143,7 +194,19 @@ class LeaveController extends Controller
                     ->with('error', 'Tanggal cuti bentrok dengan pengajuan sebelumnya. Tanggal hanya bisa dipilih lagi jika pengajuan sebelumnya ditolak.');
             }
 
-            $dto = LeaveRequestDTO::fromRequest([
+            $attachmentPath = null;
+            if ($request->hasFile('attachment')) {
+                $attachment = $request->file('attachment');
+                $filename = sprintf(
+                    '%s_leave_%s.%s',
+                    $worker->id,
+                    now()->format('YmdHis'),
+                    $attachment->getClientOriginalExtension()
+                );
+                $attachmentPath = $attachment->storeAs('leave-attachments', $filename, 'public');
+            }
+
+            LeaveRequest::create([
                 'worker_id' => $worker->id,
                 'leave_type_id' => $validated['leave_type_id'],
                 'start_date' => $validated['start_date'],
@@ -151,10 +214,8 @@ class LeaveController extends Controller
                 'total_days' => $totalDays,
                 'reason' => $validated['reason'],
                 'status' => 'pending',
-                'attachment' => $request->file('attachment'),
+                'attachment_path' => $attachmentPath,
             ]);
-
-            $this->leaveService->create($dto->toArray());
 
             return redirect()->route('employee.leaves.index')
                 ->with('success', 'Permohonan cuti berhasil diajukan!');
@@ -179,7 +240,7 @@ class LeaveController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $leave = $this->leaveService->getById($id);
+        $leave = LeaveRequest::with(['worker', 'leaveType', 'approver'])->findOrFail($id);
 
         // Verify this leave belongs to the logged-in worker
         if ($leave->worker_id !== $worker->id) {
@@ -203,7 +264,7 @@ class LeaveController extends Controller
         }
 
         try {
-            $leave = $this->leaveService->getById($id);
+            $leave = LeaveRequest::with(['worker', 'leaveType', 'approver'])->findOrFail($id);
 
             // Verify ownership
             if ($leave->worker_id !== $worker->id) {
@@ -215,7 +276,16 @@ class LeaveController extends Controller
                 return back()->with('error', 'Hanya permohonan yang masih pending yang bisa dibatalkan.');
             }
 
-            $this->leaveService->delete($id);
+            if ($leave->attachment_path) {
+                $publicDisk = Storage::disk('public');
+                if ($publicDisk->exists($leave->attachment_path)) {
+                    $publicDisk->delete($leave->attachment_path);
+                } elseif (Storage::exists($leave->attachment_path)) {
+                    Storage::delete($leave->attachment_path);
+                }
+            }
+
+            $leave->delete();
 
             return redirect()->route('employee.leaves.index')
                 ->with('success', 'Permohonan cuti berhasil dibatalkan.');
@@ -250,7 +320,9 @@ class LeaveController extends Controller
         ];
 
         // Get all records without pagination
-        $leaves = collect($this->leaveService->getAll(array_merge($filters, ['per_page' => 10000]))->items());
+        $leaves = $this->buildLeaveQuery($filters)
+            ->latest('start_date')
+            ->get();
 
         if ($format === 'excel') {
             return Excel::download(
@@ -267,7 +339,7 @@ class LeaveController extends Controller
         }
 
         // Default: PDF
-        return $this->pdfExportService->exportLeaveReport($leaves->toArray(), $worker, $filters);
+        return $this->exportLeavePdfReport($leaves->toArray(), $worker, $filters);
     }
 
     /**
@@ -294,7 +366,84 @@ class LeaveController extends Controller
         ];
 
         // Get all records without pagination for PDF
-        $leaves = $this->leaveService->getAll(array_merge($filters, ['per_page' => 10000]))->items();
+        $leaves = $this->buildLeaveQuery($filters)
+            ->latest('start_date')
+            ->get()
+            ->all();
 
-        return $this->pdfExportService->exportLeaveReport($leaves, $worker, $filters);
-    }}
+        return $this->exportLeavePdfReport($leaves, $worker, $filters);
+    }
+
+    private function buildLeaveQuery(array $filters)
+    {
+        $query = LeaveRequest::with(['worker', 'leaveType', 'approver']);
+
+        if (!empty($filters['worker_id'])) {
+            $query->where('worker_id', $filters['worker_id']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['leave_type_id'])) {
+            $query->where('leave_type_id', $filters['leave_type_id']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->where('start_date', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->where('end_date', '<=', $filters['date_to']);
+        }
+
+        if (!empty($filters['year'])) {
+            $query->whereYear('start_date', $filters['year']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('reason', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('start_date', 'like', "%{$search}%")
+                    ->orWhere('end_date', 'like', "%{$search}%")
+                    ->orWhereHas('leaveType', function ($inner) use ($search) {
+                        $inner->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('worker', function ($inner) use ($search) {
+                        $inner->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    private function exportLeavePdfReport(array $leaves, $worker, array $filters)
+    {
+        $collection = collect($leaves);
+
+        $data = [
+            'title' => 'Laporan Riwayat Cuti',
+            'worker' => $worker,
+            'leaves' => $leaves,
+            'filters' => $filters,
+            'generated_at' => now()->format('d F Y H:i'),
+            'summary' => [
+                'total' => $collection->count(),
+                'pending' => $collection->where('status', 'pending')->count(),
+                'approved' => $collection->where('status', 'approved')->count(),
+                'rejected' => $collection->where('status', 'rejected')->count(),
+            ],
+        ];
+
+        $pdf = Pdf::loadView('employee.exports.leave-pdf', $data);
+        $pdf->setPaper('a4', 'portrait');
+
+        $filename = 'Cuti_' . $worker->name . '_' . now()->format('YmdHis') . '.pdf';
+
+        return $pdf->download($filename);
+    }
+}

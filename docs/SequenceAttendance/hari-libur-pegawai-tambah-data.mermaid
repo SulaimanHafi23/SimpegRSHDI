@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR
+    participant View as "Web View (off-days manager pada detail jadwal/worker)"
+    participant C as WorkerOffDayController
+    participant Svc as WorkerOffDayService
+    participant W as "Worker Model"
+    participant WOD as "WorkerOffDay Model"
+    participant DB as "Database"
+
+    Admin->>View: Isi form tambah hari libur (single/recurring)
+    View->>C: POST /admin/workers/{workerId}/off-days/patterns
+
+    C->>C: Validasi input (type, date/day_of_week, periode, reason)
+    C->>W: Validasi worker tersedia
+    W->>DB: SELECT workers WHERE id = ?
+    DB-->>W: Data worker / null
+
+    alt Data valid
+        C->>WOD: Simpan aturan hari libur
+        WOD->>DB: INSERT INTO worker_off_days (...)
+        C-->>View: JSON success + data pola
+        View-->>Admin: Daftar hari libur bertambah
+    else Data tidak valid
+        C-->>View: JSON error validasi/proses
+        View-->>Admin: Tampilkan pesan gagal simpan
+    end

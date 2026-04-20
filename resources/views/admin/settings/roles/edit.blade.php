@@ -5,24 +5,10 @@
 @section('content')
 <div class="space-y-6">
     {{-- Page Header --}}
-    <x-page-header 
-        title="Edit Role" 
+    <x-page-header
+        title="Edit Role"
         description="Ubah informasi role dan permissions"
         icon="fas fa-user-tag" />
-
-    {{-- Alert Messages --}}
-
-
-    @if($errors->any())
-        <x-alert type="danger" dismissible>
-            <strong>Terdapat kesalahan:</strong>
-            <ul class="mt-2 ml-4 list-disc">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </x-alert>
-    @endif
 
     {{-- Form --}}
     <form action="{{ route('admin.roles.update', $role->id) }}" method="POST">
@@ -34,23 +20,23 @@
             <div class="lg:col-span-1">
                 <x-card title="Informasi Role">
                     <div class="space-y-4">
-                        <x-form.input 
-                            name="name" 
-                            label="Nama Role" 
+                        <x-form.input
+                            name="name"
+                            label="Nama Role"
                             placeholder="Contoh: manager"
                             :value="old('name', $role->name)"
                             required
                             help="Nama role dalam format lowercase tanpa spasi" />
 
-                        <x-form.input 
-                            name="display_name" 
-                            label="Display Name" 
+                        <x-form.input
+                            name="display_name"
+                            label="Display Name"
                             placeholder="Contoh: Manager"
                             :value="old('display_name', $role->display_name)" />
 
-                        <x-form.textarea 
-                            name="description" 
-                            label="Deskripsi" 
+                        <x-form.textarea
+                            name="description"
+                            label="Deskripsi"
                             rows="4"
                             placeholder="Deskripsi role..."
                             :value="old('description', $role->description)" />
@@ -79,16 +65,16 @@
                         <div class="flex items-center justify-between">
                             <h3 class="text-lg font-semibold text-gray-900">Pilih Permissions</h3>
                             <div class="flex gap-2">
-                                <x-button 
-                                    type="button" 
-                                    variant="outline" 
+                                <x-button
+                                    type="button"
+                                    variant="outline"
                                     size="sm"
                                     onclick="selectAllPermissions()">
                                     Pilih Semua
                                 </x-button>
-                                <x-button 
-                                    type="button" 
-                                    variant="outline" 
+                                <x-button
+                                    type="button"
+                                    variant="outline"
                                     size="sm"
                                     onclick="deselectAllPermissions()">
                                     Hapus Semua
@@ -99,7 +85,7 @@
 
                     @php
                         $rolePermissions = $role->permissions->pluck('id')->toArray();
-                        
+
                         // Kelompokkan permissions berdasarkan kategori yang lebih terstruktur
                         $permissionGroups = [
                             'dashboard' => [
@@ -176,22 +162,22 @@
 
                         // Master Data permissions
                         $masterDataModules = ['religion', 'gender', 'department', 'location', 'shift', 'leave-type', 'document-type', 'department-document-type', 'holiday'];
-                        
+
                         // Management permissions
                         $managementModules = ['worker', 'attendance', 'schedule', 'worker-document'];
-                        
+
                         // Approval permissions (yang punya .approve)
                         $approvalActions = ['.approve'];
-                        
+
                         // Employee-specific permissions (yang punya .request, .view, .checkin)
                         $employeeActions = ['.request', '.view', '.checkin'];
-                        
+
                         // Settings permissions
                         $settingsModules = ['role', 'user'];
 
                         foreach($permissions as $permission) {
                             $permName = $permission->name;
-                            
+
                             // Dashboard
                             if (str_contains($permName, 'dashboard')) {
                                 $permissionGroups['dashboard']['permissions'][] = $permission;
@@ -201,7 +187,7 @@
                                 $permissionGroups['master']['permissions'][] = $permission;
                             }
                             // Management - worker, attendance, schedule, worker-document yang manage
-                            elseif (collect($managementModules)->contains(fn($mod) => str_contains($permName, $mod)) && 
+                            elseif (collect($managementModules)->contains(fn($mod) => str_contains($permName, $mod)) &&
                                     str_contains($permName, '.manage')) {
                                 $permissionGroups['management']['permissions'][] = $permission;
                             }
@@ -214,8 +200,8 @@
                                 $permissionGroups['report']['permissions'][] = $permission;
                             }
                             // Employee Access - .request, .view (except report.view), .checkin
-                            elseif ((str_contains($permName, '.request') || 
-                                    (str_contains($permName, '.view') && !str_contains($permName, 'report')) || 
+                            elseif ((str_contains($permName, '.request') ||
+                                    (str_contains($permName, '.view') && !str_contains($permName, 'report')) ||
                                     str_contains($permName, '.checkin'))) {
                                 $permissionGroups['employee']['permissions'][] = $permission;
                             }
@@ -244,13 +230,13 @@
                                             </x-badge>
                                         </div>
                                     </div>
-                                    
+
                                     {{-- Group Permissions --}}
                                     <div class="bg-white px-4 py-3">
                                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                             @foreach($group['permissions'] as $permission)
-                                                <x-form.checkbox 
-                                                    name="permissions[]" 
+                                                <x-form.checkbox
+                                                    name="permissions[]"
                                                     :label="ucwords(str_replace(['-', '.'], [' ', ' › '], $permission->name))"
                                                     :value="$permission->id"
                                                     :checked="in_array($permission->id, old('permissions', $rolePermissions))"
@@ -264,7 +250,7 @@
                     </div>
 
                     @if($permissions->isEmpty())
-                        <x-empty-state 
+                        <x-empty-state
                             icon="fas fa-shield-alt"
                             title="Tidak ada permissions"
                             description="Belum ada permissions yang tersedia" />
@@ -276,26 +262,26 @@
         {{-- Action Buttons --}}
         <x-card class="mt-6">
             <div class="flex items-center justify-between">
-                <x-button 
+                <x-button
                     type="button"
-                    variant="outline" 
+                    variant="outline"
                     icon="fas fa-times"
                     onclick="window.location.href='{{ route('admin.roles.index') }}'">
                     Batal
                 </x-button>
 
                 <div class="flex gap-3">
-                    <x-button 
+                    <x-button
                         type="button"
-                        variant="secondary" 
+                        variant="secondary"
                         icon="fas fa-redo"
                         onclick="this.closest('form').reset()">
                         Reset
                     </x-button>
-                    
-                    <x-button 
+
+                    <x-button
                         type="submit"
-                        variant="primary" 
+                        variant="primary"
                         icon="fas fa-save">
                         Update Role
                     </x-button>
@@ -322,7 +308,7 @@
     // Warning before leaving page if form has changes
     let formChanged = false;
     const form = document.querySelector('form');
-    
+
     form.addEventListener('change', function() {
         formChanged = true;
     });

@@ -1,0 +1,37 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR/Manager
+    participant View as "Web View (admin.attendance.index / history)"
+    participant C as AttendanceController
+    participant A as "Attendance Model"
+    participant W as "Worker Model"
+    participant LR as "LeaveRequest Model"
+    participant X as "AttendanceExport Class"
+    participant DB as "Database"
+
+    Admin->>View: Klik Export Data Absensi (PDF/Excel/CSV)
+    View->>C: GET /admin/attendance/export or /admin/attendance/today/export
+
+    C->>C: Validasi filter (date, worker, status, format)
+
+    C->>A: Ambil data attendance sesuai filter
+    A->>DB: SELECT attendances + worker/department
+    DB-->>A: Dataset absensi
+
+    C->>W: Ambil data worker aktif (khusus export today)
+    W->>DB: SELECT workers aktif + relasi
+    DB-->>W: Dataset worker
+
+    C->>LR: Ambil data leave approved (khusus export today)
+    LR->>DB: SELECT leave_requests approved
+    DB-->>LR: Dataset leave
+
+    alt Data valid
+        C->>X: Bentuk output file berdasarkan format
+        X-->>C: File PDF/Excel/CSV siap unduh
+        C-->>View: Return download response
+        View-->>Admin: File absensi terunduh
+    else Data tidak valid
+        C-->>View: Redirect back + pesan gagal export
+        View-->>Admin: Tampilkan error export
+    end

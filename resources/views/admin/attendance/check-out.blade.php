@@ -1,4 +1,4 @@
-@extends('layouts.admin')
+    @extends('layouts.admin')
 
 @section('title', 'Check Out')
 
@@ -38,51 +38,81 @@
                 $shiftSource = $shiftInfo['source'] ?? 'none';
             @endphp
             <div class="space-y-4">
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Pegawai</label>
-                    <p class="text-base font-semibold text-gray-900 mt-1">
-                        {{ $attendance->worker->nip }} - {{ $attendance->worker->name }}
-                    </p>
+                {{-- Profile Section --}}
+                <div class="flex items-center space-x-4">
+                    @if($attendance->worker->photo)
+                        <img src="{{ Storage::url($attendance->worker->photo) }}"
+                             alt="{{ $attendance->worker->name }}"
+                             class="w-20 h-20 rounded-full object-cover border-2 border-gray-200">
+                    @else
+                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                            <span class="text-2xl font-bold text-white">
+                                {{ strtoupper(substr($attendance->worker->name, 0, 2)) }}
+                            </span>
+                        </div>
+                    @endif
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900">{{ $attendance->worker->name }}</h3>
+                        <p class="text-sm text-gray-600">{{ $attendance->worker->nip }}</p>
+                        @if($attendance->worker->department)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                {{ $attendance->worker->department->name }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
 
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Waktu Check In</label>
-                    <p class="text-base font-semibold text-gray-900 mt-1">
-                        {{ $attendance->check_in->format('H:i:s') }}
-                    </p>
+                <div class="border-t border-gray-200 pt-4 grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs font-medium text-gray-500 uppercase">Departemen</label>
+                        <p class="text-sm font-semibold text-gray-900 mt-1">
+                            {{ $attendance->worker->department->name ?? '-' }}
+                        </p>
+                    </div>
+                    <div>
+                        <label class="text-xs font-medium text-gray-500 uppercase">Status</label>
+                        <p class="mt-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $attendance->worker->status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800' }}">
+                                {{ $attendance->worker->status === 'active' ? 'Aktif' : 'Tidak Aktif' }}
+                            </span>
+                        </p>
+                    </div>
                 </div>
 
                 @if(is_object($effectiveShift) && is_array($effectiveSchedule))
-                    <div>
-                        <label class="text-sm font-medium text-gray-700">Shift Efektif</label>
-                        <div class="mt-1">
-                            <p class="text-base font-semibold text-gray-900">
-                                {{ $effectiveShift->name }}
-                                @if($shiftSource === 'shift_swap')
-                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Tukar Shift</span>
-                                @elseif($shiftSource === 'override')
-                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Override</span>
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div class="flex items-start">
+                            <i class="fas fa-clock text-blue-600 mt-0.5 mr-3"></i>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-blue-800">Shift Efektif Hari Ini</p>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <p class="text-lg font-bold text-blue-900">{{ $effectiveShift->name }}</p>
+                                    @if($shiftSource === 'shift_swap')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">Tukar Shift</span>
+                                    @elseif($shiftSource === 'override')
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800">Override</span>
+                                    @endif
+                                </div>
+                                <div class="flex items-center space-x-4 mt-2 text-sm text-blue-700">
+                                    <span>
+                                        <i class="fas fa-sign-in-alt mr-1"></i>
+                                        Masuk: {{ \Carbon\Carbon::parse($effectiveSchedule['start_time'])->format('H:i') }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-sign-out-alt mr-1"></i>
+                                        Pulang: {{ \Carbon\Carbon::parse($effectiveSchedule['end_time'])->format('H:i') }}
+                                    </span>
+                                </div>
+                                @if($shiftSource === 'shift_swap' && !empty($shiftInfo['swap_with_name']))
+                                    <p class="text-xs text-purple-700 mt-2">
+                                        <i class="fas fa-exchange-alt mr-1"></i>
+                                        Jam ini berasal dari tukar shift dengan {{ $shiftInfo['swap_with_name'] }}.
+                                    </p>
                                 @endif
-                            </p>
-                            <p class="text-sm text-gray-700 mt-1">
-                                {{ \Carbon\Carbon::parse($effectiveSchedule['start_time'])->format('H:i') }} - {{ \Carbon\Carbon::parse($effectiveSchedule['end_time'])->format('H:i') }}
-                            </p>
-                            @if($shiftSource === 'shift_swap' && !empty($shiftInfo['swap_with_name']))
-                                <p class="text-xs text-purple-700 mt-1">
-                                    <i class="fas fa-exchange-alt mr-1"></i>
-                                    Shift hasil tukar dengan {{ $shiftInfo['swap_with_name'] }}.
-                                </p>
-                            @endif
+                            </div>
                         </div>
                     </div>
                 @endif
-
-                <div>
-                    <label class="text-sm font-medium text-gray-700">Lokasi Check In</label>
-                    <p class="text-base font-semibold text-gray-900 mt-1">
-                        {{ config('attendance.location.name', 'Tidak ada lokasi') }}
-                    </p>
-                </div>
 
                 @if($attendance->is_late)
                     <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
@@ -120,33 +150,26 @@
 
                 <div class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
                     <p class="font-semibold mb-1">Info Checkout Admin</p>
-                    <p>Checkout dari halaman ini akan ditandai sebagai checkout oleh admin. Koordinat akan otomatis menggunakan lokasi yang dipilih.</p>
+                    <p>Checkout dari halaman ini akan ditandai sebagai checkout oleh admin.</p>
                 </div>
 
-                <x-form.select
-                    name="location_id"
-                    label="Lokasi Absensi (Otomatis)"
-                    disabled>
-                    @php
-                        $singleLocation = $locations->first();
-                        $defaultLocationId = old('location_id', $singleLocation?->id);
-                    @endphp
-                    @foreach($locations as $location)
-                        <option value="{{ $location->id }}"
-                                {{ $defaultLocationId == $location->id ? 'selected' : '' }}>
-                            {{ $location->name }}
-                        </option>
-                    @endforeach
-                </x-form.select>
+                <div class="rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900">
+                    <p class="font-semibold mb-1">Admin Pelaksana</p>
+                    <p>
+                        Check-out ini akan dilakukan oleh
+                        <strong>{{ auth()->user()->name }}</strong>.
+                    </p>
+                </div>
 
                 <div>
                     <label for="admin_checkout_note" class="block text-sm font-medium text-gray-700 mb-1">
-                        Keterangan Admin (Opsional)
+                        Keterangan Admin <span class="text-red-500">*</span>
                     </label>
                     <textarea
                         id="admin_checkout_note"
                         name="admin_checkout_note"
                         rows="3"
+                        required
                         class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('admin_checkout_note') border-red-500 @enderror"
                         placeholder="Contoh: Pegawai lupa checkout dan sudah dikonfirmasi atasan.">{{ old('admin_checkout_note') }}</textarea>
                     @error('admin_checkout_note')
@@ -163,30 +186,6 @@
                         Format: JPG, JPEG, PNG. Maksimal 2MB
                     </x-slot>
                 </x-form.file>
-
-                <div>
-                    <x-button
-                        type="button"
-                        variant="secondary"
-                        onclick="getCurrentLocation()"
-                        class="w-full"
-                        id="get-location-btn">
-                        <i class="fas fa-map-marker-alt mr-2"></i>
-                        Dapatkan Lokasi
-                    </x-button>
-                    <p class="text-xs text-gray-500 mt-2 text-center" id="location-status"></p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                        <p class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Latitude/Longitude Lokasi Terpilih</p>
-                        <p id="selected-coordinates" class="mt-1 text-sm font-semibold text-gray-900">-</p>
-                    </div>
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                        <p class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Latitude/Longitude Perangkat</p>
-                        <p id="current-coordinates" class="mt-1 text-sm font-semibold text-gray-900">-</p>
-                    </div>
-                </div>
 
                 {{-- Tombol Submit --}}
                 <div class="flex gap-3 pt-4">
@@ -208,187 +207,11 @@
             </form>
         </x-card>
     </div>
-
-    {{-- Location Map --}}
-    <x-card title="Peta Lokasi Terpilih">
-        <p class="text-sm text-gray-600 mb-3">Peta hanya menampilkan area lokasi yang dipilih pada form check-out.</p>
-        <div id="map" class="w-full h-96 rounded-lg"></div>
-    </x-card>
 </div>
 
 @push('scripts')
 <script>
-    // Location data from controller
-    const locationsData = @json($locationsData);
-    let map;
-    let selectedMarker;
-    let selectedCircle;
-    let currentLocationMarker;
-
-    function formatCoordinates(lat, lng) {
-        return `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
-    }
-
-    // Initialize map
-    function initMap() {
-        map = L.map('map').setView([-2.5489, 118.0149], 5);
-
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
-            maxZoom: 19
-        });
-
-        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
-        });
-
-        satelliteLayer.addTo(map);
-        L.control.layers(
-            {
-                'Satelit': satelliteLayer,
-                'Peta Jalan': streetLayer,
-            },
-            {},
-            { collapsed: false }
-        ).addTo(map);
-
-        renderSelectedLocation();
-    }
-
-    function renderSelectedLocation() {
-        const locationId = document.querySelector('select[name="location_id"]').value;
-        const selectedCoordinatesEl = document.getElementById('selected-coordinates');
-
-        if (selectedMarker) {
-            selectedMarker.remove();
-            selectedMarker = null;
-        }
-        if (selectedCircle) {
-            selectedCircle.remove();
-            selectedCircle = null;
-        }
-
-        if (!locationId || !locationsData[locationId]) {
-            if (selectedCoordinatesEl) {
-                selectedCoordinatesEl.textContent = '-';
-            }
-            return;
-        }
-
-        const location = locationsData[locationId];
-        const latLng = [location.latitude, location.longitude];
-
-        selectedMarker = L.marker(latLng).addTo(map);
-        selectedMarker.bindPopup(`<strong>${location.name}</strong><br><small>Titik lokasi terpilih</small>`);
-
-        selectedCircle = L.circle(latLng, {
-            color: '#2563EB',
-            fillColor: '#60A5FA',
-            fillOpacity: 0.2,
-            radius: location.radius
-        }).addTo(map);
-
-        selectedCircle.bindPopup(`<strong>${location.name}</strong><br><small>Radius: ${location.radius}m</small>`);
-        map.fitBounds(selectedCircle.getBounds(), { padding: [24, 24] });
-
-        if (selectedCoordinatesEl) {
-            selectedCoordinatesEl.textContent = formatCoordinates(location.latitude, location.longitude);
-        }
-    }
-
-    function getCurrentLocation() {
-        if (!navigator.geolocation) {
-            alert('Geolocation tidak didukung oleh browser Anda');
-            return;
-        }
-
-        const button = document.getElementById('get-location-btn');
-        const statusEl = document.getElementById('location-status');
-        const currentCoordinatesEl = document.getElementById('current-coordinates');
-
-        if (button) {
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengambil lokasi...';
-        }
-        if (statusEl) {
-            statusEl.textContent = 'Mengambil lokasi GPS...';
-            statusEl.className = 'text-xs text-blue-600 mt-2 text-center';
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
-
-                if (currentLocationMarker) {
-                    currentLocationMarker.remove();
-                }
-
-                currentLocationMarker = L.marker([lat, lng]).addTo(map);
-                currentLocationMarker.bindPopup(`Lokasi perangkat admin<br><small>Akurasi: ±${Math.round(accuracy)}m</small>`).openPopup();
-                map.setView([lat, lng], 16);
-
-                if (button) {
-                    button.disabled = false;
-                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Dapatkan Lokasi';
-                }
-                if (statusEl) {
-                    statusEl.textContent = `Lokasi ditemukan (Akurasi: ±${Math.round(accuracy)}m)`;
-                    statusEl.className = 'text-xs text-green-600 mt-2 text-center';
-                }
-                if (currentCoordinatesEl) {
-                    currentCoordinatesEl.textContent = formatCoordinates(lat, lng);
-                }
-            },
-            function(error) {
-                let errorMessage = 'Gagal mendapatkan lokasi: ';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage += 'Izin lokasi ditolak';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage += 'Informasi lokasi tidak tersedia';
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage += 'Waktu permintaan habis';
-                        break;
-                    default:
-                        errorMessage += 'Terjadi kesalahan';
-                }
-
-                if (button) {
-                    button.disabled = false;
-                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Dapatkan Lokasi';
-                }
-                if (statusEl) {
-                    statusEl.textContent = errorMessage;
-                    statusEl.className = 'text-xs text-red-600 mt-2 text-center';
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            }
-        );
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        initMap();
-        const locationSelect = document.querySelector('select[name="location_id"]');
-        if (locationSelect) {
-            locationSelect.addEventListener('change', renderSelectedLocation);
-            if (locationSelect.value) {
-                locationSelect.dispatchEvent(new window.Event('change'));
-            }
-        }
-    });
+    // Tidak ada script lokasi yang digunakan pada form ini
 </script>
-
-{{-- Leaflet CSS & JS --}}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 @endpush
 @endsection

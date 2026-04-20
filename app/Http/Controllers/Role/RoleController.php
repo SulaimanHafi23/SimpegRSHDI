@@ -4,17 +4,17 @@
 namespace App\Http\Controllers\Role;
 
 use App\Http\Controllers\Controller;
-use App\Services\Role\RoleService;
-use App\Services\Permission\PermissionService;
-use App\Http\Requests\Role\RoleRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleController extends Controller
 {
-    public function __construct(
-        protected RoleService $roleService,
-        protected PermissionService $permissionService
-    ) {
+    public function __construct()
+    {
         $this->middleware(['auth']);
         // Permission check handled by route middleware
     }
@@ -22,35 +22,56 @@ class RoleController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->per_page ?? 15;
-        $roles = $this->roleService->getAllPaginated($perPage);
+        $roles = Role::withCount(['permissions', 'users'])
+            ->orderBy('name')
+            ->paginate($perPage);
 
         return view('admin.settings.roles.index', compact('roles'));
     }
 
     public function create()
     {
-        $permissions = $this->permissionService->getAll();
+        $permissions = Permission::orderBy('name')->get();
 
         return view('admin.settings.roles.create', compact('permissions'));
     }
 
-    public function store(RoleRequest $request)
+    public function store(Request $request)
     {
-        // dd($request->all());
-        try {
-            $dto = \App\DTOs\RoleDTO::fromRequest($request->validated());
-            $result = $this->roleService->create($dto);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'display_name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
+        ]);
 
-            if ($result['success']) {
-                return redirect()
-                    ->route('admin.roles.index')
-                    ->with('success', $result['message']);
+        try {
+            DB::beginTransaction();
+
+            $role = Role::create([
+                'name' => $validated['name'],
+                'display_name' => $validated['display_name'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'guard_name' => config('auth.defaults.guard', 'web'),
+            ]);
+
+            if (!empty($validated['permissions'])) {
+                $permissionNames = Permission::whereIn('id', $validated['permissions'])->pluck('name')->toArray();
+                $role->syncPermissions($permissionNames);
             }
 
-            return back()
-                ->withInput()
-                ->with('error', $result['message']);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.roles.index')
+                ->with('success', 'Role berhasil dibuat');
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating role: ' . $e->getMessage());
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -60,52 +81,70 @@ class RoleController extends Controller
     public function show(string $id)
     {
         try {
-            $role = $this->roleService->findById($id);
+            $role = Role::with('permissions', 'users')->findOrFail($id);
             return view('admin.settings.roles.show', compact('role'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.roles.index')
-                ->with('error', $e->getMessage());
+                ->with('error', 'Role tidak ditemukan');
         }
     }
 
     public function edit(string $id)
     {
         try {
-            $role = $this->roleService->findById($id);
-            $permissions = $this->permissionService->getAll();
+            $role = Role::with('permissions')->findOrFail($id);
+            $permissions = Permission::orderBy('name')->get();
 
             return view('admin.settings.roles.edit', compact('role', 'permissions'));
         } catch (\Exception $e) {
             return redirect()
                 ->route('admin.roles.index')
-                ->with('error', $e->getMessage());
+                ->with('error', 'Role tidak ditemukan');
         }
     }
 
-    public function update(RoleRequest $request, string $id)
+    public function update(Request $request, string $id)
     {
-        \Log::info('RoleController update() called', [
-            'user' => auth()->user()->email,
-            'role_id' => $id,
-            'data' => $request->all()
+        $validated = $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name,' . $id,
+            'display_name' => 'nullable|string|max:255',
+            'description' => 'nullable|string',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
         ]);
 
         try {
-            $dto = \App\DTOs\RoleDTO::fromRequest($request->validated());
-            $result = $this->roleService->update($id, $dto);
+            DB::beginTransaction();
 
-            if ($result['success']) {
-                return redirect()
-                    ->route('admin.roles.show', $id)
-                    ->with('success', $result['message']);
+            $role = Role::with('permissions', 'users')->findOrFail($id);
+
+            if ($role->name === 'Super Admin') {
+                throw new \Exception('Role Super Admin tidak dapat diubah');
             }
 
-            return back()
-                ->withInput()
-                ->with('error', $result['message']);
+            $role->update([
+                'name' => $validated['name'],
+                'display_name' => $validated['display_name'] ?? null,
+                'description' => $validated['description'] ?? null,
+            ]);
+
+            $permissionNames = !empty($validated['permissions'])
+                ? Permission::whereIn('id', $validated['permissions'])->pluck('name')->toArray()
+                : [];
+            $role->syncPermissions($permissionNames);
+
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.roles.show', $id)
+                ->with('success', 'Role berhasil diupdate');
         } catch (\Exception $e) {
-            \Log::error('Error updating role: ' . $e->getMessage());
+            DB::rollBack();
+            Log::error('Error updating role: ' . $e->getMessage());
+
             return back()
                 ->withInput()
                 ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
@@ -115,16 +154,31 @@ class RoleController extends Controller
     public function destroy(string $id)
     {
         try {
-            $result = $this->roleService->delete($id);
+            DB::beginTransaction();
 
-            if ($result['success']) {
-                return redirect()
-                    ->route('admin.roles.index')
-                    ->with('success', $result['message']);
+            $role = Role::with('users')->findOrFail($id);
+
+            if ($role->name === 'Super Admin') {
+                throw new \Exception('Role Super Admin tidak dapat dihapus');
             }
 
-            return back()->with('error', $result['message']);
+            if ($role->users()->count() > 0) {
+                throw new \Exception('Role masih digunakan oleh ' . $role->users()->count() . ' user');
+            }
+
+            $role->delete();
+
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            DB::commit();
+
+            return redirect()
+                ->route('admin.roles.index')
+                ->with('success', 'Role berhasil dihapus');
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting role: ' . $e->getMessage());
+
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }

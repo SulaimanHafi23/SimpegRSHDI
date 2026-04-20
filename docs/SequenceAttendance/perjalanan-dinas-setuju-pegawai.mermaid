@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor Admin as "Manager/HR"
+    participant View as "Web View (approvals.business-trips.show)"
+    participant Controller as "BusinessTripApprovalController"
+    participant Model as "BusinessTrip Model"
+    participant DB as "Database"
+
+    Admin->>View: Klik Setujui pengajuan
+    View->>Controller: POST /approvals/business-trips/{id}/approve
+    Controller->>Controller: Validasi approval_notes (opsional)
+    Controller->>Model: findOrFail(id)
+    Model->>DB: SELECT business_trips WHERE id = ?
+    DB-->>Model: Data pengajuan
+
+    alt Data valid (lampiran ada & akses valid)
+        Controller->>Model: update(status='approved', approved_by, approved_at)
+        Model->>DB: UPDATE business_trips SET status='approved', approved_by=?, approved_at=NOW()
+        DB-->>Model: Update success
+        Model-->>Controller: Approved
+        Controller->>View: Redirect index + success
+        View-->>Admin: Notifikasi pengajuan disetujui
+    else Data tidak valid (tanpa lampiran/tidak ada akses/id invalid)
+        Controller->>View: Back + error
+        View-->>Admin: Notifikasi gagal menyetujui
+    end

@@ -1,0 +1,29 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR/Manager
+    participant View as "Web View (admin.schedules.index)"
+    participant C as WorkerShiftController
+    participant W as "Worker Model"
+    participant WS as "WorkerShift Model"
+    participant S as "Shift Model"
+    participant D as "Department Model"
+    participant DB as "Database"
+
+    Admin->>View: Buka halaman Manajemen Jadwal Pegawai
+    View->>C: GET /admin/worker-shifts?filter...
+
+    C->>W: Ambil pegawai aktif (opsional filter departemen)
+    W->>DB: SELECT workers (+ department scope)
+    DB-->>W: Data workers
+
+    C->>WS: Ambil shift terbaru/aktif per pegawai
+    WS->>DB: SELECT worker_shifts + shift by worker & filter
+    DB-->>WS: Data jadwal pegawai
+
+    alt Data valid
+        C-->>View: Render daftar jadwal + tab list/kalender
+        View-->>Admin: Tampilkan daftar jadwal pegawai
+    else Data tidak valid
+        C-->>View: Redirect/back + pesan error
+        View-->>Admin: Tampilkan error
+    end

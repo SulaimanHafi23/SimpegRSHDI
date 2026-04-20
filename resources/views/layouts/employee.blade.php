@@ -74,26 +74,6 @@
                     </div>
                 @endif
 
-                @php
-                    $globalErrorMessage = session('error') ?? ($errors->any() ? $errors->first() : null);
-                @endphp
-
-                @if($globalErrorMessage)
-                    <x-ui.alert type="error" :message="$globalErrorMessage" />
-                @endif
-
-                @if(session('success'))
-                    <x-ui.alert type="success" :message="session('success')" :auto-dismiss="true" :dismiss-after="4500" />
-                @endif
-
-                @if(session('warning'))
-                    <x-ui.alert type="warning" :message="session('warning')" :auto-dismiss="true" :dismiss-after="6000" />
-                @endif
-
-                @if(session('info'))
-                    <x-ui.alert type="info" :message="session('info')" :auto-dismiss="true" :dismiss-after="4500" />
-                @endif
-
                 <x-sweet-alert />
 
                 <!-- Page Content -->

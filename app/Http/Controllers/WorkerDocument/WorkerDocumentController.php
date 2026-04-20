@@ -3,22 +3,25 @@
 namespace App\Http\Controllers\WorkerDocument;
 
 use App\Http\Controllers\Controller;
-use App\Services\WorkerDocument\WorkerDocumentService;
-use App\Services\Worker\WorkerService;
-use App\Services\Master\DocumentTypeService;
+use App\Models\DepartmentDocumentType;
+use App\Models\DocumentType;
+use App\Models\Notification;
+use App\Models\User;
+use App\Models\Worker;
+use App\Models\WorkerDocument;
 use App\Traits\DepartmentFilterable;
+use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class WorkerDocumentController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct(
-        protected WorkerDocumentService $workerDocumentService,
-        protected WorkerService $workerService,
-        protected DocumentTypeService $documentTypeService
-    ) {}
+    public function __construct() {}
 
     public function index(Request $request)
     {
@@ -32,20 +35,19 @@ class WorkerDocumentController extends Controller
 
         // Get all active workers with their document statistics
         $departmentId = $this->getManagerDepartmentFilter();
-        $workers = $departmentId
-            ? $this->workerService->getByDepartment($departmentId)
-            : $this->workerService->getAllActive();
-
-        // Eager-load workerDocuments to avoid N+1
-        $workers->load('workerDocuments');
+        $workersQuery = Worker::where('status', 'active')->with(['department', 'workerDocuments']);
+        if ($departmentId) {
+            $workersQuery->where('department_id', $departmentId);
+        }
+        $workers = $workersQuery->get();
 
         // Pre-fetch required document type counts per department (1 query)
-        $universalCount = \App\Models\DocumentType::where('is_active', true)
+        $universalCount = DocumentType::where('is_active', true)
             ->where('is_universal', true)
             ->count();
 
         // Get department-specific counts in a single query
-        $deptDocCounts = \Illuminate\Support\Facades\DB::table('department_document_type')
+        $deptDocCounts = DB::table('department_document_type')
             ->join('document_types', 'department_document_type.document_type_id', '=', 'document_types.id')
             ->where('document_types.is_active', true)
             ->where('document_types.is_universal', false)
@@ -108,7 +110,7 @@ class WorkerDocumentController extends Controller
             $perPage = 15;
         }
         $currentPage = $request->get('page', 1);
-        $workersWithDocStats = new \Illuminate\Pagination\LengthAwarePaginator(
+        $workersWithDocStats = new LengthAwarePaginator(
             $workersWithDocStats->forPage($currentPage, $perPage),
             $workersWithDocStats->count(),
             $perPage,
@@ -116,7 +118,7 @@ class WorkerDocumentController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $documentTypes = $this->documentTypeService->getAllActive();
+        $documentTypes = DocumentType::where('is_active', true)->orderBy('name')->get();
 
         return view('admin.workers.documents.index', compact('workersWithDocStats', 'workers', 'documentTypes', 'filters'));
     }
@@ -124,17 +126,19 @@ class WorkerDocumentController extends Controller
     public function create()
     {
         $departmentId = $this->getManagerDepartmentFilter();
-        $workers = $departmentId
-            ? $this->workerService->getByDepartment($departmentId)
-            : $this->workerService->getAllActive();
-        $selectedWorkerId = request('worker_id') ?: auth()->user()?->worker?->id;
+        $workersQuery = Worker::where('status', 'active')->with(['department']);
+        if ($departmentId) {
+            $workersQuery->where('department_id', $departmentId);
+        }
+        $workers = $workersQuery->get();
+        $selectedWorkerId = request('worker_id') ?: Auth::user()?->worker?->id;
         $documentTypes = collect();
 
         if ($selectedWorkerId) {
-            $worker = $this->workerService->getById($selectedWorkerId);
+            $worker = Worker::find($selectedWorkerId);
 
             if ($worker) {
-                $documentTypes = \App\Models\DocumentType::where('is_active', true)
+                $documentTypes = DocumentType::where('is_active', true)
                     ->where(function ($builder) use ($worker) {
                         $builder->where('is_universal', true);
 
@@ -165,13 +169,13 @@ class WorkerDocumentController extends Controller
         ]);
 
         // Defensive: ensure the selected document type is allowed for the worker's department
-        $worker = $this->workerService->getById($validated['worker_id']);
+        $worker = Worker::find($validated['worker_id']);
         if (!$worker) {
             return back()->withInput()->withErrors(['worker_id' => 'Pegawai tidak ditemukan']);
         }
         // If department_document_type_id was not provided, try to resolve it from document_type_id + worker's department
         if (empty($validated['department_document_type_id']) && !empty($validated['document_type_id'])) {
-            $ddt = \App\Models\DepartmentDocumentType::where('document_type_id', $validated['document_type_id'])
+            $ddt = DepartmentDocumentType::where('document_type_id', $validated['document_type_id'])
                 ->where('department_id', $worker->department_id)
                 ->first();
 
@@ -182,7 +186,7 @@ class WorkerDocumentController extends Controller
 
         // If department_document_type_id is provided, validate it belongs to worker's department
         if (!empty($validated['department_document_type_id'])) {
-            $ddt = \App\Models\DepartmentDocumentType::find($validated['department_document_type_id']);
+            $ddt = DepartmentDocumentType::find($validated['department_document_type_id']);
             if (! $ddt) {
                 return back()->withInput()->withErrors(['department_document_type_id' => 'Tipe dokumen untuk departemen tidak ditemukan']);
             }
@@ -196,7 +200,11 @@ class WorkerDocumentController extends Controller
         } else {
             // No department mapping: fallback to existing document type behavior
             try {
-                $documentType = $this->documentTypeService->findById($validated['document_type_id']);
+                $documentType = DocumentType::find($validated['document_type_id']);
+                if (! $documentType) {
+                    throw new \Exception('Tipe dokumen tidak ditemukan');
+                }
+
                 if ($documentType->relationLoaded('departments') === false) {
                     $documentType->load('departments');
                 }
@@ -209,8 +217,36 @@ class WorkerDocumentController extends Controller
                 return back()->withInput()->withErrors(['document_type_id' => 'Tipe dokumen tidak ditemukan']);
             }
         }
+
         try {
-            $this->workerDocumentService->create($validated);
+            if (!isset($validated['file'])) {
+                throw new \Exception('File is required.');
+            }
+
+            $file = $validated['file'];
+            $workerId = $validated['worker_id'];
+
+            $filename = sprintf(
+                '%s_%s_%s.%s',
+                $workerId,
+                $validated['document_type_id'] ?? 'unknown',
+                now()->format('YmdHis'),
+                $file->getClientOriginalExtension()
+            );
+
+            $filePath = $file->storeAs('worker-documents', $filename, 'public');
+
+            WorkerDocument::create([
+                'worker_id' => $workerId,
+                'document_type_id' => $validated['document_type_id'],
+                'department_document_type_id' => $validated['department_document_type_id'] ?? null,
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $filePath,
+                'file_size' => $file->getSize(),
+                'expired_date' => $validated['expired_date'] ?? null,
+                'notes' => $validated['notes'] ?? null,
+                'status' => 'pending',
+            ]);
 
             return redirect()
                 ->route('admin.worker-documents.index')
@@ -234,12 +270,12 @@ class WorkerDocumentController extends Controller
             return response()->json(['data' => []]);
         }
 
-        $worker = $this->workerService->getById($workerId);
+        $worker = Worker::find($workerId);
         if (! $worker) {
             return response()->json(['data' => []]);
         }
 
-        $query = \App\Models\DocumentType::where('is_active', true)
+        $query = DocumentType::where('is_active', true)
             ->where(function ($builder) use ($worker) {
                 $builder->where('is_universal', true);
 
@@ -256,7 +292,7 @@ class WorkerDocumentController extends Controller
 
     public function show(string $id)
     {
-        $document = $this->workerDocumentService->getById($id);
+        $document = WorkerDocument::with(['worker', 'documentType', 'verifier'])->find($id);
 
         return view('admin.workers.documents.show', compact('document'));
     }
@@ -268,7 +304,38 @@ class WorkerDocumentController extends Controller
         ]);
 
         try {
-            $this->workerDocumentService->verify($id, Auth::id(), $validated['notes'] ?? null);
+            $verifiedBy = Auth::id();
+            if (! $verifiedBy) {
+                throw new \Exception('User tidak terautentikasi');
+            }
+
+            $document = WorkerDocument::with('documentType')->findOrFail($id);
+            $document->update([
+                'status' => 'verified',
+                'verified_by' => $verifiedBy,
+                'verified_at' => now(),
+                'notes' => $validated['notes'] ?? null,
+            ]);
+
+            $user = User::where('worker_id', $document->worker_id)->first();
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'notifiable_type' => \App\Models\User::class,
+                    'notifiable_id' => $user->id,
+                    'type' => 'document_verified',
+                    'title' => 'Dokumen Terverifikasi',
+                    'message' => sprintf(
+                        'Dokumen %s Anda telah diverifikasi.',
+                        $document->documentType?->name ?? 'Dokumen'
+                    ),
+                    'data' => [
+                        'document_id' => $document->id,
+                        'type' => 'document',
+                        'action' => 'verified',
+                    ],
+                ]);
+            }
 
             return back()->with('success', 'Dokumen berhasil diverifikasi');
         } catch (\Exception $e) {
@@ -283,7 +350,45 @@ class WorkerDocumentController extends Controller
         ]);
 
         try {
-            $this->workerDocumentService->reject($id, Auth::id(), $validated['notes']);
+            $verifiedBy = Auth::id();
+            if (! $verifiedBy) {
+                throw new \Exception('User tidak terautentikasi');
+            }
+
+            $document = WorkerDocument::with('documentType')->findOrFail($id);
+            $document->update([
+                'status' => 'rejected',
+                'verified_by' => $verifiedBy,
+                'verified_at' => now(),
+                'notes' => $validated['notes'],
+            ]);
+
+            $user = User::where('worker_id', $document->worker_id)->first();
+            if ($user) {
+                $message = sprintf(
+                    'Dokumen %s Anda ditolak.',
+                    $document->documentType?->name ?? 'Dokumen'
+                );
+
+                if (!empty($validated['notes'])) {
+                    $message .= ' Alasan: ' . $validated['notes'];
+                }
+
+                Notification::create([
+                    'user_id' => $user->id,
+                    'notifiable_type' => \App\Models\User::class,
+                    'notifiable_id' => $user->id,
+                    'type' => 'document_rejected',
+                    'title' => 'Dokumen Ditolak',
+                    'message' => $message,
+                    'data' => [
+                        'document_id' => $document->id,
+                        'type' => 'document',
+                        'action' => 'rejected',
+                        'reason' => $validated['notes'],
+                    ],
+                ]);
+            }
 
             return back()->with('success', 'Dokumen berhasil ditolak');
         } catch (\Exception $e) {
@@ -294,7 +399,22 @@ class WorkerDocumentController extends Controller
     public function download(string $id)
     {
         try {
-            return $this->workerDocumentService->downloadDocument($id);
+            $document = WorkerDocument::find($id);
+            $disk = Storage::disk('public');
+
+            if (!$document || !$document->file_path) {
+                throw new \Exception('Dokumen tidak ditemukan.');
+            }
+
+            if (!$disk->exists($document->file_path)) {
+                if (!Storage::exists($document->file_path)) {
+                    throw new \Exception('File not found.');
+                }
+
+                return response()->download(Storage::path($document->file_path), $document->file_name);
+            }
+
+            return response()->download($disk->path($document->file_path), $document->file_name);
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -302,7 +422,7 @@ class WorkerDocumentController extends Controller
 
     public function workerDocuments(string $workerId)
     {
-        $worker = $this->workerService->getById($workerId);
+        $worker = Worker::with(['department', 'user', 'activeWorkerShift.shift'])->find($workerId);
 
         if (!$worker) {
             return redirect()->route('admin.worker-documents.index')
@@ -310,11 +430,14 @@ class WorkerDocumentController extends Controller
         }
 
         // Get all documents for this worker
-        $documents = $this->workerDocumentService->getByWorkerId($workerId);
+        $documents = WorkerDocument::where('worker_id', $workerId)
+            ->with(['documentType', 'verifier'])
+            ->latest()
+            ->get();
 
         // Get required document types for this worker's department
         // Required = document types that are linked to the department in department_document_type pivot table
-        $allRequiredDocTypes = \App\Models\DocumentType::where('is_active', true)
+        $allRequiredDocTypes = DocumentType::where('is_active', true)
             ->where(function ($query) use ($worker) {
                 $query->where('is_universal', true)
                     ->orWhereHas('departments', function ($inner) use ($worker) {
@@ -333,7 +456,7 @@ class WorkerDocumentController extends Controller
         $expiredCount = $documents->filter(function($doc) {
             return $doc->status === 'verified'
                 && $doc->expired_date
-                && \Carbon\Carbon::parse($doc->expired_date)->isPast();
+                && Carbon::parse($doc->expired_date)->isPast();
         })->count();
 
         // Group documents by document type
@@ -357,7 +480,7 @@ class WorkerDocumentController extends Controller
                 'total_uploads' => $docs->count(),
                 'versions' => $versions,
                 'status' => $latestDoc ? $latestDoc->status : 'missing',
-                'is_expired' => $latestDoc && $latestDoc->expired_date && \Carbon\Carbon::parse($latestDoc->expired_date)->isPast(),
+                'is_expired' => $latestDoc && $latestDoc->expired_date && Carbon::parse($latestDoc->expired_date)->isPast(),
             ];
         });
 
@@ -381,7 +504,11 @@ class WorkerDocumentController extends Controller
 
     public function expired()
     {
-        $documents = $this->workerDocumentService->getExpiredDocuments();
+        $documents = WorkerDocument::whereNotNull('expired_date')
+            ->where('expired_date', '<', now())
+            ->where('status', 'verified')
+            ->with(['worker', 'documentType'])
+            ->get();
 
         return view('admin.workers.documents.expired', compact('documents'));
     }
@@ -389,7 +516,12 @@ class WorkerDocumentController extends Controller
     public function expiring(Request $request)
     {
         $days = $request->days ?? 30;
-        $documents = $this->workerDocumentService->getExpiringDocuments($days);
+        $documents = WorkerDocument::whereNotNull('expired_date')
+            ->where('expired_date', '<=', now()->addDays((int) $days))
+            ->where('expired_date', '>=', now())
+            ->where('status', 'verified')
+            ->with(['worker', 'documentType'])
+            ->get();
 
         return view('admin.workers.documents.expiring', compact('documents', 'days'));
     }

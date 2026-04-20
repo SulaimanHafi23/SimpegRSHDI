@@ -11,10 +11,10 @@
     <p><strong>Status:</strong>
         @php
             $statusLabel = match($status) {
-                'pending' => 'Menunggu',
-                'accepted' => 'Diterima',
-                'awaiting_approval' => 'Menunggu Persetujuan',
-                'approved' => 'Disetujui',
+                'pending' => 'Menunggu Respon Pegawai',
+                'accepted' => 'Diterima (Legacy)',
+                'awaiting_approval' => 'Menunggu Persetujuan Atasan',
+                'approved' => 'Disetujui (Belum Dieksekusi)',
                 'rejected' => 'Ditolak',
                 'cancelled' => 'Dibatalkan',
                 'executed' => 'Dieksekusi',
@@ -81,9 +81,9 @@
                         default => 'badge-secondary'
                     };
                     $statusLabel = match($swap->status) {
-                        'pending' => 'Menunggu',
+                        'pending' => 'Menunggu Respon Pegawai',
                         'accepted' => 'Diterima',
-                        'awaiting_approval' => 'Mng. Persetujuan',
+                        'awaiting_approval' => 'Menunggu Persetujuan Atasan',
                         'approved' => 'Disetujui',
                         'rejected' => 'Ditolak',
                         'cancelled' => 'Dibatalkan',
@@ -116,7 +116,8 @@
 <div style="margin-top: 20px; padding: 10px; background-color: #dbeafe; border-radius: 4px;">
     <p style="margin: 5px 0; font-size: 10px;"><strong>Ringkasan:</strong></p>
     <p style="margin: 5px 0; font-size: 10px;">Total Permintaan: {{ $swaps->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Menunggu: {{ $swaps->whereIn('status', ['pending', 'awaiting_approval'])->count() }}</p>
+    <p style="margin: 5px 0; font-size: 10px;">Menunggu Respon Pegawai: {{ $swaps->where('status', 'pending')->count() }}</p>
+    <p style="margin: 5px 0; font-size: 10px;">Menunggu Persetujuan Atasan: {{ $swaps->where('status', 'awaiting_approval')->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Disetujui: {{ $swaps->whereIn('status', ['approved', 'accepted'])->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Ditolak: {{ $swaps->where('status', 'rejected')->count() }}</p>
     <p style="margin: 5px 0; font-size: 10px;">Dieksekusi: {{ $swaps->where('status', 'executed')->count() }}</p>

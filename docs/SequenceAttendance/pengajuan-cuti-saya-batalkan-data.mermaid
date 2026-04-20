@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.leaves.show/index)"
+    participant Controller as "Employee LeaveController"
+    participant Model as "LeaveRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik Batalkan Permohonan
+    View->>Controller: DELETE /employee/leaves/{id}
+    Controller->>Model: getById(id) + validasi kepemilikan
+    Model->>DB: SELECT leave_request by id
+    DB-->>Model: Data cuti
+
+    alt Data valid (status pending & milik pegawai)
+        Controller->>Model: delete(id)
+        Model->>DB: DELETE FROM leave_requests WHERE id = ?
+        DB-->>Model: Delete success
+        Model-->>Controller: Permohonan dibatalkan
+        Controller->>View: Redirect index + success
+        View-->>Pegawai: Notifikasi pembatalan berhasil
+    else Data tidak valid (status bukan pending/id tidak ada/tidak berhak)
+        Controller->>View: Back + error
+        View-->>Pegawai: Notifikasi gagal membatalkan cuti
+    end

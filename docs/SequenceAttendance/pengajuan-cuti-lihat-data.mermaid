@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Admin as "Admin/HR"
+    participant View as "Web View (admin.leave.index)"
+    participant Controller as "LeaveRequestController"
+    participant Model as "LeaveRequest Model"
+    participant DB as "Database"
+
+    Admin->>View: Buka halaman Manajemen Cuti
+    View->>Controller: GET /leaves
+    Controller->>Model: Bangun filter (status, pegawai, jenis, bulan, tahun)
+    Model->>DB: SELECT leave_requests + relasi worker/leave_type
+    DB-->>Model: Data pengajuan cuti
+    Model-->>Controller: Koleksi + pagination
+
+    alt Data valid (data ditemukan)
+        Controller->>View: Render daftar, statistik, filter
+        View-->>Admin: Tabel pengajuan cuti ditampilkan
+    else Data tidak valid (kosong/error query)
+        Controller->>View: Render empty state / pesan error
+        View-->>Admin: Notifikasi gagal menampilkan data
+    end

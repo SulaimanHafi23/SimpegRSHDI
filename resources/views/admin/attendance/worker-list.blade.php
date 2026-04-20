@@ -21,13 +21,13 @@
             @php
                 $month = now()->month;
                 $year = now()->year;
-                $summary = app('App\\Services\\Attendance\\AttendanceService')->getMonthlyReport($worker->id, $month, $year);
-                $hadir = $summary->where('status', 'present')->count();
-                $terlambat = $summary->where('status', 'late')->count();
-                $tidakHadir = $summary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count();
-                $izin = $summary->where('status', 'permission')->count();
-                $sakit = $summary->where('status', 'sick')->count();
-                $cuti = $summary->where('status', 'leave')->count();
+                $stats = \App\Helpers\AttendanceHelper::getSummaryStats($worker->id, $month, $year);
+                $hadir = $stats['hadir'];
+                $terlambat = $stats['terlambat'];
+                $tidakHadir = $stats['tidakHadir'];
+                $izin = $stats['izin'];
+                $sakit = $stats['sakit'];
+                $cuti = $stats['cuti'];
             @endphp
             <div class="p-4">
                 <div class="mb-2">
@@ -87,13 +87,13 @@
                     @php
                         $month = now()->month;
                         $year = now()->year;
-                        $summary = app('App\\Services\\Attendance\\AttendanceService')->getMonthlyReport($worker->id, $month, $year);
-                        $hadir = $summary->where('status', 'present')->count();
-                        $terlambat = $summary->where('status', 'late')->count();
-                        $tidakHadir = $summary->whereIn('status', ['absent', 'sick', 'permission', 'leave'])->count();
-                        $izin = $summary->where('status', 'permission')->count();
-                        $sakit = $summary->where('status', 'sick')->count();
-                        $cuti = $summary->where('status', 'leave')->count();
+                        $stats = \App\Helpers\AttendanceHelper::getSummaryStats($worker->id, $month, $year);
+                        $hadir = $stats['hadir'];
+                        $terlambat = $stats['terlambat'];
+                        $tidakHadir = $stats['tidakHadir'];
+                        $izin = $stats['izin'];
+                        $sakit = $stats['sakit'];
+                        $cuti = $stats['cuti'];
                     @endphp
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $worker->name }}</td>

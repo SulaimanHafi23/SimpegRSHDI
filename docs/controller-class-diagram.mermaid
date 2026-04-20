@@ -1,0 +1,456 @@
+classDiagram
+direction LR
+
+%% Admin
+class Admin_AuditLogController {
++index()
++show()
+}
+class Admin_DashboardController {
++__construct()
++index()
++getMonthlyAttendanceStats()
++getLeaveStatsByType()
++getDepartmentStats()
++getTodayAttendanceSummary()
++getPendingApprovalsCount()
+}
+class Admin_HolidayController {
++__construct()
++index()
++create()
++store()
++edit()
++update()
++destroy()
++bulkCreate()
++bulkStore()
++autoGenerate()
++storeAutoGenerate()
++getIndonesianNationalHolidays()
++getAvailableYearsForGeneration()
+}
+
+%% API
+class Api_WorkerShiftApiController {
++__construct()
++getShiftTime()
++getFutureShifts()
+}
+
+%% Approval
+class Approval_BusinessTripApprovalController {
++__construct()
++index()
++show()
++approve()
++reject()
++destroy()
++export()
+}
+class Approval_DocumentApprovalController {
++__construct()
++index()
++show()
++verify()
++reject()
+}
+class Approval_LeaveApprovalController {
++__construct()
++index()
++show()
++approve()
++reject()
+}
+
+%% Attendance
+class Attendance_AttendanceController {
++__construct()
++index()
++create()
++checkInForm()
++checkIn()
++checkOutForm()
++checkOut()
++show()
++edit()
++getConfiguredLocation()
++update()
++destroy()
++dailyReport()
++monthlyReport()
++export()
++workerList()
++history()
++exportWorkerAttendance()
++exportWorkerHistory()
++workerStats()
++calculateWorkerStats()
++buildWorkerAttendanceCalendarRows()
++getWorkingDaysCount()
++exportStatsPdf()
++exportStatsExcel()
++exportTodayAttendance()
++getAttendanceDetail()
+}
+
+%% Auth
+class Auth_ForgotPasswordController {
++showLinkRequestForm()
++sendResetLinkEmail()
++getStatusMessage()
+}
+class Auth_LoginController {
++__construct()
++showLoginForm()
++login()
++logout()
+}
+class Auth_ResetPasswordController {
++showResetForm()
++reset()
++getStatusMessage()
+}
+
+%% Document
+class Document_BerkasController {
++__construct()
++index()
++show()
++create()
++store()
++edit()
++update()
++destroy()
++verify()
++reject()
++pending()
++workerDocuments()
++checkCompleteness()
++download()
++preview()
+}
+
+%% Employee
+class Employee_AttendanceController {
++__construct()
++index()
++checkInForm()
++checkOutForm()
++checkIn()
++checkOut()
++show()
++photo()
++export()
++exportPdf()
++computeVirtualAbsentDays()
++buildMonthlyExportRows()
++getConfiguredLocation()
+}
+class Employee_BusinessTripController {
++__construct()
++index()
++create()
++store()
++show()
++cancel()
++export()
++notifyApprovers()
+}
+class Employee_CalendarController {
++__construct()
++index()
++events()
++getLeaveColor()
++getBusinessTripColor()
+}
+class Employee_DashboardController {
++__construct()
++index()
+}
+class Employee_DocumentController {
++__construct()
++index()
++create()
++store()
++show()
++getAllowedDocumentTypes()
++download()
++preview()
++destroy()
+}
+class Employee_LeaveController {
++__construct()
++index()
++create()
++store()
++show()
++cancel()
++export()
++exportPdf()
+}
+class Employee_NotificationController {
++__construct()
++index()
++getUnreadCount()
++getUnread()
++markAsRead()
++markAllAsRead()
++destroy()
+}
+class Employee_ProfileController {
++__construct()
++show()
++edit()
++update()
++updatePassword()
+}
+class Employee_ShiftController {
++__construct()
++index()
++show()
++buildCalendar()
+}
+class Employee_ShiftSwapController {
++__construct()
++index()
++create()
++store()
++accept()
++reject()
++cancel()
++showAcceptOpen()
++acceptOpen()
++export()
+}
+
+%% HR
+class HR_HRDashboardController {
++__construct()
++index()
+}
+
+%% Leave
+class Leave_LeaveRequestController {
++__construct()
++index()
++create()
++store()
++show()
++destroy()
++approve()
++reject()
++cancel()
++export()
++workerLeaveBalance()
+}
+
+%% Manager
+class Manager_ManagerDashboardController {
++__construct()
++index()
+}
+class Manager_ShiftSwapApprovalController {
++__construct()
++index()
++show()
++approve()
++reject()
++execute()
++revert()
++export()
+}
+
+%% Master
+class Master_DepartmentController {
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class Master_DepartmentDocumentTypeController {
++__construct()
++index()
++create()
++store()
++edit()
++update()
++show()
++destroy()
+}
+class Master_DocumentTypeController {
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class Master_LeaveTypeController {
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+class Master_ShiftController {
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
++syncDayTimes()
+}
+
+%% Notification and Profile
+class Notification_NotificationController {
++__construct()
++index()
++unread()
++unreadCount()
++markAsRead()
++markAllAsRead()
++destroy()
+}
+class Profile_ProfileController {
++__construct()
++show()
++edit()
++update()
++updatePassword()
+}
+
+%% Report
+class Report_AttendanceReportController {
++__construct()
++index()
++calculateWorkingDays()
+}
+class Report_ReportController {
++__construct()
++attendance()
++leaves()
++workerDocuments()
++workers()
++exportAttendance()
++exportLeaves()
++exportWorkerDocuments()
+}
+
+%% Role
+class Role_RoleController {
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+
+%% Schedule
+class Schedule_WorkerShiftScheduleController {
++__construct()
++index()
++show()
++create()
++store()
++edit()
++update()
++destroy()
++workerSchedule()
++bulkCreate()
++calendar()
+}
+
+%% ShiftOverride
+class ShiftOverride_ShiftOverrideController {
++__construct()
++index()
++create()
++store()
++bulkCreate()
++destroy()
+}
+
+%% User
+class User_UserController {
++__construct()
++index()
++create()
++store()
++show()
++edit()
++update()
++destroy()
+}
+
+%% Worker
+class Worker_WorkerController {
++__construct()
++index()
++show()
++attendanceHistory()
++create()
++store()
++edit()
++update()
++destroy()
++resign()
++export()
++import()
++downloadTemplate()
+}
+class Worker_WorkerOffDayController {
++__construct()
++index()
++storePattern()
++destroyPattern()
++checkDate()
++getRange()
+}
+
+%% WorkerDocument
+class WorkerDocument_WorkerDocumentController {
++__construct()
++index()
++create()
++store()
++documentTypesForWorker()
++show()
++verify()
++reject()
++download()
++workerDocuments()
++expired()
++expiring()
+}
+
+%% WorkerShift
+class WorkerShift_WorkerShiftController {
++__construct()
++index()
++create()
++generate()
++generateStore()
++store()
++show()
++edit()
++update()
++destroy()
++workerShifts()
++calendarData()
+}

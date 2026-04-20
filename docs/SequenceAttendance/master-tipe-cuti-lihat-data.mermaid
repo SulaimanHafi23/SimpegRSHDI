@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR
+    participant View as "Web View (admin.master.leave-types.index)"
+    participant C as LeaveTypeController
+    participant LT as "LeaveType Model"
+    participant LR as "LeaveRequest Model"
+    participant DB as "Database"
+
+    Admin->>View: Buka halaman Data Master Tipe Cuti
+    View->>C: GET /admin/master/leave-types (dengan/without search)
+
+    C->>LT: Ambil data leave type + leave_requests_count
+    LT->>DB: SELECT leave_types + COUNT leave_requests + pagination
+    DB-->>LT: Hasil query
+
+    alt Data valid
+        C-->>View: Render daftar tipe cuti
+        View-->>Admin: Tampilkan list, filter, pagination
+    else Data tidak valid
+        C-->>View: Redirect/back + pesan error
+        View-->>Admin: Tampilkan error
+    end

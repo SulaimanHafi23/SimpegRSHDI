@@ -4,27 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\User\UpdatePasswordRequest;
 use App\Http\Requests\User\UpdateProfileRequest;
-use App\Services\User\UserService;
-use App\Services\Worker\WorkerService;
+use App\Models\User;
+use App\Models\Worker;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManagerStatic as Image;
 
 class ProfileController extends Controller
 {
-    public function __construct(
-        private readonly UserService $userService,
-        private readonly WorkerService $workerService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
     public function show()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = null;
 
-        if ($user->worker_id) {
-            $worker = $this->workerService->findById($user->worker_id);
+        if ($user && $user->worker_id) {
+            $worker = Worker::find($user->worker_id);
         }
 
         return view('admin.profile', compact('user', 'worker'));
@@ -32,11 +31,11 @@ class ProfileController extends Controller
 
     public function edit()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = null;
 
-        if ($user->worker_id) {
-            $worker = $this->workerService->findById($user->worker_id);
+        if ($user && $user->worker_id) {
+            $worker = Worker::find($user->worker_id);
         }
 
         return view('profile.edit', compact('user', 'worker'));
@@ -44,7 +43,11 @@ class ProfileController extends Controller
 
     public function update(UpdateProfileRequest $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (!$user) {
+            return back()->withErrors(['email' => 'User tidak ditemukan.'])->withInput();
+        }
+
         // Prepare user data for update
         $userData = [
             'email' => $request->email,
@@ -55,9 +58,8 @@ class ProfileController extends Controller
         if ($request->hasFile('photo')) {
             // If the user is linked to a worker, update the worker's photo instead
             if ($user->worker_id) {
-                // Delegate to WorkerService which handles deleting old photo and saving new one
                 try {
-                    $this->workerService->update($user->worker_id, [
+                    $this->updateWorkerProfile($user->worker_id, [
                         'photo' => $request->file('photo'),
                     ]);
                 } catch (\Exception $e) {
@@ -75,8 +77,9 @@ class ProfileController extends Controller
                     $filename = sprintf('profile_%s.%s', now()->format('YmdHis'), $ext);
 
                     try {
-                        if (class_exists('\\Intervention\\Image\\ImageManagerStatic')) {
-                            $img = Image::make($file->getRealPath());
+                        $imageClass = '\\Intervention\\Image\\ImageManagerStatic';
+                        if (class_exists($imageClass)) {
+                            $img = $imageClass::make($file->getRealPath());
                             $img->orientate();
                             if ($img->width() > 1200) {
                                 $img->resize(1200, null, function ($constraint) {
@@ -106,7 +109,7 @@ class ProfileController extends Controller
         }
 
         try {
-            $this->userService->update($user->id, $userData);
+            $this->updateUserProfile($user, $userData);
 
             if ($user->worker_id && ($request->has('name') || $request->has('phone') || $request->has('address'))) {
                 $workerData = array_filter([
@@ -116,7 +119,7 @@ class ProfileController extends Controller
                 ]);
 
                 if (!empty($workerData)) {
-                    $this->workerService->update($user->worker_id, $workerData);
+                    $this->updateWorkerProfile($user->worker_id, $workerData);
                 }
             }
         } catch (\Exception $e) {
@@ -130,16 +133,19 @@ class ProfileController extends Controller
 
     public function updatePassword(UpdatePasswordRequest $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
+        if (!$user) {
+            return back()->withErrors(['current_password' => 'User tidak ditemukan.']);
+        }
 
         try {
-            // Use changePassword method which verifies current password internally
-            // The UpdatePasswordRequest validates 'password' (confirmed) so use that field
-            $this->userService->changePassword(
-                $user->id,
-                $request->current_password,
-                $request->password
-            );
+            if (!Hash::check($request->current_password, (string) $user->password)) {
+                throw new \Exception('Current password is incorrect.');
+            }
+
+            $user->update([
+                'password' => Hash::make((string) $request->password),
+            ]);
 
             return redirect()
                 ->route('profile.show')
@@ -149,5 +155,102 @@ class ProfileController extends Controller
                 'current_password' => $e->getMessage()
             ]);
         }
+    }
+
+    private function updateUserProfile(User $user, array $data): User
+    {
+        if (!empty($data['email']) && $data['email'] !== $user->email) {
+            $emailOwner = User::where('email', $data['email'])->first();
+            $workerEmailConflict = Worker::where('email', $data['email'])
+                ->when($user->worker_id, function ($query) use ($user) {
+                    $query->where('id', '!=', $user->worker_id);
+                })
+                ->exists();
+
+            if (($emailOwner && $emailOwner->id !== $user->id) || $workerEmailConflict) {
+                throw new \Exception('Email already exists.');
+            }
+        }
+
+        $data = array_filter($data, function ($value) {
+            return $value !== '' && $value !== null && $value !== [];
+        });
+
+        $user->update($data);
+        $user = $user->fresh(['worker']);
+
+        if (!empty($data['email']) && $user->worker && $user->worker->email !== $user->email) {
+            $user->worker->update(['email' => $user->email]);
+        }
+
+        return $user;
+    }
+
+    private function updateWorkerProfile(string $workerId, array $data): Worker
+    {
+        $worker = Worker::with('user')->findOrFail($workerId);
+
+        if (!empty($data['email']) && $data['email'] !== $worker->email) {
+            $existingWorker = Worker::where('email', $data['email'])->first();
+            $existingUser = User::where('email', $data['email'])
+                ->where('worker_id', '!=', $worker->id)
+                ->first();
+
+            if (($existingWorker && $existingWorker->id !== $worker->id) || $existingUser) {
+                throw new \Exception('Email already exists.');
+            }
+        }
+
+        if (isset($data['photo'])) {
+            if ($worker->photo_url && Storage::exists($worker->photo_url)) {
+                Storage::delete($worker->photo_url);
+            }
+            $data['photo_url'] = $this->saveWorkerPhoto($data['photo'], (string) $worker->nip);
+            unset($data['photo']);
+        }
+
+        $data = array_filter($data, function ($value) {
+            return $value !== '' && $value !== null && $value !== [];
+        });
+
+        $worker->update($data);
+        $worker = $worker->fresh(['user']);
+
+        if (!empty($data['email']) && $worker->user && $worker->user->email !== $worker->email) {
+            $worker->user->update(['email' => $worker->email]);
+        }
+
+        return $worker;
+    }
+
+    private function saveWorkerPhoto($photo, string $nip): string
+    {
+        $ext = strtolower($photo->getClientOriginalExtension() ?? 'jpg');
+        $filename = sprintf('%s_photo_%s.%s', $nip, now()->format('YmdHis'), $ext);
+
+        try {
+            $imageClass = '\\Intervention\\Image\\ImageManagerStatic';
+            if (class_exists($imageClass)) {
+                $img = $imageClass::make($photo->getRealPath());
+                $img->orientate();
+
+                if ($img->width() > 1200) {
+                    $img->resize(1200, null, function ($constraint) {
+                        $constraint->aspectRatio();
+                        $constraint->upsize();
+                    });
+                }
+
+                $encoded = (string) $img->encode($ext, 75);
+                $path = 'worker-photos/' . $filename;
+                Storage::disk('public')->put($path, $encoded);
+
+                return $path;
+            }
+        } catch (\Throwable $e) {
+            // Fallback below.
+        }
+
+        return $photo->storeAs('worker-photos', $filename, 'public');
     }
 }

@@ -3,13 +3,14 @@
 namespace App\Http\Requests\ShiftSwap;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class ShiftSwapRequestRequest extends FormRequest
 {
     public function authorize()
     {
-        return auth()->check();
+        return Auth::check();
     }
 
     public function prepareForValidation()

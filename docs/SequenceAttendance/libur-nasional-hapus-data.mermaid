@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Admin as "Admin/HR/Manager"
+    participant View as "Web View (admin.holidays.index)"
+    participant Controller as "Admin HolidayController"
+    participant Model as "Holiday Model"
+    participant DB as "Database"
+
+    Admin->>View: Klik Hapus pada libur nasional
+    View->>Controller: DELETE /admin/holidays/{id}
+    Controller->>Model: findOrFail(id)
+    Model->>DB: SELECT holidays WHERE id = ?
+    DB-->>Model: Data libur
+
+    alt Data valid (id ditemukan)
+        Controller->>Model: delete()
+        Model->>DB: DELETE FROM holidays WHERE id = ?
+        DB-->>Model: Delete success
+        Model-->>Controller: Holiday dihapus
+        Controller->>View: Redirect index + success
+        View-->>Admin: Notifikasi libur berhasil dihapus
+    else Data tidak valid (id tidak ditemukan / sudah tidak ada)
+        Controller->>View: Back + error
+        View-->>Admin: Notifikasi gagal menghapus libur
+    end

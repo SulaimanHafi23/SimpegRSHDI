@@ -4,14 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Worker;
-use App\Services\ShiftSwap\ShiftSwapService;
+use App\Models\WorkerShift;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class WorkerShiftApiController extends Controller
 {
-    public function __construct(protected ShiftSwapService $shiftSwapService)
+    public function __construct()
     {
         $this->middleware('auth');
     }
@@ -82,7 +82,16 @@ class WorkerShiftApiController extends Controller
     public function getFutureShifts(string $workerId): JsonResponse
     {
         try {
-            $shifts = $this->shiftSwapService->getFutureShifts($workerId);
+            $today = now()->format('Y-m-d');
+            $shifts = WorkerShift::where('worker_id', $workerId)
+                ->where('is_active', true)
+                ->where(function ($query) use ($today) {
+                    $query->whereNull('effective_until')
+                        ->orWhere('effective_until', '>=', $today);
+                })
+                ->with('shift')
+                ->orderBy('effective_from')
+                ->get();
 
             $formattedShifts = $shifts->map(function ($workerShift) {
                 return [

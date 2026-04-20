@@ -268,7 +268,7 @@
                                 @endif
 
                                 @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
-                                    <button onclick="if(confirm('Apakah Anda yakin ingin menghapus pegawai ini?')) { document.getElementById('delete-form-{{ $worker->id }}').submit(); }"
+                                    <button onclick="showDeleteConfirm(() => document.getElementById('delete-form-{{ $worker->id }}').submit());"
                                             class="text-red-600 hover:text-red-900"
                                             title="Hapus">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

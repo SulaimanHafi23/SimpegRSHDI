@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Worker;
 
+use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -20,9 +21,42 @@ class WorkerRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'birth_date' => $this->normalizeDateInput($this->input('birth_date')),
+            'hire_date' => $this->normalizeDateInput($this->input('hire_date')),
+            'resign_date' => $this->normalizeDateInput($this->input('resign_date')),
+        ]);
+    }
+
+    private function normalizeDateInput($value): ?string
+    {
+        if (! is_string($value) || trim($value) === '') {
+            return $value;
+        }
+
+        $value = trim($value);
+        $formats = ['Y-m-d', 'd/m/Y', 'd-m-Y', 'm/d/Y', 'm-d-Y'];
+
+        foreach ($formats as $format) {
+            try {
+                $date = Carbon::createFromFormat($format, $value);
+                if ($date !== false) {
+                    return $date->format('Y-m-d');
+                }
+            } catch (\Throwable $e) {
+                // Try next supported format.
+            }
+        }
+
+        return $value;
+    }
+
     public function rules(): array
     {
         $workerId = $this->route('id');
+        $minimumBirthDate = now()->subYears(17)->toDateString();
 
         return [
             'nip' => [
@@ -49,11 +83,7 @@ class WorkerRequest extends FormRequest
                 'required',
                 'date',
                 'before:today',
-                function ($attribute, $value, $fail) {
-                    if (now()->diffInYears(\Carbon\Carbon::parse($value)) < 17) {
-                        $fail('Usia pegawai minimal 17 tahun.');
-                    }
-                },
+                'before_or_equal:' . $minimumBirthDate,
             ],
             'address' => 'nullable|string|max:500',
             'religion' => ['required', Rule::in(['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'])],
@@ -76,6 +106,7 @@ class WorkerRequest extends FormRequest
     {
         return [
             'birth_date.before' => 'Tanggal Lahir harus sebelum hari ini.',
+            'birth_date.before_or_equal' => 'Usia pegawai minimal 17 tahun.',
             'hire_date.before_or_equal' => 'Tanggal Masuk tidak boleh melebihi hari ini.',
             'resign_date.prohibited' => 'Tanggal Resign hanya diisi saat update data pegawai.',
         ];

@@ -1,0 +1,22 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.business-trips.index)"
+    participant Controller as "Employee BusinessTripController"
+    participant Model as "BusinessTrip Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Buka menu Perjalanan Dinas Saya
+    View->>Controller: GET /employee/business-trips
+    Controller->>Model: Bangun filter (status, tanggal)
+    Model->>DB: SELECT business_trips WHERE worker_id = ?
+    DB-->>Model: Data perjalanan dinas
+    Model-->>Controller: Koleksi terfilter + pagination
+
+    alt Data valid (data berhasil diambil)
+        Controller->>View: Render tabel, filter, pagination
+        View-->>Pegawai: Daftar perjalanan dinas tampil
+    else Data tidak valid (worker tidak ditemukan atau query error)
+        Controller->>View: Redirect dashboard/back + error
+        View-->>Pegawai: Notifikasi gagal memuat data
+    end

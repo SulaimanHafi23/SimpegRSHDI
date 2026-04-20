@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const compressedBlob = await compressImageFile(originalFile, MAX_BYTES);
             if (!compressedBlob) {
                 e.preventDefault();
-                alert('Ukuran file terlalu besar dan tidak dapat dikompres cukup kecil. Silakan pilih gambar yang lebih kecil atau hubungi admin untuk menaikkan limit server.');
+                window.showErrorAlert('Gagal', 'Ukuran file terlalu besar dan tidak dapat dikompres cukup kecil. Silakan pilih gambar yang lebih kecil atau hubungi admin untuk menaikkan limit server.');
                 return;
             }
 
@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // If compression fails, prevent the submit and inform user
             e.preventDefault();
             console.error('Compression error', err);
-            alert('Terjadi kesalahan saat mengompres gambar. Silakan coba lagi dengan file yang lebih kecil.');
+            window.showErrorAlert('Gagal', 'Terjadi kesalahan saat mengompres gambar. Silakan coba lagi dengan file yang lebih kecil.');
         }
     });
 });

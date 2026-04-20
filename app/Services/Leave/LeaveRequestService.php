@@ -48,7 +48,7 @@ class LeaveRequestService
     public function create(array $data)
     {
         return DB::transaction(function () use ($data) {
-        $leaveType = $this->leaveTypeRepository->getById($data['leave_type_id']);
+        $leaveType = $this->leaveTypeRepository->findById($data['leave_type_id']);
 
         // Always calculate on server-side to prevent client-side tampering.
         $startDate = \Carbon\Carbon::parse($data['start_date']);
@@ -100,8 +100,8 @@ class LeaveRequestService
             throw new \Exception('Sudah ada permohonan cuti yang tumpang tindih pada tanggal tersebut.');
         }
 
-        // Handle attachment
-        if (isset($data['attachment']) && $leaveType->requires_attachment) {
+        // Handle attachment - store any uploaded file so it can be previewed later.
+        if (isset($data['attachment']) && $data['attachment']) {
             $data['attachment_path'] = $this->saveAttachment($data['attachment'], $data['worker_id']);
         }
 
@@ -124,10 +124,10 @@ class LeaveRequestService
         }
 
         // Handle attachment
-        if (isset($data['attachment'])) {
+        if (isset($data['attachment']) && $data['attachment']) {
             // Delete old attachment
-            if ($leaveRequest->attachment_path && Storage::exists($leaveRequest->attachment_path)) {
-                Storage::delete($leaveRequest->attachment_path);
+            if ($leaveRequest->attachment_path && Storage::disk('public')->exists($leaveRequest->attachment_path)) {
+                Storage::disk('public')->delete($leaveRequest->attachment_path);
             }
             $data['attachment_path'] = $this->saveAttachment($data['attachment'], $leaveRequest->worker_id);
         }

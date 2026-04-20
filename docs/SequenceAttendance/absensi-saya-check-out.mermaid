@@ -1,0 +1,25 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.attendance.check-out)"
+    participant Controller as "Employee AttendanceController"
+    participant Model as "Attendance Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Isi form lalu klik Check-out
+    View->>Controller: POST /employee/attendance/check-out/{id}
+    Controller->>Model: getById(id) + validasi kepemilikan
+    Model->>DB: SELECT attendance by id
+    DB-->>Model: Data sesi absensi aktif
+
+    alt Data valid (status present, belum checkout, aturan valid)
+        Controller->>Model: Proses checkOut(id, data)
+        Model->>DB: UPDATE attendance SET check_out, early_leave, photo
+        DB-->>Model: Update success
+        Model-->>Controller: Check-out berhasil
+        Controller->>View: Redirect index + success/warning
+        View-->>Pegawai: Notifikasi check-out berhasil
+    else Data tidak valid (id tidak ada/bukan pemilik/sudah checkout/validasi gagal)
+        Controller->>View: Back/redirect + error
+        View-->>Pegawai: Notifikasi gagal check-out
+    end

@@ -3,24 +3,21 @@
 namespace App\Http\Controllers\WorkerShift;
 
 use App\Http\Controllers\Controller;
-use App\Services\WorkerShift\WorkerShiftService;
-use App\Services\Worker\WorkerService;
-use App\Services\Master\ShiftService;
-use App\Services\Master\DepartmentService;
+use App\Models\Department;
+use App\Models\Shift;
+use App\Models\Worker;
+use App\Models\WorkerShift;
+use App\Models\WorkerShiftHistory;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class WorkerShiftController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct(
-        protected WorkerShiftService $workerShiftService,
-        protected WorkerService $workerService,
-        protected ShiftService $shiftService,
-        protected DepartmentService $departmentService
-    ) {}
+    public function __construct() {}
 
     public function index(Request $request)
     {
@@ -37,8 +34,8 @@ class WorkerShiftController extends Controller
         // Get all active workers with their latest shift
         $departmentId = $this->getManagerDepartmentFilter();
         $workers = $departmentId
-            ? $this->workerService->getByDepartment($departmentId)
-            : $this->workerService->getAllActive();
+            ? $this->getActiveWorkersByDepartment($departmentId)
+            : $this->getAllActiveWorkers();
 
         // Get all workers with their latest active shift
             $today = Carbon::today();
@@ -114,8 +111,8 @@ class WorkerShiftController extends Controller
             ['path' => $request->url(), 'query' => $request->query()]
         );
 
-        $shifts = $this->shiftService->getActive();
-        $departments = $this->departmentService->getAllActive();
+        $shifts = $this->getActiveShifts();
+        $departments = $this->getActiveDepartments();
 
         return view('admin.schedules.index', compact('workersWithShifts', 'workers', 'shifts', 'departments', 'filters', 'departmentId'));
     }
@@ -124,9 +121,9 @@ class WorkerShiftController extends Controller
     {
         $departmentId = $this->getManagerDepartmentFilter();
         $workers = $departmentId
-            ? $this->workerService->getByDepartment($departmentId)
-            : $this->workerService->getAllActive();
-        $shifts = $this->shiftService->getActive();
+            ? $this->getActiveWorkersByDepartment($departmentId)
+            : $this->getAllActiveWorkers();
+        $shifts = $this->getActiveShifts();
 
         return view('admin.schedules.create', compact('workers', 'shifts'));
     }
@@ -135,9 +132,9 @@ class WorkerShiftController extends Controller
     {
         $departmentId = $this->getManagerDepartmentFilter();
         $workers = $departmentId
-            ? $this->workerService->getByDepartment($departmentId)
-            : $this->workerService->getAllActive();
-        $shifts = $this->shiftService->getActive();
+            ? $this->getActiveWorkersByDepartment($departmentId)
+            : $this->getAllActiveWorkers();
+        $shifts = $this->getActiveShifts();
 
         return view('admin.schedules.generate', compact('workers', 'shifts'));
     }
@@ -192,7 +189,7 @@ class WorkerShiftController extends Controller
         $deactivateExisting = $request->boolean('deactivate_existing');
         if ($deactivateExisting) {
             foreach ($workerIds as $workerId) {
-                $this->workerShiftService->deleteOldShifts($workerId);
+                $this->deleteOldShifts($workerId);
             }
         }
 
@@ -223,7 +220,7 @@ class WorkerShiftController extends Controller
             $shiftId = $sequence[$sequenceIndex % count($sequence)];
 
             foreach ($workerIds as $workerId) {
-                $this->workerShiftService->create([
+                $this->createWorkerShift([
                     'worker_id' => $workerId,
                     'shift_id' => $shiftId,
                     'start_date' => $currentStart->toDateString(),
@@ -302,7 +299,7 @@ class WorkerShiftController extends Controller
             $deactivateExisting = $request->boolean('deactivate_existing');
             if ($deactivateExisting) {
                 foreach ($workerIds as $workerId) {
-                    $this->workerShiftService->deleteOldShifts($workerId);
+                    $this->deleteOldShifts($workerId);
                 }
             }
 
@@ -333,7 +330,7 @@ class WorkerShiftController extends Controller
                 $shiftId = $sequence[$sequenceIndex % count($sequence)];
 
                 foreach ($workerIds as $workerId) {
-                    $this->workerShiftService->create([
+                    $this->createWorkerShift([
                         'worker_id' => $workerId,
                         'shift_id' => $shiftId,
                         'start_date' => $currentStart->toDateString(),
@@ -402,7 +399,7 @@ class WorkerShiftController extends Controller
                 // Remove worker_ids to avoid confusion
                 unset($payload['worker_ids']);
 
-                $this->workerShiftService->create($payload);
+                $this->createWorkerShift($payload);
                 $created++;
             }
 
@@ -418,9 +415,9 @@ class WorkerShiftController extends Controller
 
     public function show(string $id)
     {
-        $workerShift = $this->workerShiftService->getById($id);
-        $shiftHistories = $this->workerShiftService->getShiftHistories($workerShift->worker_id);
-        $rotationShifts = $this->workerShiftService->getByWorkerId($workerShift->worker_id)
+        $workerShift = WorkerShift::with(['worker.department', 'shift'])->findOrFail($id);
+        $shiftHistories = $this->getShiftHistories($workerShift->worker_id);
+        $rotationShifts = $this->getByWorkerId($workerShift->worker_id)
             ->sortBy('effective_from')
             ->values();
 
@@ -432,9 +429,9 @@ class WorkerShiftController extends Controller
 
     public function edit(string $id)
     {
-        $workerShift = $this->workerShiftService->getById($id);
-        $workers = $this->workerService->getAllActive();
-        $shifts = $this->shiftService->getActive();
+        $workerShift = WorkerShift::with(['worker.department', 'shift'])->findOrFail($id);
+        $workers = $this->getAllActiveWorkers();
+        $shifts = $this->getActiveShifts();
 
         return view('admin.schedules.edit', compact('workerShift', 'workers', 'shifts'));
     }
@@ -479,9 +476,9 @@ class WorkerShiftController extends Controller
 
             $deactivateExisting = $request->boolean('deactivate_existing');
             if ($deactivateExisting) {
-                $this->workerShiftService->deleteOldShifts($workerId);
+                $this->deleteOldShifts($workerId);
             } else {
-                $this->workerShiftService->delete($id);
+                $this->deleteWorkerShift($id);
             }
 
             $created = 0;
@@ -510,7 +507,7 @@ class WorkerShiftController extends Controller
 
                 $shiftId = $sequence[$sequenceIndex % count($sequence)];
 
-                $this->workerShiftService->create([
+                $this->createWorkerShift([
                     'worker_id' => $workerId,
                     'shift_id' => $shiftId,
                     'start_date' => $currentStart->toDateString(),
@@ -554,7 +551,7 @@ class WorkerShiftController extends Controller
             // Pastikan is_active terisi
             $data['is_active'] = $request->boolean('is_active'); // Mengambil nilai checkbox dengan benar
 
-            $this->workerShiftService->update($id, $data);
+            $this->updateWorkerShift($id, $data);
 
             return redirect()
                 ->route('admin.worker-shifts.show', $id)
@@ -569,7 +566,7 @@ class WorkerShiftController extends Controller
     public function destroy(string $id)
     {
         try {
-            $this->workerShiftService->delete($id);
+            $this->deleteWorkerShift($id);
 
             return redirect()
                 ->route('admin.worker-shifts.index')
@@ -581,10 +578,11 @@ class WorkerShiftController extends Controller
 
     public function workerShifts(string $workerId)
     {
-        $worker = $this->workerService->getById($workerId);
-        $workerShifts = $this->workerShiftService->getByWorkerId($workerId);
+        Worker::findOrFail($workerId);
 
-        return view('admin.schedules.worker-shifts', compact('worker', 'workerShifts'));
+        return redirect()->route('admin.worker-shifts.index', [
+            'worker_id' => $workerId,
+        ]);
     }
 
     /**
@@ -710,6 +708,144 @@ class WorkerShiftController extends Controller
                 'success' => false,
                 'message' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    private function getAllActiveWorkers()
+    {
+        return Worker::where('status', 'active')->with(['department'])->orderBy('name')->get();
+    }
+
+    private function getActiveWorkersByDepartment(string $departmentId)
+    {
+        return Worker::where('status', 'active')
+            ->where('department_id', $departmentId)
+            ->with(['department'])
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function getActiveShifts()
+    {
+        return Shift::where('is_active', true)->orderBy('name')->get();
+    }
+
+    private function getActiveDepartments()
+    {
+        return Department::where('is_active', true)->orderBy('name')->get();
+    }
+
+    private function getByWorkerId(string $workerId)
+    {
+        return WorkerShift::with(['shift'])
+            ->where('worker_id', $workerId)
+            ->orderByDesc('effective_from')
+            ->get();
+    }
+
+    private function getShiftHistories(string $workerId)
+    {
+        return WorkerShiftHistory::where('worker_id', $workerId)
+            ->with('shift', 'changedByUser')
+            ->orderByDesc('changed_at')
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    private function createWorkerShift(array $data)
+    {
+        return DB::transaction(function () use ($data) {
+            $skipDeactivate = (bool) ($data['skip_deactivate'] ?? false);
+
+            if (($data['is_active'] ?? true) && !$skipDeactivate) {
+                $this->logShiftsToHistory($data['worker_id'], null, 'shift_replaced');
+                $this->deleteOldShifts($data['worker_id']);
+            }
+
+            $payload = array_filter($data, function ($value) {
+                return $value !== '' && $value !== null && $value !== [];
+            });
+
+            $payload['effective_from'] = $payload['effective_from'] ?? ($payload['start_date'] ?? null);
+            $payload['effective_until'] = array_key_exists('effective_until', $payload)
+                ? $payload['effective_until']
+                : ($payload['end_date'] ?? null);
+            $payload['notes'] = $payload['notes'] ?? ($payload['description'] ?? null);
+
+            unset($payload['skip_deactivate'], $payload['start_date'], $payload['end_date'], $payload['description'], $payload['worker_ids']);
+
+            return WorkerShift::create($payload);
+        });
+    }
+
+    private function updateWorkerShift(string $id, array $data)
+    {
+        return DB::transaction(function () use ($id, $data) {
+            $workerShift = WorkerShift::findOrFail($id);
+
+            $this->logShiftsToHistory($workerShift->worker_id, $id, 'shift_replaced');
+            $this->deleteOldShifts($workerShift->worker_id, $id);
+
+            $payload = array_filter($data, function ($value) {
+                return $value !== '' && $value !== null && $value !== [];
+            });
+
+            $payload['effective_from'] = $payload['effective_from'] ?? ($payload['start_date'] ?? null);
+            $payload['effective_until'] = array_key_exists('effective_until', $payload)
+                ? $payload['effective_until']
+                : ($payload['end_date'] ?? null);
+            $payload['notes'] = $payload['notes'] ?? ($payload['description'] ?? null);
+
+            unset($payload['start_date'], $payload['end_date'], $payload['description']);
+
+            $workerShift->update($payload);
+            return $workerShift->fresh(['worker.department', 'shift']);
+        });
+    }
+
+    private function deleteWorkerShift(string $id): bool
+    {
+        $workerShift = WorkerShift::findOrFail($id);
+
+        WorkerShiftHistory::logChange(
+            $workerShift->worker_id,
+            $workerShift->shift_id,
+            $workerShift->effective_from?->toDateString(),
+            $workerShift->effective_until?->toDateString(),
+            'shift_deleted'
+        );
+
+        return (bool) $workerShift->delete();
+    }
+
+    private function deleteOldShifts(string $workerId, ?string $excludeId = null): int
+    {
+        $query = WorkerShift::where('worker_id', $workerId);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query->delete();
+    }
+
+    private function logShiftsToHistory(string $workerId, ?string $excludeId = null, string $reason = 'shift_replaced'): void
+    {
+        $query = WorkerShift::where('worker_id', $workerId);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $existingShifts = $query->get();
+
+        foreach ($existingShifts as $shift) {
+            WorkerShiftHistory::logChange(
+                $shift->worker_id,
+                $shift->shift_id,
+                $shift->effective_from?->toDateString(),
+                $shift->effective_until?->toDateString(),
+                $reason
+            );
         }
     }
 }

@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor Admin as Admin/HR/Manager
+    participant View as "Web View (admin.schedules.index/show)"
+    participant C as WorkerShiftController
+    participant Svc as WorkerShiftService
+    participant WS as "WorkerShift Model"
+    participant WSH as "WorkerShiftHistory Model"
+    participant DB as "Database"
+
+    Admin->>View: Klik Hapus jadwal pegawai
+    View->>C: DELETE /admin/worker-shifts/{id}
+
+    C->>Svc: delete(id)
+    Svc->>WS: Ambil jadwal by id
+    WS->>DB: SELECT worker_shifts WHERE id = ?
+
+    alt Data valid
+        Svc->>WSH: Simpan log penghapusan shift
+        WSH->>DB: INSERT worker_shift_histories(change_reason='shift_deleted')
+        Svc->>WS: Hapus jadwal
+        WS->>DB: DELETE FROM worker_shifts WHERE id = ?
+        C-->>View: Redirect ke index + success
+        View-->>Admin: Jadwal berhasil dihapus
+    else Data tidak valid
+        C-->>View: Redirect back + pesan gagal hapus
+        View-->>Admin: Tampilkan error
+    end

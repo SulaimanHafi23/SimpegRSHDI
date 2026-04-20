@@ -3,13 +3,14 @@
 namespace App\Http\Controllers\Report;
 
 use App\Http\Controllers\Controller;
-use App\Services\Attendance\AttendanceService;
-use App\Services\Leave\LeaveRequestService;
-use App\Services\WorkerDocument\WorkerDocumentService;
+use App\Models\Attendance;
+use App\Models\DocumentType;
+use App\Models\LeaveRequest;
+use App\Models\WorkerDocument;
 use App\Traits\DepartmentFilterable;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\Worker;
-use App\Models\DocumentType;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ReportAttendanceExport;
@@ -20,11 +21,8 @@ class ReportController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct(
-        protected AttendanceService $attendanceService,
-        protected LeaveRequestService $leaveService,
-        protected WorkerDocumentService $workerDocumentService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         // Allow viewing reports and exporting reports (some users may have export permission)
         $this->middleware('permission:report.view');
@@ -34,19 +32,7 @@ class ReportController extends Controller
     {
         $month = $request->input('month');
         $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $year] = $this->resolveDateRange($request, 'start_date', 'end_date', $month, $year);
 
         $filters = [
             'date_from' => $startDate,
@@ -57,7 +43,10 @@ class ReportController extends Controller
             'year' => $year,
         ];
 
-        $attendances = $this->attendanceService->getAll($filters);
+        $attendances = $this->buildAttendanceQuery($filters)
+            ->latest('attendance_date')
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
 
         $departmentId = $this->getManagerDepartmentFilter();
         $workers = Worker::select('id', 'name')
@@ -100,19 +89,7 @@ class ReportController extends Controller
     {
         $month = $request->input('month');
         $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('start_date', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('end_date', now()->endOfMonth()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $year] = $this->resolveDateRange($request, 'start_date', 'end_date', $month, $year);
 
         $filters = [
             'date_from' => $startDate,
@@ -125,7 +102,10 @@ class ReportController extends Controller
             'year' => $year,
         ];
 
-        $leaves = $this->leaveService->getAll($filters);
+        $leaves = $this->buildLeaveQuery($filters)
+            ->latest('start_date')
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
 
         $departmentId = $this->getManagerDepartmentFilter();
         $workers = Worker::select('id', 'name')
@@ -140,19 +120,7 @@ class ReportController extends Controller
     {
         $month = $request->input('month');
         $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('date_from', now()->startOfMonth()->format('Y-m-d'));
-            $endDate = $request->input('date_to', now()->endOfMonth()->format('Y-m-d'));
-        }
+        [$startDate, $endDate, $year] = $this->resolveDateRange($request, 'date_from', 'date_to', $month, $year);
 
         $filters = [
             'date_from' => $startDate,
@@ -165,7 +133,10 @@ class ReportController extends Controller
             'year' => $year,
         ];
 
-        $documents = $this->workerDocumentService->getAll($filters);
+        $documents = $this->buildWorkerDocumentQuery($filters)
+            ->latest()
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
 
         $departmentId = $this->getManagerDepartmentFilter();
         $workers = Worker::select('id', 'name')
@@ -264,19 +235,7 @@ class ReportController extends Controller
     {
         $month = $request->input('month');
         $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('date_from') ?? $request->input('start_date');
-            $endDate = $request->input('date_to') ?? $request->input('end_date');
-        }
+        [$startDate, $endDate, $year] = $this->resolveDateRange($request, 'date_from', 'date_to', $month, $year, false);
 
         // Get department filter: prioritas dari modal, fallback ke manager restriction
         $departmentFilter = $request->input('department_id') ?: $this->getManagerDepartmentFilter();
@@ -292,7 +251,10 @@ class ReportController extends Controller
             'year' => $year,
         ];
 
-        $attendances = $this->attendanceService->getAll($filters);
+        $attendances = $this->buildAttendanceQuery($filters)
+            ->latest('attendance_date')
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
         $collection = $attendances instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($attendances->items()) : collect($attendances);
 
         $format = $request->input('format', 'pdf');
@@ -318,19 +280,7 @@ class ReportController extends Controller
     {
         $month = $request->input('month');
         $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('date_from') ?? $request->input('start_date');
-            $endDate = $request->input('date_to') ?? $request->input('end_date');
-        }
+        [$startDate, $endDate, $year] = $this->resolveDateRange($request, 'date_from', 'date_to', $month, $year, false);
 
         $filters = [
             'date_from' => $startDate,
@@ -343,7 +293,10 @@ class ReportController extends Controller
             'year' => $year,
         ];
 
-        $leaves = $this->leaveService->getAll($filters);
+        $leaves = $this->buildLeaveQuery($filters)
+            ->latest('start_date')
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
         $collection = $leaves instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($leaves->items()) : collect($leaves);
 
         $format = $request->input('format', 'pdf');
@@ -369,19 +322,7 @@ class ReportController extends Controller
     {
         $month = $request->input('month');
         $year = $request->input('year');
-        if ($month || $year) {
-            $year = $year ?: now()->year;
-            if ($month) {
-                $startDate = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
-            } else {
-                $startDate = \Carbon\Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
-                $endDate = \Carbon\Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
-            }
-        } else {
-            $startDate = $request->input('date_from') ?? $request->input('start_date');
-            $endDate = $request->input('date_to') ?? $request->input('end_date');
-        }
+        [$startDate, $endDate, $year] = $this->resolveDateRange($request, 'date_from', 'date_to', $month, $year, false);
 
         $filters = [
             'date_from' => $startDate,
@@ -394,7 +335,10 @@ class ReportController extends Controller
             'year' => $year,
         ];
 
-        $documents = $this->workerDocumentService->getAll($filters);
+        $documents = $this->buildWorkerDocumentQuery($filters)
+            ->latest()
+            ->paginate($filters['per_page'] ?? 15)
+            ->appends($filters);
         $collection = $documents instanceof \Illuminate\Contracts\Pagination\Paginator ? collect($documents->items()) : collect($documents);
 
         $format = $request->input('format', 'pdf');
@@ -411,5 +355,206 @@ class ReportController extends Controller
         } else {
             return Excel::download(new ReportWorkerDocumentsExport($collection, $filters), $filename . '.csv', \Maatwebsite\Excel\Excel::CSV);
         }
+    }
+
+    private function resolveDateRange(
+        Request $request,
+        string $fromKey,
+        string $toKey,
+        $month,
+        $year,
+        bool $withDefaultCurrentMonth = true
+    ): array {
+        if ($month || $year) {
+            $year = $year ?: now()->year;
+
+            if ($month) {
+                $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth()->format('Y-m-d');
+                $endDate = Carbon::createFromDate($year, $month, 1)->endOfMonth()->format('Y-m-d');
+            } else {
+                $startDate = Carbon::createFromDate($year, 1, 1)->startOfYear()->format('Y-m-d');
+                $endDate = Carbon::createFromDate($year, 1, 1)->endOfYear()->format('Y-m-d');
+            }
+
+            return [$startDate, $endDate, $year];
+        }
+
+        if ($withDefaultCurrentMonth) {
+            $startDate = $request->input($fromKey, now()->startOfMonth()->format('Y-m-d'));
+            $endDate = $request->input($toKey, now()->endOfMonth()->format('Y-m-d'));
+        } else {
+            $startDate = $request->input('date_from') ?? $request->input('start_date');
+            $endDate = $request->input('date_to') ?? $request->input('end_date');
+        }
+
+        return [$startDate, $endDate, $year];
+    }
+
+    private function buildAttendanceQuery(array $filters)
+    {
+        $query = Attendance::with([
+            'worker.shift',
+            'worker.workerShifts.shift',
+            'worker.shiftOverrides.shift',
+            'shift',
+        ]);
+
+        if (!empty($filters['worker_id'])) {
+            $query->where('worker_id', $filters['worker_id']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->where('attendance_date', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->where('attendance_date', '<=', $filters['date_to']);
+        }
+
+        if (!empty($filters['status'])) {
+            if ($filters['status'] === 'late') {
+                $query->where('is_late', true);
+            } elseif ($filters['status'] === 'present') {
+                $query->where(function ($q) {
+                    $q->where('status', 'present')
+                        ->orWhere('is_late', true);
+                });
+            } else {
+                $query->where('status', $filters['status']);
+            }
+        }
+
+        if (!empty($filters['is_late'])) {
+            $query->where('is_late', $filters['is_late']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
+        if (!empty($filters['search'])) {
+            $search = strtolower($filters['search']);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(attendance_date) LIKE ?', ['%' . $search . '%'])
+                    ->orWhereRaw('LOWER(status) LIKE ?', ['%' . $search . '%'])
+                    ->orWhereRaw('LOWER(check_in) LIKE ?', ['%' . $search . '%'])
+                    ->orWhereRaw('LOWER(check_out) LIKE ?', ['%' . $search . '%'])
+                    ->orWhereHas('worker', function ($workerQuery) use ($search) {
+                        $workerQuery->whereRaw('LOWER(name) LIKE ?', ['%' . $search . '%'])
+                            ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $search . '%'])
+                            ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $search . '%']);
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    private function buildLeaveQuery(array $filters)
+    {
+        $query = LeaveRequest::with(['worker', 'leaveType', 'approver']);
+
+        if (!empty($filters['worker_id'])) {
+            $query->where('worker_id', $filters['worker_id']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['leave_type_id'])) {
+            $query->where('leave_type_id', $filters['leave_type_id']);
+        }
+
+        $dateFrom = $filters['date_from'] ?? $filters['start_date'] ?? null;
+        $dateTo = $filters['date_to'] ?? $filters['end_date'] ?? null;
+
+        if (!empty($dateFrom)) {
+            $query->where('start_date', '>=', $dateFrom);
+        }
+
+        if (!empty($dateTo)) {
+            $query->where('end_date', '<=', $dateTo);
+        }
+
+        if (!empty($filters['year'])) {
+            $query->whereYear('start_date', $filters['year']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('reason', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('start_date', 'like', "%{$search}%")
+                    ->orWhere('end_date', 'like', "%{$search}%")
+                    ->orWhereHas('leaveType', function ($leaveTypeQuery) use ($search) {
+                        $leaveTypeQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('worker', function ($workerQuery) use ($search) {
+                        $workerQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query;
+    }
+
+    private function buildWorkerDocumentQuery(array $filters)
+    {
+        $query = WorkerDocument::with(['worker', 'documentType', 'verifier']);
+
+        if (!empty($filters['worker_id'])) {
+            $query->where('worker_id', $filters['worker_id']);
+        }
+
+        if (!empty($filters['status'])) {
+            $status = $filters['status'];
+            if (is_array($status)) {
+                $query->whereIn('status', $status);
+            } else {
+                $query->where('status', $status);
+            }
+        }
+
+        if (!empty($filters['document_type_id'])) {
+            $query->where('document_type_id', $filters['document_type_id']);
+        }
+
+        if (!empty($filters['date_from'])) {
+            $query->whereDate('created_at', '>=', $filters['date_from']);
+        }
+
+        if (!empty($filters['date_to'])) {
+            $query->whereDate('created_at', '<=', $filters['date_to']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function ($q) use ($search) {
+                $q->where('document_number', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('documentType', function ($documentTypeQuery) use ($search) {
+                        $documentTypeQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        return $query;
     }
 }

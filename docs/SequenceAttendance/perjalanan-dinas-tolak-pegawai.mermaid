@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor Admin as "Manager/HR"
+    participant View as "Web View (approvals.business-trips.show)"
+    participant Controller as "BusinessTripApprovalController"
+    participant Model as "BusinessTrip Model"
+    participant DB as "Database"
+
+    Admin->>View: Isi alasan lalu klik Tolak
+    View->>Controller: POST /approvals/business-trips/{id}/reject + rejection_reason
+    Controller->>Controller: Validasi rejection_reason wajib
+    Controller->>Model: findOrFail(id)
+    Model->>DB: SELECT business_trips WHERE id = ?
+    DB-->>Model: Data pengajuan
+
+    alt Data valid (reason terisi & akses valid)
+        Controller->>Model: update(status='rejected', approved_by, approved_at, rejection_reason)
+        Model->>DB: UPDATE business_trips SET status='rejected', approved_by=?, approved_at=NOW(), rejection_reason=?
+        DB-->>Model: Update success
+        Model-->>Controller: Rejected
+        Controller->>View: Redirect index + success
+        View-->>Admin: Notifikasi pengajuan ditolak
+    else Data tidak valid (reason kosong/tidak ada akses/id invalid)
+        Controller->>View: Back + error/validation
+        View-->>Admin: Notifikasi gagal menolak
+    end

@@ -4,21 +4,20 @@ namespace App\Http\Controllers\Approval;
 
 use App\Http\Controllers\Controller;
 use App\Models\LeaveRequest;
-use App\Services\Leave\LeaveRequestService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LeaveApprovalController extends Controller
 {
-    public function __construct(
-        private readonly LeaveRequestService $leaveService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         $this->middleware('role:Manager|HR|Super Admin');
     }
 
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $filters = [
             'status' => $request->input('status', 'pending'),
             'per_page' => 20,
@@ -29,7 +28,23 @@ class LeaveApprovalController extends Controller
             $filters['department_id'] = $user->worker->department_id;
         }
 
-        $leaves = $this->leaveService->getAll($filters);
+        $leavesQuery = LeaveRequest::with(['worker', 'leaveType', 'approver']);
+
+        if (!empty($filters['department_id'])) {
+            $leavesQuery->whereHas('worker', function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
+        if (!empty($filters['status'])) {
+            $leavesQuery->where('status', $filters['status']);
+        }
+
+        $leaves = $leavesQuery
+            ->latest('start_date')
+            ->paginate($filters['per_page'])
+            ->appends($filters);
+
         $leaveTypes = \App\Models\LeaveType::orderBy('name')->get();
 
         // Get statistics
@@ -57,11 +72,11 @@ class LeaveApprovalController extends Controller
 
     public function show(string $id)
     {
-        $leaveRequest = LeaveRequest::with(['worker.department', 'worker.position', 'leaveType', 'approver'])
+        $leaveRequest = LeaveRequest::with(['worker.department', 'leaveType', 'approver'])
             ->findOrFail($id);
 
         // Check if user has permission to view this request
-        $user = auth()->user();
+        $user = Auth::user();
         if ($user->hasRole('Manager') && $user->worker) {
             if ($leaveRequest->worker->department_id !== $user->worker->department_id) {
                 abort(403, 'Unauthorized');
@@ -81,7 +96,7 @@ class LeaveApprovalController extends Controller
             $leaveRequest = LeaveRequest::findOrFail($id);
 
             // Check permission
-            $user = auth()->user();
+            $user = Auth::user();
             if ($user->hasRole('Manager') && $user->worker) {
                 if ($leaveRequest->worker->department_id !== $user->worker->department_id) {
                     return back()->with('error', 'Anda tidak memiliki akses untuk menyetujui pengajuan ini.');
@@ -90,7 +105,7 @@ class LeaveApprovalController extends Controller
 
             $leaveRequest->update([
                 'status' => 'approved',
-                'approved_by' => auth()->id(),
+                'approved_by' => Auth::id(),
                 'approved_at' => now(),
                 'approval_notes' => $request->input('approval_notes'),
             ]);
@@ -113,7 +128,7 @@ class LeaveApprovalController extends Controller
             $leaveRequest = LeaveRequest::findOrFail($id);
 
             // Check permission
-            $user = auth()->user();
+            $user = Auth::user();
             if ($user->hasRole('Manager') && $user->worker) {
                 if ($leaveRequest->worker->department_id !== $user->worker->department_id) {
                     return back()->with('error', 'Anda tidak memiliki akses untuk menolak pengajuan ini.');
@@ -122,7 +137,7 @@ class LeaveApprovalController extends Controller
 
             $leaveRequest->update([
                 'status' => 'rejected',
-                'approved_by' => auth()->id(),
+                'approved_by' => Auth::id(),
                 'approved_at' => now(),
                 'rejection_reason' => $request->input('rejection_reason'),
             ]);

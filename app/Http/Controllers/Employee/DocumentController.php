@@ -3,19 +3,16 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Services\WorkerDocument\WorkerDocumentService;
-use App\Services\Master\DocumentTypeService;
 use App\Models\DocumentType;
 use App\Models\WorkerDocument;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 class DocumentController extends Controller
 {
-    public function __construct(
-        protected WorkerDocumentService $documentService,
-        protected DocumentTypeService $documentTypeService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
@@ -24,7 +21,7 @@ class DocumentController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -40,17 +37,43 @@ class DocumentController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $documents = $this->documentService->getAll($filters);
+        $documentsQuery = WorkerDocument::with(['worker', 'documentType', 'verifier'])
+            ->where('worker_id', $worker->id);
+
+        if (!empty($filters['status'])) {
+            $documentsQuery->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['document_type_id'])) {
+            $documentsQuery->where('document_type_id', $filters['document_type_id']);
+        }
+
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $documentsQuery->where(function ($query) use ($search) {
+                $query->where('document_number', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhere('notes', 'like', "%{$search}%")
+                    ->orWhereHas('documentType', function ($inner) use ($search) {
+                        $inner->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $documents = $documentsQuery
+            ->latest()
+            ->paginate($filters['per_page'])
+            ->appends($filters);
 
         $documentTypes = $this->getAllowedDocumentTypes($worker);
 
         // Calculate summary
-        $summaryFilters = ['worker_id' => $worker->id];
+        $summaryQuery = WorkerDocument::where('worker_id', $worker->id);
         $summary = [
-            'total' => $this->documentService->getAll($summaryFilters)->total(),
-            'pending' => $this->documentService->getAll(array_merge($summaryFilters, ['status' => 'pending']))->total(),
-            'approved' => $this->documentService->getAll(array_merge($summaryFilters, ['status' => 'verified']))->total(),
-            'rejected' => $this->documentService->getAll(array_merge($summaryFilters, ['status' => 'rejected']))->total(),
+            'total' => (clone $summaryQuery)->count(),
+            'pending' => (clone $summaryQuery)->where('status', 'pending')->count(),
+            'approved' => (clone $summaryQuery)->where('status', 'verified')->count(),
+            'rejected' => (clone $summaryQuery)->where('status', 'rejected')->count(),
         ];
 
         return view('employee.documents.index', compact('documents', 'documentTypes', 'filters', 'summary'));
@@ -61,7 +84,7 @@ class DocumentController extends Controller
      */
     public function create()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -88,9 +111,12 @@ class DocumentController extends Controller
             ->toArray();
 
         // Get document statistics for each type
-        $documentStats = $this->documentService->getAll([
-            'worker_id' => $worker->id
-        ])->groupBy('document_type_id')->map(function($docs) {
+        $workerDocuments = WorkerDocument::with(['worker', 'documentType', 'verifier'])
+            ->where('worker_id', $worker->id)
+            ->latest()
+            ->get();
+
+        $documentStats = $workerDocuments->groupBy('document_type_id')->map(function($docs) {
             $expiredDocs = $docs->filter(function ($doc) {
                 return $doc->expired_date && $doc->expired_date->isPast();
             });
@@ -119,7 +145,7 @@ class DocumentController extends Controller
      */
     public function store(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -169,13 +195,26 @@ class DocumentController extends Controller
                     ->with('error', "Anda sudah memiliki dokumen {$documentType->name} yang aktif. Upload ulang hanya bisa dilakukan jika dokumen sebelumnya sudah kadaluarsa atau ditolak.");
             }
 
-            // Pass file and data to service (service will handle file upload)
-            $document = $this->documentService->create([
+            $file = $request->file('file');
+            $filename = sprintf(
+                '%s_%s_%s.%s',
+                $worker->id,
+                $validated['document_type_id'],
+                now()->format('YmdHis'),
+                $file->getClientOriginalExtension()
+            );
+
+            $filePath = $file->storeAs('worker-documents', $filename, 'public');
+
+            WorkerDocument::create([
                 'worker_id' => $worker->id,
                 'document_type_id' => $validated['document_type_id'],
-                'file' => $request->file('file'),
+                'file_name' => $file->getClientOriginalName(),
+                'file_path' => $filePath,
+                'file_size' => $file->getSize(),
                 'expired_date' => $validated['expired_date'] ?? null,
                 'notes' => $validated['notes'] ?? null,
+                'status' => 'pending',
             ]);
 
             return redirect()->route('employee.documents.index')
@@ -193,7 +232,7 @@ class DocumentController extends Controller
      */
     public function show(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -201,7 +240,7 @@ class DocumentController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $document = $this->documentService->getById($id);
+        $document = WorkerDocument::with(['worker', 'documentType', 'verifier'])->findOrFail($id);
 
         // Verify ownership
         if ($document->worker_id !== $worker->id) {
@@ -237,7 +276,7 @@ class DocumentController extends Controller
      */
     public function download(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -245,14 +284,27 @@ class DocumentController extends Controller
                 ->with('error', 'Data pekerja tidak ditemukan.');
         }
 
-        $document = $this->documentService->getById($id);
+        $document = WorkerDocument::with(['worker', 'documentType', 'verifier'])->findOrFail($id);
 
         // Verify ownership
         if ($document->worker_id !== $worker->id) {
             abort(403, 'Unauthorized');
         }
 
-        return $this->documentService->downloadDocument($id);
+        $disk = Storage::disk('public');
+
+        if (!$document || !$document->file_path) {
+            abort(404, 'Dokumen tidak ditemukan.');
+        }
+
+        if (!$disk->exists($document->file_path)) {
+            if (!Storage::exists($document->file_path)) {
+                abort(404, 'File dokumen tidak ditemukan.');
+            }
+            return response()->download(Storage::path($document->file_path), $document->file_name);
+        }
+
+        return response()->download($disk->path($document->file_path), $document->file_name);
     }
 
     /**
@@ -260,14 +312,14 @@ class DocumentController extends Controller
      */
     public function preview(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
             abort(404);
         }
 
-        $document = $this->documentService->getById($id);
+        $document = WorkerDocument::with(['worker', 'documentType', 'verifier'])->findOrFail($id);
 
         if ($document->worker_id !== $worker->id) {
             abort(403, 'Unauthorized');
@@ -291,7 +343,7 @@ class DocumentController extends Controller
      */
     public function destroy(string $id)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -300,7 +352,7 @@ class DocumentController extends Controller
         }
 
         try {
-            $document = $this->documentService->getById($id);
+            $document = WorkerDocument::with(['worker', 'documentType', 'verifier'])->findOrFail($id);
 
             // Verify ownership
             if ($document->worker_id !== $worker->id) {
@@ -312,7 +364,16 @@ class DocumentController extends Controller
                 return back()->with('error', 'Hanya dokumen yang masih pending yang bisa dihapus.');
             }
 
-            $this->documentService->delete($id);
+            if ($document->file_path) {
+                $publicDisk = Storage::disk('public');
+                if ($publicDisk->exists($document->file_path)) {
+                    $publicDisk->delete($document->file_path);
+                } elseif (Storage::exists($document->file_path)) {
+                    Storage::delete($document->file_path);
+                }
+            }
+
+            $document->delete();
 
             return redirect()->route('employee.documents.index')
                 ->with('success', 'Dokumen berhasil dihapus.');

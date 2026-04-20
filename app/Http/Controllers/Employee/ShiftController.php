@@ -3,17 +3,18 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
-use App\Services\WorkerShift\WorkerShiftService;
-use App\Services\ShiftOverride\ShiftOverrideService;
+use App\Models\Shift;
+use App\Models\ShiftOverride;
+use App\Models\WorkerShift;
+use App\Models\WorkerShiftHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
 class ShiftController extends Controller
 {
-    public function __construct(
-        protected WorkerShiftService $workerShiftService,
-        protected ShiftOverrideService $shiftOverrideService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
@@ -22,7 +23,7 @@ class ShiftController extends Controller
      */
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -47,26 +48,18 @@ class ShiftController extends Controller
             });
 
         // Get all worker shifts to handle date ranges correctly
-        $workerShifts = $this->workerShiftService->getAll([
-            'worker_id' => $worker->id,
-            'per_page' => 1000, // Ensure we get enough records
-        ]);
-
-        if (method_exists($workerShifts, 'items')) {
-            $workerShifts = $workerShifts->items();
-        }
+        $workerShifts = WorkerShift::with(['worker', 'shift'])
+            ->where('worker_id', $worker->id)
+            ->latest()
+            ->get();
 
         // Get shift overrides for this month
-        $shiftOverrides = $this->shiftOverrideService->getAll([
-            'worker_id' => $worker->id,
-            'date_from' => $startOfMonth->format('Y-m-d'),
-            'date_to' => $endOfMonth->format('Y-m-d'),
-        ]);
-
-        // convert paginator to collection for easier lookup
-        if (method_exists($shiftOverrides, 'items')) {
-            $shiftOverrides = collect($shiftOverrides->items());
-        }
+        $shiftOverrides = ShiftOverride::with(['worker', 'shift', 'creator'])
+            ->where('worker_id', $worker->id)
+            ->where('override_date', '>=', $startOfMonth->format('Y-m-d'))
+            ->where('override_date', '<=', $endOfMonth->format('Y-m-d'))
+            ->latest('override_date')
+            ->get();
 
         // Get approved leave requests for this month
         $leaveRequests = \App\Models\LeaveRequest::with('leaveType')
@@ -84,7 +77,17 @@ class ShiftController extends Controller
         $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
 
         // Determine current active shift using service helper (more reliable)
-        $workerShift = $this->workerShiftService->getActiveByWorkerId($worker->id);
+        $workerShift = WorkerShift::where('worker_id', $worker->id)
+            ->where('is_active', true)
+            ->where('effective_from', '<=', now())
+            ->where(function ($query) {
+                $query->whereNull('effective_until')
+                    ->orWhere('effective_until', '>=', now());
+            })
+            ->orderByDesc('effective_from')
+            ->orderByDesc('created_at')
+            ->with(['shift'])
+            ->first();
 
         // FALLBACK: Jika tidak ada jadwal aktif saat ini, ambil jadwal terakhir (terbaru)
         if (!$workerShift && count($workerShifts) > 0) {
@@ -92,7 +95,11 @@ class ShiftController extends Controller
         }
 
         // Get shift history for this worker
-        $shiftHistories = $this->workerShiftService->getShiftHistories($worker->id);
+        $shiftHistories = WorkerShiftHistory::where('worker_id', $worker->id)
+            ->with('shift', 'changedByUser')
+            ->orderByDesc('changed_at')
+            ->orderByDesc('created_at')
+            ->get();
 
         return view('employee.shifts.index', compact(
             'calendar',
@@ -109,7 +116,7 @@ class ShiftController extends Controller
      */
     public function show(Request $request)
     {
-        $user = auth()->user();
+        $user = Auth::user();
         $worker = $user->worker;
 
         if (!$worker) {
@@ -120,14 +127,10 @@ class ShiftController extends Controller
         $date = Carbon::parse($request->date);
 
         // Get worker shift for specific date
-        $workerShifts = $this->workerShiftService->getAll([
-            'worker_id' => $worker->id,
-            'per_page' => 100,
-        ]);
-
-        if (method_exists($workerShifts, 'items')) {
-            $workerShifts = $workerShifts->items();
-        }
+        $workerShifts = WorkerShift::with(['worker', 'shift'])
+            ->where('worker_id', $worker->id)
+            ->latest()
+            ->get();
 
         $workerShift = collect($workerShifts)->first(function ($shift) use ($date) {
             // Use model helpers to check if this worker shift applies to the requested date
@@ -142,11 +145,11 @@ class ShiftController extends Controller
         });
 
         // Check for override on this date
-        $override = $this->shiftOverrideService->getAll([
-            'worker_id' => $worker->id,
-            'date_from' => $date->format('Y-m-d'),
-            'date_to' => $date->format('Y-m-d'),
-        ])->first();
+        $override = ShiftOverride::with(['worker', 'shift', 'creator'])
+            ->where('worker_id', $worker->id)
+            ->where('override_date', $date->format('Y-m-d'))
+            ->latest('override_date')
+            ->first();
 
         return view('employee.shifts.show', compact(
             'date',
@@ -249,7 +252,7 @@ class ShiftController extends Controller
                     if ($applicableShift) {
                         $shiftId = $applicableShift->getShiftForDate($current->toDateTime());
                         if ($shiftId) {
-                            $dayData['shift'] = \App\Models\Shift::find($shiftId);
+                            $dayData['shift'] = Shift::find($shiftId);
                             if ($dayData['shift']) {
                                 $dayData['schedule'] = $dayData['shift']->getScheduleForDate($current->toDateTime());
                             }

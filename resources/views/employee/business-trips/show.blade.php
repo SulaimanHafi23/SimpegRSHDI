@@ -160,6 +160,42 @@
                         <p class="text-xs text-gray-400">{{ $trip->created_at->diffForHumans() }}</p>
                     @endif
                 </div>
+
+                @if($trip->supporting_document_path)
+                    @php
+                        $supportingDocUrl = Storage::disk('public')->url($trip->supporting_document_path);
+                        $supportingDocExtension = strtolower(pathinfo($trip->supporting_document_path, PATHINFO_EXTENSION));
+                        $isSupportingImage = in_array($supportingDocExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true);
+                        $isSupportingPdf = $supportingDocExtension === 'pdf';
+                    @endphp
+                    <div class="sm:col-span-2 pt-2 border-t border-gray-200">
+                        <p class="text-xs text-gray-500 mb-2">Preview Dokumen Pendukung</p>
+                        <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 space-y-3">
+                            <div class="flex items-center justify-between gap-3">
+                                <p class="text-xs sm:text-sm font-medium text-gray-700">{{ basename($trip->supporting_document_path) }}</p>
+                                <a href="{{ $supportingDocUrl }}" target="_blank" rel="noopener"
+                                   class="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-3 py-2 text-xs sm:text-sm font-semibold text-white hover:bg-blue-700 transition">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6m0 0v6m0-6L10 14"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5v14h14v-5"/></svg>
+                                    Buka File
+                                </a>
+                            </div>
+
+                            @if($isSupportingImage)
+                                <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                    <img src="{{ $supportingDocUrl }}" alt="Preview dokumen pendukung" class="w-full object-contain" style="height: clamp(34rem, 85vh, 72rem);">
+                                </div>
+                            @elseif($isSupportingPdf)
+                                <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                    <iframe src="{{ $supportingDocUrl }}#zoom=page-width" class="w-full" style="height: clamp(34rem, 85vh, 72rem);" title="Preview dokumen pendukung PDF"></iframe>
+                                </div>
+                            @else
+                                <div class="rounded-lg border border-dashed border-gray-300 bg-white p-3 text-xs sm:text-sm text-gray-600">
+                                    Jenis file ini belum bisa dipreview langsung. Silakan klik tombol Buka File.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
 

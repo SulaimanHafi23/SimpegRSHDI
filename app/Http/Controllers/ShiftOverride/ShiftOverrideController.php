@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\ShiftOverride;
 
 use App\Http\Controllers\Controller;
-use App\Services\ShiftOverride\ShiftOverrideService;
-use App\Services\Worker\WorkerService;
-use App\Services\Master\ShiftService;
+use App\Models\Shift;
+use App\Models\ShiftOverride;
+use App\Models\Worker;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,11 +14,7 @@ class ShiftOverrideController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct(
-        protected ShiftOverrideService $shiftOverrideService,
-        protected WorkerService $workerService,
-        protected ShiftService $shiftService
-    ) {}
+    public function __construct() {}
 
     public function index(Request $request)
     {
@@ -31,10 +27,26 @@ class ShiftOverrideController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $shiftOverrides = $this->shiftOverrideService->getAll($filters);
-        $workers = $departmentId
-            ? $this->workerService->getByDepartment($departmentId)
-            : $this->workerService->getAllActive();
+        $query = ShiftOverride::with(['worker', 'shift', 'creator']);
+
+        if (!empty($filters['worker_id'])) {
+            $query->where('worker_id', $filters['worker_id']);
+        }
+
+        if (!empty($filters['department_id'])) {
+            $query->whereHas('worker', function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
+        $shiftOverrides = $query->latest('override_date')
+            ->paginate($filters['per_page'])
+            ->appends($filters);
+
+        $workers = Worker::where('status', 'active')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->with(['department'])
+            ->get();
 
         return view('admin.shift-overrides.index', compact('shiftOverrides', 'workers'));
     }
@@ -42,10 +54,11 @@ class ShiftOverrideController extends Controller
     public function create()
     {
         $departmentId = $this->getManagerDepartmentFilter();
-        $workers = $departmentId
-            ? $this->workerService->getByDepartment($departmentId)
-            : $this->workerService->getAllActive();
-        $shifts = $this->shiftService->getActive();
+        $workers = Worker::where('status', 'active')
+            ->when($departmentId, fn($q) => $q->where('department_id', $departmentId))
+            ->with(['department'])
+            ->get();
+        $shifts = Shift::where('is_active', true)->orderBy('name')->get();
 
         return view('admin.shift-overrides.create', compact('workers', 'shifts'));
     }
@@ -62,7 +75,15 @@ class ShiftOverrideController extends Controller
         $validated['created_by'] = Auth::id();
 
         try {
-            $this->shiftOverrideService->create($validated);
+            $existing = ShiftOverride::where('worker_id', $validated['worker_id'])
+                ->where('override_date', $validated['override_date'])
+                ->first();
+
+            if ($existing) {
+                throw new \Exception('Shift override already exists for this date.');
+            }
+
+            ShiftOverride::create($validated);
 
             return redirect()
                 ->route('admin.shift-overrides.index')
@@ -85,13 +106,27 @@ class ShiftOverrideController extends Controller
         ]);
 
         try {
-            $this->shiftOverrideService->bulkCreate(
-                $validated['worker_id'],
-                $validated['shift_id'],
-                $validated['dates'],
-                Auth::id(),
-                $validated['reason'] ?? null
-            );
+            foreach ($validated['dates'] as $date) {
+                try {
+                    $existing = ShiftOverride::where('worker_id', $validated['worker_id'])
+                        ->where('override_date', $date)
+                        ->first();
+
+                    if ($existing) {
+                        continue;
+                    }
+
+                    ShiftOverride::create([
+                        'worker_id' => $validated['worker_id'],
+                        'shift_id' => $validated['shift_id'],
+                        'override_date' => $date,
+                        'reason' => $validated['reason'] ?? null,
+                        'created_by' => Auth::id(),
+                    ]);
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
 
             return redirect()
                 ->route('admin.shift-overrides.index')
@@ -106,7 +141,7 @@ class ShiftOverrideController extends Controller
     public function destroy(string $id)
     {
         try {
-            $this->shiftOverrideService->delete($id);
+            ShiftOverride::findOrFail($id)->delete();
 
             return redirect()
                 ->route('admin.shift-overrides.index')

@@ -46,7 +46,7 @@
                             type="submit"
                             variant="success"
                             icon="fas fa-check"
-                            onclick="return confirm('Setujui pengajuan cuti ini?')">
+                            onclick="event.preventDefault(); showConfirmAlert('Setujui Pengajuan?', 'Setujui pengajuan cuti ini?', () => this.closest('form').submit());">
                             Setujui
                         </x-button>
                     </form>
@@ -117,15 +117,47 @@
                         <p class="text-base text-gray-700 mt-2 leading-relaxed">{{ $leaveRequest->reason }}</p>
                     </div>
 
-                    @if($leaveRequest->attachment)
+                    @php
+                        $attachmentPath = $leaveRequest->attachment_path ?? $leaveRequest->attachment ?? null;
+                        $attachmentUrl = $attachmentPath ? \Illuminate\Support\Facades\Storage::disk('public')->url($attachmentPath) : null;
+                        $attachmentExtension = $attachmentPath ? strtolower(pathinfo($attachmentPath, PATHINFO_EXTENSION)) : null;
+                        $isImageAttachment = in_array($attachmentExtension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'], true);
+                        $isPdfAttachment = $attachmentExtension === 'pdf';
+                    @endphp
+
+                    @if($attachmentUrl)
                         <div class="pt-3 border-t border-gray-200">
-                            <label class="text-sm font-medium text-gray-500 mb-2 block">Lampiran</label>
-                            <a href="{{ asset('storage/' . $leaveRequest->attachment) }}"
-                               target="_blank"
-                               class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition">
-                                <i class="fas fa-paperclip mr-2"></i>
-                                Lihat Lampiran
-                            </a>
+                            <label class="text-sm font-medium text-gray-500 mb-3 block">Berkas Pendukung</label>
+
+                            <div class="space-y-4 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <div>
+                                        <p class="text-sm font-semibold text-gray-900">{{ basename($attachmentPath) }}</p>
+                                        <p class="text-xs text-gray-500">{{ strtoupper($attachmentExtension ?? 'FILE') }}</p>
+                                    </div>
+                                    <a href="{{ $attachmentUrl }}"
+                                       target="_blank"
+                                       class="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition">
+                                        <i class="fas fa-external-link-alt mr-2"></i>
+                                        Buka File
+                                    </a>
+                                </div>
+
+                                @if($isImageAttachment)
+                                    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                        <img src="{{ $attachmentUrl }}" alt="Preview berkas pendukung"
+                                             class="w-full object-contain bg-white" style="height: clamp(42rem, 92vh, 92rem);">
+                                    </div>
+                                @elseif($isPdfAttachment)
+                                    <div class="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                                        <iframe src="{{ $attachmentUrl }}#zoom=220" class="w-full" style="height: clamp(42rem, 92vh, 92rem);" title="Preview PDF berkas pendukung"></iframe>
+                                    </div>
+                                @else
+                                    <div class="rounded-lg border border-dashed border-gray-300 bg-white p-4 text-sm text-gray-600">
+                                        Preview langsung belum tersedia untuk jenis file ini. Gunakan tombol Buka File untuk melihat lampiran.
+                                    </div>
+                                @endif
+                            </div>
                         </div>
                     @endif
                 </div>
@@ -216,7 +248,7 @@
                                 variant="outline"
                                 icon="fas fa-trash"
                                 class="w-full justify-start text-red-600 hover:bg-red-50"
-                                onclick="if(confirm('Yakin ingin menghapus pengajuan ini?')) { document.getElementById('delete-form').submit(); }">
+                                onclick="showDeleteConfirm(() => document.getElementById('delete-form').submit());">
                                 Hapus Pengajuan
                             </x-button>
 

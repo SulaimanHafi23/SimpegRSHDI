@@ -1,23 +1,50 @@
 @props(['route', 'title' => 'Export Data', 'formats' => ['pdf', 'excel', 'csv'], 'showDateRange' => true])
 
 {{-- Export Buttons Inline + Filter Modal --}}
-<div x-data="{ showExportModal: false, exportFormat: '' }">
+<div x-data="{
+    showExportModal: false,
+    exportFormat: '',
+    dateFrom: @js(request('date_from')) || '',
+    dateTo: @js(request('date_to')) || '',
+    get isDateRangeInvalid() {
+        if (!this.dateFrom || !this.dateTo) return false;
+        return this.dateFrom > this.dateTo;
+    },
+    openExport(format) {
+        this.exportFormat = format;
+        this.showExportModal = true;
+    },
+    sanitizeAndSubmit(event) {
+        if (this.isDateRangeInvalid) {
+            event.preventDefault();
+            return;
+        }
+
+        Array.from(event.target.elements).forEach((el) => {
+            if (!el.name || el.disabled) return;
+            const type = (el.type || '').toLowerCase();
+            if (['button', 'submit', 'reset'].includes(type)) return;
+            const isEmpty = el.value === null || String(el.value).trim() === '';
+            if (isEmpty) el.disabled = true;
+        });
+    }
+}">
     {{-- Inline Buttons --}}
     <div class="bg-gray-50 border border-gray-200 rounded-lg p-1 flex items-center gap-1">
         @if(in_array('pdf', $formats))
-        <button @click="exportFormat = 'pdf'; showExportModal = true" type="button"
+        <button @click="openExport('pdf')" type="button"
                 class="inline-flex items-center justify-center px-3 py-2 rounded-md text-xs sm:text-sm font-semibold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 transition">
             <i class="fas fa-file-pdf mr-1.5"></i>PDF
         </button>
         @endif
         @if(in_array('excel', $formats))
-        <button @click="exportFormat = 'excel'; showExportModal = true" type="button"
+        <button @click="openExport('excel')" type="button"
                 class="inline-flex items-center justify-center px-3 py-2 rounded-md text-xs sm:text-sm font-semibold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 transition">
             <i class="fas fa-file-excel mr-1.5"></i>Excel
         </button>
         @endif
         @if(in_array('csv', $formats))
-        <button @click="exportFormat = 'csv'; showExportModal = true" type="button"
+        <button @click="openExport('csv')" type="button"
                 class="inline-flex items-center justify-center px-3 py-2 rounded-md text-xs sm:text-sm font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition">
             <i class="fas fa-file-csv mr-1.5"></i>CSV
         </button>
@@ -77,14 +104,8 @@
                 </div>
 
                 {{-- Form --}}
-                <form action="{{ $route }}" method="GET" class="p-6 space-y-4"
-                      @submit="Array.from($event.target.elements).forEach((el) => {
-                          if (!el.name || el.disabled) return;
-                          const type = (el.type || '').toLowerCase();
-                          if (['button', 'submit', 'reset'].includes(type)) return;
-                          const isEmpty = el.value === null || String(el.value).trim() === '';
-                          if (isEmpty) el.disabled = true;
-                      })">
+                    <form action="{{ $route }}" method="GET" class="p-6 space-y-4"
+                        @submit="sanitizeAndSubmit($event)">
                     <input type="hidden" name="format" :value="exportFormat">
 
                     {{-- Date Range --}}
@@ -93,14 +114,21 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Dari Tanggal</label>
                             <input type="date" name="date_from"
+                                   x-model="dateFrom"
+                                   :max="dateTo || null"
                                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Sampai Tanggal</label>
                             <input type="date" name="date_to"
+                                   x-model="dateTo"
+                                   :min="dateFrom || null"
                                    class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         </div>
                     </div>
+                    <p x-show="isDateRangeInvalid" x-cloak class="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        Rentang tanggal tidak valid. Tanggal mulai tidak boleh lebih besar dari tanggal selesai.
+                    </p>
                     @endif
 
                     {{-- Extra Filters (slot) --}}
@@ -121,12 +149,16 @@
                             Batal
                         </button>
                         <button type="submit"
+                                :disabled="isDateRangeInvalid"
                                 class="flex-1 px-4 py-2.5 font-semibold rounded-lg transition text-sm text-white shadow-sm"
-                                :class="{
-                                    'bg-red-600 hover:bg-red-700': exportFormat === 'pdf',
-                                    'bg-green-600 hover:bg-green-700': exportFormat === 'excel',
-                                    'bg-blue-600 hover:bg-blue-700': exportFormat === 'csv'
-                                }">
+                                :class="isDateRangeInvalid
+                                    ? 'bg-gray-300 cursor-not-allowed'
+                                    : {
+                                        'bg-red-600 hover:bg-red-700': exportFormat === 'pdf',
+                                        'bg-green-600 hover:bg-green-700': exportFormat === 'excel',
+                                        'bg-blue-600 hover:bg-blue-700': exportFormat === 'csv'
+                                    }"
+                                >
                             <i class="fas fa-download mr-2"></i>
                             Export <span x-text="exportFormat.toUpperCase()"></span>
                         </button>

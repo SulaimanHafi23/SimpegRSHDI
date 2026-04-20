@@ -154,23 +154,32 @@
 
                 <div class="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
                     <p class="font-semibold mb-1">Info Check-in Admin</p>
-                    <p>Check-in dari halaman ini akan tercatat sebagai check-in oleh admin. Koordinat akan otomatis mengikuti lokasi yang dipilih.</p>
+                    <p>Check-in dari halaman ini akan tercatat sebagai check-in oleh admin.</p>
                 </div>
 
-                <x-form.select
-                    name="location_id"
-                    label="Lokasi Absensi (Otomatis)"
-                    disabled>
-                    @php
-                        $singleLocation = $locations->first();
-                        $defaultLocationId = old('location_id', $singleLocation?->id);
-                    @endphp
-                    @foreach($locations as $location)
-                        <option value="{{ $location->id }}" {{ $defaultLocationId == $location->id ? 'selected' : '' }}>
-                            {{ $location->name }}
-                        </option>
-                    @endforeach
-                </x-form.select>
+                <div class="rounded-lg border border-purple-200 bg-purple-50 p-3 text-sm text-purple-900">
+                    <p class="font-semibold mb-1">Admin Pelaksana</p>
+                    <p>
+                        Check-in ini akan dilakukan oleh
+                        <strong>{{ auth()->user()->name }}</strong>.
+                    </p>
+                </div>
+
+                <div>
+                    <label for="admin_checkin_note" class="block text-sm font-medium text-gray-700 mb-1">
+                        Keterangan Admin <span class="text-red-500">*</span>
+                    </label>
+                    <textarea
+                        id="admin_checkin_note"
+                        name="admin_checkin_note"
+                        rows="3"
+                        required
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('admin_checkin_note') border-red-500 @enderror"
+                        placeholder="Contoh: Check-in dilakukan oleh admin karena perangkat pegawai mengalami kendala dan sudah dikonfirmasi.">{{ old('admin_checkin_note') }}</textarea>
+                    @error('admin_checkin_note')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
 
                 <x-form.file
                     name="photo"
@@ -181,31 +190,6 @@
                         Format: JPG, JPEG, PNG. Maksimal 2MB
                     </x-slot>
                 </x-form.file>
-
-                {{-- Get Location Button --}}
-                <div>
-                    <x-button
-                        type="button"
-                        variant="secondary"
-                        onclick="getCurrentLocation()"
-                        class="w-full"
-                        id="get-location-btn">
-                        <i class="fas fa-map-marker-alt mr-2"></i>
-                        Dapatkan Lokasi
-                    </x-button>
-                    <p class="text-xs text-gray-500 mt-2 text-center" id="location-status"></p>
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                        <p class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Latitude/Longitude Lokasi Terpilih</p>
-                        <p id="selected-coordinates" class="mt-1 text-sm font-semibold text-gray-900">-</p>
-                    </div>
-                    <div class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
-                        <p class="text-[11px] font-medium uppercase tracking-wide text-gray-500">Latitude/Longitude Perangkat</p>
-                        <p id="current-coordinates" class="mt-1 text-sm font-semibold text-gray-900">-</p>
-                    </div>
-                </div>
 
                 {{-- Tombol Submit --}}
                 <div class="flex gap-3 pt-4">
@@ -228,290 +212,26 @@
         </x-card>
     </div>
 
-    {{-- Location Map --}}
-    <x-card title="Peta Lokasi Terpilih">
-        <p class="text-sm text-gray-600 mb-3">Peta menampilkan area lokasi yang dipilih. Gunakan tombol "Dapatkan Lokasi" untuk melihat posisi perangkat admin.</p>
-        <div id="map" class="w-full h-96 rounded-lg"></div>
-    </x-card>
+    {{-- Tidak ada lokasi yang ditampilkan pada form ini --}}
 </div>
 
 @push('scripts')
-{{-- Leaflet CSS & JS --}}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
-    // Location data from controller
-    const locationsData = @json($locationsData);
-    let map;
-    let selectedMarker;
-    let selectedCircle;
-    let currentLocationMarker;
-
-    function formatCoordinates(lat, lng) {
-        return `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
-    }
-
-    // World Time tracking
-    let serverTime = null;
-    let lastSyncTime = null;
-
-    // Fetch waktu dari World Time API (online time)
-    async function fetchWorldTime() {
-        try {
-            const response = await fetch('{{ route('api.world-time') }}');
-            const data = await response.json();
-
-            if (data.success) {
-                serverTime = new Date(data.datetime);
-                lastSyncTime = Date.now();
-                console.log('Time synced from:', data.source || 'unknown');
-                console.log('Server datetime:', data.datetime);
-                console.log('Parsed time:', serverTime.toLocaleString('id-ID', { timeZone: 'Asia/Makassar' }));
-
-                if (data.fallback) {
-                    console.warn('Using fallback server time');
-                }
-            }
-        } catch (error) {
-            console.error('Failed to fetch world time:', error);
-            // Fallback to local time if API fails
-            serverTime = new Date();
-            lastSyncTime = Date.now();
-        }
-    }
-
-    // Update display waktu (setiap detik)
     function updateCurrentTime() {
-        if (serverTime && lastSyncTime) {
-            // Calculate time passed since last sync
-            const timePassed = Date.now() - lastSyncTime;
-            const currentTime = new Date(serverTime.getTime() + timePassed);
-
-            const timeStr = currentTime.toLocaleTimeString('id-ID', {
-                timeZone: 'Asia/Makassar',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-
-            document.getElementById('current-time').textContent = timeStr + ' WITA';
-        } else {
-            document.getElementById('current-time').textContent = 'Memuat...';
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        const currentTime = document.getElementById('current-time');
+        if (currentTime) {
+            currentTime.textContent = timeString;
         }
     }
 
-    // Initialize time
-    fetchWorldTime(); // Initial fetch
-    setInterval(updateCurrentTime, 1000); // Update display every second
-    setInterval(fetchWorldTime, 30000); // Re-sync every 30 seconds
     updateCurrentTime();
-
-    // Initialize map
-    function initMap() {
-        map = L.map('map').setView([-2.5489, 118.0149], 5);
-
-        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
-            maxZoom: 19
-        });
-
-        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
-        });
-
-        satelliteLayer.addTo(map);
-        L.control.layers(
-            {
-                'Satelit': satelliteLayer,
-                'Peta Jalan': streetLayer,
-            },
-            {},
-            { collapsed: false }
-        ).addTo(map);
-
-        renderSelectedLocation();
-    }
-
-    function renderSelectedLocation() {
-        const locationId = document.querySelector('select[name="location_id"]').value;
-        const selectedCoordinatesEl = document.getElementById('selected-coordinates');
-
-        if (selectedMarker) {
-            selectedMarker.remove();
-            selectedMarker = null;
-        }
-        if (selectedCircle) {
-            selectedCircle.remove();
-            selectedCircle = null;
-        }
-
-        if (!locationId || !locationsData[locationId]) {
-            if (selectedCoordinatesEl) {
-                selectedCoordinatesEl.textContent = '-';
-            }
-            return;
-        }
-
-        const location = locationsData[locationId];
-        const latLng = [location.latitude, location.longitude];
-
-        selectedMarker = L.marker(latLng).addTo(map);
-        selectedMarker.bindPopup(`<strong>${location.name}</strong><br><small>Titik lokasi terpilih</small>`);
-
-        selectedCircle = L.circle(latLng, {
-            color: '#2563EB',
-            fillColor: '#60A5FA',
-            fillOpacity: 0.2,
-            radius: location.radius
-        }).addTo(map);
-
-        selectedCircle.bindPopup(`<strong>${location.name}</strong><br><small>Radius: ${location.radius}m</small>`);
-        map.fitBounds(selectedCircle.getBounds(), { padding: [24, 24] });
-
-        if (selectedCoordinatesEl) {
-            selectedCoordinatesEl.textContent = formatCoordinates(location.latitude, location.longitude);
-        }
-    }
-
-    // Get current location
-    function getCurrentLocation() {
-        if (!navigator.geolocation) {
-            alert('Geolocation tidak didukung oleh browser Anda');
-            return;
-        }
-
-        const button = document.getElementById('get-location-btn');
-        const statusEl = document.getElementById('location-status');
-        const currentCoordinatesEl = document.getElementById('current-coordinates');
-
-        if (button) {
-            button.disabled = true;
-            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Mengambil lokasi...';
-        }
-        if (statusEl) {
-            statusEl.textContent = 'Mengambil lokasi GPS...';
-            statusEl.className = 'text-xs text-blue-600 mt-2 text-center';
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
-
-                // Update map
-                if (currentLocationMarker) {
-                    currentLocationMarker.remove();
-                }
-
-                currentLocationMarker = L.marker([lat, lng]).addTo(map);
-                currentLocationMarker.bindPopup(`Lokasi perangkat admin<br><small>Akurasi: ±${Math.round(accuracy)}m</small>`).openPopup();
-                map.setView([lat, lng], 16);
-
-                // Validate location
-                validateLocation(lat, lng);
-
-                if (button) {
-                    button.disabled = false;
-                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Dapatkan Lokasi';
-                }
-                if (statusEl) {
-                    statusEl.textContent = `Lokasi ditemukan (Akurasi: ±${Math.round(accuracy)}m)`;
-                    statusEl.className = 'text-xs text-green-600 mt-2 text-center';
-                }
-                if (currentCoordinatesEl) {
-                    currentCoordinatesEl.textContent = formatCoordinates(lat, lng);
-                }
-            },
-            function(error) {
-                let errorMessage = 'Gagal mendapatkan lokasi: ';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage += 'Izin lokasi ditolak';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage += 'Informasi lokasi tidak tersedia';
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage += 'Waktu permintaan habis';
-                        break;
-                    default:
-                        errorMessage += 'Terjadi kesalahan';
-                }
-
-                if (button) {
-                    button.disabled = false;
-                    button.innerHTML = '<i class="fas fa-map-marker-alt mr-2"></i>Dapatkan Lokasi';
-                }
-                if (statusEl) {
-                    statusEl.textContent = errorMessage;
-                    statusEl.className = 'text-xs text-red-600 mt-2 text-center';
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            }
-        );
-    }
-
-    // Validate location against selected location's geofence
-    function validateLocation(lat, lng) {
-        const locationId = document.querySelector('select[name="location_id"]').value;
-        if (!locationId) return;
-
-        const location = locationsData[locationId];
-        if (!location || !location.enforce_geofence) return;
-
-        const distance = calculateDistance(
-            lat, lng,
-            location.latitude, location.longitude
-        );
-
-        const statusEl = document.getElementById('location-status');
-        if (distance > location.radius) {
-            if (statusEl) {
-                statusEl.textContent = `⚠️ Anda berada di luar radius lokasi ${location.name} (${Math.round(distance)}m dari lokasi)`;
-                statusEl.className = 'text-xs text-yellow-600 mt-2 text-center';
-            }
-        } else {
-            if (statusEl) {
-                statusEl.textContent = `✓ Anda berada dalam radius lokasi ${location.name}`;
-                statusEl.className = 'text-xs text-green-600 mt-2 text-center';
-            }
-        }
-    }
-
-    // Calculate distance between two coordinates (Haversine formula)
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371e3; // Earth's radius in meters
-        const φ1 = lat1 * Math.PI / 180;
-        const φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180;
-        const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                Math.cos(φ1) * Math.cos(φ2) *
-                Math.sin(Δλ/2) * Math.sin(Δλ/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-
-        return R * c;
-    }
-
-    // Initialize map when document is ready
-    document.addEventListener('DOMContentLoaded', function() {
-        initMap();
-        const locationSelect = document.querySelector('select[name="location_id"]');
-        if (locationSelect) {
-            locationSelect.addEventListener('change', renderSelectedLocation);
-            if (locationSelect.value) {
-                locationSelect.dispatchEvent(new window.Event('change'));
-            }
-        }
-    });
+    setInterval(updateCurrentTime, 1000);
 </script>
 @endpush
 @endsection

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Approval;
 
 use App\Http\Controllers\Controller;
 use App\Models\BusinessTrip;
+use App\Models\Notification;
 use App\Models\Worker;
-use App\Services\Notification\NotificationService;
 use App\Traits\DepartmentFilterable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +14,8 @@ class BusinessTripApprovalController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct(
-        protected NotificationService $notificationService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         $this->middleware('role:Manager|HR|Super Admin');
     }
@@ -105,10 +104,8 @@ class BusinessTripApprovalController extends Controller
         return view('approvals.business-trips.show', compact('trip'));
     }
 
-    public function approve(Request $request, string $id)
+    public function approve(string $id)
     {
-        $request->validate(['approval_notes' => 'nullable|string|max:1000']);
-
         $trip = BusinessTrip::findOrFail($id);
 
         if (empty($trip->supporting_document_path)) {
@@ -128,7 +125,7 @@ class BusinessTripApprovalController extends Controller
         ]);
 
         if ($trip->worker?->user) {
-            $this->notificationService->notifyBusinessTripApproved($trip->worker->user->id, [
+            $this->notifyBusinessTripApproved($trip->worker->user->id, [
                 'id' => $trip->id,
                 'destination' => $trip->destination,
             ]);
@@ -156,7 +153,7 @@ class BusinessTripApprovalController extends Controller
         ]);
 
         if ($trip->worker?->user) {
-            $this->notificationService->notifyBusinessTripRejected($trip->worker->user->id, [
+            $this->notifyBusinessTripRejected($trip->worker->user->id, [
                 'id' => $trip->id,
                 'destination' => $trip->destination,
             ], $request->rejection_reason);
@@ -269,5 +266,52 @@ class BusinessTripApprovalController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan saat export: ' . $e->getMessage());
         }
+    }
+
+    private function notifyBusinessTripApproved(string $userId, array $tripData): void
+    {
+        Notification::create([
+            'user_id' => $userId,
+            'notifiable_type' => \App\Models\User::class,
+            'notifiable_id' => $userId,
+            'type' => 'business_trip_approved',
+            'title' => 'Perjalanan Dinas Disetujui',
+            'message' => sprintf(
+                'Permohonan perjalanan dinas ke %s telah disetujui.',
+                $tripData['destination']
+            ),
+            'data' => [
+                'business_trip_id' => $tripData['id'],
+                'type' => 'business_trip',
+                'action' => 'approved',
+            ],
+        ]);
+    }
+
+    private function notifyBusinessTripRejected(string $userId, array $tripData, ?string $reason = null): void
+    {
+        $message = sprintf(
+            'Permohonan perjalanan dinas ke %s telah ditolak.',
+            $tripData['destination']
+        );
+
+        if ($reason) {
+            $message .= ' Alasan: ' . $reason;
+        }
+
+        Notification::create([
+            'user_id' => $userId,
+            'notifiable_type' => \App\Models\User::class,
+            'notifiable_id' => $userId,
+            'type' => 'business_trip_rejected',
+            'title' => 'Perjalanan Dinas Ditolak',
+            'message' => $message,
+            'data' => [
+                'business_trip_id' => $tripData['id'],
+                'type' => 'business_trip',
+                'action' => 'rejected',
+                'reason' => $reason,
+            ],
+        ]);
     }
 }

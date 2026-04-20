@@ -546,13 +546,13 @@
             const maxSize = parseInt(selectedOption.getAttribute('data-max-size') || 5120) * 1024;
             const ext = file.name.split('.').pop().toLowerCase();
             if (!allowedFormats.map(f => f.trim()).includes(ext)) {
-                alert('Format file tidak sesuai dengan jenis dokumen yang dipilih!');
+                window.showWarningAlert('Validasi', 'Format file tidak sesuai dengan jenis dokumen yang dipilih!');
                 this.value = '';
                 filePreview.classList.add('hidden');
                 return;
             }
             if (file.size > maxSize) {
-                alert('Ukuran file terlalu besar! Maksimal ' + Math.round(maxSize/1024/1024) + 'MB.');
+                window.showWarningAlert('Validasi', 'Ukuran file terlalu besar! Maksimal ' + Math.round(maxSize / 1024 / 1024) + 'MB.');
                 this.value = '';
                 filePreview.classList.add('hidden');
                 return;
@@ -566,8 +566,8 @@
     });
 
     document.querySelector('form').addEventListener('submit', function(e) {
-        if (documentTypeSelect.value === '') { e.preventDefault(); alert('Pilih jenis dokumen terlebih dahulu!'); return; }
-        if (fileInput.files.length === 0) { e.preventDefault(); alert('Pilih file dokumen yang akan diupload!'); return; }
+        if (documentTypeSelect.value === '') { e.preventDefault(); window.showWarningAlert('Validasi', 'Pilih jenis dokumen terlebih dahulu!'); return; }
+        if (fileInput.files.length === 0) { e.preventDefault(); window.showWarningAlert('Validasi', 'Pilih file dokumen yang akan diupload!'); return; }
     });
 })();
 </script>

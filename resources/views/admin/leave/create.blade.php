@@ -10,18 +10,6 @@
         description="Lengkapi form di bawah untuk mengajukan cuti"
         icon="fas fa-calendar-plus" />
 
-    {{-- Alert Messages --}}
-    @if($errors->any())
-        <x-alert type="danger" dismissible>
-            <strong>Terdapat kesalahan:</strong>
-            <ul class="mt-2 ml-4 list-disc">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </x-alert>
-    @endif
-
     {{-- Form --}}
     <form action="{{ route('admin.leave.store') }}" method="POST" enctype="multipart/form-data" x-data="leaveForm()">
         @csrf

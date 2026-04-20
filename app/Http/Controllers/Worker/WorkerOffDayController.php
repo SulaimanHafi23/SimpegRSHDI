@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Worker;
 
 use App\Http\Controllers\Controller;
 use App\Models\Worker;
-use App\Services\WorkerOffDay\WorkerOffDayService;
-use App\DTOs\WorkerOffDay\WorkerOffDayDTO;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class WorkerOffDayController extends Controller
 {
-    public function __construct(
-        protected WorkerOffDayService $offDayService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         $this->middleware('permission:worker.manage');
     }
@@ -62,10 +61,15 @@ class WorkerOffDayController extends Controller
 
         $worker = Worker::findOrFail($workerId);
         $validated['worker_id'] = $workerId;
-        $validated['created_by'] = auth()->id();
+        $validated['created_by'] = Auth::id();
 
-        $dto = WorkerOffDayDTO::fromRequest($validated);
-        $pattern = $worker->offDays()->create($dto->toArray());
+        $pattern = $worker->offDays()->create([
+            'day_of_week' => $validated['day_of_week'],
+            'effective_from' => $validated['effective_from'],
+            'effective_until' => $validated['effective_until'] ?? null,
+            'reason' => $validated['reason'] ?? null,
+            'created_by' => $validated['created_by'],
+        ]);
 
         return response()->json([
             'success' => true,
@@ -99,8 +103,8 @@ class WorkerOffDayController extends Controller
         ]);
 
         $worker = Worker::findOrFail($workerId);
-        $isOffDay = $this->offDayService->isOffDay($worker, $validated['date']);
-        $info = $this->offDayService->getOffDayInfo($worker, $validated['date']);
+        $isOffDay = $worker->isOffDay(Carbon::parse($validated['date']));
+        $info = $this->getOffDayInfo($worker, $validated['date']);
 
         return response()->json([
             'success' => true,
@@ -120,11 +124,54 @@ class WorkerOffDayController extends Controller
         ]);
 
         $worker = Worker::findOrFail($workerId);
-        $offDays = $this->offDayService->getOffDaysInRange($worker, $validated['from'], $validated['to']);
+        $offDays = [];
+        $start = Carbon::parse($validated['from']);
+        $end = Carbon::parse($validated['to']);
+
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            if ($worker->isOffDay($date)) {
+                $offDays[] = $date->format('Y-m-d');
+            }
+        }
 
         return response()->json([
             'success' => true,
             'off_days' => $offDays,
         ]);
+    }
+
+    private function getOffDayInfo(Worker $worker, string $date): ?array
+    {
+        $dateObj = Carbon::parse($date);
+        $dateStr = $dateObj->format('Y-m-d');
+
+        $offDayPattern = $worker->offDays()
+            ->where('effective_from', '<=', $dateStr)
+            ->where(function ($query) use ($dateStr) {
+                $query->whereNull('effective_until')
+                    ->orWhere('effective_until', '>=', $dateStr);
+            })
+            ->orderByDesc('effective_from')
+            ->get()
+            ->first(function ($item) use ($dateObj) {
+                return is_array($item->day_of_week) && in_array($dateObj->dayOfWeek, $item->day_of_week, true);
+            });
+
+        if (!$offDayPattern) {
+            return null;
+        }
+
+        $isSingleDay = $offDayPattern->effective_until
+            && $offDayPattern->effective_from
+            && $offDayPattern->effective_from->format('Y-m-d') === $offDayPattern->effective_until->format('Y-m-d');
+
+        return [
+            'type' => $isSingleDay ? 'single' : 'recurring',
+            'date' => $dateObj->format('Y-m-d'),
+            'pattern' => $offDayPattern->day_of_week,
+            'reason' => $offDayPattern->reason,
+            'effective_from' => $offDayPattern->effective_from->format('d M Y'),
+            'effective_until' => $offDayPattern->effective_until?->format('d M Y') ?? 'Tanpa batas',
+        ];
     }
 }

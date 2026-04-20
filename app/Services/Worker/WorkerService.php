@@ -220,8 +220,9 @@ class WorkerService
 
         // Try to process with Intervention Image if available; otherwise fallback to storing original file
         try {
-            if (class_exists('\\Intervention\\Image\\ImageManagerStatic')) {
-                $img = Image::make($photo->getRealPath());
+            $imageClass = '\\Intervention\\Image\\ImageManagerStatic';
+            if (class_exists($imageClass)) {
+                $img = $imageClass::make($photo->getRealPath());
                 $img->orientate();
 
                 // Resize if wider than 1200px, keep aspect ratio

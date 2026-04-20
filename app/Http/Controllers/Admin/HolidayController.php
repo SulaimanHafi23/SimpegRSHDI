@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Holiday;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class HolidayController extends Controller
 {
@@ -173,10 +175,49 @@ class HolidayController extends Controller
     /**
      * Show auto-generate form
      */
-    public function autoGenerate()
+    public function autoGenerate(Request $request)
     {
+        $validated = $request->validate([
+            'year' => 'nullable|integer|min:2000|max:2100',
+        ]);
+
+        $selectedYear = $validated['year'] ?? now()->year;
+        $previewHolidays = null;
+        $fetchError = null;
+
+        if ($request->filled('year')) {
+            try {
+                $holidays = $this->getIndonesianNationalHolidays($selectedYear);
+
+                $existingDates = Holiday::whereIn('date', collect($holidays)->pluck('date')->unique()->values())
+                    ->pluck('date')
+                    ->map(fn ($date) => \Carbon\Carbon::parse($date)->toDateString())
+                    ->flip();
+
+                $previewHolidays = collect($holidays)
+                    ->map(function (array $holiday) use ($existingDates) {
+                        $holiday['already_exists'] = $existingDates->has($holiday['date']);
+                        return $holiday;
+                    })
+                    ->values();
+            } catch (\Throwable $e) {
+                Log::error('Failed to fetch holiday preview from API.', [
+                    'year' => $selectedYear,
+                    'endpoint' => 'https://libur.deno.dev/api',
+                    'message' => $e->getMessage(),
+                ]);
+                $fetchError = 'Gagal mengambil data libur dari API. Silakan coba lagi.';
+            }
+        }
+
         $availableYears = $this->getAvailableYearsForGeneration();
-        return view('admin.holidays.auto-generate', compact('availableYears'));
+
+        return view('admin.holidays.auto-generate', compact(
+            'availableYears',
+            'selectedYear',
+            'previewHolidays',
+            'fetchError'
+        ));
     }
 
     /**
@@ -185,11 +226,22 @@ class HolidayController extends Controller
     public function storeAutoGenerate(Request $request)
     {
         $validated = $request->validate([
-            'year' => 'required|integer|in:2025,2026',
+            'year' => 'required|integer|min:2000|max:2100',
         ]);
 
         $year = $validated['year'];
-        $holidays = $this->getIndonesianNationalHolidays($year);
+        try {
+            $holidays = $this->getIndonesianNationalHolidays($year);
+        } catch (\Throwable $e) {
+            Log::error('Failed to fetch holidays before storing auto-generated data.', [
+                'year' => $year,
+                'endpoint' => 'https://libur.deno.dev/api',
+                'message' => $e->getMessage(),
+            ]);
+
+            return redirect()->route('admin.holidays.auto-generate', ['year' => $year])
+                ->with('error', 'Gagal sinkronisasi data libur dari API. Silakan coba lagi beberapa saat.');
+        }
 
         $count = 0;
         $skipped = 0;
@@ -223,56 +275,49 @@ class HolidayController extends Controller
     /**
      * Get Indonesian national holidays for a specific year
      */
-    private function getIndonesianNationalHolidays($year)
+    private function getIndonesianNationalHolidays(int $year): array
     {
-        $holidays = [];
+        $response = Http::timeout(20)
+            ->retry(3, 500)
+            ->acceptJson()
+            ->get('https://libur.deno.dev/api', ['year' => $year]);
 
-        if ($year == 2025) {
-            $holidays = [
-                ['name' => 'Tahun Baru Masehi', 'date' => '2025-01-01', 'description' => 'Hari Raya Tahun Baru 2025'],
-                ['name' => 'Tahun Baru Imlek 2576 Kongzili', 'date' => '2025-01-29', 'description' => 'Tahun Baru China/Imlek'],
-                ['name' => 'Isra Mi\'raj Nabi Muhammad SAW', 'date' => '2025-01-27', 'description' => 'Peringatan Isra Mi\'raj'],
-                ['name' => 'Hari Raya Nyepi Tahun Baru Saka 1947', 'date' => '2025-03-29', 'description' => 'Tahun Baru Saka'],
-                ['name' => 'Wafat Isa Al-Masih', 'date' => '2025-04-18', 'description' => 'Jumat Agung'],
-                ['name' => 'Hari Buruh Internasional', 'date' => '2025-05-01', 'description' => 'Hari Buruh Sedunia'],
-                ['name' => 'Kenaikan Isa Al-Masih', 'date' => '2025-05-29', 'description' => 'Kenaikan Yesus Kristus'],
-                ['name' => 'Hari Raya Idulfitri 1446 H', 'date' => '2025-03-31', 'description' => 'Hari Raya Idul Fitri Hari Pertama'],
-                ['name' => 'Hari Raya Idulfitri 1446 H', 'date' => '2025-04-01', 'description' => 'Hari Raya Idul Fitri Hari Kedua'],
-                ['name' => 'Cuti Bersama Idulfitri', 'date' => '2025-03-28', 'description' => 'Cuti Bersama'],
-                ['name' => 'Cuti Bersama Idulfitri', 'date' => '2025-04-02', 'description' => 'Cuti Bersama'],
-                ['name' => 'Cuti Bersama Idulfitri', 'date' => '2025-04-03', 'description' => 'Cuti Bersama'],
-                ['name' => 'Cuti Bersama Idulfitri', 'date' => '2025-04-04', 'description' => 'Cuti Bersama'],
-                ['name' => 'Hari Lahir Pancasila', 'date' => '2025-06-01', 'description' => 'Hari Kesaktian Pancasila'],
-                ['name' => 'Hari Raya Iduladha 1446 H', 'date' => '2025-06-07', 'description' => 'Hari Raya Idul Adha'],
-                ['name' => 'Tahun Baru Islam 1447 H', 'date' => '2025-06-27', 'description' => 'Tahun Baru Hijriyah'],
-                ['name' => 'Hari Kemerdekaan RI', 'date' => '2025-08-17', 'description' => 'HUT Kemerdekaan Indonesia ke-80'],
-                ['name' => 'Maulid Nabi Muhammad SAW', 'date' => '2025-09-05', 'description' => 'Peringatan Maulid Nabi'],
-                ['name' => 'Hari Raya Natal', 'date' => '2025-12-25', 'description' => 'Hari Raya Natal'],
-                ['name' => 'Cuti Bersama Natal', 'date' => '2025-12-26', 'description' => 'Cuti Bersama'],
-            ];
-        } elseif ($year == 2026) {
-            $holidays = [
-                ['name' => 'Tahun Baru Masehi', 'date' => '2026-01-01', 'description' => 'Hari Raya Tahun Baru 2026'],
-                ['name' => 'Isra Mi\'raj Nabi Muhammad SAW', 'date' => '2026-01-16', 'description' => 'Peringatan Isra Mi\'raj'],
-                ['name' => 'Tahun Baru Imlek 2577 Kongzili', 'date' => '2026-02-17', 'description' => 'Tahun Baru China/Imlek'],
-                ['name' => 'Hari Raya Nyepi Tahun Baru Saka 1948', 'date' => '2026-03-19', 'description' => 'Tahun Baru Saka'],
-                ['name' => 'Hari Raya Idulfitri 1447 H', 'date' => '2026-03-20', 'description' => 'Hari Raya Idul Fitri Hari Pertama'],
-                ['name' => 'Hari Raya Idulfitri 1447 H', 'date' => '2026-03-21', 'description' => 'Hari Raya Idul Fitri Hari Kedua'],
-                ['name' => 'Cuti Bersama Idulfitri', 'date' => '2026-03-23', 'description' => 'Cuti Bersama'],
-                ['name' => 'Cuti Bersama Idulfitri', 'date' => '2026-03-24', 'description' => 'Cuti Bersama'],
-                ['name' => 'Wafat Isa Al-Masih', 'date' => '2026-04-03', 'description' => 'Jumat Agung'],
-                ['name' => 'Hari Buruh Internasional', 'date' => '2026-05-01', 'description' => 'Hari Buruh Sedunia'],
-                ['name' => 'Kenaikan Isa Al-Masih', 'date' => '2026-05-14', 'description' => 'Kenaikan Yesus Kristus'],
-                ['name' => 'Hari Raya Iduladha 1447 H', 'date' => '2026-05-27', 'description' => 'Hari Raya Idul Adha'],
-                ['name' => 'Hari Lahir Pancasila', 'date' => '2026-06-01', 'description' => 'Hari Kesaktian Pancasila'],
-                ['name' => 'Tahun Baru Islam 1448 H', 'date' => '2026-06-16', 'description' => 'Tahun Baru Hijriyah'],
-                ['name' => 'Hari Kemerdekaan RI', 'date' => '2026-08-17', 'description' => 'HUT Kemerdekaan Indonesia ke-81'],
-                ['name' => 'Maulid Nabi Muhammad SAW', 'date' => '2026-08-25', 'description' => 'Peringatan Maulid Nabi'],
-                ['name' => 'Hari Raya Natal', 'date' => '2026-12-25', 'description' => 'Hari Raya Natal'],
-            ];
+        if (! $response->successful()) {
+            Log::warning('Holiday API responded with non-success status.', [
+                'year' => $year,
+                'endpoint' => 'https://libur.deno.dev/api',
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            throw new \RuntimeException('Failed to fetch holidays from API.');
         }
 
-        return $holidays;
+        $payload = $response->json();
+        if (! is_array($payload)) {
+            Log::warning('Holiday API payload is not an array.', [
+                'year' => $year,
+                'endpoint' => 'https://libur.deno.dev/api',
+                'payload_type' => gettype($payload),
+            ]);
+            throw new \RuntimeException('Unexpected API response format.');
+        }
+
+        return collect($payload)
+            ->filter(fn ($item) => is_array($item) && ! empty($item['date']) && ! empty($item['name']))
+            ->map(function (array $item) use ($year) {
+                $date = \Carbon\Carbon::parse($item['date'])->toDateString();
+                $name = trim((string) preg_replace('/\s+/', ' ', (string) $item['name']));
+
+                return [
+                    'name' => $name,
+                    'date' => $date,
+                    'description' => "Hari Libur Pada Tahun {$year}",
+                ];
+            })
+            ->unique('date')
+            ->sortBy('date')
+            ->values()
+            ->all();
     }
 
     /**
@@ -280,9 +325,11 @@ class HolidayController extends Controller
      */
     private function getAvailableYearsForGeneration()
     {
-        return [
-            ['year' => 2025, 'count' => count($this->getIndonesianNationalHolidays(2025))],
-            ['year' => 2026, 'count' => count($this->getIndonesianNationalHolidays(2026))],
-        ];
+        $currentYear = now()->year;
+
+        return collect(range($currentYear - 2, $currentYear + 5))
+            ->map(fn ($year) => ['year' => $year])
+            ->values()
+            ->all();
     }
 }

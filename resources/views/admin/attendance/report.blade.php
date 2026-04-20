@@ -10,7 +10,7 @@
         icon="fas fa-chart-bar">
         <x-slot:actions>
             {{-- Export placeholder --}}
-            <x-button variant="secondary" icon="fas fa-file-export" onclick="alert('Export belum tersedia')">Export</x-button>
+            <x-button variant="secondary" icon="fas fa-file-export" onclick="window.showInfoAlert('Informasi', 'Fitur export belum tersedia')">Export</x-button>
         </x-slot:actions>
     </x-page-header>
 

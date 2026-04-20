@@ -1,119 +1,172 @@
-{{-- Sweet Alert helper functions (no automatic flash popups) --}}
+{{-- Sweet Alert helper functions + automatic flash popups --}}
 <script>
-// Helper functions for Sweet Alert
+const flashToast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 4500,
+    timerProgressBar: true,
+    customClass: {
+        popup: 'colored-toast'
+    }
+});
+
+const modalDefaults = {
+    allowOutsideClick: false,
+    reverseButtons: true,
+    buttonsStyling: true,
+    confirmButtonColor: '#2563eb',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Ya',
+    cancelButtonText: 'Batal'
+};
+
 window.showSuccessAlert = function(title, message) {
-    Swal.fire({
+    flashToast.fire({
         icon: 'success',
         title: title || 'Berhasil!',
-        text: message,
-        timer: 5000,
-        timerProgressBar: true,
-        showConfirmButton: false,
-        toast: true,
-        position: 'top-end'
+        text: message || ''
     });
 };
 
 window.showErrorAlert = function(title, message) {
-    Swal.fire({
+    flashToast.fire({
         icon: 'error',
-        title: title || 'Error!',
-        text: message,
-        showConfirmButton: true,
-        confirmButtonText: 'OK',
-        confirmButtonColor: '#ef4444'
+        title: title || 'Gagal!',
+        text: message || ''
+    });
+};
+
+window.showWarningAlert = function(title, message) {
+    flashToast.fire({
+        icon: 'warning',
+        title: title || 'Peringatan',
+        text: message || ''
+    });
+};
+
+window.showInfoAlert = function(title, message) {
+    flashToast.fire({
+        icon: 'info',
+        title: title || 'Informasi',
+        text: message || ''
     });
 };
 
 window.showConfirmAlert = function(title, message, confirmCallback) {
     Swal.fire({
+        ...modalDefaults,
         title: title || 'Konfirmasi',
         text: message,
         icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Ya',
-        cancelButtonText: 'Batal'
+        showCancelButton: true
     }).then((result) => {
         if (result.isConfirmed && confirmCallback) {
             confirmCallback();
         }
+    });
+};
+
+window.showConfirmDialog = function(options = {}) {
+    return Swal.fire({
+        ...modalDefaults,
+        ...options
     });
 };
 
 window.showDeleteConfirm = function(confirmCallback) {
     Swal.fire({
+        ...modalDefaults,
         title: 'Hapus Data?',
-        text: "Data yang dihapus tidak dapat dikembalikan!",
+        text: 'Data yang dihapus tidak dapat dikembalikan!',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal'
+        confirmButtonColor: '#dc2626',
+        confirmButtonText: 'Ya, Hapus!'
     }).then((result) => {
         if (result.isConfirmed && confirmCallback) {
             confirmCallback();
         }
     });
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+    @if(session('success'))
+        window.showSuccessAlert('Berhasil', @json(session('success')));
+    @endif
+
+    @if(session('error'))
+        window.showErrorAlert('Gagal', @json(session('error')));
+    @endif
+
+    @if(session('warning'))
+        window.showWarningAlert('Peringatan', @json(session('warning')));
+    @endif
+
+    @if(session('info'))
+        window.showInfoAlert('Informasi', @json(session('info')));
+    @endif
+
+    {{-- Field validation errors ditampilkan di bawah masing-masing field, bukan di modal --}}
+});
 </script>
 
 <style>
-/* Toast styles with high contrast */
-.colored-toast.swal2-icon-success {
-    background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
-    box-shadow: 0 4px 12px rgba(4, 120, 87, 0.4) !important;
-}
-
-.colored-toast.swal2-icon-error {
-    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4) !important;
-}
-
-.colored-toast.swal2-icon-warning {
-    background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4) !important;
-}
-
-.colored-toast.swal2-icon-info {
-    background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%) !important;
-    box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4) !important;
+/* Clean white toast styles */
+.colored-toast {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
 }
 
 .colored-toast .swal2-title {
-    color: white !important;
+    color: #1f2937 !important;
     font-weight: 600 !important;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2) !important;
+    font-size: 14px !important;
 }
 
 .colored-toast .swal2-html-container,
 .colored-toast .swal2-content {
-    color: white !important;
-    text-shadow: 0 1px 1px rgba(0,0,0,0.1) !important;
+    color: #6b7280 !important;
+    font-size: 13px !important;
 }
 
 .colored-toast .swal2-timer-progress-bar {
-    background: rgba(255, 255, 255, 0.5) !important;
+    background: #3b82f6 !important;
 }
 
-.colored-toast.swal2-icon-success .swal2-icon.swal2-success,
-.colored-toast.swal2-icon-error .swal2-icon.swal2-error,
-.colored-toast.swal2-icon-warning .swal2-icon.swal2-warning,
-.colored-toast.swal2-icon-info .swal2-icon.swal2-info {
-    border-color: rgba(255, 255, 255, 0.8) !important;
-    color: white !important;
+/* Success icon styling */
+.colored-toast.swal2-icon-success .swal2-icon {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
 }
 
-.colored-toast .swal2-success-line-tip,
-.colored-toast .swal2-success-line-long {
-    background-color: white !important;
+.colored-toast.swal2-icon-success .swal2-success-line-tip,
+.colored-toast.swal2-icon-success .swal2-success-line-long {
+    background-color: #10b981 !important;
 }
 
-.colored-toast .swal2-x-mark-line-left,
-.colored-toast .swal2-x-mark-line-right {
-    background-color: white !important;
+/* Error icon styling */
+.colored-toast.swal2-icon-error .swal2-icon {
+    border-color: #ef4444 !important;
+    color: #ef4444 !important;
+}
+
+.colored-toast.swal2-icon-error .swal2-x-mark-line-left,
+.colored-toast.swal2-icon-error .swal2-x-mark-line-right {
+    background-color: #ef4444 !important;
+}
+
+/* Warning icon styling */
+.colored-toast.swal2-icon-warning .swal2-icon {
+    border-color: #f59e0b !important;
+    color: #f59e0b !important;
+}
+
+/* Info icon styling */
+.colored-toast.swal2-icon-info .swal2-icon {
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
 }
 
 /* Modal/Popup styles with better contrast */

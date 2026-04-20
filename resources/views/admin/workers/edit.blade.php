@@ -94,7 +94,7 @@
                     type="date"
                     :value="old('birth_date', $worker->birth_date?->format('Y-m-d') ?? '')"
                     required
-                    max="{{ date('Y-m-d', strtotime('-1 day')) }}"
+                    max="{{ date('Y-m-d', strtotime('-17 years')) }}"
                     :error="$errors->first('birth_date')" />
 
                 <x-form.select
@@ -341,7 +341,7 @@
                 }
             } catch (error) {
                 console.error('Error compressing image:', error);
-                alert('Gagal mengompres foto. Silakan coba dengan foto yang lebih kecil.');
+                window.showErrorAlert('Gagal', 'Gagal mengompres foto. Silakan coba dengan foto yang lebih kecil.');
                 photoInput.value = '';
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnHTML;

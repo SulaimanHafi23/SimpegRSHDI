@@ -10,7 +10,7 @@
             <p class="text-sm text-gray-600 mt-1">Informasi lengkap kehadiran pegawai</p>
         </div>
         <div class="flex space-x-2">
-            <button onclick="if(confirm('Yakin ingin menghapus?')) document.getElementById('delete-form').submit()"
+            <button onclick="showDeleteConfirm(() => document.getElementById('delete-form').submit())"
                     class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
                 <i class="fas fa-trash mr-2"></i>Hapus
             </button>

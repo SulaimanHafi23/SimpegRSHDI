@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Auth;
 
 class WorkerShiftHistory extends Model
 {
@@ -62,7 +63,7 @@ class WorkerShiftHistory extends Model
             'effective_until' => $effectiveUntil,
             'changed_at' => now()->format('Y-m-d'),
             'change_reason' => $changeReason,
-            'changed_by' => $changedBy ?? auth()->id(),
+            'changed_by' => $changedBy ?? Auth::id(),
             'notes' => $notes,
         ]);
     }

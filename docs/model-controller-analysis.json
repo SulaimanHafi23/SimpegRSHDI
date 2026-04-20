@@ -1,0 +1,1002 @@
+{
+    "generatedAt":  "2026-04-06T01:05:26",
+    "modelCount":  22,
+    "controllerCount":  43,
+    "models":  [
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\Attendance.php",
+                       "class":  "Attendance",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027shift_id\u0027, \u0027attendance_date\u0027, \u0027check_in\u0027, \u0027check_out\u0027, \u0027distance_check_in\u0027, \u0027distance_check_out\u0027, \u0027check_in_by_admin\u0027, \u0027check_in_admin_id\u0027, \u0027check_out_by_admin\u0027, \u0027check_out_admin_id\u0027, \u0027status\u0027, \u0027is_late\u0027, \u0027late_minutes\u0027, \u0027is_early_leave\u0027, \u0027early_leave_minutes\u0027, \u0027notes\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027attendance_date\u0027 =\u003e \u0027date\u0027, \u0027check_in\u0027 =\u003e \u0027datetime\u0027, \u0027check_out\u0027 =\u003e \u0027datetime\u0027, \u0027distance_check_in\u0027 =\u003e \u0027integer\u0027, \u0027distance_check_out\u0027 =\u003e \u0027integer\u0027, \u0027check_in_by_admin\u0027 =\u003e \u0027boolean\u0027, \u0027check_out_by_admin\u0027 =\u003e \u0027boolean\u0027, \u0027is_late\u0027 =\u003e \u0027boolean\u0027, \u0027late_minutes\u0027 =\u003e \u0027integer\u0027, \u0027is_early_leave\u0027 =\u003e \u0027boolean\u0027, \u0027early_leave_minutes\u0027 =\u003e \u0027integer\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "shift",
+                                             "checkInAdmin",
+                                             "checkOutAdmin",
+                                             "photos",
+                                             "checkInPhoto",
+                                             "checkOutPhoto"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\AttendancePhoto.php",
+                       "class":  "AttendancePhoto",
+                       "table":  "",
+                       "fillable":  "\u0027attendance_id\u0027, \u0027photo_path\u0027, \u0027photo_type\u0027, \u0027taken_at\u0027, \u0027created_at\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027taken_at\u0027 =\u003e \u0027datetime\u0027, \u0027created_at\u0027 =\u003e \u0027datetime\u0027,",
+                       "publicMethods":  "attendance",
+                       "relationTypes":  "belongsTo"
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\AuditLog.php",
+                       "class":  "AuditLog",
+                       "table":  "",
+                       "fillable":  "\u0027user_id\u0027, \u0027user_name\u0027, \u0027action\u0027, \u0027auditable_type\u0027, \u0027auditable_id\u0027, \u0027description\u0027, \u0027old_values\u0027, \u0027new_values\u0027, \u0027ip_address\u0027, \u0027user_agent\u0027, \u0027url\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027old_values\u0027 =\u003e \u0027array\u0027, \u0027new_values\u0027 =\u003e \u0027array\u0027,",
+                       "publicMethods":  [
+                                             "user",
+                                             "auditable",
+                                             "scopeForModel",
+                                             "scopeByUser",
+                                             "scopeByAction",
+                                             "scopeRecent",
+                                             "getModelNameAttribute",
+                                             "getActionBadgeAttribute"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "morphTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\BusinessTrip.php",
+                       "class":  "BusinessTrip",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027destination\u0027, \u0027purpose\u0027, \u0027start_date\u0027, \u0027end_date\u0027, \u0027trip_duration_type\u0027, \u0027half_day_session\u0027, \u0027transportation\u0027, \u0027accommodation\u0027, \u0027notes\u0027, \u0027supporting_document_path\u0027, \u0027estimated_cost\u0027, \u0027status\u0027, \u0027approved_by\u0027, \u0027approved_at\u0027, \u0027rejection_reason\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027start_date\u0027 =\u003e \u0027date\u0027, \u0027end_date\u0027 =\u003e \u0027date\u0027, \u0027estimated_cost\u0027 =\u003e \u0027decimal:2\u0027, \u0027approved_at\u0027 =\u003e \u0027datetime\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "approvedBy",
+                                             "getHalfDaySessionLabelAttribute",
+                                             "getDurationValueAttribute",
+                                             "getDurationLabelAttribute"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\Department.php",
+                       "class":  "Department",
+                       "table":  "",
+                       "fillable":  "\u0027name\u0027, \u0027code\u0027, \u0027description\u0027, \u0027is_active\u0027, \u0027requires_holiday_attendance\u0027, \u0027parent_id\u0027, \u0027manager_id\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027is_active\u0027 =\u003e \u0027boolean\u0027, \u0027requires_holiday_attendance\u0027 =\u003e \u0027boolean\u0027,",
+                       "publicMethods":  [
+                                             "workers",
+                                             "parent",
+                                             "children",
+                                             "manager",
+                                             "documentTypes"
+                                         ],
+                       "relationTypes":  [
+                                             "hasMany",
+                                             "belongsTo",
+                                             "hasMany",
+                                             "belongsTo",
+                                             "belongsToMany"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\DepartmentDocumentType.php",
+                       "class":  "DepartmentDocumentType",
+                       "table":  "",
+                       "fillable":  "\u0027department_id\u0027, \u0027document_type_id\u0027,",
+                       "guarded":  "",
+                       "casts":  "",
+                       "publicMethods":  [
+                                             "department",
+                                             "documentType"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\DocumentType.php",
+                       "class":  "DocumentType",
+                       "table":  "",
+                       "fillable":  "\u0027name\u0027, \u0027description\u0027, \u0027file_format\u0027, \u0027max_file_size\u0027, \u0027is_required\u0027, \u0027is_universal\u0027, \u0027is_active\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027is_required\u0027 =\u003e \u0027boolean\u0027, \u0027is_universal\u0027 =\u003e \u0027boolean\u0027, \u0027is_active\u0027 =\u003e \u0027boolean\u0027,",
+                       "publicMethods":  [
+                                             "workerDocuments",
+                                             "departments"
+                                         ],
+                       "relationTypes":  [
+                                             "hasMany",
+                                             "belongsToMany"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\Holiday.php",
+                       "class":  "Holiday",
+                       "table":  "",
+                       "fillable":  "\u0027name\u0027, \u0027date\u0027, \u0027description\u0027, \u0027is_national\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027date\u0027 =\u003e \u0027date\u0027, \u0027is_national\u0027 =\u003e \u0027boolean\u0027,",
+                       "publicMethods":  [
+                                             "scopeNational",
+                                             "scopeDateRange",
+                                             "scopeYear"
+                                         ],
+                       "relationTypes":  {
+
+                                         }
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\LeaveRequest.php",
+                       "class":  "LeaveRequest",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027leave_type_id\u0027, \u0027start_date\u0027, \u0027end_date\u0027, \u0027total_days\u0027, \u0027reason\u0027, \u0027attachment_path\u0027, \u0027status\u0027, \u0027approved_by\u0027, \u0027approved_at\u0027, \u0027rejection_reason\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027start_date\u0027 =\u003e \u0027date\u0027, \u0027end_date\u0027 =\u003e \u0027date\u0027, \u0027total_days\u0027 =\u003e \u0027integer\u0027, \u0027approved_at\u0027 =\u003e \u0027datetime\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "leaveType",
+                                             "approver"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\LeaveType.php",
+                       "class":  "LeaveType",
+                       "table":  "",
+                       "fillable":  "\u0027name\u0027, \u0027code\u0027, \u0027max_days_per_year\u0027, \u0027requires_approval\u0027, \u0027requires_attachment\u0027, \u0027days_notice\u0027, \u0027is_active\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027max_days_per_year\u0027 =\u003e \u0027integer\u0027, \u0027requires_approval\u0027 =\u003e \u0027boolean\u0027, \u0027requires_attachment\u0027 =\u003e \u0027boolean\u0027, \u0027days_notice\u0027 =\u003e \u0027integer\u0027, \u0027is_active\u0027 =\u003e \u0027boolean\u0027,",
+                       "publicMethods":  "leaveRequests",
+                       "relationTypes":  "hasMany"
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\Notification.php",
+                       "class":  "Notification",
+                       "table":  "",
+                       "fillable":  "\u0027user_id\u0027, \u0027notifiable_type\u0027, \u0027notifiable_id\u0027, \u0027type\u0027, \u0027title\u0027, \u0027message\u0027, \u0027data\u0027, \u0027read_at\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027data\u0027 =\u003e \u0027array\u0027, \u0027read_at\u0027 =\u003e \u0027datetime\u0027,",
+                       "publicMethods":  [
+                                             "user",
+                                             "isRead",
+                                             "markAsRead",
+                                             "scopeUnread",
+                                             "scopeRead",
+                                             "getTitleAttribute",
+                                             "getMessageAttribute",
+                                             "getIsReadAttribute"
+                                         ],
+                       "relationTypes":  "belongsTo"
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\Shift.php",
+                       "class":  "Shift",
+                       "table":  "",
+                       "fillable":  "\u0027name\u0027, \u0027start_time\u0027, \u0027end_time\u0027, \u0027total_hours\u0027, \u0027grace_period_minutes\u0027, \u0027is_overnight\u0027, \u0027is_active\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027start_time\u0027 =\u003e \u0027datetime:H:i:s\u0027, \u0027end_time\u0027 =\u003e \u0027datetime:H:i:s\u0027, \u0027total_hours\u0027 =\u003e \u0027integer\u0027, \u0027grace_period_minutes\u0027 =\u003e \u0027integer\u0027, \u0027is_overnight\u0027 =\u003e \u0027boolean\u0027, \u0027is_active\u0027 =\u003e \u0027boolean\u0027,",
+                       "publicMethods":  [
+                                             "workerShifts",
+                                             "dayTimes",
+                                             "shiftOverrides",
+                                             "attendances",
+                                             "getScheduleForDate"
+                                         ],
+                       "relationTypes":  [
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\ShiftDayTime.php",
+                       "class":  "ShiftDayTime",
+                       "table":  "",
+                       "fillable":  "\u0027shift_id\u0027, \u0027day_of_week\u0027, \u0027start_time\u0027, \u0027end_time\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027day_of_week\u0027 =\u003e \u0027integer\u0027, \u0027start_time\u0027 =\u003e \u0027datetime:H:i:s\u0027, \u0027end_time\u0027 =\u003e \u0027datetime:H:i:s\u0027,",
+                       "publicMethods":  "shift",
+                       "relationTypes":  "belongsTo"
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\ShiftOverride.php",
+                       "class":  "ShiftOverride",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027shift_id\u0027, \u0027override_date\u0027, \u0027reason\u0027, \u0027created_by\u0027, \u0027shift_swap_request_id\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027override_date\u0027 =\u003e \u0027date\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "shift",
+                                             "creator",
+                                             "shiftSwapRequest"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\ShiftSwapAuditLog.php",
+                       "class":  "ShiftSwapAuditLog",
+                       "table":  "",
+                       "fillable":  "\u0027shift_swap_request_id\u0027, \u0027user_id\u0027, \u0027action\u0027, \u0027old_status\u0027, \u0027new_status\u0027, \u0027notes\u0027, \u0027metadata\u0027, \u0027user_agent\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027metadata\u0027 =\u003e \u0027array\u0027,",
+                       "publicMethods":  [
+                                             "shiftSwapRequest",
+                                             "user"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\ShiftSwapRequest.php",
+                       "class":  "ShiftSwapRequest",
+                       "table":  "",
+                       "fillable":  "\u0027requester_id\u0027, \u0027target_worker_id\u0027, \u0027requester_shift_id\u0027, \u0027target_shift_id\u0027, \u0027swap_type\u0027, \u0027swap_start_date\u0027, \u0027swap_end_date\u0027, \u0027swap_dates\u0027, \u0027status\u0027, \u0027requires_manager_approval\u0027, \u0027manager_id\u0027, \u0027manager_approved_at\u0027, \u0027reason\u0027, \u0027metadata\u0027, \u0027requested_at\u0027, \u0027executed_by\u0027, \u0027executed_at\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027requires_manager_approval\u0027 =\u003e \u0027boolean\u0027, \u0027metadata\u0027 =\u003e \u0027array\u0027, \u0027swap_dates\u0027 =\u003e \u0027array\u0027, \u0027swap_start_date\u0027 =\u003e \u0027date\u0027, \u0027swap_end_date\u0027 =\u003e \u0027date\u0027, \u0027requested_at\u0027 =\u003e \u0027datetime\u0027, \u0027manager_approved_at\u0027 =\u003e \u0027datetime\u0027, \u0027executed_at\u0027 =\u003e \u0027datetime\u0027,",
+                       "publicMethods":  [
+                                             "getSwapDateAttribute",
+                                             "setSwapDateAttribute",
+                                             "requester",
+                                             "targetWorker",
+                                             "requesterShift",
+                                             "targetShift",
+                                             "manager",
+                                             "executedBy",
+                                             "auditLogs"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "hasMany"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\User.php",
+                       "class":  "User",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027email\u0027, \u0027username\u0027, \u0027password\u0027, \u0027email_verified_at\u0027, \u0027last_login\u0027, \u0027is_active\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027email_verified_at\u0027 =\u003e \u0027datetime\u0027, \u0027last_login\u0027 =\u003e \u0027datetime\u0027, \u0027is_active\u0027 =\u003e \u0027boolean\u0027, \u0027password\u0027 =\u003e \u0027hashed\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "createdShiftOverrides",
+                                             "verifiedDocuments",
+                                             "approvedLeaveRequests"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\Worker.php",
+                       "class":  "Worker",
+                       "table":  "",
+                       "fillable":  "\u0027nip\u0027, \u0027name\u0027, \u0027email\u0027, \u0027phone_number\u0027, \u0027address\u0027, \u0027birth_date\u0027, \u0027birth_place\u0027, \u0027gender\u0027, \u0027religion\u0027, \u0027department_id\u0027, \u0027shift_id\u0027, \u0027hire_date\u0027, \u0027resign_date\u0027, \u0027employment_status\u0027, \u0027status\u0027, \u0027photo_url\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027birth_date\u0027 =\u003e \u0027date\u0027, \u0027hire_date\u0027 =\u003e \u0027date\u0027, \u0027resign_date\u0027 =\u003e \u0027date\u0027, \u0027gender\u0027 =\u003e \u0027string\u0027, \u0027religion\u0027 =\u003e \u0027string\u0027,",
+                       "publicMethods":  [
+                                             "department",
+                                             "shift",
+                                             "user",
+                                             "workerShifts",
+                                             "shiftOverrides",
+                                             "shiftHistories",
+                                             "attendances",
+                                             "workerDocuments",
+                                             "leaveRequests",
+                                             "shiftSwapRequestsAsRequester",
+                                             "shiftSwapRequestsAsTarget",
+                                             "offDays",
+                                             "activeWorkerShift",
+                                             "getShiftForDate",
+                                             "isOffDay",
+                                             "canCheckOutOnDate",
+                                             "getCurrentShift",
+                                             "resolveShiftForDate"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "hasOne",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasMany",
+                                             "hasOne"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\WorkerDocument.php",
+                       "class":  "WorkerDocument",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027document_type_id\u0027, \u0027department_document_type_id\u0027, \u0027file_name\u0027, \u0027file_path\u0027, \u0027file_size\u0027, \u0027expired_date\u0027, \u0027status\u0027, \u0027verified_by\u0027, \u0027verified_at\u0027, \u0027notes\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027file_size\u0027 =\u003e \u0027integer\u0027, \u0027expired_date\u0027 =\u003e \u0027date\u0027, \u0027verified_at\u0027 =\u003e \u0027datetime\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "documentType",
+                                             "departmentDocumentType",
+                                             "verifier",
+                                             "isExpired",
+                                             "getFileSizeHumanAttribute"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\WorkerOffDay.php",
+                       "class":  "WorkerOffDay",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027day_of_week\u0027, \u0027effective_from\u0027, \u0027effective_until\u0027, \u0027reason\u0027, \u0027created_by\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027day_of_week\u0027 =\u003e \u0027array\u0027, \u0027effective_from\u0027 =\u003e \u0027date\u0027, \u0027effective_until\u0027 =\u003e \u0027date\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "createdBy"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\WorkerShift.php",
+                       "class":  "WorkerShift",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027shift_id\u0027, \u0027effective_from\u0027, \u0027effective_until\u0027, \u0027is_active\u0027, \u0027notes\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027effective_from\u0027 =\u003e \u0027date\u0027, \u0027effective_until\u0027 =\u003e \u0027date\u0027, \u0027is_active\u0027 =\u003e \u0027boolean\u0027,",
+                       "publicMethods":  [
+                                             "getStartDateAttribute",
+                                             "getEndDateAttribute",
+                                             "worker",
+                                             "shift",
+                                             "getShiftForDate",
+                                             "isActiveOnDate"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   },
+                   {
+                       "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Models\\WorkerShiftHistory.php",
+                       "class":  "WorkerShiftHistory",
+                       "table":  "",
+                       "fillable":  "\u0027worker_id\u0027, \u0027shift_id\u0027, \u0027effective_from\u0027, \u0027effective_until\u0027, \u0027changed_at\u0027, \u0027change_reason\u0027, \u0027changed_by\u0027, \u0027notes\u0027,",
+                       "guarded":  "",
+                       "casts":  "\u0027effective_from\u0027 =\u003e \u0027date\u0027, \u0027effective_until\u0027 =\u003e \u0027date\u0027, \u0027changed_at\u0027 =\u003e \u0027date\u0027,",
+                       "publicMethods":  [
+                                             "worker",
+                                             "shift",
+                                             "changedByUser"
+                                         ],
+                       "relationTypes":  [
+                                             "belongsTo",
+                                             "belongsTo",
+                                             "belongsTo"
+                                         ]
+                   }
+               ],
+    "controllers":  [
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\NotificationController.php",
+                            "class":  "NotificationController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "unread",
+                                            "unreadCount",
+                                            "markAsRead",
+                                            "markAllAsRead",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\ProfileController.php",
+                            "class":  "ProfileController",
+                            "methods":  [
+                                            "__construct",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "updatePassword"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Admin\\AuditLogController.php",
+                            "class":  "AuditLogController",
+                            "methods":  [
+                                            "index",
+                                            "show"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Admin\\DashboardController.php",
+                            "class":  "DashboardController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "getTodayAttendanceSummary",
+                                            "getPendingApprovalsCount"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Admin\\HolidayController.php",
+                            "class":  "HolidayController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "edit",
+                                            "update",
+                                            "destroy",
+                                            "bulkCreate",
+                                            "bulkStore",
+                                            "autoGenerate",
+                                            "storeAutoGenerate"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Api\\WorkerShiftApiController.php",
+                            "class":  "WorkerShiftApiController",
+                            "methods":  [
+                                            "__construct",
+                                            "getShiftTime",
+                                            "getFutureShifts"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Approval\\BusinessTripApprovalController.php",
+                            "class":  "BusinessTripApprovalController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show",
+                                            "approve",
+                                            "reject",
+                                            "destroy",
+                                            "export"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Approval\\DocumentApprovalController.php",
+                            "class":  "DocumentApprovalController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show",
+                                            "verify",
+                                            "reject"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Approval\\LeaveApprovalController.php",
+                            "class":  "LeaveApprovalController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show",
+                                            "approve",
+                                            "reject"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Attendance\\AttendanceController.php",
+                            "class":  "AttendanceController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "checkInForm",
+                                            "checkIn",
+                                            "checkOutForm",
+                                            "checkOut",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy",
+                                            "dailyReport",
+                                            "monthlyReport",
+                                            "export",
+                                            "workerList",
+                                            "history",
+                                            "exportWorkerAttendance",
+                                            "exportWorkerHistory",
+                                            "workerStats",
+                                            "exportStatsPdf",
+                                            "exportStatsExcel",
+                                            "exportTodayAttendance",
+                                            "getAttendanceDetail"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Auth\\ForgotPasswordController.php",
+                            "class":  "ForgotPasswordController",
+                            "methods":  [
+                                            "showLinkRequestForm",
+                                            "sendResetLinkEmail"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Auth\\LoginController.php",
+                            "class":  "LoginController",
+                            "methods":  [
+                                            "__construct",
+                                            "showLoginForm",
+                                            "login",
+                                            "logout"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Auth\\ResetPasswordController.php",
+                            "class":  "ResetPasswordController",
+                            "methods":  [
+                                            "showResetForm",
+                                            "reset"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Document\\BerkasController.php",
+                            "class":  "BerkasController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show",
+                                            "create",
+                                            "store",
+                                            "edit",
+                                            "update",
+                                            "destroy",
+                                            "verify",
+                                            "reject",
+                                            "pending",
+                                            "workerDocuments",
+                                            "checkCompleteness",
+                                            "download",
+                                            "preview"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\AttendanceController.php",
+                            "class":  "AttendanceController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "checkInForm",
+                                            "checkOutForm",
+                                            "checkIn",
+                                            "checkOut",
+                                            "show",
+                                            "photo",
+                                            "export",
+                                            "exportPdf"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\BusinessTripController.php",
+                            "class":  "BusinessTripController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "cancel",
+                                            "export"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\CalendarController.php",
+                            "class":  "CalendarController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "events"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\DashboardController.php",
+                            "class":  "DashboardController",
+                            "methods":  [
+                                            "__construct",
+                                            "index"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\DocumentController.php",
+                            "class":  "DocumentController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "download",
+                                            "preview",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\LeaveController.php",
+                            "class":  "LeaveController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "cancel",
+                                            "export",
+                                            "exportPdf"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\NotificationController.php",
+                            "class":  "NotificationController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "getUnreadCount",
+                                            "getUnread",
+                                            "markAsRead",
+                                            "markAllAsRead",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\ProfileController.php",
+                            "class":  "ProfileController",
+                            "methods":  [
+                                            "__construct",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "updatePassword"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\ShiftController.php",
+                            "class":  "ShiftController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Employee\\ShiftSwapController.php",
+                            "class":  "ShiftSwapController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "accept",
+                                            "reject",
+                                            "cancel",
+                                            "showAcceptOpen",
+                                            "acceptOpen",
+                                            "export"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\HR\\HRDashboardController.php",
+                            "class":  "HRDashboardController",
+                            "methods":  [
+                                            "__construct",
+                                            "index"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Leave\\LeaveRequestController.php",
+                            "class":  "LeaveRequestController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "destroy",
+                                            "approve",
+                                            "reject",
+                                            "cancel",
+                                            "export",
+                                            "workerLeaveBalance"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Manager\\ManagerDashboardController.php",
+                            "class":  "ManagerDashboardController",
+                            "methods":  [
+                                            "__construct",
+                                            "index"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Manager\\ShiftSwapApprovalController.php",
+                            "class":  "ShiftSwapApprovalController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show",
+                                            "approve",
+                                            "reject",
+                                            "execute",
+                                            "revert",
+                                            "export"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Master\\DepartmentController.php",
+                            "class":  "DepartmentController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Master\\DepartmentDocumentTypeController.php",
+                            "class":  "DepartmentDocumentTypeController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "edit",
+                                            "update",
+                                            "show",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Master\\DocumentTypeController.php",
+                            "class":  "DocumentTypeController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Master\\LeaveTypeController.php",
+                            "class":  "LeaveTypeController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Master\\ShiftController.php",
+                            "class":  "ShiftController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Report\\AttendanceReportController.php",
+                            "class":  "AttendanceReportController",
+                            "methods":  [
+                                            "__construct",
+                                            "index"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Report\\ReportController.php",
+                            "class":  "ReportController",
+                            "methods":  [
+                                            "__construct",
+                                            "attendance",
+                                            "leaves",
+                                            "workerDocuments",
+                                            "workers",
+                                            "exportAttendance",
+                                            "exportLeaves",
+                                            "exportWorkerDocuments"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Role\\RoleController.php",
+                            "class":  "RoleController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Schedule\\WorkerShiftScheduleController.php",
+                            "class":  "WorkerShiftScheduleController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show",
+                                            "create",
+                                            "store",
+                                            "edit",
+                                            "update",
+                                            "destroy",
+                                            "workerSchedule",
+                                            "bulkCreate",
+                                            "calendar"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\ShiftOverride\\ShiftOverrideController.php",
+                            "class":  "ShiftOverrideController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "bulkCreate",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\User\\UserController.php",
+                            "class":  "UserController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Worker\\WorkerController.php",
+                            "class":  "WorkerController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "show",
+                                            "attendanceHistory",
+                                            "create",
+                                            "store",
+                                            "edit",
+                                            "update",
+                                            "destroy",
+                                            "resign",
+                                            "export",
+                                            "import",
+                                            "downloadTemplate"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\Worker\\WorkerOffDayController.php",
+                            "class":  "WorkerOffDayController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "storePattern",
+                                            "destroyPattern",
+                                            "checkDate",
+                                            "getRange"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\WorkerDocument\\WorkerDocumentController.php",
+                            "class":  "WorkerDocumentController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "store",
+                                            "documentTypesForWorker",
+                                            "show",
+                                            "verify",
+                                            "reject",
+                                            "download",
+                                            "workerDocuments",
+                                            "expired",
+                                            "expiring"
+                                        ]
+                        },
+                        {
+                            "file":  "C:\\laragon\\www\\SimpegRSHDI\\app\\Http\\Controllers\\WorkerShift\\WorkerShiftController.php",
+                            "class":  "WorkerShiftController",
+                            "methods":  [
+                                            "__construct",
+                                            "index",
+                                            "create",
+                                            "generate",
+                                            "generateStore",
+                                            "store",
+                                            "show",
+                                            "edit",
+                                            "update",
+                                            "destroy",
+                                            "workerShifts",
+                                            "calendarData"
+                                        ]
+                        }
+                    ]
+}

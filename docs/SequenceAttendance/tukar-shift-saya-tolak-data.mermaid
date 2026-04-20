@@ -1,0 +1,26 @@
+sequenceDiagram
+    autonumber
+    actor Pegawai as "Pegawai"
+    participant View as "Web View (employee.shift-swaps.index)"
+    participant Controller as "Employee ShiftSwapController"
+    participant Model as "ShiftSwapRequest Model"
+    participant DB as "Database"
+
+    Pegawai->>View: Klik Tolak Permintaan
+    View->>Controller: POST /employee/shift-swaps/{id}/reject + reason
+    Controller->>Controller: Ambil alasan penolakan
+    Controller->>Model: rejectRequest(id, worker_id, reason)
+    Model->>DB: SELECT shift_swap_requests by id
+    DB-->>Model: Data permintaan
+
+    alt Data valid (alasan ada dan request valid)
+        Controller->>Model: Update status jadi rejected
+        Model->>DB: UPDATE shift_swap_requests SET status='rejected'
+        DB-->>Model: Reject success
+        Model-->>Controller: Permintaan ditolak
+        Controller->>View: Redirect index + success
+        View-->>Pegawai: Notifikasi penolakan berhasil
+    else Data tidak valid (alasan kosong / bukan target / request tidak valid)
+        Controller->>View: Back + error
+        View-->>Pegawai: Notifikasi gagal menolak permintaan
+    end

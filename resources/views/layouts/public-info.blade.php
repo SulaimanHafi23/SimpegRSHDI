@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         :root {
@@ -68,6 +69,8 @@
     </style>
 </head>
 <body>
+    <x-sweet-alert />
+
     <div class="relative overflow-hidden">
         <div class="pointer-events-none absolute inset-0">
             <div class="absolute -top-24 left-8 h-56 w-56 rounded-full bg-[rgba(245,166,35,0.18)] blur-3xl"></div>

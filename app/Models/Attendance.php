@@ -59,12 +59,12 @@ class Attendance extends Model
 
     public function checkInAdmin(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'check_in_admin_id');
+        return $this->belongsTo(User::class, 'check_in_admin_id')->withTrashed();
     }
 
     public function checkOutAdmin(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'check_out_admin_id');
+        return $this->belongsTo(User::class, 'check_out_admin_id')->withTrashed();
     }
 
     public function photos(): HasMany
@@ -82,5 +82,48 @@ class Attendance extends Model
     {
         return $this->hasMany(AttendancePhoto::class, 'attendance_id')
             ->where('photo_type', 'check_out');
+    }
+
+    public function getCheckInAdminDisplayNameAttribute(): ?string
+    {
+        return $this->resolveAdminDisplayName($this->check_in_admin_id, $this->checkInAdmin);
+    }
+
+    public function getCheckOutAdminDisplayNameAttribute(): ?string
+    {
+        return $this->resolveAdminDisplayName($this->check_out_admin_id, $this->checkOutAdmin);
+    }
+
+    private function resolveAdminDisplayName(?string $adminId, ?User $resolvedUser = null): ?string
+    {
+        if (empty($adminId)) {
+            return null;
+        }
+
+        // 1) ID mengarah ke tabel users (normal case)
+        $user = $resolvedUser ?? User::withTrashed()->with('worker')->find($adminId);
+        if ($user) {
+            return $user->worker?->name
+                ?? $user->username
+                ?? $user->email
+                ?? null;
+        }
+
+        // 2) Fallback: data lama kemungkinan menyimpan worker_id langsung
+        $worker = Worker::withTrashed()->find($adminId);
+        if ($worker) {
+            return $worker->name;
+        }
+
+        // 3) Fallback: cari user berdasarkan worker_id = adminId
+        $userByWorker = User::withTrashed()->with('worker')->where('worker_id', $adminId)->first();
+        if ($userByWorker) {
+            return $userByWorker->worker?->name
+                ?? $userByWorker->username
+                ?? $userByWorker->email
+                ?? null;
+        }
+
+        return null;
     }
 }
