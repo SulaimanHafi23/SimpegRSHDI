@@ -58,7 +58,6 @@ use App\Http\Controllers\Approval\BusinessTripApprovalController;
 use App\Http\Controllers\ProfileController;
 
 // Approval Controllers
-use App\Http\Controllers\Approval\LeaveApprovalController;
 use App\Http\Controllers\Approval\DocumentApprovalController;
 
 // Report Controller
@@ -299,10 +298,10 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::prefix('approvals')->name('approvals.')->middleware('role:Manager|HR|Super Admin')->group(function () {
         // Leave Approvals
         Route::prefix('leaves')->name('leaves.')->group(function () {
-            Route::get('/', [LeaveApprovalController::class, 'index'])->name('index');
-            Route::get('/{id}', [LeaveApprovalController::class, 'show'])->name('show');
-            Route::post('/{id}/approve', [LeaveApprovalController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [LeaveApprovalController::class, 'reject'])->name('reject');
+            Route::get('/', [LeaveRequestController::class, 'approvalIndex'])->name('index');
+            Route::get('/{id}', [LeaveRequestController::class, 'approvalShow'])->name('show');
+            Route::post('/{id}/approve', [LeaveRequestController::class, 'approvalApprove'])->name('approve');
+            Route::post('/{id}/reject', [LeaveRequestController::class, 'approvalReject'])->name('reject');
         });
         // Document Approvals
         Route::prefix('documents')->name('documents.')->group(function () {

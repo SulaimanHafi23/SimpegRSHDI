@@ -26,6 +26,15 @@ class AttendancePhoto extends Model
         'created_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $photo): void {
+            if (empty($photo->created_at)) {
+                $photo->created_at = $photo->taken_at ?? now();
+            }
+        });
+    }
+
     public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class, 'attendance_id');

@@ -24,7 +24,174 @@ class LeaveRequestController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:leave.manage');
+        $this->middleware('permission:leave.manage')->except([
+            'approvalIndex',
+            'approvalShow',
+            'approvalApprove',
+            'approvalReject',
+        ]);
+        $this->middleware('role:Manager|HR|Super Admin')->only([
+            'approvalIndex',
+            'approvalShow',
+            'approvalApprove',
+            'approvalReject',
+        ]);
+    }
+
+    public function approvalIndex(Request $request)
+    {
+        $user = Auth::user();
+
+        $filters = [
+            'status' => $request->input('status', 'pending'),
+            'per_page' => 20,
+        ];
+
+        if ($user->hasRole('Manager') && $user->worker) {
+            $filters['department_id'] = $user->worker->department_id;
+        }
+
+        $leaves = $this->buildLeaveQuery($filters)
+            ->latest('start_date')
+            ->paginate($filters['per_page'])
+            ->appends($filters);
+
+        $leaveTypes = LeaveType::orderBy('name')->get();
+
+        $baseQuery = LeaveRequest::query();
+        if (!empty($filters['department_id'])) {
+            $baseQuery->whereHas('worker', function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            });
+        }
+
+        $totalLeaves = (clone $baseQuery)->count();
+        $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
+        $approvedCount = (clone $baseQuery)->where('status', 'approved')->count();
+        $rejectedCount = (clone $baseQuery)->where('status', 'rejected')->count();
+
+        return view('approvals.leaves.index', compact(
+            'leaves',
+            'leaveTypes',
+            'totalLeaves',
+            'pendingCount',
+            'approvedCount',
+            'rejectedCount',
+            'filters'
+        ));
+    }
+
+    public function approvalShow(string $id)
+    {
+        $leave = LeaveRequest::with(['worker.department', 'leaveType', 'approver'])->findOrFail($id);
+        $this->ensureApprovalAccess($leave);
+
+        // Compatibility for existing approval view that references approvedBy.
+        $leave->setRelation('approvedBy', $leave->approver);
+
+        return view('approvals.leaves.show', compact('leave'));
+    }
+
+    public function approvalApprove(Request $request, string $id)
+    {
+        $request->validate([
+            'approval_notes' => 'nullable|string|max:1000',
+        ]);
+
+        try {
+            $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
+            $this->ensureApprovalAccess($leaveRequest);
+
+            if ($leaveRequest->status !== 'pending') {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat disetujui.');
+            }
+
+            $leaveRequest->update([
+                'status' => 'approved',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'rejection_reason' => null,
+            ]);
+
+            $user = User::where('worker_id', $leaveRequest->worker_id)->first();
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'notifiable_type' => \App\Models\User::class,
+                    'notifiable_id' => $user->id,
+                    'type' => 'leave_approved',
+                    'title' => 'Cuti Disetujui',
+                    'message' => sprintf(
+                        'Permohonan cuti Anda dari %s sampai %s telah disetujui.',
+                        $leaveRequest->start_date,
+                        $leaveRequest->end_date
+                    ),
+                    'data' => [
+                        'leave_id' => $leaveRequest->id,
+                        'type' => 'leave',
+                        'action' => 'approved',
+                    ],
+                ]);
+            }
+
+            return redirect()
+                ->route('approvals.leaves.index')
+                ->with('success', 'Pengajuan cuti berhasil disetujui.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function approvalReject(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|max:1000',
+        ]);
+
+        try {
+            $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
+            $this->ensureApprovalAccess($leaveRequest);
+
+            if ($leaveRequest->status !== 'pending') {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat ditolak.');
+            }
+
+            $leaveRequest->update([
+                'status' => 'rejected',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+                'rejection_reason' => $validated['rejection_reason'],
+            ]);
+
+            $user = User::where('worker_id', $leaveRequest->worker_id)->first();
+            if ($user) {
+                Notification::create([
+                    'user_id' => $user->id,
+                    'notifiable_type' => \App\Models\User::class,
+                    'notifiable_id' => $user->id,
+                    'type' => 'leave_rejected',
+                    'title' => 'Cuti Ditolak',
+                    'message' => sprintf(
+                        'Permohonan cuti Anda dari %s sampai %s telah ditolak. Alasan: %s',
+                        $leaveRequest->start_date,
+                        $leaveRequest->end_date,
+                        $validated['rejection_reason']
+                    ),
+                    'data' => [
+                        'leave_id' => $leaveRequest->id,
+                        'type' => 'leave',
+                        'action' => 'rejected',
+                        'reason' => $validated['rejection_reason'],
+                    ],
+                ]);
+            }
+
+            return redirect()
+                ->route('approvals.leaves.index')
+                ->with('success', 'Pengajuan cuti berhasil ditolak.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function index(Request $request)
@@ -469,5 +636,15 @@ class LeaveRequestController extends Controller
         }
 
         return $query;
+    }
+
+    private function ensureApprovalAccess(LeaveRequest $leaveRequest): void
+    {
+        $user = Auth::user();
+        if ($user && $user->hasRole('Manager') && $user->worker) {
+            if ((string) $leaveRequest->worker->department_id !== (string) $user->worker->department_id) {
+                abort(403, 'Unauthorized');
+            }
+        }
     }
 }

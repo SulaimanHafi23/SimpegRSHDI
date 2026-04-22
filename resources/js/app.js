@@ -22,4 +22,40 @@ document.addEventListener('DOMContentLoaded', () => {
 		parent.insertBefore(wrapper, table);
 		wrapper.appendChild(table);
 	});
+
+	const logoutForms = document.querySelectorAll('form[action$="/logout"]');
+
+	logoutForms.forEach((form) => {
+		form.addEventListener('submit', (event) => {
+			if (form.dataset.logoutConfirmed === 'true') {
+				return;
+			}
+
+			event.preventDefault();
+
+			if (window.Swal) {
+				window.Swal.fire({
+					title: 'Logout sekarang?',
+					text: 'Sesi Anda akan diakhiri.',
+					icon: 'question',
+					showCancelButton: true,
+					confirmButtonText: 'Ya, logout',
+					cancelButtonText: 'Batal',
+					reverseButtons: true,
+				}).then((result) => {
+					if (result.isConfirmed) {
+						form.dataset.logoutConfirmed = 'true';
+						form.submit();
+					}
+				});
+				return;
+			}
+
+			const confirmed = window.confirm('Anda yakin ingin logout?');
+			if (confirmed) {
+				form.dataset.logoutConfirmed = 'true';
+				form.submit();
+			}
+		});
+	});
 });

@@ -1625,6 +1625,7 @@ class AttendanceController extends Controller
                     'photo_path' => $photoPath,
                     'photo_type' => 'check_in',
                     'taken_at' => $checkInTime,
+                    'created_at' => $checkInTime,
                 ]);
             }
 
@@ -1774,6 +1775,7 @@ class AttendanceController extends Controller
                     'photo_path' => $photoPath,
                     'photo_type' => 'check_out',
                     'taken_at' => $checkOutTime,
+                    'created_at' => $checkOutTime,
                 ]);
             }
 

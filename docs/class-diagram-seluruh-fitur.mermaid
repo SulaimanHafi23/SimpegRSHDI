@@ -1,0 +1,920 @@
+classDiagram
+    direction LR
+
+    %% ==============================
+    %% DOMAIN MODELS
+    %% ==============================
+    class User {
++id: uuid
++worker_id: uuid?
++email: string
++username: string
++password: string
++email_verified_at: datetime?
++last_login: datetime?
++is_active: bool
++created_at: datetime
++updated_at: datetime
++deleted_at: datetime?
++worker(): BelongsTo
++createdShiftOverrides(): HasMany
++verifiedDocuments(): HasMany
++approvedLeaveRequests(): HasMany
+    }
+    class Worker {
++id: uuid
++nip: string
++name: string
++email: string
++phone_number: string?
++address: text?
++birth_date: date?
++birth_place: string?
++gender: string?
++religion: string?
++department_id: uuid?
++shift_id: uuid?
++hire_date: date?
++resign_date: date?
++employment_status: string?
++status: string?
++photo_url: string?
++created_at: datetime
++updated_at: datetime
++deleted_at: datetime?
++department(): BelongsTo
++shift(): BelongsTo
++user(): HasOne
++workerShifts(): HasMany
++shiftOverrides(): HasMany
++shiftHistories(): HasMany
++attendances(): HasMany
++workerDocuments(): HasMany
++leaveRequests(): HasMany
++shiftSwapRequestsAsRequester(): HasMany
++shiftSwapRequestsAsTarget(): HasMany
++offDays(): HasMany
++activeWorkerShift(): HasOne
++getShiftForDate(date): ?string
++isOffDay(date): bool
++canCheckOutOnDate(checkOutDate, checkInDate): bool
++getCurrentShift(): ?Shift
++resolveShiftForDate(date): array
+    }
+    class Department {
++id: uuid
++name: string
++code: string?
++description: text?
++is_active: bool
++requires_holiday_attendance: bool
++parent_id: uuid?
++manager_id: uuid?
++created_at: datetime
++updated_at: datetime
++workers(): HasMany
++parent(): BelongsTo
++children(): HasMany
++manager(): BelongsTo
++documentTypes(): BelongsToMany
+    }
+    class Role {
++id: uuid|int
++name: string
++guard_name: string
++created_at: datetime
++updated_at: datetime
+    }
+    class Permission {
++id: uuid|int
++name: string
++guard_name: string
++created_at: datetime
++updated_at: datetime
+    }
+
+    class Shift {
++id: uuid
++name: string
++start_time: time
++end_time: time
++total_hours: int
++grace_period_minutes: int
++is_overnight: bool
++is_active: bool
++created_at: datetime
++updated_at: datetime
++workerShifts(): HasMany
++dayTimes(): HasMany
++shiftOverrides(): HasMany
++attendances(): HasMany
++getScheduleForDate(date): array
+    }
+    class ShiftDayTime {
++id: uuid
++shift_id: uuid
++day_of_week: int
++start_time: time
++end_time: time
++created_at: datetime
++updated_at: datetime
++shift(): BelongsTo
+    }
+    class WorkerShift {
++id: uuid
++worker_id: uuid
++shift_id: uuid
++effective_from: date
++effective_until: date?
++is_active: bool
++notes: text?
++created_at: datetime
++updated_at: datetime
++getStartDateAttribute(): ?string
++getEndDateAttribute(): ?string
++worker(): BelongsTo
++shift(): BelongsTo
++getShiftForDate(date): ?string
++isActiveOnDate(date): bool
+    }
+    class WorkerShiftHistory {
++id: uuid
++worker_id: uuid
++shift_id: uuid
++effective_from: date?
++effective_until: date?
++changed_at: date
++change_reason: string
++changed_by: uuid?
++notes: text?
++created_at: datetime
++updated_at: datetime
++worker(): BelongsTo
++shift(): BelongsTo
++changedByUser(): BelongsTo
++logChange(...): self
+    }
+    class ShiftOverride {
++id: uuid
++worker_id: uuid
++shift_id: uuid
++override_date: date
++reason: string?
++created_by: uuid?
++shift_swap_request_id: uuid?
++created_at: datetime
++updated_at: datetime
++worker(): BelongsTo
++shift(): BelongsTo
++creator(): BelongsTo
++shiftSwapRequest(): BelongsTo
+    }
+    class WorkerOffDay {
++id: uuid
++worker_id: uuid
++day_of_week: int[]
++effective_from: date
++effective_until: date?
++reason: string?
++created_by: uuid?
++created_at: datetime
++updated_at: datetime
++worker(): BelongsTo
++createdBy(): BelongsTo
++getActiveRules(workerId, date): Collection
++isOffDay(workerId, date): bool
++isOffDayByPattern(workerId, date): bool
+    }
+
+    class Attendance {
++id: uuid
++worker_id: uuid
++shift_id: uuid?
++attendance_date: date
++check_in: datetime?
++check_out: datetime?
++distance_check_in: int?
++distance_check_out: int?
++check_in_by_admin: bool
++check_in_admin_id: uuid?
++check_out_by_admin: bool
++check_out_admin_id: uuid?
++status: enum(present|late|absent|sick|permission|leave)
++is_late: bool
++late_minutes: int
++is_early_leave: bool
++early_leave_minutes: int
++notes: text?
++created_at: datetime
++updated_at: datetime
++deleted_at: datetime?
++worker(): BelongsTo
++shift(): BelongsTo
++checkInAdmin(): BelongsTo
++checkOutAdmin(): BelongsTo
++photos(): HasMany
++checkInPhoto(): HasMany
++checkOutPhoto(): HasMany
++getCheckInAdminDisplayNameAttribute(): ?string
++getCheckOutAdminDisplayNameAttribute(): ?string
+    }
+    class AttendancePhoto {
++id: uuid
++attendance_id: uuid
++photo_path: string
++photo_type: enum(check_in|check_out)
++taken_at: datetime
++created_at: datetime
++booted(): void
++attendance(): BelongsTo
+    }
+
+    class LeaveType {
++id: uuid
++name: string
++code: string
++max_days_per_year: int
++requires_approval: bool
++requires_attachment: bool
++days_notice: int
++is_active: bool
++created_at: datetime
++updated_at: datetime
++leaveRequests(): HasMany
+    }
+    class LeaveRequest {
++id: uuid
++worker_id: uuid
++leave_type_id: uuid
++start_date: date
++end_date: date
++total_days: int
++reason: text
++attachment_path: string?
++status: enum(pending|approved|rejected|cancelled)
++approved_by: uuid?
++approved_at: datetime?
++rejection_reason: text?
++created_at: datetime
++updated_at: datetime
++deleted_at: datetime?
++getAttachmentAttribute(): ?string
++setAttachmentAttribute(value): void
++worker(): BelongsTo
++leaveType(): BelongsTo
++approver(): BelongsTo
+    }
+
+    class BusinessTrip {
++id: uuid
++worker_id: uuid
++destination: string
++purpose: text
++start_date: date
++end_date: date
++trip_duration_type: enum(full_day|half_day)
++half_day_session: enum(pagi|siang)?
++transportation: string?
++accommodation: string?
++notes: text?
++supporting_document_path: string?
++estimated_cost: decimal?
++status: enum(pending|approved|rejected|cancelled)
++approved_by: uuid?
++approved_at: datetime?
++rejection_reason: text?
++created_at: datetime
++updated_at: datetime
++deleted_at: datetime?
++worker(): BelongsTo
++approvedBy(): BelongsTo
++getHalfDaySessionLabelAttribute(): ?string
++getDurationValueAttribute(): float|int
++getDurationLabelAttribute(): string
+    }
+
+    class DocumentType {
++id: uuid
++name: string
++description: text?
++file_format: string?
++max_file_size: int?
++is_required: bool
++is_universal: bool
++is_active: bool
++created_at: datetime
++updated_at: datetime
++workerDocuments(): HasMany
++departments(): BelongsToMany
+    }
+    class DepartmentDocumentType {
++id: uuid
++department_id: uuid
++document_type_id: uuid
++created_at: datetime
++updated_at: datetime
++department(): BelongsTo
++documentType(): BelongsTo
+    }
+    class WorkerDocument {
++id: uuid
++worker_id: uuid
++document_type_id: uuid
++department_document_type_id: uuid?
++file_name: string
++file_path: string
++file_size: int
++expired_date: date?
++status: enum(pending|verified|rejected)
++verified_by: uuid?
++verified_at: datetime?
++notes: text?
++created_at: datetime
++updated_at: datetime
++deleted_at: datetime?
++worker(): BelongsTo
++documentType(): BelongsTo
++departmentDocumentType(): BelongsTo
++verifier(): BelongsTo
++isExpired(): bool
++getFileSizeHumanAttribute(): string
+    }
+
+    class ShiftSwapRequest {
++id: uuid
++requester_id: uuid
++target_worker_id: uuid
++requester_shift_id: uuid
++target_shift_id: uuid
++swap_type: enum(single_date|date_range)
++swap_start_date: date
++swap_end_date: date?
++swap_dates: date[]?
++status: enum(pending|accepted|awaiting_approval|approved|rejected|executed|cancelled)
++requires_manager_approval: bool
++manager_id: uuid?
++manager_approved_at: datetime?
++reason: text?
++metadata: json?
++requested_at: datetime?
++executed_by: uuid?
++executed_at: datetime?
++created_at: datetime
++updated_at: datetime
++deleted_at: datetime?
++getSwapDateAttribute()
++setSwapDateAttribute(value): void
++requester(): BelongsTo
++targetWorker(): BelongsTo
++requesterShift(): BelongsTo
++targetShift(): BelongsTo
++manager(): BelongsTo
++executedBy(): BelongsTo
++auditLogs(): HasMany
+    }
+    class ShiftSwapAuditLog {
++id: uuid
++shift_swap_request_id: uuid
++user_id: uuid?
++action: string
++old_status: string?
++new_status: string?
++notes: text?
++metadata: json?
++user_agent: string?
++created_at: datetime
++updated_at: datetime
++shiftSwapRequest(): BelongsTo
++user(): BelongsTo
++log(...): self
+    }
+
+    class Holiday {
++id: uuid
++name: string
++date: date
++description: text?
++is_national: bool
++created_at: datetime
++updated_at: datetime
++scopeNational(query)
++scopeDateRange(query, start, end)
++scopeYear(query, year)
+    }
+    class Notification {
++id: uuid
++user_id: uuid?
++notifiable_type: string?
++notifiable_id: uuid?
++type: string
++title: string
++message: text
++data: json?
++read_at: datetime?
++created_at: datetime
++updated_at: datetime
++booted(): void
++notifiable(): MorphTo
++user(): BelongsTo
++isRead(): bool
++markAsRead(): void
++scopeUnread(query)
++scopeRead(query)
++getTitleAttribute(value): string
++getMessageAttribute(value): string
++getIsReadAttribute(): bool
+    }
+    class AuditLog {
++id: uuid
++user_id: uuid?
++user_name: string
++action: string
++auditable_type: string?
++auditable_id: uuid?
++description: text?
++old_values: json?
++new_values: json?
++ip_address: string?
++user_agent: string?
++url: string?
++created_at: datetime
++updated_at: datetime
++user(): BelongsTo
++auditable(): MorphTo
++scopeForModel(query, modelClass, modelId)
++scopeByUser(query, userId)
++scopeByAction(query, action)
++scopeRecent(query, days)
++log(...): self
++getModelNameAttribute(): string
++getActionBadgeAttribute(): array
+    }
+
+    User "1" --> "0..1" Worker : belongsTo
+    Worker "*" --> "1" Department : belongsTo
+    User "*" --> "*" Role : hasRoles
+    Role "*" --> "*" Permission : hasPermissions
+
+    Shift "1" --> "*" ShiftDayTime : hasMany
+    Worker "1" --> "*" WorkerShift : hasMany
+    Worker "1" --> "*" ShiftOverride : hasMany
+    Worker "1" --> "*" WorkerOffDay : hasMany
+    Worker "1" --> "*" WorkerShiftHistory : hasMany
+
+    Worker "1" --> "*" Attendance : hasMany
+    Attendance "1" --> "*" AttendancePhoto : hasMany
+    Attendance "*" --> "1" Shift : belongsTo
+
+    Worker "1" --> "*" LeaveRequest : hasMany
+    LeaveRequest "*" --> "1" LeaveType : belongsTo
+
+    Worker "1" --> "*" BusinessTrip : hasMany
+
+    Worker "1" --> "*" WorkerDocument : hasMany
+    WorkerDocument "*" --> "1" DocumentType : belongsTo
+    Department "1" --> "*" DepartmentDocumentType : hasMany
+    DepartmentDocumentType "*" --> "1" DocumentType : belongsTo
+
+    Worker "1" --> "*" ShiftSwapRequest : requester
+    Worker "1" --> "*" ShiftSwapRequest : target
+    ShiftSwapRequest "1" --> "*" ShiftSwapAuditLog : hasMany
+
+    Worker "1" --> "*" Notification : receives
+    User "1" --> "*" AuditLog : creates
+
+    %% ==============================
+    %% SERVICES
+    %% ==============================
+    class AuthService
+    class UserService
+    class RoleService
+    class PermissionService
+
+    class WorkerService
+    class WorkerShiftService
+    class WorkerOffDayService
+    class ShiftOverrideService
+
+    class ShiftService
+    class DepartmentService
+    class LeaveTypeService
+    class DocumentTypeService
+
+    class LeaveRequestService
+    class ShiftSwapService
+    class WorkerDocumentService
+    class NotificationService
+
+    class DashboardService
+    class EmployeeDashboardService
+    class PdfExportService
+
+    AuthService --> User
+    UserService --> User
+    RoleService --> Role
+    PermissionService --> Permission
+
+    WorkerService --> Worker
+    WorkerShiftService --> WorkerShift
+    WorkerShiftService --> WorkerShiftHistory
+    WorkerOffDayService --> WorkerOffDay
+    ShiftOverrideService --> ShiftOverride
+
+    ShiftService --> Shift
+    DepartmentService --> Department
+    LeaveTypeService --> LeaveType
+    DocumentTypeService --> DocumentType
+
+    LeaveRequestService --> LeaveRequest
+    ShiftSwapService --> ShiftSwapRequest
+    ShiftSwapService --> ShiftSwapAuditLog
+    WorkerDocumentService --> WorkerDocument
+    NotificationService --> Notification
+
+    DashboardService --> Attendance
+    DashboardService --> LeaveRequest
+    EmployeeDashboardService --> Attendance
+    PdfExportService --> Attendance
+
+    %% ==============================
+    %% REPOSITORIES
+    %% ==============================
+    class UserRepository
+    class RoleRepository
+    class PermissionRepository
+
+    class WorkerRepository
+    class WorkerShiftRepository
+    class ShiftOverrideRepository
+
+    class DepartmentRepository
+    class ShiftRepository
+    class LeaveTypeRepository
+    class DocumentTypeRepository
+
+    class LeaveRequestRepository
+    class WorkerDocumentRepository
+    class NotificationRepository
+
+    UserService --> UserRepository
+    RoleService --> RoleRepository
+    PermissionService --> PermissionRepository
+
+    WorkerService --> WorkerRepository
+    WorkerShiftService --> WorkerShiftRepository
+    ShiftOverrideService --> ShiftOverrideRepository
+
+    DepartmentService --> DepartmentRepository
+    ShiftService --> ShiftRepository
+    LeaveTypeService --> LeaveTypeRepository
+    DocumentTypeService --> DocumentTypeRepository
+
+    LeaveRequestService --> LeaveRequestRepository
+    WorkerDocumentService --> WorkerDocumentRepository
+    NotificationService --> NotificationRepository
+
+    %% ==============================
+    %% CONTROLLERS (FITUR)
+    %% ==============================
+    class LoginController {
++showLoginForm(): View
++login(request): RedirectResponse
++logout(): RedirectResponse
+-getRedirectUrl(user): string
+    }
+    class ForgotPasswordController {
++showLinkRequestForm()
++sendResetLinkEmail(request)
+#getStatusMessage(status): string
+    }
+    class ResetPasswordController {
++showResetForm(request, token)
++reset(request)
+#getStatusMessage(status): string
+    }
+
+    class AdminDashboardController {
++index()
++getTodayAttendanceSummary()
++getPendingApprovalsCount()
+-getMonthlyAttendanceStats(departmentId): array
+-getLeaveStatsByType(departmentId): array
+-getDepartmentStats(departmentId): array
+-getPendingCheckouts(...)
+-formatHoursLate(hours): string
+    }
+    class HRDashboardController {
++index()
+-getPendingCheckouts(...)
+-formatHoursLate(hours): string
+    }
+    class ManagerDashboardController {
++index()
+-getPendingCheckouts(...)
+-formatHoursLate(hours): string
+    }
+    class EmployeeDashboardController {
++index()
+-getAttendanceSummary(workerId, period): array
+-getAttendanceChart(workerId, days): array
+-getLeaveSummary(workerId): array
+-getRecentActivities(workerId, limit)
+-getUpcomingLeaves(workerId, limit)
+-getLeaveBalance(workerId): array
+    }
+
+    class AttendanceController {
++index(request)
++create()
++checkInForm(workerId)
++checkIn(request)
++checkOutForm(id)
++checkOut(request, id)
++show(id)
++destroy(id)
++dailyReport(request)
++monthlyReport(request)
++export(request)
++workerList(request)
++history(request, workerId)
++workerStats(request, workerId)
++getAttendanceDetail(id)
+-performCheckIn(data): Attendance
+-performCheckOut(attendanceId, data): Attendance
+-calculateDistance(lat1, lon1, lat2, lon2): float
+    }
+    class EmployeeAttendanceController {
++index(request)
++checkInForm()
++checkOutForm()
++checkIn(request)
++checkOut(request, id)
++show(id)
++photo(id, type)
++export(request)
++exportPdf(request)
+-computeVirtualAbsentDays(...): Collection
+-buildMonthlyExportRows(worker, startDate, endDate): array
+-performCheckIn(data): Attendance
+-performCheckOut(attendanceId, data): Attendance
+    }
+
+    class BusinessTripApprovalController {
++index(request)
++show(id)
++approve(id)
++reject(request, id)
++destroy(id)
++export(request)
+    }
+    class DocumentApprovalController {
++index(request)
++show(id)
++verify(request, id)
++reject(request, id)
+    }
+
+    class LeaveRequestController {
++index(request)
++create()
++store(request)
++show(id)
++destroy(id)
++approve(id)
++reject(request, id)
++cancel(id)
++export(request)
++workerLeaveBalance(workerId)
+    }
+    class EmployeeLeaveController {
++index(request)
++create()
++store(request)
++show(id)
++cancel(id)
++export(request)
++exportPdf(request)
+    }
+
+    class EmployeeBusinessTripController {
++index(request)
++create()
++store(request)
++show(id)
++cancel(id)
++export(request)
+    }
+
+    class WorkerDocumentController {
++index(request)
++create()
++store(request)
++documentTypesForWorker(request)
++show(id)
++verify(request, id)
++reject(request, id)
++download(id)
++workerDocuments(workerId)
++expired()
++expiring(request)
+    }
+    class EmployeeDocumentController {
++index(request)
++create()
++store(request)
++show(id)
++download(id)
++preview(id)
++destroy(id)
+    }
+
+    class WorkerShiftController {
++index(request)
++create()
++generate()
++generateStore(request)
++store(request)
++show(id)
++edit(id)
++update(request, id)
++destroy(id)
++workerShifts(workerId)
++calendarData(request)
+    }
+    class WorkerShiftScheduleController {
++index(request)
++show(id)
++create()
++store(request)
++edit(id)
++update(request, id)
++destroy(id)
++workerSchedule(request, workerId)
++bulkCreate(request)
++calendar(request)
+    }
+    class ShiftOverrideController {
++index(request)
++create()
++store(request)
++bulkCreate(request)
++destroy(id)
+    }
+    class EmployeeShiftController {
++index(request)
++show(request)
+-buildCalendar(...)
+    }
+    class EmployeeShiftSwapController {
++index(request)
++create()
++store(request)
++accept(request, id)
++reject(request, id)
++cancel(request, id)
++showAcceptOpen(id)
++acceptOpen(request, id)
++export(request)
+    }
+    class ShiftSwapApprovalController {
++index(request)
++show(id)
++approve(request, id)
++reject(request, id)
++execute(request, id)
++revert(request, id)
++export(request)
+    }
+
+    class HolidayController {
++index(request)
++create()
++store(request)
++edit(id)
++update(request, id)
++destroy(id)
++bulkCreate()
++bulkStore(request)
++autoGenerate(request)
++storeAutoGenerate(request)
+    }
+    class ReportController {
++attendance(request)
++leaves(request)
++workerDocuments(request)
++workers(request)
++exportAttendance(request)
++exportLeaves(request)
++exportWorkerDocuments(request)
+    }
+    class AttendanceReportController {
++index(request)
+-calculateWorkingDays(startDate, endDate): int
+    }
+    class NotificationController {
++index(request)
++unread()
++unreadCount()
++markAsRead(id)
++markAllAsRead()
++destroy(id)
+    }
+    class EmployeeNotificationController {
++index(request)
++getUnreadCount()
++getUnread()
++markAsRead(id)
++markAllAsRead()
++destroy(id)
+    }
+
+    LoginController --> AuthService
+    ForgotPasswordController --> User
+    ResetPasswordController --> User
+
+    AdminDashboardController --> DashboardService
+    HRDashboardController --> DashboardService
+    ManagerDashboardController --> DashboardService
+    EmployeeDashboardController --> EmployeeDashboardService
+
+    AttendanceController --> WorkerOffDayService
+    AttendanceController --> ShiftSwapService
+    EmployeeAttendanceController --> WorkerOffDayService
+
+    BusinessTripApprovalController --> BusinessTrip
+    DocumentApprovalController --> WorkerDocumentService
+
+    LeaveRequestController --> LeaveRequestService
+    EmployeeLeaveController --> LeaveRequestService
+
+    EmployeeBusinessTripController --> BusinessTrip
+
+    WorkerDocumentController --> WorkerDocumentService
+    EmployeeDocumentController --> WorkerDocumentService
+
+    WorkerShiftController --> WorkerShiftService
+    WorkerShiftScheduleController --> WorkerShiftService
+    ShiftOverrideController --> ShiftOverrideService
+    EmployeeShiftController --> WorkerShiftService
+    EmployeeShiftSwapController --> ShiftSwapService
+    ShiftSwapApprovalController --> ShiftSwapService
+
+    HolidayController --> Holiday
+    ReportController --> PdfExportService
+    AttendanceReportController --> Attendance
+    NotificationController --> NotificationService
+    EmployeeNotificationController --> NotificationService
+
+    %% ==============================
+    %% FITUR SUMMARY (AGGREGATE VIEW)
+    %% ==============================
+    class Feature_Auth
+    class Feature_Attendance
+    class Feature_Leave
+    class Feature_BusinessTrip
+    class Feature_Documents
+    class Feature_ShiftAndSwap
+    class Feature_Notification
+    class Feature_MasterData
+    class Feature_ReportAndAudit
+
+    Feature_Auth --> LoginController
+    Feature_Auth --> User
+    Feature_Auth --> Role
+
+    Feature_Attendance --> AttendanceController
+    Feature_Attendance --> EmployeeAttendanceController
+    Feature_Attendance --> Attendance
+    Feature_Attendance --> AttendancePhoto
+
+    Feature_Leave --> LeaveRequestController
+    Feature_Leave --> LeaveRequest
+    Feature_Leave --> LeaveType
+
+    Feature_BusinessTrip --> EmployeeBusinessTripController
+    Feature_BusinessTrip --> BusinessTripApprovalController
+    Feature_BusinessTrip --> BusinessTrip
+
+    Feature_Documents --> WorkerDocumentController
+    Feature_Documents --> DocumentApprovalController
+    Feature_Documents --> WorkerDocument
+    Feature_Documents --> DocumentType
+
+    Feature_ShiftAndSwap --> WorkerShiftController
+    Feature_ShiftAndSwap --> ShiftOverrideController
+    Feature_ShiftAndSwap --> ShiftSwapApprovalController
+    Feature_ShiftAndSwap --> Shift
+    Feature_ShiftAndSwap --> ShiftSwapRequest
+
+    Feature_Notification --> NotificationController
+    Feature_Notification --> EmployeeNotificationController
+    Feature_Notification --> Notification
+
+    Feature_MasterData --> DepartmentService
+    Feature_MasterData --> ShiftService
+    Feature_MasterData --> LeaveTypeService
+    Feature_MasterData --> DocumentTypeService
+
+    Feature_ReportAndAudit --> ReportController
+    Feature_ReportAndAudit --> AttendanceReportController
+    Feature_ReportAndAudit --> AuditLog

@@ -3,7 +3,7 @@
 @section('title', 'Detail Perjalanan Dinas')
 
 @section('content')
-<div class="space-y-6" x-data="{ showApproveModal: false, showRejectModal: false, rejectionReason: '' }">
+<div class="space-y-6">
     <!-- Breadcrumb -->
     <nav class="flex" aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-3">
@@ -25,10 +25,10 @@
         </div>
         @if($trip->status === 'pending')
         <div class="flex gap-2">
-            <button @click="showApproveModal = true" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            <button type="button" onclick="confirmBusinessTripApprove()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                 <i class="fas fa-check mr-2"></i>Setujui
             </button>
-            <button @click="showRejectModal = true" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+            <button type="button" onclick="confirmBusinessTripReject()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                 <i class="fas fa-times mr-2"></i>Tolak
             </button>
         </div>
@@ -342,65 +342,90 @@
         </div>
     </div>
 
-    <!-- Approve Modal -->
-    <div x-show="showApproveModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showApproveModal = false"></div>
-            <div class="relative bg-white rounded-lg max-w-md w-full p-6">
-                <h3 class="text-lg font-semibold mb-4">Setujui Permohonan</h3>
-                <form method="POST" action="{{ route('approvals.business-trips.approve', $trip->id) }}">
-                    @csrf
-                    <div class="flex justify-end gap-2">
-                        <button type="button" @click="showApproveModal = false"
-                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                            Batal
-                        </button>
-                        <button type="submit"
-                                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                            <i class="fas fa-check mr-2"></i>Approve
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <form id="approve-business-trip-form" method="POST" action="{{ route('approvals.business-trips.approve', $trip->id) }}" class="hidden">
+        @csrf
+    </form>
 
-    <!-- Reject Modal -->
-    <div x-show="showRejectModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showRejectModal = false"></div>
-            <div class="relative bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-900 mb-1">Tolak Perjalanan Dinas</h3>
-                <p class="text-sm text-gray-500 mb-4">Tuliskan alasan yang jelas agar pegawai dapat melakukan perbaikan.</p>
-                <form method="POST" action="{{ route('approvals.business-trips.reject', $trip->id) }}">
-                    @csrf
-                    <div class="mb-4 rounded-lg border border-red-100 bg-red-50/50 p-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Alasan Penolakan <span class="text-red-500">*</span>
-                        </label>
-                        <textarea x-model="rejectionReason" name="rejection_reason" rows="4" required
-                                  class="w-full rounded-lg border-gray-300 text-sm focus:border-red-500 focus:ring focus:ring-red-200"
-                                  placeholder="Isi alasan penolakan."></textarea>
-                        <p class="text-xs text-gray-500 mt-2">Alasan ini akan ditampilkan ke pegawai sebagai catatan penolakan.</p>
-                    </div>
-                    <div class="flex justify-end gap-2">
-                        <button type="button" @click="showRejectModal = false"
-                                class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
-                            Batal
-                        </button>
-                        <button type="submit"
-                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                            <i class="fas fa-times mr-2"></i>Tolak
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <form id="reject-business-trip-form" method="POST" action="{{ route('approvals.business-trips.reject', $trip->id) }}" class="hidden">
+        @csrf
+        <input type="hidden" name="rejection_reason" id="reject-business-trip-reason">
+    </form>
 </div>
 
-@push('styles')
-<style>[x-cloak]{display:none!important}</style>
+@push('scripts')
+<script>
+    function confirmBusinessTripApprove() {
+        const form = document.getElementById('approve-business-trip-form');
+        if (!form) {
+            return;
+        }
+
+        if (window.Swal) {
+            window.Swal.fire({
+                title: 'Setujui perjalanan dinas?',
+                text: 'Permohonan akan diproses sebagai disetujui.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, setujui',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+            return;
+        }
+
+        if (window.confirm('Setujui perjalanan dinas ini?')) {
+            form.submit();
+        }
+    }
+
+    function confirmBusinessTripReject() {
+        const form = document.getElementById('reject-business-trip-form');
+        const reasonInput = document.getElementById('reject-business-trip-reason');
+
+        if (!form || !reasonInput) {
+            return;
+        }
+
+        if (window.Swal) {
+            window.Swal.fire({
+                title: 'Tolak perjalanan dinas?',
+                text: 'Alasan penolakan wajib diisi.',
+                icon: 'warning',
+                input: 'textarea',
+                inputPlaceholder: 'Tulis alasan penolakan...',
+                inputAttributes: {
+                    'aria-label': 'Alasan penolakan',
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Ya, tolak',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'Alasan penolakan wajib diisi.';
+                    }
+                    return null;
+                },
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    reasonInput.value = (result.value || '').trim();
+                    form.submit();
+                }
+            });
+            return;
+        }
+
+        const reason = window.prompt('Masukkan alasan penolakan:');
+        if (reason && reason.trim()) {
+            reasonInput.value = reason.trim();
+            form.submit();
+        }
+    }
+</script>
 @endpush
 
 @endsection
