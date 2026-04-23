@@ -40,7 +40,7 @@ class EnhancedWorkerDocumentSeeder extends Seeder
             for ($i = 0; $i < $docCount; $i++) {
                 // Avoid duplicate document types per worker
                 $availableTypes = $documentTypes->whereNotIn('id', $usedTypes);
-                
+
                 if ($availableTypes->isEmpty()) {
                     break;
                 }
@@ -49,7 +49,7 @@ class EnhancedWorkerDocumentSeeder extends Seeder
                 $usedTypes[] = $documentType->id;
 
                 $status = $this->getRandomStatus($statuses);
-                
+
                 $doc = $this->createWorkerDocument($worker, $documentType, $status);
 
                 $this->command->info("Created {$status} document for {$worker->name}: {$documentType->name}");
@@ -101,7 +101,8 @@ class EnhancedWorkerDocumentSeeder extends Seeder
             'file_path' => $filePath,
             'file_size' => $fileSize,
             'status' => $status,
-            'uploaded_at' => $now->copy()->subDays(rand(1, 90)),
+            'created_at' => $now->copy()->subDays(rand(1, 90)),
+            'updated_at' => $now,
         ];
 
         // Add notes (40% kemungkinan)
@@ -119,10 +120,10 @@ class EnhancedWorkerDocumentSeeder extends Seeder
         // Add verification details
         if (in_array($status, ['verified', 'rejected'])) {
             $verifier = \App\Models\User::role(['HR', 'Super Admin'])->inRandomOrder()->first();
-            
+
             if ($verifier) {
                 $data['verified_by'] = $verifier->id;
-                $data['verified_at'] = $data['uploaded_at']->copy()->addDays(rand(1, 5));
+                $data['verified_at'] = $data['created_at']->copy()->addDays(rand(1, 5));
             }
 
             if ($status === 'rejected') {
@@ -135,9 +136,9 @@ class EnhancedWorkerDocumentSeeder extends Seeder
                     'Ukuran file terlalu besar',
                     'Dokumen tidak sesuai dengan yang diminta',
                 ];
-                $data['rejection_reason'] = $rejectionReasons[array_rand($rejectionReasons)];
+                $data['notes'] = $rejectionReasons[array_rand($rejectionReasons)];
             } else {
-                $data['verification_notes'] = 'Dokumen telah diverifikasi dan sesuai';
+                $data['notes'] = 'Dokumen telah diverifikasi dan sesuai';
             }
         }
 
@@ -153,7 +154,7 @@ class EnhancedWorkerDocumentSeeder extends Seeder
 
         if ($needsExpiry || rand(1, 100) <= 50) {
             // Expiry date: 6 bulan - 5 tahun dari sekarang
-            $data['expiry_date'] = $now->copy()->addMonths(rand(6, 60));
+            $data['expired_date'] = $now->copy()->addMonths(rand(6, 60));
         }
 
         return WorkerDocument::create($data);

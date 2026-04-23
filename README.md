@@ -250,7 +250,7 @@ sudo nano /etc/supervisor/conf.d/simpegrs-worker.conf
 
 ## 🗄️ Struktur Database
 
-Sistem menggunakan **26 tabel** yang terbagi dalam 5 kategori:
+Sistem menggunakan tabel-tabel inti berikut:
 
 ### Authentication & Users
 - `users` - User accounts
@@ -259,9 +259,6 @@ Sistem menggunakan **26 tabel** yang terbagi dalam 5 kategori:
 
 ### Master Data
 - `departments` - Departemen
-- `genders` - Jenis kelamin
-- `religions` - Agama
-- `locations` - Lokasi kantor
 - `document_types` - Tipe dokumen
 - `leave_types` - Tipe cuti
 - `shifts` - Master shift
@@ -269,15 +266,19 @@ Sistem menggunakan **26 tabel** yang terbagi dalam 5 kategori:
 ### HR Management
 - `workers` - Data karyawan
 - `worker_documents` - Dokumen karyawan
-- `department_document_types` - Mapping dokumen required per departemen
+- `department_document_type` - Mapping dokumen required per departemen
 
 ### Attendance
 - `attendances` - Data absensi
 - `attendance_photos` - Foto absensi
 - `worker_shifts` - Jadwal shift karyawan
 - `shift_overrides` - Override shift
-- `custom_working_days` - Hari kerja custom
+- `worker_off_days` - Hari off per karyawan
 - `holidays` - Data libur
+
+### Shift Management
+- `shift_day_times` - Jadwal harian per shift
+- `worker_shift_histories` - Riwayat perubahan shift
 
 ### Leave Management
 - `leave_requests` - Pengajuan cuti

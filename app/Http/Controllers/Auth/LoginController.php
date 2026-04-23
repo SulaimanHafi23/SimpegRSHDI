@@ -51,7 +51,7 @@ class LoginController extends Controller
             if (!$user) {
                 $result = [
                     'success' => false,
-                    'message' => 'Email atau username tidak ditemukan.',
+                    'message' => 'Username atau password tidak sesuai.',
                 ];
             } elseif (!$user->is_active) {
                 $result = [
@@ -61,7 +61,7 @@ class LoginController extends Controller
             } elseif (!Hash::check($credentials['password'], $user->password)) {
                 $result = [
                     'success' => false,
-                    'message' => 'Password yang Anda masukkan salah.',
+                    'message' => 'Username atau password tidak sesuai.',
                 ];
             } elseif (!Auth::attempt($credentials, $remember)) {
                 $result = [

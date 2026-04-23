@@ -15,67 +15,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // Master Data Repositories
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\DepartmentRepositoryInterface::class,
-            \App\Repositories\Master\DepartmentRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\ShiftRepositoryInterface::class,
-            \App\Repositories\Master\ShiftRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\DocumentTypeRepositoryInterface::class,
-            \App\Repositories\Master\DocumentTypeRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Master\LeaveTypeRepositoryInterface::class,
-            \App\Repositories\Master\LeaveTypeRepository::class
-        );
-
-        // Other Repositories
-        $this->app->bind(
-            \App\Repositories\Contracts\Worker\WorkerRepositoryInterface::class,
-            \App\Repositories\Worker\WorkerRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\WorkerShift\WorkerShiftRepositoryInterface::class,
-            \App\Repositories\WorkerShift\WorkerShiftRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\ShiftOverride\ShiftOverrideRepositoryInterface::class,
-            \App\Repositories\ShiftOverride\ShiftOverrideRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Leave\LeaveRequestRepositoryInterface::class,
-            \App\Repositories\Leave\LeaveRequestRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\WorkerDocument\WorkerDocumentRepositoryInterface::class,
-            \App\Repositories\WorkerDocument\WorkerDocumentRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\User\UserRepositoryInterface::class,
-            \App\Repositories\User\UserRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Role\RoleRepositoryInterface::class,
-            \App\Repositories\Role\RoleRepository::class
-        );
-
-        $this->app->bind(
-            \App\Repositories\Contracts\Permission\PermissionRepositoryInterface::class,
-            \App\Repositories\Permission\PermissionRepository::class
-        );
+        // Intentionally left blank.
     }
 
     /**

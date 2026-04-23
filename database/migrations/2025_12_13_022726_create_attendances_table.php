@@ -15,7 +15,6 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('worker_id')->constrained('workers')->cascadeOnDelete();
             $table->foreignUuid('shift_id')->nullable()->constrained('shifts')->nullOnDelete();
-            $table->foreignUuid('location_id')->nullable()->constrained('locations')->nullOnDelete();
             $table->date('attendance_date');
 
             // Check In

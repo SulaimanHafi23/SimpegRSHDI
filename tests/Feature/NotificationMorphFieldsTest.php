@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class NotificationMorphFieldsTest extends TestCase
@@ -19,7 +20,7 @@ class NotificationMorphFieldsTest extends TestCase
         $this->user = User::factory()->create();
     }
 
-    /** @test */
+    #[Test]
     public function notification_creates_with_morph_fields()
     {
         // Create notification with explicit morph fields
@@ -35,7 +36,7 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertEquals($this->user->id, $notification->notifiable_id);
     }
 
-    /** @test */
+    #[Test]
     public function notification_stores_all_fields_correctly()
     {
         // Create notification with all available fields
@@ -53,7 +54,7 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertEquals(['key' => 'value'], $notification->data);
     }
 
-    /** @test */
+    #[Test]
     public function notification_morph_relationship_works_correctly()
     {
         $notification = Notification::create([
@@ -69,7 +70,7 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertEquals($this->user->id, $notification->notifiable->id);
     }
 
-    /** @test */
+    #[Test]
     public function notification_can_be_retrieved_by_notifiable_relationship()
     {
         $notification = Notification::create([
@@ -85,7 +86,7 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertEquals($notification->id, $retrieved->id);
     }
 
-    /** @test */
+    #[Test]
     public function notification_handles_uuid_correctly()
     {
         $notification = Notification::create([
@@ -100,23 +101,21 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertTrue(\Ramsey\Uuid\Uuid::isValid($notification->id));
     }
 
-    /** @test */
+    #[Test]
     public function multiple_notifications_can_belong_to_same_user()
     {
-        $notifications = [
-            Notification::create([
-                'notifiable_type' => User::class,
-                'notifiable_id' => $this->user->id,
-                'type' => 'leave_approved',
-                'data' => [],
-            ]),
-            Notification::create([
-                'notifiable_type' => User::class,
-                'notifiable_id' => $this->user->id,
-                'type' => 'business_trip_approved',
-                'data' => [],
-            ]),
-        ];
+        Notification::create([
+            'notifiable_type' => User::class,
+            'notifiable_id' => $this->user->id,
+            'type' => 'leave_approved',
+            'data' => [],
+        ]);
+        Notification::create([
+            'notifiable_type' => User::class,
+            'notifiable_id' => $this->user->id,
+            'type' => 'business_trip_approved',
+            'data' => [],
+        ]);
 
         $userNotifications = $this->user->notifications;
 
@@ -125,7 +124,7 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertTrue($userNotifications->pluck('type')->contains('business_trip_approved'));
     }
 
-    /** @test */
+    #[Test]
     public function notification_can_be_queried_by_type()
     {
         Notification::create([
@@ -148,7 +147,7 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertEquals('leave_approved', $leaveNotifications->first()->type);
     }
 
-    /** @test */
+    #[Test]
     public function notification_data_json_field_works_correctly()
     {
         $testData = [
@@ -169,3 +168,4 @@ class NotificationMorphFieldsTest extends TestCase
         $this->assertEquals('Sakit', $notification->data['reason']);
     }
 }
+

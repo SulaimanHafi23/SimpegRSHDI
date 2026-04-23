@@ -1126,10 +1126,12 @@ class AttendanceController extends Controller
         // Off-days (pola libur pekerja)
         $offDays = [];
         if ($worker) {
-            $offDayService = app(\App\Services\WorkerOffDay\WorkerOffDayService::class);
-            if (method_exists($offDayService, 'getOffDaysInRange')) {
-                $offDays = array_flip($offDayService->getOffDaysInRange($worker, $start, $end));
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                if ($worker->isOffDay($date)) {
+                    $offDays[] = $date->format('Y-m-d');
+                }
             }
+            $offDays = array_flip($offDays);
         }
 
         // Iterate per hari, hitung yang benar-benar hari kerja efektif
@@ -1469,10 +1471,8 @@ class AttendanceController extends Controller
                 throw new \Exception('Data pekerja tidak ditemukan.');
             }
 
-            $offDayService = app(\App\Services\WorkerOffDay\WorkerOffDayService::class);
-            $offDayCheck = $offDayService->canPerformAttendance($worker, $today, 'check_in');
-            if (!($offDayCheck['can_perform'] ?? false)) {
-                throw new \Exception($offDayCheck['message'] ?? 'Hari ini termasuk hari libur Anda.');
+            if ($worker->isOffDay(now())) {
+                throw new \Exception('Hari ini termasuk hari libur Anda.');
             }
 
             $existing = Attendance::where('worker_id', $workerId)
@@ -1653,15 +1653,8 @@ class AttendanceController extends Controller
                 throw new \Exception('Data pekerja tidak ditemukan.');
             }
 
-            $offDayService = app(\App\Services\WorkerOffDay\WorkerOffDayService::class);
-            $offDayCheck = $offDayService->canPerformAttendance(
-                $worker,
-                now()->format('Y-m-d'),
-                'check_out',
-                $attendance->attendance_date?->format('Y-m-d')
-            );
-            if (!($offDayCheck['can_perform'] ?? false)) {
-                throw new \Exception($offDayCheck['message'] ?? 'Tidak dapat check-out di hari libur.');
+            if ($worker->isOffDay(now()) && !$worker->canCheckOutOnDate(now(), $attendance->attendance_date)) {
+                throw new \Exception('Tidak dapat check-out di hari libur.');
             }
 
             if ($attendance->check_out) {

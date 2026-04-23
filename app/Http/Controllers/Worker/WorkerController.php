@@ -3,30 +3,30 @@
 namespace App\Http\Controllers\Worker;
 
 use App\Traits\DepartmentFilterable;
+use App\Models\Attendance;
+use App\Models\Department;
+use App\Models\LeaveRequest;
+use App\Models\User;
+use App\Models\Worker;
+use App\Models\WorkerShiftHistory;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Worker\WorkerRequest;
-use App\Models\Attendance;
-use App\Services\Worker\WorkerService;
-use App\Services\Master\DepartmentService;
-use App\Services\Role\RoleService;
-use App\Models\Department;
-use App\Models\Worker;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\WorkersExport;
 use App\Exports\WorkersTemplateExport;
 use App\Imports\WorkersImport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Spatie\Permission\Models\Role;
 
 class WorkerController extends Controller
 {
     use DepartmentFilterable;
 
-    public function __construct(
-        private readonly WorkerService $service,
-        private readonly DepartmentService $departmentService,
-        private readonly RoleService $roleService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
         $this->middleware('permission:worker.manage');
     }
@@ -46,11 +46,11 @@ class WorkerController extends Controller
             'per_page' => $request->input('per_page', 15),
         ];
 
-    $workers = $this->service->getAll($filters);
-    $departments = $this->departmentService->getAllActive();
-    $roles = $this->roleService->getAll();
+        $workers = $this->getWorkers($filters);
+        $departments = $this->getActiveDepartments();
+        $roles = $this->getRoles();
 
-    return view('admin.workers.index', compact('workers', 'departments', 'filters', 'roles'));
+        return view('admin.workers.index', compact('workers', 'departments', 'filters', 'roles'));
     }
 
     public function show(string $id)
@@ -58,7 +58,7 @@ class WorkerController extends Controller
         $this->authorizePermission('worker.manage');
 
         try {
-            $worker = $this->service->getById($id);
+            $worker = $this->findWorkerById($id);
 
             // Manager can only view workers in their department
             if (!$this->canManageWorker($id)) {
@@ -74,16 +74,21 @@ class WorkerController extends Controller
                 ->count();
 
             // Recent Leave Requests (last 5)
-            $leaveService = app(\App\Services\Leave\LeaveRequestService::class);
-            $leaveRequests = $leaveService->getByWorkerId($worker->id, [
-                'per_page' => 5,
-                'sort' => 'start_date',
-                'order' => 'desc',
-            ]);
+            $leaveRequests = LeaveRequest::query()
+                ->with(['leaveType', 'approver'])
+                ->where('worker_id', $worker->id)
+                ->orderByDesc('start_date')
+                ->orderByDesc('created_at')
+                ->limit(5)
+                ->get();
 
             // Shift history
-            $workerShiftService = app(\App\Services\WorkerShift\WorkerShiftService::class);
-            $shiftHistories = $workerShiftService->getShiftHistories($worker->id);
+            $shiftHistories = WorkerShiftHistory::query()
+                ->where('worker_id', $worker->id)
+                ->with(['shift', 'changedByUser'])
+                ->orderByDesc('changed_at')
+                ->orderByDesc('created_at')
+                ->get();
 
             return view('admin.workers.show', compact(
                 'worker',
@@ -216,7 +221,7 @@ class WorkerController extends Controller
     {
         $this->authorizePermission('worker.manage');
 
-        $departments = $this->departmentService->getAllActive();
+        $departments = $this->getActiveDepartments();
 
         return view('admin.workers.create', compact('departments'));
     }
@@ -226,7 +231,7 @@ class WorkerController extends Controller
         $this->authorizePermission('worker.manage');
 
         try {
-            $worker = $this->service->create($request->validated());
+            $this->createWorker($request->validated());
 
             return redirect()
                 ->route('admin.workers.index')
@@ -243,8 +248,8 @@ class WorkerController extends Controller
         $this->authorizePermission('worker.manage');
 
         try {
-            $worker = $this->service->getById($id);
-            $departments = $this->departmentService->getAllActive();
+            $worker = $this->findWorkerById($id);
+            $departments = $this->getActiveDepartments();
 
             return view('admin.workers.edit', compact('worker', 'departments'));
         } catch (\Exception $e) {
@@ -259,7 +264,7 @@ class WorkerController extends Controller
         $this->authorizePermission('worker.manage');
 
         try {
-            $worker = $this->service->update($id, $request->validated());
+            $this->updateWorker($id, $request->validated());
 
             return redirect()
                 ->route('admin.workers.show', $id)
@@ -276,7 +281,7 @@ class WorkerController extends Controller
         $this->authorizePermission('worker.manage');
 
         try {
-            $this->service->delete($id);
+            $this->deleteWorker($id);
 
             return redirect()
                 ->route('admin.workers.index')
@@ -296,7 +301,7 @@ class WorkerController extends Controller
         ]);
 
         try {
-            $this->service->resign($id, $validated['resign_date']);
+            $this->resignWorker($id, $validated['resign_date']);
 
             return back()->with('success', 'Pekerja berhasil di-resign.');
         } catch (\Exception $e) {
@@ -412,5 +417,150 @@ class WorkerController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+    }
+
+    private function getActiveDepartments()
+    {
+        return Department::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function getRoles()
+    {
+        return Role::query()
+            ->orderBy('name')
+            ->get();
+    }
+
+    private function findWorkerById(string $id): Worker
+    {
+        return Worker::query()
+            ->with(['department', 'activeWorkerShift.shift', 'workerShifts.shift'])
+            ->findOrFail($id);
+    }
+
+    private function createWorker(array $data): Worker
+    {
+        return DB::transaction(function () use ($data) {
+            $this->ensureWorkerUniqueness($data['nip'], $data['email']);
+
+            if (!empty($data['photo'])) {
+                $data['photo_url'] = $this->savePhoto($data['photo'], $data['nip']);
+            }
+
+            $worker = Worker::create($this->workerPayload($data));
+
+            return $worker->fresh(['department']);
+        });
+    }
+
+    private function updateWorker(string $id, array $data): Worker
+    {
+        return DB::transaction(function () use ($id, $data) {
+            $worker = $this->findWorkerById($id);
+
+            $this->ensureWorkerUniqueness($data['nip'], $data['email'], $worker->id);
+
+            if (!empty($data['photo'])) {
+                if ($worker->photo_url && Storage::disk('public')->exists($worker->photo_url)) {
+                    Storage::disk('public')->delete($worker->photo_url);
+                }
+
+                $data['photo_url'] = $this->savePhoto($data['photo'], $data['nip']);
+            } elseif (array_key_exists('photo_url', $data)) {
+                unset($data['photo_url']);
+            }
+
+            $worker->fill($this->workerPayload($data))->save();
+
+            return $worker->fresh(['department', 'activeWorkerShift.shift', 'workerShifts.shift']);
+        });
+    }
+
+    private function deleteWorker(string $id): bool
+    {
+        return DB::transaction(function () use ($id) {
+            $worker = $this->findWorkerById($id);
+
+            if ($worker->photo_url && Storage::disk('public')->exists($worker->photo_url)) {
+                Storage::disk('public')->delete($worker->photo_url);
+            }
+
+            return (bool) $worker->delete();
+        });
+    }
+
+    private function resignWorker(string $id, string $resignDate): Worker
+    {
+        return DB::transaction(function () use ($id, $resignDate) {
+            $worker = $this->findWorkerById($id);
+            $worker->update([
+                'status' => 'resigned',
+                'resign_date' => $resignDate,
+            ]);
+
+            return $worker->fresh(['department']);
+        });
+    }
+
+    private function ensureWorkerUniqueness(string $nip, string $email, ?string $ignoreId = null): void
+    {
+        $nipQuery = Worker::query()->where('nip', $nip);
+        $emailQuery = Worker::query()->where('email', $email);
+        $userEmailQuery = User::query()->where('email', $email);
+
+        if ($ignoreId) {
+            $nipQuery->where('id', '!=', $ignoreId);
+            $emailQuery->where('id', '!=', $ignoreId);
+            $userEmailQuery->where('worker_id', '!=', $ignoreId);
+        }
+
+        if ($nipQuery->exists()) {
+            throw new \Exception('NIP already exists.');
+        }
+
+        if ($emailQuery->exists()) {
+            throw new \Exception('Email already exists.');
+        }
+
+        if ($userEmailQuery->exists()) {
+            throw new \Exception('Email already exists.');
+        }
+    }
+
+    private function workerPayload(array $data): array
+    {
+        $payload = [
+            'nip' => $data['nip'],
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'phone_number' => $data['phone_number'],
+            'birth_place' => $data['birth_place'],
+            'birth_date' => $data['birth_date'],
+            'address' => $data['address'] ?? null,
+            'religion' => $data['religion'],
+            'gender' => $data['gender'],
+            'department_id' => $data['department_id'],
+            'hire_date' => $data['hire_date'],
+            'resign_date' => $data['resign_date'] ?? null,
+            'employment_status' => $data['employment_status'],
+            'status' => $data['status'] ?? 'active',
+        ];
+
+        if (array_key_exists('photo_url', $data)) {
+            $payload['photo_url'] = $data['photo_url'];
+        }
+
+        return $payload;
+    }
+
+    private function savePhoto($photo, string $nip): string
+    {
+        $ext = strtolower($photo->getClientOriginalExtension() ?? 'jpg');
+        $filename = sprintf('%s_photo_%s.%s', $nip, now()->format('YmdHis'), $ext);
+
+        return $photo->storeAs('worker-photos', $filename, 'public');
     }
 }

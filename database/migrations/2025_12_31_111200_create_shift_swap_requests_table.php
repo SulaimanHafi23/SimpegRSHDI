@@ -19,7 +19,6 @@ return new class extends Migration
             $table->uuid('requester_shift_id');
             $table->uuid('target_shift_id')->nullable();
             $table->string('swap_type')->default('single_date');
-            $table->date('swap_date')->nullable();
             $table->date('swap_start_date')->nullable();
             $table->date('swap_end_date')->nullable();
             $table->json('swap_dates')->nullable();
@@ -34,7 +33,6 @@ return new class extends Migration
             $table->json('metadata')->nullable();
 
             $table->timestamp('requested_at')->nullable();
-            $table->timestamp('expires_at')->nullable();
 
             $table->uuid('executed_by')->nullable();
             $table->timestamp('executed_at')->nullable();

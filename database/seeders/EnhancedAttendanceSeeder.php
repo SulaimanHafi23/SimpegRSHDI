@@ -153,6 +153,8 @@ class EnhancedAttendanceSeeder extends Seeder
 
         $lateMinutes = 0;
         $earlyMinutes = 0;
+        $isLate = false;
+        $isEarlyLeave = false;
         $status = 'present';
         $notes = null;
 
@@ -161,7 +163,7 @@ class EnhancedAttendanceSeeder extends Seeder
                 // Terlambat 5-120 menit
                 $lateMinutes = rand(5, 120);
                 $checkIn->addMinutes($lateMinutes);
-                $status = 'late';
+                $isLate = true;
                 $notes = "Terlambat {$lateMinutes} menit";
                 break;
 
@@ -169,7 +171,7 @@ class EnhancedAttendanceSeeder extends Seeder
                 // Pulang cepat 10-90 menit
                 $earlyMinutes = rand(10, 90);
                 $checkOut->subMinutes($earlyMinutes);
-                $status = 'early_out';
+                $isEarlyLeave = true;
                 $notes = "Pulang {$earlyMinutes} menit lebih awal";
                 break;
 
@@ -178,7 +180,8 @@ class EnhancedAttendanceSeeder extends Seeder
                 $earlyMinutes = rand(10, 60);
                 $checkIn->addMinutes($lateMinutes);
                 $checkOut->subMinutes($earlyMinutes);
-                $status = 'late';
+                $isLate = true;
+                $isEarlyLeave = true;
                 $notes = "Terlambat {$lateMinutes} menit, pulang {$earlyMinutes} menit lebih awal";
                 break;
 
@@ -189,9 +192,8 @@ class EnhancedAttendanceSeeder extends Seeder
                 break;
 
             case 'missing_checkin':
-                $checkIn = null;
-                $status = 'present';
-                $notes = 'Lupa check in';
+                // Kolom check_in wajib terisi pada skema terbaru.
+                $notes = 'Anomali: check-in tercatat otomatis';
                 break;
 
             case 'normal':
@@ -202,22 +204,19 @@ class EnhancedAttendanceSeeder extends Seeder
                 break;
         }
 
-        // Calculate work hours
-        $workHours = null;
-        if ($checkIn && $checkOut) {
-            $workHours = $checkIn->diffInHours($checkOut);
-        }
-
         return Attendance::create([
             'id' => Str::uuid(),
             'worker_id' => $worker->id,
-            'date' => $date->format('Y-m-d'),
+            'attendance_date' => $date->format('Y-m-d'),
             'check_in' => $checkIn,
             'check_out' => $checkOut,
+            'distance_check_in' => rand(10, 150),
+            'distance_check_out' => $checkOut ? rand(10, 150) : null,
             'status' => $status,
+            'is_late' => $isLate,
             'late_minutes' => $lateMinutes,
-            'early_minutes' => $earlyMinutes,
-            'work_hours' => $workHours,
+            'is_early_leave' => $isEarlyLeave,
+            'early_leave_minutes' => $earlyMinutes,
             'notes' => $notes,
             'created_at' => $date,
             'updated_at' => $date,
@@ -236,8 +235,7 @@ class EnhancedAttendanceSeeder extends Seeder
                 'attendance_id' => $attendance->id,
                 'photo_path' => 'attendance/sample_checkin_' . rand(1, 5) . '.jpg',
                 'photo_type' => 'check_in',
-                'latitude' => -6.200000 + (rand(-1000, 1000) / 10000),
-                'longitude' => 106.816666 + (rand(-1000, 1000) / 10000),
+                'taken_at' => $attendance->check_in,
                 'created_at' => $attendance->check_in,
                 'updated_at' => $attendance->check_in,
             ]);
@@ -250,8 +248,7 @@ class EnhancedAttendanceSeeder extends Seeder
                 'attendance_id' => $attendance->id,
                 'photo_path' => 'attendance/sample_checkout_' . rand(1, 5) . '.jpg',
                 'photo_type' => 'check_out',
-                'latitude' => -6.200000 + (rand(-1000, 1000) / 10000),
-                'longitude' => 106.816666 + (rand(-1000, 1000) / 10000),
+                'taken_at' => $attendance->check_out,
                 'created_at' => $attendance->check_out,
                 'updated_at' => $attendance->check_out,
             ]);

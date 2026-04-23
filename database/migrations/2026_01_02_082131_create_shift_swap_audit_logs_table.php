@@ -20,7 +20,6 @@ return new class extends Migration
             $table->string('new_status');
             $table->text('notes')->nullable();
             $table->json('metadata')->nullable();
-            $table->ipAddress('ip_address')->nullable();
             $table->string('user_agent')->nullable();
             $table->timestamps();
 

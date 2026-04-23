@@ -5,11 +5,11 @@ namespace Tests\Feature\Leaves;
 use App\Models\Department;
 use App\Models\LeaveRequest;
 use App\Models\LeaveType;
-use App\Models\Notification;
 use App\Models\User;
 use App\Models\Worker;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -180,7 +180,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function manager_can_see_approval_list_for_own_department_only()
     {
         $response = $this->actingAs($this->managerUserDeptA)
@@ -198,7 +198,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertNotContains($this->pendingLeaveDeptB->id, $departmentALeaveIds);
     }
 
-    /** @test */
+    #[Test]
     public function hr_can_see_approval_list_for_all_departments()
     {
         $response = $this->actingAs($this->hrUser)
@@ -215,7 +215,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertContains($this->pendingLeaveDeptB->id, $leaveIds);
     }
 
-    /** @test */
+    #[Test]
     public function manager_can_approve_leave_in_own_department()
     {
         $this->actingAs($this->managerUserDeptA)
@@ -230,7 +230,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertNotNull($this->pendingLeaveDeptA->approved_at);
     }
 
-    /** @test */
+    #[Test]
     public function manager_cannot_approve_leave_in_other_department()
     {
         $originalStatus = $this->pendingLeaveDeptB->status;
@@ -251,7 +251,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertEquals($originalApproverId, $this->pendingLeaveDeptB->approved_by);
     }
 
-    /** @test */
+    #[Test]
     public function hr_can_approve_leave_from_any_department()
     {
         $this->actingAs($this->hrUser)
@@ -265,7 +265,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertEquals($this->hrUser->id, $this->pendingLeaveDeptB->approved_by);
     }
 
-    /** @test */
+    #[Test]
     public function manager_can_reject_leave_in_own_department()
     {
         $this->actingAs($this->managerUserDeptA)
@@ -279,7 +279,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertEquals('Too many absences in this period', $this->pendingLeaveDeptA->rejection_reason);
     }
 
-    /** @test */
+    #[Test]
     public function cannot_approve_already_approved_leave()
     {
         // First approval
@@ -303,7 +303,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertEquals($this->managerUserDeptA->id, $this->pendingLeaveDeptA->approved_by);
     }
 
-    /** @test */
+    #[Test]
     public function approval_index_shows_correct_statistics()
     {
         // Create another leave in Department A (approved)
@@ -330,7 +330,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertEquals(1, $response->viewData('approvedCount')); // approved count should be 1
     }
 
-    /** @test */
+    #[Test]
     public function employee_cannot_access_approval_list()
     {
         $response = $this->actingAs($this->employeeUserDeptA)
@@ -340,7 +340,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $response->assertStatus(403);
     }
 
-    /** @test */
+    #[Test]
     public function manager_can_view_approval_detail()
     {
         $response = $this->actingAs($this->managerUserDeptA)
@@ -353,7 +353,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->assertEquals($this->pendingLeaveDeptA->id, $leave->id);
     }
 
-    /** @test */
+    #[Test]
     public function manager_cannot_view_approval_detail_from_other_department()
     {
         $response = $this->actingAs($this->managerUserDeptA)
@@ -363,3 +363,4 @@ class LeaveApprovalWorkflowTest extends TestCase
         $response->assertStatus(403);
     }
 }
+

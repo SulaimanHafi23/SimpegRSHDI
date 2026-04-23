@@ -5,13 +5,14 @@ namespace Tests\Unit;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class NotificationIntegrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test */
+    #[Test]
     public function notification_model_creates_successfully_with_morph_fields()
     {
         $user = User::factory()->create();
@@ -29,7 +30,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertEquals('test_notification', $notification->type);
     }
 
-    /** @test */
+    #[Test]
     public function notification_relationship_can_access_notifiable_user()
     {
         $user = User::factory()->create();
@@ -48,7 +49,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertEquals($user->id, $retrievedNotifiable->id);
     }
 
-    /** @test */
+    #[Test]
     public function user_can_have_multiple_notifications()
     {
         $user = User::factory()->create();
@@ -69,7 +70,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertTrue($notifications->pluck('type')->contains('notification_type_4'));
     }
 
-    /** @test */
+    #[Test]
     public function notifications_can_be_filtered_by_type()
     {
         $user1 = User::factory()->create();
@@ -101,7 +102,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertCount(2, $approvedNotifications);
     }
 
-    /** @test */
+    #[Test]
     public function notification_data_field_stores_json_correctly()
     {
         $user = User::factory()->create();
@@ -124,7 +125,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertEquals('Sakit Kepala', $retrieved->data['reason']);
     }
 
-    /** @test */
+    #[Test]
     public function notification_timestamps_are_set_correctly()
     {
         $user = User::factory()->create();
@@ -141,7 +142,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertNull($notification->read_at);
     }
 
-    /** @test */
+    #[Test]
     public function notification_can_be_marked_as_read()
     {
         $user = User::factory()->create();
@@ -161,7 +162,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertNotNull($notification->read_at);
     }
 
-    /** @test */
+    #[Test]
     public function notification_uuid_is_unique()
     {
         $user = User::factory()->create();
@@ -185,7 +186,7 @@ class NotificationIntegrationTest extends TestCase
         $this->assertTrue(\Ramsey\Uuid\Uuid::isValid($notification2->id));
     }
 
-    /** @test */
+    #[Test]
     public function multiple_users_can_have_same_notification_type()
     {
         $user1 = User::factory()->create();
@@ -206,3 +207,4 @@ class NotificationIntegrationTest extends TestCase
         $this->assertCount(3, $announcements);
     }
 }
+

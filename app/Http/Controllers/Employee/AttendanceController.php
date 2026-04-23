@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Employee;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\AttendancePhoto;
-use App\Services\WorkerOffDay\WorkerOffDayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +13,8 @@ use Illuminate\Support\Facades\Storage;
 
 class AttendanceController extends Controller
 {
-    public function __construct(
-        protected WorkerOffDayService $offDayService
-    ) {
+    public function __construct()
+    {
         $this->middleware('auth');
     }
 
@@ -204,13 +202,12 @@ class AttendanceController extends Controller
 
         // 4. Cek hari libur pola (off-day pattern / exception milik pegawai)
         if (!$todayOffInfo) {
-            $isWorkerOffDay = $this->offDayService->isOffDay($worker, $today);
+            $isWorkerOffDay = $worker->isOffDay(now());
             if ($isWorkerOffDay) {
-                $offDayDetail = $this->offDayService->getOffDayInfo($worker, $today);
                 $todayOffInfo = [
                     'type' => 'off_day',
                     'title' => 'Hari Libur Anda',
-                    'reason' => $offDayDetail['reason'] ?? 'Hari libur sesuai jadwal kerja Anda',
+                    'reason' => 'Hari libur sesuai jadwal kerja Anda',
                 ];
             }
         }
@@ -273,7 +270,7 @@ class AttendanceController extends Controller
         }
 
         // Hari libur pola pegawai (off-day)
-        if ($this->offDayService->isOffDay($worker, $today)) {
+        if ($worker->isOffDay(now())) {
             return redirect()->route('employee.attendance.index')
                 ->with('info', 'Hari ini adalah hari libur Anda sesuai jadwal kerja. Tidak perlu melakukan absensi.');
         }
@@ -404,14 +401,8 @@ class AttendanceController extends Controller
 
         try {
             // Check if worker has off-day for today
-            $offDayCheck = $this->offDayService->canPerformAttendance(
-                $worker,
-                now()->format('Y-m-d'),
-                'check_in'
-            );
-
-            if (!$offDayCheck['can_perform']) {
-                return back()->withInput()->with('error', 'Maaf, hari ini Anda libur. Alasan: ' . ($offDayCheck['message'] ?? 'Hari libur terjadwal'));
+            if ($worker->isOffDay(now())) {
+                return back()->withInput()->with('error', 'Maaf, hari ini Anda libur. Alasan: Hari libur terjadwal');
             }
 
             // Server-side check for accuracy (always enforce for present status)
@@ -516,15 +507,8 @@ class AttendanceController extends Controller
 
         // Smart off-day check for check-out with overnight shift support
         $checkOutDate = now()->format('Y-m-d');
-        $offDayCheck = $this->offDayService->canPerformAttendance(
-            $worker,
-            $checkOutDate,
-            'check_out',
-            $attendance->attendance_date->format('Y-m-d')  // pass check-in date for overnight logic
-        );
-
-        if (!$offDayCheck['can_perform']) {
-            return back()->withInput()->with('error', 'Tidak dapat check-out hari ini. Alasan: ' . ($offDayCheck['message'] ?? 'Status hari libur'));
+        if ($worker->isOffDay(now()) && !$worker->canCheckOutOnDate(now(), $attendance->attendance_date)) {
+            return back()->withInput()->with('error', 'Tidak dapat check-out hari ini. Alasan: Status hari libur');
         }
 
         $validated = $request->validate([
@@ -851,9 +835,12 @@ class AttendanceController extends Controller
 
         // Off days from worker's pattern in range
         $offDays = [];
-        if (method_exists($this->offDayService, 'getOffDaysInRange')) {
-            $offDays = array_flip($this->offDayService->getOffDaysInRange($worker, $start, $end));
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            if ($worker->isOffDay($date)) {
+                $offDays[] = $date->format('Y-m-d');
+            }
         }
+        $offDays = array_flip($offDays);
 
         // Approved leaves in range
         $approvedLeaves = \App\Models\LeaveRequest::where('worker_id', $worker->id)
@@ -1179,9 +1166,8 @@ class AttendanceController extends Controller
                 throw new \Exception('Data pekerja tidak ditemukan.');
             }
 
-            $offDayCheck = $this->offDayService->canPerformAttendance($worker, $today, 'check_in');
-            if (!($offDayCheck['can_perform'] ?? false)) {
-                throw new \Exception($offDayCheck['message'] ?? 'Hari ini termasuk hari libur Anda.');
+            if ($worker->isOffDay(now())) {
+                throw new \Exception('Hari ini termasuk hari libur Anda.');
             }
 
             $existing = Attendance::where('worker_id', $workerId)

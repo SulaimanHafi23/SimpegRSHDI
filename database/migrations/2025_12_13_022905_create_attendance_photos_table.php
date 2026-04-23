@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('photo_path');
             $table->enum('photo_type', ['check_in', 'check_out']);
             $table->timestamp('taken_at');
-            $table->timestamp('created_at');
+            $table->timestamps();
 
             $table->index('attendance_id');
         });

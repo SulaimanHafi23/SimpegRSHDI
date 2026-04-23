@@ -40,10 +40,10 @@ class EnhancedLeaveRequestSeeder extends Seeder
             for ($i = 0; $i < $requestCount; $i++) {
                 $status = $this->getRandomStatus($statuses);
                 $leaveType = $leaveTypes->random();
-                
+
                 // Generate date ranges
                 $dateRange = $this->generateDateRange($status);
-                
+
                 $leave = $this->createLeaveRequest(
                     $worker,
                     $leaveType,
@@ -166,7 +166,7 @@ class EnhancedLeaveRequestSeeder extends Seeder
         if (in_array($status, ['approved', 'rejected'])) {
             // Get a manager or HR user
             $approver = \App\Models\User::role(['Manager', 'HR', 'Super Admin'])->inRandomOrder()->first();
-            
+
             if ($approver) {
                 $data['approved_by'] = $approver->id;
                 $data['approved_at'] = $data['created_at']->copy()->addDays(rand(1, 3));
@@ -177,11 +177,7 @@ class EnhancedLeaveRequestSeeder extends Seeder
             }
         }
 
-        // Add cancellation details
-        if ($status === 'cancelled') {
-            $data['cancelled_at'] = $data['created_at']->copy()->addDays(rand(1, 5));
-            $data['cancellation_reason'] = 'Dibatalkan karena perubahan rencana';
-        }
+        // Status cancelled tetap disimpan hanya lewat kolom status pada skema final.
 
         // Add attachment (30% kemungkinan)
         if (rand(1, 100) <= 30) {

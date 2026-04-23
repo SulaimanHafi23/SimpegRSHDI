@@ -9,6 +9,7 @@ use App\Models\Worker;
 use App\Models\WorkerShift;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -111,7 +112,7 @@ class ShiftSwapWorkflowTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function employee_can_create_swap_request()
     {
         $response = $this->actingAs($this->requesterUser)
@@ -134,7 +135,7 @@ class ShiftSwapWorkflowTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function target_worker_can_accept_swap_request()
     {
         // Create swap
@@ -158,12 +159,12 @@ class ShiftSwapWorkflowTest extends TestCase
         $response->assertSessionHas('success');
 
         $swap->refresh();
-        // Same department swaps are auto-executed after target acceptance
-        $this->assertEquals('executed', $swap->status);
-        $this->assertFalse($swap->requires_manager_approval);
+        // Target acceptance now always requires final manager/HR/admin approval.
+        $this->assertEquals('awaiting_approval', $swap->status);
+        $this->assertTrue($swap->requires_manager_approval);
     }
 
-    /** @test */
+    #[Test]
     public function cross_department_swap_request_is_rejected()
     {
         // Make target cross-department just for this scenario
@@ -185,10 +186,10 @@ class ShiftSwapWorkflowTest extends TestCase
         ]);
     }
 
-    /** @test */
-    public function target_acceptance_auto_executes_swap_and_creates_overrides()
+    #[Test]
+    public function target_acceptance_moves_to_awaiting_approval_without_execution()
     {
-        // Create and accept swap (same department: auto-executes)
+        // Create and accept swap.
         $this->actingAs($this->requesterUser)
             ->post(route('employee.shift-swaps.store'), [
                 'requester_shift_id' => $this->requesterShift->id,
@@ -206,23 +207,23 @@ class ShiftSwapWorkflowTest extends TestCase
 
         $swap->refresh();
 
-        // Verify swap was auto-executed after target acceptance
-        $this->assertEquals('executed', $swap->status);
-        $this->assertNotNull($swap->executed_at);
+        // Verify swap is awaiting final approval and has not executed yet.
+        $this->assertEquals('awaiting_approval', $swap->status);
+        $this->assertNull($swap->executed_at);
         $this->assertNull($swap->manager_approved_at);
 
-        // Verify ShiftOverride records were created
-        $this->assertDatabaseHas('shift_overrides', [
+        // ShiftOverride records must not exist before final approval/execution.
+        $this->assertDatabaseMissing('shift_overrides', [
             'worker_id' => $swap->requester_id,
             'shift_swap_request_id' => $swap->id,
         ]);
-        $this->assertDatabaseHas('shift_overrides', [
+        $this->assertDatabaseMissing('shift_overrides', [
             'worker_id' => $swap->target_worker_id,
             'shift_swap_request_id' => $swap->id,
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function requester_can_cancel_pending_swap()
     {
         $this->actingAs($this->requesterUser)
@@ -246,7 +247,7 @@ class ShiftSwapWorkflowTest extends TestCase
         $this->assertEquals('cancelled', $swap->status);
     }
 
-    /** @test */
+    #[Test]
     public function target_worker_can_reject_swap()
     {
         $this->actingAs($this->requesterUser)
@@ -272,7 +273,7 @@ class ShiftSwapWorkflowTest extends TestCase
         $this->assertEquals('rejected', $swap->status);
     }
 
-    /** @test */
+    #[Test]
     public function audit_logs_are_created_for_all_actions()
     {
         // Create swap
@@ -303,14 +304,16 @@ class ShiftSwapWorkflowTest extends TestCase
             'action' => 'accepted',
         ]);
 
-        $this->assertDatabaseHas('shift_swap_audit_logs', [
+        // Current flow logs created + accepted at employee stage.
+        // Manager approval/execution logs are created in manager approval flow.
+        $this->assertDatabaseMissing('shift_swap_audit_logs', [
             'shift_swap_request_id' => $swap->id,
             'action' => 'executed',
         ]);
 
-        // Should have 3 audit log entries (created, accepted, executed)
+        // Should have 2 audit log entries at this stage (created, accepted)
         $auditCount = \App\Models\ShiftSwapAuditLog::where('shift_swap_request_id', $swap->id)->count();
-        $this->assertEquals(3, $auditCount);
+        $this->assertEquals(2, $auditCount);
     }
 
     private function createWorker(Department $department, string $name): Worker
@@ -334,3 +337,4 @@ class ShiftSwapWorkflowTest extends TestCase
         ]);
     }
 }
+

@@ -18,12 +18,17 @@ return new class extends Migration
             $table->text('purpose')->nullable();
             $table->date('start_date');
             $table->date('end_date');
+            $table->string('trip_duration_type')->default('full_day');
+            $table->string('half_day_session')->nullable();
+            $table->string('transportation')->nullable();
+            $table->string('accommodation')->nullable();
+            $table->text('notes')->nullable();
+            $table->string('supporting_document_path')->nullable();
             $table->decimal('estimated_cost', 12, 2)->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected', 'cancelled'])->default('pending');
             $table->foreignUuid('approved_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('approved_at')->nullable();
             $table->text('rejection_reason')->nullable();
-            $table->json('itinerary')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

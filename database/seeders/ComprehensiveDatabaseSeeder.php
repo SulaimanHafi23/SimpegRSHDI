@@ -142,11 +142,10 @@ class ComprehensiveDatabaseSeeder extends Seeder
             'permissions',
             'roles',
             'holidays',
-            'department_document_types',
+            'department_document_type',
             'document_types',
             'leave_types',
             'shifts',
-            'locations',
             'departments',
         ];
 
@@ -165,7 +164,6 @@ class ComprehensiveDatabaseSeeder extends Seeder
             ['Table', 'Count'],
             [
                 ['Departments', DB::table('departments')->count()],
-                ['Locations', DB::table('locations')->count()],
                 ['Shifts', DB::table('shifts')->count()],
                 ['Leave Types', DB::table('leave_types')->count()],
                 ['Document Types', DB::table('document_types')->count()],
