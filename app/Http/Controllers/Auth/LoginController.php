@@ -91,10 +91,9 @@ class LoginController extends Controller
             // Log login event
             AuditLog::log('login', 'User berhasil login', $result['user']);
 
-            // Redirect based on role
-            return redirect()->intended(
-                $this->getRedirectUrl($result['user'])
-            );
+            // Always send the user to the default dashboard for their role.
+            // This avoids stale intended URLs from expired sessions.
+            return redirect()->to($this->getRedirectUrl($result['user']));
 
         } catch (\Exception $e) {
             return back()

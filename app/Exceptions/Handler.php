@@ -51,10 +51,12 @@ class Handler extends ExceptionHandler
                 ], 419);
             }
 
-            // Otherwise redirect back with an error flash
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Session Anda telah berakhir. Silakan coba lagi.');
+            // Clear any stale intended URL and send the user back to login.
+            $request->session()->forget('url.intended');
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')
+                ->with('error', 'Session Anda telah berakhir. Silakan login kembali.');
         }
 
         // Handle oversized POST (HTTP 413) with a friendly message

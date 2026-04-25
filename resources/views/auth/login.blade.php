@@ -273,6 +273,18 @@
                     </div>
 
                     <!-- Error Messages -->
+                    @if (session('error'))
+                        <div class="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg">
+                            <div class="flex items-start">
+                                <i class="fas fa-clock text-amber-500 text-xl mr-3 mt-0.5"></i>
+                                <div>
+                                    <strong class="font-semibold text-amber-800">Sesi habis</strong>
+                                    <p class="text-sm text-amber-700 mt-1">{{ session('error') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     @if ($errors->any())
                         <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
                             <div class="flex items-start">

@@ -108,7 +108,7 @@ class WorkerController extends Controller
         $this->authorizePermission('worker.manage');
 
         try {
-            $worker = $this->service->getById($id);
+            $worker = $this->findWorkerById($id);
 
             // Get month and year from request, default to current month
             $month = $request->input('month', now()->month);
@@ -562,5 +562,71 @@ class WorkerController extends Controller
         $filename = sprintf('%s_photo_%s.%s', $nip, now()->format('YmdHis'), $ext);
 
         return $photo->storeAs('worker-photos', $filename, 'public');
+    }
+
+    private function getWorkers(array $filters)
+    {
+        $query = Worker::query()->with(['department', 'activeWorkerShift.shift']);
+
+        // Apply search filter
+        if (!empty($filters['search'])) {
+            $searchTerm = strtolower($filters['search']);
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(nip) LIKE ?', ['%' . $searchTerm . '%'])
+                    ->orWhereRaw('LOWER(email) LIKE ?', ['%' . $searchTerm . '%']);
+            });
+        }
+
+        // Apply status filter
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        // Apply employment status filter
+        if (!empty($filters['employment_status'])) {
+            $query->where('employment_status', $filters['employment_status']);
+        }
+
+        // Apply department filter
+        if (!empty($filters['department_id'])) {
+            $query->where('department_id', $filters['department_id']);
+        }
+
+        // Apply pagination
+        $perPage = $filters['per_page'] ?? 15;
+
+        return $query->orderBy('name')->paginate($perPage);
+    }
+
+    private function canManageWorker(string $workerId): bool
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return false;
+        }
+
+        // Super Admin can manage all workers
+        if ($user->hasRole('Super Admin')) {
+            return true;
+        }
+
+        // HR can manage all workers
+        if ($user->hasRole('HR')) {
+            return true;
+        }
+
+        // Manager can only manage workers in their department
+        if ($user->hasRole('Manager')) {
+            $worker = Worker::find($workerId);
+            if (!$worker) {
+                return false;
+            }
+
+            $managerDeptId = $this->getManagerDepartmentFilter();
+            return $worker->department_id == $managerDeptId;
+        }
+
+        return false;
     }
 }
