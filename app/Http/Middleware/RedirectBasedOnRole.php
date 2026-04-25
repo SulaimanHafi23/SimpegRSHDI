@@ -24,43 +24,25 @@ class RedirectBasedOnRole
 
         $currentPath = $request->path();
 
-        // Get user's first role
-        $role = $user->roles->first()?->name;
-
-        // Define admin roles
-        $adminRoles = ['Super Admin', 'HR', 'Manager'];
-        $isAdmin = in_array($role, $adminRoles);
-
-        // If accessing /dashboard
+        // If accessing /dashboard - check permission
         if ($currentPath === 'dashboard') {
-            if ($isAdmin) {
-                // Admin accessing /dashboard - allow
+            if ($user->can('dashboard.admin')) {
                 return $next($request);
             } else {
-                // Employee accessing /dashboard - redirect to employee dashboard
+                // Redirect to employee dashboard if no admin permission
                 return redirect()->route('employee.dashboard');
             }
         }
 
-        // If accessing /employee/dashboard or /employee/*
+        // If accessing /employee/dashboard or /employee/* - check permission
         if (str_starts_with($currentPath, 'employee/')) {
-            // Allow access if user has a worker profile (any role with worker can use employee features)
-            if ($user->worker) {
+            if ($user->can('dashboard.employee') && $user->worker) {
                 return $next($request);
             }
 
-            // Check if user has employee role or permission
-            if ($user->hasRole('Employee') || $user->can('dashboard.employee')) {
-                return $next($request);
-            }
-
-            // No worker profile and no employee role - redirect to admin dashboard if admin
-            if ($isAdmin) {
-                return redirect()->route('admin.dashboard');
-            }
+            return redirect()->route('home');
         }
 
-        // For other routes, continue normally
         return $next($request);
     }
 }

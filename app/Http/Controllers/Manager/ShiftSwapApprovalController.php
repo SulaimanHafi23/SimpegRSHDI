@@ -26,7 +26,7 @@ class ShiftSwapApprovalController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:Manager|HR|Super Admin');
+        $this->middleware('permission:shift-swap.approve');
     }
 
     /**
@@ -99,7 +99,7 @@ class ShiftSwapApprovalController extends Controller
 
         // Check department access for Manager
         $user = Auth::user();
-        if ($user->hasRole('Manager') && $user->worker) {
+        if ($user->worker) {
             $deptId = $user->worker->department_id;
             $requesterDept = $swap->requester->department_id ?? null;
             $targetDept = $swap->targetWorker->department_id ?? null;
@@ -240,7 +240,7 @@ class ShiftSwapApprovalController extends Controller
 
         $query = ShiftSwapRequest::with(['requester', 'targetWorker', 'requesterShift.shift', 'targetShift.shift']);
 
-        $canViewAllDepartments = $manager->hasRole('Super Admin') || $manager->hasRole('HR');
+        $canViewAllDepartments = !$manager->worker || $manager->can('dashboard.admin');
 
         if ($worker && !$canViewAllDepartments) {
             $query->where(function ($q) use ($worker) {
@@ -312,7 +312,7 @@ class ShiftSwapApprovalController extends Controller
         $swap = ShiftSwapRequest::findOrFail($swapId);
         $approver = User::findOrFail($managerId);
 
-        if (!$approver->hasRole('Manager') && !$approver->hasRole('HR') && !$approver->hasRole('Super Admin')) {
+        if (!$approver->can('shift-swap.approve')) {
             throw new \Exception('Anda tidak berhak menyetujui permintaan tukar shift ini.');
         }
 
@@ -380,7 +380,7 @@ class ShiftSwapApprovalController extends Controller
         $swap = ShiftSwapRequest::findOrFail($swapId);
         $approver = User::findOrFail($managerId);
 
-        if (!$approver->hasRole('Manager') && !$approver->hasRole('HR') && !$approver->hasRole('Super Admin')) {
+        if (!$approver->can('shift-swap.approve')) {
             throw new \Exception('Anda tidak berhak menolak permintaan tukar shift ini.');
         }
 

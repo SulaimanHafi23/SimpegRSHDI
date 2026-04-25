@@ -606,27 +606,23 @@ class WorkerController extends Controller
             return false;
         }
 
-        // Super Admin can manage all workers
-        if ($user->hasRole('Super Admin')) {
-            return true;
+        // If user doesn't have worker.manage permission, deny access
+        if (!$user->can('worker.manage')) {
+            return false;
         }
 
-        // HR can manage all workers
-        if ($user->hasRole('HR')) {
-            return true;
-        }
-
-        // Manager can only manage workers in their department
-        if ($user->hasRole('Manager')) {
+        // If user has a worker profile (department), only allow managing workers in their department
+        if ($user->worker) {
             $worker = Worker::find($workerId);
             if (!$worker) {
                 return false;
             }
 
-            $managerDeptId = $this->getManagerDepartmentFilter();
-            return $worker->department_id == $managerDeptId;
+            // Can only manage workers in their own department
+            return $worker->department_id == $user->worker->department_id;
         }
 
-        return false;
+        // No worker profile (admin-like user) can manage all workers
+        return true;
     }
 }

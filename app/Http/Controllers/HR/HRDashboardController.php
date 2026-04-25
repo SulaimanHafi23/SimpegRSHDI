@@ -15,7 +15,7 @@ class HRDashboardController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:HR');
+        $this->middleware('permission:dashboard.hr');
     }
 
     public function index()

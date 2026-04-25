@@ -14,7 +14,7 @@ class AttendanceReportController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:HR|Manager|Super Admin');
+        $this->middleware('permission:report.view');
     }
 
     public function index(Request $request)
@@ -32,7 +32,7 @@ class AttendanceReportController extends Controller
             ->whereBetween('attendance_date', [$startDate, $endDate]);
 
         // Manager can only see their department
-        if ($user->hasRole('Manager') && $user->worker) {
+        if ($user->worker) {
             $query->whereHas('worker', function($q) use ($user) {
                 $q->where('department_id', $user->worker->department_id);
             });
@@ -102,7 +102,7 @@ class AttendanceReportController extends Controller
         // Get workers for filter
         $workers = Worker::with('user')
             ->where('status', 'active')
-            ->when($user->hasRole('Manager') && $user->worker, function($q) use ($user) {
+            ->when($user->worker, function($q) use ($user) {
                 $q->where('department_id', $user->worker->department_id);
             })
             ->orderBy('name')

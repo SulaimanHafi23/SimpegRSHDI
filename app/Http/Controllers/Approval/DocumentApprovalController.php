@@ -15,7 +15,7 @@ class DocumentApprovalController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:Manager|HR|Super Admin');
+        $this->middleware('permission:document.approve');
     }
 
     public function index(Request $request)
@@ -115,7 +115,7 @@ class DocumentApprovalController extends Controller
 
         // Check if manager can view this document
         $user = Auth::user();
-        if ($user->hasRole('Manager') && $user->worker) {
+        if ($user->worker) {
             if ($document->worker->department_id !== $user->worker->department_id) {
                 abort(403, 'Unauthorized');
             }
@@ -135,7 +135,7 @@ class DocumentApprovalController extends Controller
 
             // Check permission for manager
             $user = Auth::user();
-            if ($user->hasRole('Manager') && $user->worker) {
+            if ($user->worker) {
                 if ($document->worker->department_id !== $user->worker->department_id) {
                     return back()->with('error', 'Anda tidak memiliki akses untuk memverifikasi dokumen ini.');
                 }
@@ -167,7 +167,7 @@ class DocumentApprovalController extends Controller
 
             // Check permission for manager
             $user = Auth::user();
-            if ($user->hasRole('Manager') && $user->worker) {
+            if ($user->worker) {
                 if ($document->worker->department_id !== $user->worker->department_id) {
                     return back()->with('error', 'Anda tidak memiliki akses untuk menolak dokumen ini.');
                 }

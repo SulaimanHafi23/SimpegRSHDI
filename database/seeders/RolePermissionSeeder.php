@@ -30,6 +30,8 @@ class RolePermissionSeeder extends Seeder
         $permissions = [
             // Dashboard Access
             'dashboard.admin',      // Admin dashboard with global stats, approvals, reports
+            'dashboard.hr',         // HR-specific dashboard
+            'dashboard.manager',    // Manager-specific dashboard
             'dashboard.employee',   // Employee dashboard with personal data only
 
             // Data Master - Configuration & Setup
@@ -39,6 +41,7 @@ class RolePermissionSeeder extends Seeder
             'document-type.manage',
             'department-document-type.manage',
             'holiday.manage',
+            'master.manage',        // Generic master data management
 
             // Worker & Attendance Management
             'worker.manage',           // Full CRUD on all workers
@@ -68,6 +71,7 @@ class RolePermissionSeeder extends Seeder
             'shift-swap.approve',  // Can approve/reject shift swap requests
             'shift-swap.request',  // Can submit own shift swap request
             'shift-swap.view',     // View own shift swap requests only
+            
             // Notification Management
             'notification.manage', // Manage all notifications
             'notification.view',   // View own notifications only
@@ -87,6 +91,7 @@ class RolePermissionSeeder extends Seeder
             'role.manage',            // Manage roles and permissions
             'user.manage',            // Manage user accounts
             'system-settings.manage', // Manage system configurations
+            'audit.view',             // View audit logs
         ];
 
         // Create permissions
@@ -118,8 +123,10 @@ class RolePermissionSeeder extends Seeder
         $hr->syncPermissions([
             // Dashboard
             'dashboard.admin',
+            'dashboard.hr',
 
             // Master Data - Full Configuration Access
+            'master.manage',
             'department.manage',
             'shift.manage',
             'leave-type.manage',
@@ -148,9 +155,19 @@ class RolePermissionSeeder extends Seeder
             // Notifications - Manage
             'notification.manage',
 
+            // Calendar
+            'calendar.view',
+
+            // Profile
+            'profile.view',
+            'profile.edit',
+
             // Reports - Full Access
             'report.view',
             'report.export',
+
+            // Audit
+            'audit.view',
 
             // User Management (not roles)
             'user.manage',
@@ -168,9 +185,10 @@ class RolePermissionSeeder extends Seeder
         $manager->syncPermissions([
             // Dashboard
             'dashboard.admin',
+            'dashboard.manager',
 
-            // Worker & Attendance - View Only
-            'worker.manage',      // Can view worker lists
+            // Worker & Attendance - View & Manage
+            'worker.manage',      // Can view worker lists and manage within dept
             'attendance.manage',  // Can view attendance records
             'schedule.manage',    // Can view and adjust schedules
 
@@ -199,7 +217,7 @@ class RolePermissionSeeder extends Seeder
             'profile.view',
             'profile.edit',
 
-            // Reports - View Only
+            // Reports - View & Export
             'report.view',
             'report.export',
         ]);

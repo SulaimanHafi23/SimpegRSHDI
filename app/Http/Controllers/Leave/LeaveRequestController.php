@@ -30,7 +30,7 @@ class LeaveRequestController extends Controller
             'approvalApprove',
             'approvalReject',
         ]);
-        $this->middleware('role:Manager|HR|Super Admin')->only([
+        $this->middleware('permission:leave.approve')->only([
             'approvalIndex',
             'approvalShow',
             'approvalApprove',
@@ -47,7 +47,7 @@ class LeaveRequestController extends Controller
             'per_page' => 20,
         ];
 
-        if ($user->hasRole('Manager') && $user->worker) {
+        if ($user->worker) {
             $filters['department_id'] = $user->worker->department_id;
         }
 
@@ -641,7 +641,7 @@ class LeaveRequestController extends Controller
     private function ensureApprovalAccess(LeaveRequest $leaveRequest): void
     {
         $user = Auth::user();
-        if ($user && $user->hasRole('Manager') && $user->worker) {
+        if ($user && $user->worker) {
             if ((string) $leaveRequest->worker->department_id !== (string) $user->worker->department_id) {
                 abort(403, 'Unauthorized');
             }

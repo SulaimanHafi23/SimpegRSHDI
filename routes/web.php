@@ -68,19 +68,25 @@ Route::get('/', function () {
     if (Auth::check()) {
         $user = Auth::user();
 
-        if ($user->hasRole('Manager')) {
+        // Route based on first available dashboard permission
+        if ($user->can('dashboard.manager')) {
             return redirect()->route('manager.dashboard');
         }
 
-        if ($user->hasRole('HR')) {
+        if ($user->can('dashboard.hr')) {
             return redirect()->route('hr.dashboard');
         }
 
-        if ($user->hasRole('Employee')) {
+        if ($user->can('dashboard.admin')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->can('dashboard.employee')) {
             return redirect()->route('employee.dashboard');
         }
 
-        return redirect()->route('admin.dashboard');
+        // Default fallback
+        return redirect()->route('employee.dashboard');
     }
     return view('welcome');
 })->name('home');
@@ -162,16 +168,16 @@ Route::get('/storage/{path}', function (string $path) {
 Route::middleware(['auth', 'redirect_role'])->group(function () {
 
     // ========== DASHBOARDS ==========
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('role_or_permission:Super Admin|HR|Manager|dashboard.admin')->name('admin.dashboard');
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->middleware('permission:dashboard.admin')->name('admin.dashboard');
 
     // HR Dashboard
-    Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->middleware('role:HR')->name('hr.dashboard');
+    Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->middleware('permission:dashboard.hr')->name('hr.dashboard');
 
     // Manager Dashboard
-    Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('role:Manager')->name('manager.dashboard');
+    Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('permission:dashboard.manager')->name('manager.dashboard');
 
     // ========== EMPLOYEE ROUTES ==========
-    Route::prefix('employee')->name('employee.')->middleware('role_or_permission:Employee|Manager|HR|Super Admin|dashboard.employee')->group(function () {
+    Route::prefix('employee')->name('employee.')->middleware('permission:dashboard.employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         // Attendance for employees
         Route::prefix('attendance')->name('attendance.')->group(function () {
@@ -263,7 +269,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== MANAGER ROUTES ==========
-    Route::prefix('manager')->name('manager.')->middleware('role:Manager|HR|Super Admin')->group(function () {
+    Route::prefix('manager')->name('manager.')->middleware('permission:shift-swap.approve')->group(function () {
         // Shift swap approvals
         Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'index'])->name('index');
@@ -295,7 +301,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== APPROVAL ROUTES ==========
-    Route::prefix('approvals')->name('approvals.')->middleware('role:Manager|HR|Super Admin')->group(function () {
+    Route::prefix('approvals')->name('approvals.')->middleware('permission:leave.approve')->group(function () {
         // Leave Approvals
         Route::prefix('leaves')->name('leaves.')->group(function () {
             Route::get('/', [LeaveRequestController::class, 'approvalIndex'])->name('index');
@@ -312,8 +318,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         });
     });
 
-    // Business Trip Approvals (separate - needs Manager|HR|Super Admin role)
-    Route::prefix('approvals/business-trips')->name('approvals.business-trips.')->middleware('role:Manager|HR|Super Admin')->group(function () {
+    // Business Trip Approvals (separate - needs business-trip.approve permission)
+    Route::prefix('approvals/business-trips')->name('approvals.business-trips.')->middleware('permission:business-trip.approve')->group(function () {
         Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
         Route::get('/export', [BusinessTripApprovalController::class, 'export'])->name('export');
         Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
@@ -323,7 +329,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== REPORT ROUTES ==========
-    Route::middleware('role:Super Admin|HR|Manager')->prefix('reports')->name('reports.')->group(function () {
+    Route::middleware('permission:report.view')->prefix('reports')->name('reports.')->group(function () {
         Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');
         Route::get('/leaves', [ReportController::class, 'leaves'])->name('leaves');
         Route::get('/worker-documents', [ReportController::class, 'workerDocuments'])->name('worker-documents');
@@ -340,14 +346,14 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== USER MANAGEMENT ==========
-    Route::middleware('role:Super Admin|HR')->resource('users', UserController::class)->names('admin.users');
+    Route::middleware('permission:user.manage')->resource('users', UserController::class)->names('admin.users');
 
     // ========== WORKER MANAGEMENT ==========
     Route::prefix('workers')->name('admin.workers.')->group(function () {
         Route::get('/', [WorkerController::class, 'index'])->name('index');
         Route::get('/create', [WorkerController::class, 'create'])->name('create');
         Route::get('/export', [WorkerController::class, 'export'])->name('export');
-        Route::middleware('role:Super Admin|HR')->group(function () {
+        Route::middleware('permission:worker.manage')->group(function () {
             Route::get('/template', [WorkerController::class, 'downloadTemplate'])->name('template');
             Route::post('/import', [WorkerController::class, 'import'])->name('import');
         });
@@ -462,7 +468,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== MASTER DATA MANAGEMENT ==========
-    Route::prefix('master')->name('admin.master.')->middleware(['role_or_permission:Super Admin|HR|department.manage|shift.manage|leave-type.manage|document-type.manage|department-document-type.manage'])->group(function () {
+    Route::prefix('master')->name('admin.master.')->middleware('permission:master.manage')->group(function () {
 
         // Departments (Pengganti Positions)
         Route::resource('departments', DepartmentController::class);
@@ -480,7 +486,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== HOLIDAYS MANAGEMENT ==========
-    Route::prefix('holidays')->name('admin.holidays.')->middleware(['auth', 'role:Super Admin|HR|Manager'])->group(function () {
+    Route::prefix('holidays')->name('admin.holidays.')->middleware(['auth', 'permission:holiday.manage'])->group(function () {
         Route::get('/', [HolidayController::class, 'index'])->name('index');
         Route::get('/create', [HolidayController::class, 'create'])->name('create');
         Route::post('/', [HolidayController::class, 'store'])->name('store');
@@ -494,7 +500,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== AUDIT LOG ==========
-    Route::prefix('audit-logs')->name('admin.audit-logs.')->middleware(['auth', 'role:Super Admin'])->group(function () {
+    Route::prefix('audit-logs')->name('admin.audit-logs.')->middleware(['auth', 'permission:audit.view'])->group(function () {
         Route::get('/', [AuditLogController::class, 'index'])->name('index');
         Route::get('/{id}', [AuditLogController::class, 'show'])->name('show');
     });
