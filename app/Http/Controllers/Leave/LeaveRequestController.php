@@ -40,16 +40,13 @@ class LeaveRequestController extends Controller
 
     public function approvalIndex(Request $request)
     {
-        $user = Auth::user();
+        $departmentId = $this->getManagerDepartmentFilter();
 
         $filters = [
             'status' => $request->input('status', 'pending'),
             'per_page' => 20,
+            'department_id' => $departmentId,
         ];
-
-        if ($user->worker) {
-            $filters['department_id'] = $user->worker->department_id;
-        }
 
         $leaves = $this->buildLeaveQuery($filters)
             ->latest('start_date')
@@ -640,11 +637,11 @@ class LeaveRequestController extends Controller
 
     private function ensureApprovalAccess(LeaveRequest $leaveRequest): void
     {
-        $user = Auth::user();
-        if ($user && $user->worker) {
-            if ((string) $leaveRequest->worker->department_id !== (string) $user->worker->department_id) {
-                abort(403, 'Unauthorized');
-            }
+        $managerDepartmentId = $this->getManagerDepartmentFilter();
+
+        // Only manager-scoped users are restricted to their own department.
+        if ($managerDepartmentId && (string) $leaveRequest->worker->department_id !== (string) $managerDepartmentId) {
+            abort(403, 'Unauthorized');
         }
     }
 }

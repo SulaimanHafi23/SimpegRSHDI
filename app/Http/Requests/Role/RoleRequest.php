@@ -12,12 +12,7 @@ class RoleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Super Admin always authorized
-        if (auth()->user()->hasRole('Super Admin')) {
-            return true;
-        }
-
-        return auth()->user()->can('role.manage');
+        return auth()->check() && auth()->user()->can('role.manage');
     }
 
     /**

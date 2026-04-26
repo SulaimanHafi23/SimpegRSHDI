@@ -38,13 +38,22 @@ class BusinessTripController extends Controller
         ];
 
         $query = BusinessTrip::where('worker_id', $worker->id);
+        
+        // Calculate Summary before applying filters (except worker_id)
+        $summary = [
+            'total' => (clone $query)->count(),
+            'pending' => (clone $query)->where('status', 'pending')->count(),
+            'approved' => (clone $query)->where('status', 'approved')->count(),
+            'rejected' => (clone $query)->where('status', 'rejected')->count(),
+        ];
+
         if ($filters['status']) $query->where('status', $filters['status']);
         if ($filters['date_from']) $query->whereDate('start_date', '>=', $filters['date_from']);
         if ($filters['date_to']) $query->whereDate('end_date', '<=', $filters['date_to']);
 
         $businessTrips = $query->orderBy('start_date', 'desc')->paginate($filters['per_page']);
 
-        return view('employee.business-trips.index', compact('businessTrips', 'filters', 'worker'));
+        return view('employee.business-trips.index', compact('businessTrips', 'filters', 'worker', 'summary'));
     }
 
     public function create()
@@ -201,14 +210,14 @@ class BusinessTripController extends Controller
                 'notifiable_type' => \App\Models\User::class,
                 'notifiable_id' => $recipient->id,
                 'type' => 'business_trip_submitted',
-                'title' => 'Pengajuan Perjalanan Dinas Baru',
-                'message' => sprintf(
-                    '%s mengajukan perjalanan dinas ke %s pada %s.',
-                    $trip->worker->name ?? 'Pegawai',
-                    $trip->destination,
-                    $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->translatedFormat('d M Y') : '-'
-                ),
                 'data' => [
+                    'title' => 'Pengajuan Perjalanan Dinas Baru',
+                    'message' => sprintf(
+                        '%s mengajukan perjalanan dinas ke %s pada %s.',
+                        $trip->worker->name ?? 'Pegawai',
+                        $trip->destination,
+                        $trip->start_date ? \Carbon\Carbon::parse($trip->start_date)->translatedFormat('d M Y') : '-'
+                    ),
                     'business_trip_id' => $trip->id,
                     'worker_id' => $trip->worker_id,
                     'type' => 'business_trip',

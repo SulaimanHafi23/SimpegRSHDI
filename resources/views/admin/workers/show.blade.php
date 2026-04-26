@@ -11,7 +11,7 @@
             <p class="text-xs sm:text-sm text-gray-600 mt-1">Informasi lengkap pegawai dan ringkasan aktivitasnya.</p>
         </div>
         <div class="flex space-x-2 w-full sm:w-auto">
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('worker.manage'))
                 <x-button
                     variant="warning"
                     icon="fas fa-edit"
@@ -19,7 +19,7 @@
                     Edit
                 </x-button>
             @endif
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('worker.manage'))
                 <x-button
                     variant="danger"
                     icon="fas fa-trash"
@@ -342,7 +342,7 @@
     </div>
 </div>
 
-@if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
+@if(auth()->user()->can('dashboard.admin') || auth()->user()->can('worker.manage'))
     <form id="delete-form" action="{{ route('admin.workers.destroy', $worker->id ?? 1) }}" method="POST" class="hidden">
         @csrf
         @method('DELETE')

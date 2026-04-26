@@ -30,7 +30,55 @@
         </form>
     </div>
 
-    <div class="bg-white rounded-lg shadow overflow-hidden">
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+        @forelse($documentTypes as $docType)
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="flex items-start gap-3 min-w-0 flex-1">
+                        <div class="h-8 w-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-file-alt text-indigo-600 text-sm"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-sm font-semibold text-gray-900 truncate">{{ $docType->name }}</p>
+                            <p class="text-xs text-gray-600 mt-1">
+                                <i class="fas fa-file-code mr-1"></i>
+                                Format: {{ $docType->file_format ?? '-' }}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-database mr-1"></i>
+                                Max {{ $docType->max_file_size ?? '-' }} KB
+                            </p>
+                        </div>
+                    </div>
+                    <div><x-status-pill :active="$docType->is_active" /></div>
+                </div>
+                <div class="mt-3 flex items-center justify-end space-x-3 text-sm">
+                    <a href="{{ route('admin.master.document-types.show', $docType->id) }}" class="text-blue-600 hover:text-blue-900" title="Lihat Detail">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ route('admin.master.document-types.edit', $docType->id) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ route('admin.master.document-types.destroy', $docType->id) }}" method="POST" class="inline" onsubmit="return confirm('Yakin hapus?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow px-6 py-8 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-2"></i>
+                <p>Tidak ada data</p>
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="hidden md:block bg-white rounded-lg shadow overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -50,9 +98,6 @@
                             </div>
                             <div class="ml-3 sm:ml-4">
                                 <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $docType->name }}</div>
-                                <div class="text-xs md:hidden mt-1">
-                                    <x-status-pill :active="$docType->is_active" size="xs" />
-                                </div>
                             </div>
                         </div>
                     </td>

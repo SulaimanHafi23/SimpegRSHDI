@@ -91,6 +91,53 @@ window.showDeleteConfirm = function(confirmCallback) {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
+    if (!window.__logoutSwalHandlerBound) {
+        const logoutForms = document.querySelectorAll('form[action$="/logout"]');
+
+        logoutForms.forEach((form) => {
+            if (form.dataset.logoutSwalBound === 'true') {
+                return;
+            }
+
+            form.dataset.logoutSwalBound = 'true';
+
+            form.addEventListener('submit', function (event) {
+                if (form.dataset.logoutConfirmed === 'true') {
+                    return;
+                }
+
+                event.preventDefault();
+
+                if (window.Swal) {
+                    Swal.fire({
+                        ...modalDefaults,
+                        title: 'Logout sekarang?',
+                        text: 'Sesi Anda akan diakhiri.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc2626',
+                        confirmButtonText: 'Ya, logout',
+                        cancelButtonText: 'Batal',
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.dataset.logoutConfirmed = 'true';
+                            form.submit();
+                        }
+                    });
+
+                    return;
+                }
+
+                if (window.confirm('Anda yakin ingin logout?')) {
+                    form.dataset.logoutConfirmed = 'true';
+                    form.submit();
+                }
+            });
+        });
+
+        window.__logoutSwalHandlerBound = true;
+    }
+
     @if(session('success'))
         window.showSuccessAlert('Berhasil', @json(session('success')));
     @endif

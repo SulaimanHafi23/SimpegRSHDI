@@ -99,7 +99,7 @@
                 </div>
 
                 <div class="mt-4">
-                    @if($document->status === 'pending' && (auth()->user()->hasRole('Super Admin') || auth()->user()->can('verify-worker-documents')))
+                    @if($document->status === 'pending' && (auth()->user()->can('dashboard.admin') || auth()->user()->can('document.approve')))
                         <form action="{{ route('admin.worker-documents.verify', $document->id) }}" method="POST" class="inline-block mr-2">
                             @csrf
                             <button class="px-4 py-2 bg-green-600 text-white rounded">Verifikasi</button>

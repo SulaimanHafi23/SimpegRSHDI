@@ -237,8 +237,9 @@ class ReportController extends Controller
         $year = $request->input('year');
         [$startDate, $endDate, $year] = $this->resolveDateRange($request, 'date_from', 'date_to', $month, $year, false);
 
-        // Get department filter: prioritas dari modal, fallback ke manager restriction
-        $departmentFilter = $request->input('department_id') ?: $this->getManagerDepartmentFilter();
+        // Manager-scoped users cannot override department via export request.
+        $managerDepartmentId = $this->getManagerDepartmentFilter();
+        $departmentFilter = $managerDepartmentId ?: $request->input('department_id');
 
         $filters = [
             'date_from' => $startDate,

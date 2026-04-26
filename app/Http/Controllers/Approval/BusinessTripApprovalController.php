@@ -17,7 +17,7 @@ class BusinessTripApprovalController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:Manager|HR|Super Admin');
+        $this->middleware('permission:business-trip.approve');
     }
 
     public function index(Request $request)
@@ -96,8 +96,8 @@ class BusinessTripApprovalController extends Controller
     {
         $trip = BusinessTrip::with(['worker.user', 'worker.department', 'approvedBy'])->findOrFail($id);
 
-        $user = Auth::user();
-        if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
+        $departmentId = $this->getManagerDepartmentFilter();
+        if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
             abort(403, 'Unauthorized');
         }
 
@@ -112,11 +112,13 @@ class BusinessTripApprovalController extends Controller
             return back()->with('error', 'Permohonan tidak dapat disetujui karena tidak memiliki lampiran surat tugas/disposisi.');
         }
 
-        // permission check for manager
-        $user = Auth::user();
-        if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
+        // Department restriction applies only for manager-scoped users.
+        $departmentId = $this->getManagerDepartmentFilter();
+        if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menyetujui permohonan ini.');
         }
+
+        $user = Auth::user();
 
         $trip->update([
             'status' => 'approved',
@@ -140,10 +142,12 @@ class BusinessTripApprovalController extends Controller
 
         $trip = BusinessTrip::findOrFail($id);
 
-        $user = Auth::user();
-        if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
+        $departmentId = $this->getManagerDepartmentFilter();
+        if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menolak permohonan ini.');
         }
+
+        $user = Auth::user();
 
         $trip->update([
             'status' => 'rejected',
@@ -166,8 +170,8 @@ class BusinessTripApprovalController extends Controller
     {
         $trip = BusinessTrip::findOrFail($id);
 
-        $user = Auth::user();
-        if ($user->hasRole('Manager') && $user->worker && $trip->worker->department_id !== $user->worker->department_id) {
+        $departmentId = $this->getManagerDepartmentFilter();
+        if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menghapus permohonan ini.');
         }
 
@@ -207,10 +211,8 @@ class BusinessTripApprovalController extends Controller
                 'year' => $year,
             ];
 
-            // Department filter for Manager
-            if ($user->hasRole('Manager') && $user->worker) {
-                $filters['department_id'] = $user->worker->department_id;
-            }
+            // Department filter applies only for manager-scoped users.
+            $filters['department_id'] = $this->getManagerDepartmentFilter();
 
             $query = BusinessTrip::with(['worker.department', 'approvedBy']);
 

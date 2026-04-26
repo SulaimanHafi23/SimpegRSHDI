@@ -113,12 +113,10 @@ class DocumentApprovalController extends Controller
         $document = WorkerDocument::with(['worker.department', 'documentType', 'verifier'])
             ->findOrFail($id);
 
-        // Check if manager can view this document
-        $user = Auth::user();
-        if ($user->worker) {
-            if ($document->worker->department_id !== $user->worker->department_id) {
-                abort(403, 'Unauthorized');
-            }
+        // Department restriction applies only for manager-scoped users.
+        $departmentId = $this->getManagerDepartmentFilter();
+        if ($departmentId && (string) $document->worker->department_id !== (string) $departmentId) {
+            abort(403, 'Unauthorized');
         }
 
         return view('approvals.documents.show', compact('document'));
@@ -133,12 +131,10 @@ class DocumentApprovalController extends Controller
         try {
             $document = WorkerDocument::findOrFail($id);
 
-            // Check permission for manager
-            $user = Auth::user();
-            if ($user->worker) {
-                if ($document->worker->department_id !== $user->worker->department_id) {
-                    return back()->with('error', 'Anda tidak memiliki akses untuk memverifikasi dokumen ini.');
-                }
+            // Department restriction applies only for manager-scoped users.
+            $departmentId = $this->getManagerDepartmentFilter();
+            if ($departmentId && (string) $document->worker->department_id !== (string) $departmentId) {
+                return back()->with('error', 'Anda tidak memiliki akses untuk memverifikasi dokumen ini.');
             }
 
             $document->update([
@@ -165,12 +161,10 @@ class DocumentApprovalController extends Controller
         try {
             $document = WorkerDocument::findOrFail($id);
 
-            // Check permission for manager
-            $user = Auth::user();
-            if ($user->worker) {
-                if ($document->worker->department_id !== $user->worker->department_id) {
-                    return back()->with('error', 'Anda tidak memiliki akses untuk menolak dokumen ini.');
-                }
+            // Department restriction applies only for manager-scoped users.
+            $departmentId = $this->getManagerDepartmentFilter();
+            if ($departmentId && (string) $document->worker->department_id !== (string) $departmentId) {
+                return back()->with('error', 'Anda tidak memiliki akses untuk menolak dokumen ini.');
             }
 
             $document->update([

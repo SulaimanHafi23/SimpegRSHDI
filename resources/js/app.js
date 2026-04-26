@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	const logoutForms = document.querySelectorAll('form[action$="/logout"]');
 
+	if (window.__logoutSwalHandlerBound) {
+		return;
+	}
+
 	logoutForms.forEach((form) => {
 		form.addEventListener('submit', (event) => {
 			if (form.dataset.logoutConfirmed === 'true') {
@@ -58,4 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		});
 	});
+
+	window.__logoutSwalHandlerBound = true;
 });

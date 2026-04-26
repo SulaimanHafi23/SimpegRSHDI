@@ -331,7 +331,7 @@
     {{-- Quick Actions for Manager --}}
     <x-card title="Aksi Cepat">
         <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('attendance.manage'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.manager') || auth()->user()->can('attendance.manage'))
                 <x-button
                     variant="success"
                     icon="fas fa-clipboard-check"
@@ -342,7 +342,7 @@
                 </x-button>
             @endif
 
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('leave.approve'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.manager') || auth()->user()->can('leave.approve'))
                 <x-button
                     variant="warning"
                     icon="fas fa-calendar-check"
@@ -353,7 +353,7 @@
                 </x-button>
             @endif
 
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Manager') || auth()->user()->can('schedule.manage'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.manager') || auth()->user()->can('schedule.manage'))
                 <x-button
                     variant="secondary"
                     icon="fas fa-user-clock"

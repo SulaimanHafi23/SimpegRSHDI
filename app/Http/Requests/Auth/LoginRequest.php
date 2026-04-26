@@ -66,8 +66,16 @@ class LoginRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        $normalizedLogin = $this->input('login');
+
+        if (is_string($normalizedLogin)) {
+            // Prevent hidden whitespace issues (e.g., mobile keyboard trailing spaces).
+            $normalizedLogin = preg_replace('/\s+/', ' ', trim($normalizedLogin));
+        }
+
         // Convert checkbox value to boolean
         $this->merge([
+            'login' => $normalizedLogin,
             'remember_me' => $this->has('remember_me') ?
                 filter_var($this->remember_me, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false :
                 false

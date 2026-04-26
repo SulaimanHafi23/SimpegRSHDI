@@ -134,37 +134,21 @@
 
     <!-- Worker Shifts Table -->
     <div class="bg-white rounded-lg shadow overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Pegawai
-                        </th>
-                        <th scope="col" class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Shift
-                        </th>
-                        <th scope="col" class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Jam Kerja
-                        </th>
-                        <th scope="col" class="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Pola
-                        </th>
-                        <th scope="col" class="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Periode
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                        </th>
-                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                        </th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @forelse($workersWithShifts as $worker)
-                    <tr class="hover:bg-gray-50 {{ !$worker->latestShift ? 'bg-yellow-50' : '' }}">
-                        <td class="px-6 py-4 whitespace-nowrap">
+        <x-table>
+            <x-slot:thead>
+                <x-table.row>
+                    <x-table.cell header>Pegawai</x-table.cell>
+                    <x-table.cell header class="hidden md:table-cell">Shift</x-table.cell>
+                    <x-table.cell header class="hidden lg:table-cell">Jam Kerja</x-table.cell>
+                    <x-table.cell header class="hidden lg:table-cell">Pola</x-table.cell>
+                    <x-table.cell header class="hidden md:table-cell">Periode</x-table.cell>
+                    <x-table.cell header>Status</x-table.cell>
+                    <x-table.cell header class="text-right">Actions</x-table.cell>
+                </x-table.row>
+            </x-slot:thead>
+            @forelse($workersWithShifts as $worker)
+                <x-table.row class="{{ !$worker->latestShift ? 'bg-yellow-50' : '' }}">
+                    <x-table.cell>
                             <div class="flex items-center">
                                 <div class="flex-shrink-0 h-10 w-10">
                                     @if(($worker->photo_url ?? false) && Storage::disk('public')->exists($worker->photo_url))
@@ -186,16 +170,15 @@
                                     <div class="text-sm text-gray-500">{{ $worker->employee_number ?? '-' }}</div>
                                 </div>
                             </div>
-                        </td>
-                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                        <x-table.cell class="hidden md:table-cell">
                             @if($worker->latestShift)
                                 <div class="text-sm font-medium text-gray-900">{{ $worker->latestShift->shift->name }}</div>
                                 <div class="text-sm text-gray-500">{{ $worker->latestShift->shift->code ?? '-' }}</div>
                             @else
                                 <div class="text-sm font-medium text-gray-400 italic">Belum ada shift</div>
                             @endif
-                        </td>
-                        <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                        </x-table.cell>
+                        <x-table.cell class="hidden lg:table-cell">
                             @if($worker->latestShift)
                                 <div class="text-sm text-gray-900">
                                     {{ \Carbon\Carbon::parse($worker->latestShift->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($worker->latestShift->shift->end_time)->format('H:i') }}
@@ -203,8 +186,8 @@
                             @else
                                 <div class="text-sm text-gray-400 italic">-</div>
                             @endif
-                        </td>
-                        <td class="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
+                        </x-table.cell>
+                        <x-table.cell class="hidden lg:table-cell">
                             @if($worker->latestShift)
                                 @if($worker->hasRotation ?? false)
                                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
@@ -220,8 +203,8 @@
                                     -
                                 </span>
                             @endif
-                        </td>
-                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                        </x-table.cell>
+                        <x-table.cell class="hidden md:table-cell">
                             @if($worker->latestShift)
                                 <div class="text-sm text-gray-900">{{ $worker->latestShift->effective_from->format('d M Y') }}</div>
                                 <div class="text-sm text-gray-500">
@@ -230,8 +213,8 @@
                             @else
                                 <div class="text-sm text-gray-400 italic">-</div>
                             @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        </x-table.cell>
+                        <x-table.cell>
                             @if($worker->latestShift)
                                 @if($worker->latestShift->is_active)
                                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
@@ -248,8 +231,8 @@
                                     Belum Ada Shift
                                 </span>
                             @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        </x-table.cell>
+                        <x-table.cell class="text-right">
                             @if($worker->latestShift)
                                 <div class="flex justify-end space-x-2">
                                     <a href="{{ route('admin.worker-shifts.show', $worker->latestShift->id) }}#off-day-management"
@@ -294,24 +277,22 @@
                                     Tambah Shift
                                 </a>
                             @endif
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
-                            <div class="flex flex-col items-center justify-center py-8">
-                                <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                </svg>
-                                <p class="text-lg font-medium text-gray-700 mb-1">Tidak ada data pegawai</p>
-                                <p class="text-sm text-gray-500">Silakan tambahkan pegawai terlebih dahulu</p>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                        </x-table.cell>
+                </x-table.row>
+                @empty
+                <x-table.row>
+                    <x-table.cell colspan="7" class="text-center text-gray-500">
+                        <div class="flex flex-col items-center justify-center py-8">
+                            <svg class="w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <p class="text-lg font-medium text-gray-700 mb-1">Tidak ada data pegawai</p>
+                            <p class="text-sm text-gray-500">Silakan tambahkan pegawai terlebih dahulu</p>
+                        </div>
+                    </x-table.cell>
+                </x-table.row>
+                @endforelse
+        </x-table>
 
         <!-- Pagination -->
         <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">

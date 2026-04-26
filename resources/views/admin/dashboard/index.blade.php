@@ -217,7 +217,7 @@
     {{-- Quick Actions --}}
     <x-card title="Aksi Cepat">
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('worker.manage'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('worker.manage'))
                 <x-button
                     variant="primary"
                     icon="fas fa-user-plus"
@@ -227,7 +227,7 @@
                 </x-button>
             @endif
 
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('attendance.manage'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('attendance.manage'))
                 <x-button
                     variant="success"
                     icon="fas fa-clipboard-check"
@@ -237,7 +237,7 @@
                 </x-button>
             @endif
 
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('report.view'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('report.view'))
                 <x-button
                     variant="warning"
                     icon="fas fa-chart-bar"
@@ -247,7 +247,7 @@
                 </x-button>
             @endif
 
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
                 <x-button
                     variant="secondary"
                     icon="fas fa-tasks"

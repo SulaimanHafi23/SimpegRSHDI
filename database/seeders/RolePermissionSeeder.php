@@ -71,7 +71,7 @@ class RolePermissionSeeder extends Seeder
             'shift-swap.approve',  // Can approve/reject shift swap requests
             'shift-swap.request',  // Can submit own shift swap request
             'shift-swap.view',     // View own shift swap requests only
-            
+
             // Notification Management
             'notification.manage', // Manage all notifications
             'notification.view',   // View own notifications only

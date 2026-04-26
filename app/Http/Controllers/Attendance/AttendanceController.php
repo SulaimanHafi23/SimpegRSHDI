@@ -538,8 +538,9 @@ class AttendanceController extends Controller
         try {
             $format = $request->input('format', 'excel'); // pdf, excel, csv
 
-            // Get department filter: prioritas dari modal, fallback ke manager restriction
-            $departmentFilter = $request->input('department_id') ?: $this->getManagerDepartmentFilter();
+            // Manager-scoped users cannot override department via export request.
+            $managerDepartmentId = $this->getManagerDepartmentFilter();
+            $departmentFilter = $managerDepartmentId ?: $request->input('department_id');
 
             $filters = [
                 'worker_id' => $request->input('worker_id'),

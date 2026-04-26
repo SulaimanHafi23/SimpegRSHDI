@@ -59,7 +59,8 @@ class LeaveController extends Controller
                 COUNT(*) as total,
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
                 SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
-                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected
+                SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
             ")
             ->first();
 
@@ -68,6 +69,7 @@ class LeaveController extends Controller
             'pending' => $summaryData->pending ?? 0,
             'approved' => $summaryData->approved ?? 0,
             'rejected' => $summaryData->rejected ?? 0,
+            'cancelled' => $summaryData->cancelled ?? 0,
         ];
 
         return view('employee.leaves.index', compact('leaveRequests', 'leaveTypes', 'filters', 'summary', 'worker'));
@@ -276,16 +278,7 @@ class LeaveController extends Controller
                 return back()->with('error', 'Hanya permohonan yang masih pending yang bisa dibatalkan.');
             }
 
-            if ($leave->attachment_path) {
-                $publicDisk = Storage::disk('public');
-                if ($publicDisk->exists($leave->attachment_path)) {
-                    $publicDisk->delete($leave->attachment_path);
-                } elseif (Storage::exists($leave->attachment_path)) {
-                    Storage::delete($leave->attachment_path);
-                }
-            }
-
-            $leave->delete();
+            $leave->update(['status' => 'cancelled']);
 
             return redirect()->route('employee.leaves.index')
                 ->with('success', 'Permohonan cuti berhasil dibatalkan.');

@@ -99,19 +99,19 @@
                                 Quick Links
                             </h3>
                             <div class="space-y-2">
-                                @role('Super Admin')
+                                @can('dashboard.admin')
                                     <a href="{{ route('admin.dashboard') }}" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                         <span class="text-gray-800 font-medium">Admin Dashboard</span>
                                     </a>
                                 @endrole
 
-                                @role('HR')
+                                @can('dashboard.hr')
                                     <a href="{{ route('hr.dashboard') }}" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                         <span class="text-gray-800 font-medium">HR Dashboard</span>
                                     </a>
                                 @endrole
 
-                                @role('Manager')
+                                @can('dashboard.manager')
                                     <a href="{{ route('manager.dashboard') }}" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                         <span class="text-gray-800 font-medium">Manager Dashboard</span>
                                     </a>

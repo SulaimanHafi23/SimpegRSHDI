@@ -19,13 +19,13 @@
     @auth
         @php
             $dashboardUrl = '/';
-            if (auth()->user()->hasRole('Employee')) {
+            if (auth()->user()->can('dashboard.employee')) {
                 $dashboardUrl = route('employee.dashboard');
-            } elseif (auth()->user()->hasRole('HR')) {
+            } elseif (auth()->user()->can('dashboard.hr')) {
                 $dashboardUrl = route('hr.dashboard');
-            } elseif (auth()->user()->hasRole('Manager')) {
+            } elseif (auth()->user()->can('dashboard.manager')) {
                 $dashboardUrl = route('manager.dashboard');
-            } elseif (auth()->user()->hasRole('Super Admin')) {
+            } elseif (auth()->user()->can('dashboard.admin')) {
                 $dashboardUrl = route('admin.dashboard');
             }
         @endphp

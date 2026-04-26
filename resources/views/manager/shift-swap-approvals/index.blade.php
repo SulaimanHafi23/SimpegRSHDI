@@ -120,9 +120,9 @@
                 @foreach($items as $index => $item)
                     @php
                         $statusBadges = [
-                            'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Respon Pegawai'],
-                            'accepted' => ['variant' => 'info', 'label' => 'Diterima (Legacy)'],
-                            'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Persetujuan Atasan'],
+                            'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Pegawai'],
+                            'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
+                            'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
                             'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
                             'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
                             'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
@@ -133,67 +133,77 @@
                         $tgtShift = $item->targetShift?->shift;
                     @endphp
                     <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <div class="flex justify-between items-start mb-3">
+                        <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
                             <div>
-                                <span class="text-xs text-gray-500">#{{ $items->firstItem() + $index }}</span>
-                                <div class="text-sm text-gray-600">
-                                    {{ $item->requested_at?->format('d M Y H:i') ?? $item->created_at->format('d M Y H:i') }}
+                                <span class="text-xs text-gray-500 font-medium">#{{ $items->firstItem() + $index }}</span>
+                                <div class="text-xs text-gray-400 mt-0.5">
+                                    {{ $item->requested_at?->format('d M Y, H:i') ?? $item->created_at->format('d M Y, H:i') }}
                                 </div>
                             </div>
                             <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
                         </div>
 
-                        <div class="space-y-2 text-sm">
-                            <div>
-                                <span class="font-medium text-gray-500">Pemohon:</span>
-                                <span class="text-gray-900">{{ $item->requester->name }}</span>
-                                <span class="text-xs text-gray-400">({{ $item->requester->nip ?? '-' }})</span>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex flex-col">
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Pemohon</span>
+                                    <span class="text-sm font-semibold text-gray-900">{{ $item->requester->name }}</span>
+                                </div>
+                                <div class="px-2 text-gray-300">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </div>
+                                <div class="flex flex-col text-right">
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Target</span>
+                                    @if($item->targetWorker)
+                                        <span class="text-sm font-semibold text-gray-900">{{ $item->targetWorker->name }}</span>
+                                    @else
+                                        <x-badge variant="secondary">Open Request</x-badge>
+                                    @endif
+                                </div>
                             </div>
-                            <div>
-                                <span class="font-medium text-gray-500">Target:</span>
-                                @if($item->targetWorker)
-                                    <span class="text-gray-900">{{ $item->targetWorker->name }}</span>
-                                    <span class="text-xs text-gray-400">({{ $item->targetWorker->nip ?? '-' }})</span>
-                                @else
-                                    <x-badge variant="secondary">Open Request</x-badge>
-                                @endif
-                            </div>
-                            <div class="grid grid-cols-2 gap-2">
+
+                            <div class="bg-gray-50 rounded-lg p-3 grid grid-cols-2 gap-4 border border-gray-100">
                                 <div>
-                                    <span class="font-medium text-gray-500 block">Shift Pemohon:</span>
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Shift Awal</span>
                                     @if($reqShift)
-                                        <span class="text-gray-900">{{ $reqShift->name }}</span>
-                                        <div class="text-xs text-gray-500">{{ $reqShift->start_time }} - {{ $reqShift->end_time }}</div>
+                                        <span class="text-sm font-bold text-indigo-700 block">{{ $reqShift->name }}</span>
+                                        <span class="text-xs text-gray-500 font-medium">{{ $reqShift->start_time }} - {{ $reqShift->end_time }}</span>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </div>
                                 <div>
-                                    <span class="font-medium text-gray-500 block">Shift Target:</span>
+                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Shift Tujuan</span>
                                     @if($tgtShift)
-                                        <span class="text-gray-900">{{ $tgtShift->name }}</span>
-                                        <div class="text-xs text-gray-500">{{ $tgtShift->start_time }} - {{ $tgtShift->end_time }}</div>
+                                        <span class="text-sm font-bold text-emerald-700 block">{{ $tgtShift->name }}</span>
+                                        <span class="text-xs text-gray-500 font-medium">{{ $tgtShift->start_time }} - {{ $tgtShift->end_time }}</span>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
                                 </div>
                             </div>
-                            <div>
-                                <span class="font-medium text-gray-500">Tanggal Tukar:</span>
+                            
+                            <div class="flex items-center justify-between text-sm bg-blue-50/50 rounded-lg p-3 border border-blue-100/50">
+                                <span class="font-medium text-gray-600">
+                                    <i class="fas fa-calendar-alt text-blue-400 mr-1.5"></i>Tanggal Tukar
+                                </span>
                                 @if($item->swap_type === 'single_date' && $item->swap_date)
-                                    <span class="text-gray-900">{{ $item->swap_date->format('d M Y') }}</span>
+                                    <span class="font-bold text-gray-900">{{ $item->swap_date->format('d M Y') }}</span>
                                 @elseif($item->swap_type === 'date_range' && $item->swap_start_date && $item->swap_end_date)
-                                    <span class="text-gray-900">{{ $item->swap_start_date->format('d M') }} - {{ $item->swap_end_date->format('d M Y') }}</span>
+                                    <span class="font-bold text-gray-900">{{ $item->swap_start_date->format('d M') }} - {{ $item->swap_end_date->format('d M Y') }}</span>
                                 @elseif($item->swap_type === 'recurring' && $item->swap_dates)
-                                    <span class="text-gray-900 text-xs">{{ collect($item->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))->join(', ') }}</span>
+                                    <span class="font-bold text-gray-900 text-xs">{{ collect($item->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))->join(', ') }}</span>
                                 @else
                                     <span class="text-gray-400">-</span>
                                 @endif
                             </div>
+
                             @if($item->reason)
-                                <div>
-                                    <span class="font-medium text-gray-500">Alasan:</span>
-                                    <span class="text-gray-600">{{ Str::limit($item->reason, 80) }}</span>
+                                <div class="text-sm bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                    <span class="font-medium text-gray-600 block mb-1">
+                                        <i class="fas fa-comment-alt text-gray-400 mr-1.5"></i>Alasan
+                                    </span>
+                                    <span class="text-gray-700 italic">{{ Str::limit($item->reason, 80) }}</span>
                                 </div>
                             @endif
                         </div>
@@ -312,9 +322,9 @@
                         <x-table.cell>
                             @php
                                 $statusBadges = [
-                                    'pending' => ['variant' => 'secondary', 'label' => 'Pending'],
+                                    'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Pegawai'],
                                     'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
-                                    'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Persetujuan'],
+                                    'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
                                     'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
                                     'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
                                     'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],

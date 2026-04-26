@@ -16,7 +16,7 @@ class ManagerDashboardController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('role:Manager');
+        $this->middleware('permission:dashboard.manager');
     }
 
     public function index()

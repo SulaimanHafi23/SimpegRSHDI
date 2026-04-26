@@ -8,6 +8,7 @@ use App\Models\LeaveType;
 use App\Models\User;
 use App\Models\Worker;
 use Carbon\Carbon;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
@@ -33,7 +34,7 @@ class LeaveApprovalWorkflowTest extends TestCase
         parent::setUp();
 
         // Disable CSRF and redirect middlewares for testing
-        $this->withoutMiddleware(\App\Http\Middleware\VerifyCsrfToken::class);
+        $this->withoutMiddleware(ValidateCsrfToken::class);
         $this->withoutMiddleware(\App\Http\Middleware\RedirectBasedOnRole::class);
 
         // Create roles
@@ -42,14 +43,21 @@ class LeaveApprovalWorkflowTest extends TestCase
         Role::create(['name' => 'Manager']);
         Role::create(['name' => 'Employee']);
 
-        // Create permissions (leave.manage)
+        // Create permissions used by current middleware
         \Spatie\Permission\Models\Permission::create(['name' => 'leave.manage']);
+        \Spatie\Permission\Models\Permission::create(['name' => 'leave.approve']);
+        \Spatie\Permission\Models\Permission::create(['name' => 'dashboard.hr']);
+        \Spatie\Permission\Models\Permission::create(['name' => 'dashboard.manager']);
 
-        // Assign leave.manage permission to HR and Manager
+        // Assign approval/dashboard permissions to HR and Manager
         $hrRole = Role::where('name', 'HR')->first();
         $managerRole = Role::where('name', 'Manager')->first();
         $hrRole->givePermissionTo('leave.manage');
+        $hrRole->givePermissionTo('leave.approve');
+        $hrRole->givePermissionTo('dashboard.hr');
         $managerRole->givePermissionTo('leave.manage');
+        $managerRole->givePermissionTo('leave.approve');
+        $managerRole->givePermissionTo('dashboard.manager');
 
         // Create departments
         $this->departmentA = Department::create([
@@ -87,6 +95,8 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->hrUser = User::factory()->create(['worker_id' => $hrWorker->id]);
         $this->hrUser->assignRole('HR');
         $this->hrUser->givePermissionTo('leave.manage');
+        $this->hrUser->givePermissionTo('leave.approve');
+        $this->hrUser->givePermissionTo('dashboard.hr');
 
         // Create Manager for Department A
         $managerWorkerA = Worker::create([
@@ -105,6 +115,8 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->managerUserDeptA = User::factory()->create(['worker_id' => $managerWorkerA->id]);
         $this->managerUserDeptA->assignRole('Manager');
         $this->managerUserDeptA->givePermissionTo('leave.manage');
+        $this->managerUserDeptA->givePermissionTo('leave.approve');
+        $this->managerUserDeptA->givePermissionTo('dashboard.manager');
 
         // Create Manager for Department B
         $managerWorkerB = Worker::create([
@@ -123,6 +135,8 @@ class LeaveApprovalWorkflowTest extends TestCase
         $this->managerUserDeptB = User::factory()->create(['worker_id' => $managerWorkerB->id]);
         $this->managerUserDeptB->assignRole('Manager');
         $this->managerUserDeptB->givePermissionTo('leave.manage');
+        $this->managerUserDeptB->givePermissionTo('leave.approve');
+        $this->managerUserDeptB->givePermissionTo('dashboard.manager');
 
         // Create Employee in Department A
         $employeeWorkerA = Worker::create([

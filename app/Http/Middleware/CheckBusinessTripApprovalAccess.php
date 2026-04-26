@@ -16,9 +16,9 @@ class CheckBusinessTripApprovalAccess
     public function handle(Request $request, Closure $next): Response
     {
         $user = auth()->user();
-        
-        // Allow Super Admin or users with approve-business-trips permission
-        if ($user && ($user->hasRole('Super Admin') || $user->can('approve-business-trips'))) {
+
+        // Allow users with business trip approval permission
+        if ($user && $user->can('business-trip.approve')) {
             return $next($request);
         }
 

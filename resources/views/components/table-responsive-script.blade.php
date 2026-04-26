@@ -37,7 +37,7 @@
             }
 
             const details = document.createElement('dl');
-            details.className = 'space-y-3';
+            details.className = 'divide-y divide-gray-100';
 
             cells.forEach((cell, index) => {
                 if (index === 0) {
@@ -46,10 +46,10 @@
 
                 const label = headers[index] ? escapeHtml(headers[index]) : `Kolom ${index + 1}`;
                 const item = document.createElement('div');
-                item.className = 'grid gap-1 border-t border-gray-100 pt-3 sm:grid-cols-3 sm:gap-4';
+                item.className = 'py-2 flex flex-col sm:grid sm:grid-cols-3 sm:gap-4';
                 item.innerHTML = `
                     <dt class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 sm:pt-1">${label}</dt>
-                    <dd class="text-sm text-gray-900 sm:col-span-2">${cell.innerHTML}</dd>
+                    <dd class="text-sm text-gray-900 sm:col-span-2 mt-0.5 sm:mt-0">${cell.innerHTML}</dd>
                 `;
                 details.appendChild(item);
             });

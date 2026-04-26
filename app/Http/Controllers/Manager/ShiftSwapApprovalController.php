@@ -97,13 +97,12 @@ class ShiftSwapApprovalController extends Controller
             'auditLogs.user',
         ])->findOrFail($id);
 
-        // Check department access for Manager
-        $user = Auth::user();
-        if ($user->worker) {
-            $deptId = $user->worker->department_id;
+        // Department restriction applies only for manager-scoped users.
+        $departmentId = $this->getManagerDepartmentFilter();
+        if ($departmentId) {
             $requesterDept = $swap->requester->department_id ?? null;
             $targetDept = $swap->targetWorker->department_id ?? null;
-            if ($requesterDept !== $deptId && $targetDept !== $deptId) {
+            if ((string) $requesterDept !== (string) $departmentId && (string) $targetDept !== (string) $departmentId) {
                 abort(403, 'Unauthorized');
             }
         }
@@ -240,9 +239,12 @@ class ShiftSwapApprovalController extends Controller
 
         $query = ShiftSwapRequest::with(['requester', 'targetWorker', 'requesterShift.shift', 'targetShift.shift']);
 
-        $canViewAllDepartments = !$manager->worker || $manager->can('dashboard.admin');
+        $departmentId = null;
+        if ($worker && $manager->can('dashboard.manager') && !$manager->can('dashboard.admin') && !$manager->can('dashboard.hr')) {
+            $departmentId = $worker->department_id;
+        }
 
-        if ($worker && !$canViewAllDepartments) {
+        if ($departmentId) {
             $query->where(function ($q) use ($worker) {
                 $q->whereHas('requester', function ($sub) use ($worker) {
                     $sub->where('department_id', $worker->department_id);

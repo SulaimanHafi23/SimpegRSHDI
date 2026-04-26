@@ -43,7 +43,7 @@
             @include('layouts.partials.admin-navbar')
 
             <!-- Page Content -->
-            <main class="flex-1 p-4 sm:p-6 lg:p-8 {{ auth()->check() && auth()->user()->hasRole('Employee') ? 'pb-20 lg:pb-8' : '' }}">
+            <main class="flex-1 p-4 sm:p-6 lg:p-8 {{ auth()->check() && auth()->user()->can('dashboard.employee') ? 'pb-20 lg:pb-8' : '' }}">
                 <!-- Breadcrumb -->
                 @if(isset($breadcrumbs))
                     <x-ui.breadcrumb :items="$breadcrumbs" />
@@ -92,7 +92,7 @@
     </div>
 
     <!-- Bottom Navigation for Employee Role -->
-    @if(auth()->check() && auth()->user()->hasRole('Employee'))
+    @if(auth()->check() && auth()->user()->can('dashboard.employee'))
         @include('layouts.partials.employee-footer')
     @endif
 

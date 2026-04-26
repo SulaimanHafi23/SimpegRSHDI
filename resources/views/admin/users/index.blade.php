@@ -10,7 +10,7 @@
         description="Kelola akun pengguna sistem"
         icon="fas fa-users-cog">
         <x-slot:actions>
-            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
+            @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
                 <x-button
                     variant="success"
                     icon="fas fa-plus"
@@ -124,7 +124,7 @@
 
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
-                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
+                                @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
                                     <a href="{{ route('admin.users.show', $user->id) }}"
                                        class="text-blue-600 hover:text-blue-900"
                                        title="Detail">
@@ -135,7 +135,7 @@
                                     </a>
                                 @endif
 
-                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
+                                @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
                                     <a href="{{ route('admin.users.edit', $user->id) }}"
                                        class="text-green-600 hover:text-green-900"
                                        title="Edit">
@@ -146,7 +146,7 @@
                                 @endif
 
                                 @if($user->id !== auth()->id())
-                                    @if(auth()->user()->hasRole('Super Admin') || auth()->user()->can('user.manage'))
+                                    @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')

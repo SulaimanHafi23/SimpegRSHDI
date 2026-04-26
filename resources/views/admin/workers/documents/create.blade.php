@@ -37,7 +37,7 @@
         @csrf
 
         {{-- Section 1: Data Pegawai (admin only) --}}
-        @if(auth()->check() && !auth()->user()->hasRole('Employee'))
+        @if(auth()->check() && !auth()->user()->can('dashboard.employee'))
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
             <div class="flex items-center gap-2.5 mb-5">
                 <div class="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center shrink-0">

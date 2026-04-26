@@ -14,9 +14,18 @@ trait DepartmentFilterable
     {
         $user = Auth::user();
 
-        // Only Manager role gets filtered
-        if (!$user || !$user->hasRole('Manager')) {
-            return null; // No filter for Super Admin, HR, or other roles
+        if (!$user) {
+            return null;
+        }
+
+        // Admin/HR should always see all departments even if they also have manager permission.
+        if ($user->can('dashboard.admin') || $user->can('dashboard.hr')) {
+            return null;
+        }
+
+        // Only manager dashboard users get restricted by department.
+        if (!$user->can('dashboard.manager')) {
+            return null;
         }
 
         // Get manager's department from their worker profile
@@ -64,13 +73,13 @@ trait DepartmentFilterable
     {
         $user = Auth::user();
 
-        // Super Admin, HR can manage all workers
-        if ($user->hasRole('Super Admin') || $user->hasRole('HR')) {
+        // Admin and HR dashboard users can manage all workers
+        if ($user && ($user->can('dashboard.admin') || $user->can('dashboard.hr'))) {
             return true;
         }
 
-        // Manager can only manage workers in their department
-        if ($user->hasRole('Manager')) {
+        // Manager dashboard users can only manage workers in their department
+        if ($user && $user->can('dashboard.manager')) {
             $worker = \App\Models\Worker::find($workerId);
 
             if (!$worker || !$user->worker) {

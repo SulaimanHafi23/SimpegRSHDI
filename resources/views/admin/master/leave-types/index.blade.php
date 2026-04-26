@@ -22,10 +22,10 @@
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow-md p-4 mb-6">
         <form method="GET" action="{{ route('admin.master.leave-types.index') }}" class="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <input type="text" 
-                   name="search" 
+            <input type="text"
+                   name="search"
                    value="{{ request('search') }}"
-                   placeholder="Cari nama tipe cuti..." 
+                   placeholder="Cari nama tipe cuti..."
                    class="md:col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm">
             <div class="flex gap-2">
                 <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition duration-200 text-sm">
@@ -38,8 +38,59 @@
         </form>
     </div>
 
-    <!-- Table -->
-    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <!-- Mobile Cards -->
+    <div class="md:hidden space-y-3">
+        @forelse($leaveTypes as $type)
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0 flex-1">
+                        <p class="text-sm font-semibold text-gray-900 truncate">{{ $type->name }}</p>
+                        <p class="text-xs text-gray-600 mt-1">
+                            <i class="fas fa-calendar-day mr-1"></i>
+                            {{ $type->max_days_per_year ?? '∞' }} hari
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-code mr-1"></i>
+                            {{ $type->code ?? '-' }}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            @if($type->requires_approval ?? true)
+                                Perlu Approval
+                            @else
+                                Tidak Perlu Approval
+                            @endif
+                        </p>
+                    </div>
+                    <div><x-status-pill :active="$type->is_active" /></div>
+                </div>
+                <div class="mt-3 flex items-center justify-end space-x-3 text-sm">
+                    <a href="{{ route('admin.master.leave-types.show', $type->id) }}" class="text-blue-600 hover:text-blue-900" title="Lihat Detail">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{{ route('admin.master.leave-types.edit', $type->id) }}" class="text-yellow-600 hover:text-yellow-900" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ route('admin.master.leave-types.destroy', $type->id) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus tipe cuti ini?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:text-red-900" title="Hapus">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @empty
+            <div class="bg-white rounded-lg shadow px-6 py-8 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-2"></i>
+                <p>Tidak ada data tipe cuti</p>
+            </div>
+        @endforelse
+    </div>
+
+    <!-- Desktop Table -->
+    <div class="hidden md:block bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
@@ -56,9 +107,6 @@
                 <tr class="hover:bg-gray-50">
                     <td class="px-3 sm:px-6 py-4">
                         <div class="text-xs sm:text-sm font-medium text-gray-900">{{ $type->name }}</div>
-                        <div class="text-xs text-gray-500 md:hidden mt-1">
-                            {{ $type->max_days_per_year ?? '∞' }} hari
-                        </div>
                     </td>
                     <td class="px-3 sm:px-6 py-4 hidden lg:table-cell">
                         <span class="text-xs sm:text-sm font-mono text-gray-600">{{ $type->code ?? '-' }}</span>
@@ -85,24 +133,24 @@
                     </td>
                     <td class="px-3 sm:px-6 py-4 text-right">
                         <div class="flex justify-end space-x-1 sm:space-x-2">
-                            <a href="{{ route('admin.master.leave-types.show', $type->id) }}" 
-                               class="p-1 text-blue-600 hover:text-blue-900" 
+                            <a href="{{ route('admin.master.leave-types.show', $type->id) }}"
+                               class="p-1 text-blue-600 hover:text-blue-900"
                                title="Lihat Detail">
                                 <i class="fas fa-eye text-xs sm:text-sm"></i>
                             </a>
-                            <a href="{{ route('admin.master.leave-types.edit', $type->id) }}" 
-                               class="p-1 text-yellow-600 hover:text-yellow-900" 
+                            <a href="{{ route('admin.master.leave-types.edit', $type->id) }}"
+                               class="p-1 text-yellow-600 hover:text-yellow-900"
                                title="Edit">
                                 <i class="fas fa-edit text-xs sm:text-sm"></i>
                             </a>
-                            <form action="{{ route('admin.master.leave-types.destroy', $type->id) }}" 
-                                  method="POST" 
+                            <form action="{{ route('admin.master.leave-types.destroy', $type->id) }}"
+                                  method="POST"
                                   class="inline"
                                   onsubmit="return confirm('Apakah Anda yakin ingin menghapus tipe cuti ini?')">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" 
-                                        class="p-1 text-red-600 hover:text-red-900" 
+                                <button type="submit"
+                                        class="p-1 text-red-600 hover:text-red-900"
                                         title="Hapus">
                                     <i class="fas fa-trash text-xs sm:text-sm"></i>
                                 </button>
@@ -120,6 +168,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     <!-- Pagination -->

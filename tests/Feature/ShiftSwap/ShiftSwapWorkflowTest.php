@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Worker;
 use App\Models\WorkerShift;
 use Carbon\Carbon;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Role;
@@ -36,9 +37,19 @@ class ShiftSwapWorkflowTest extends TestCase
     {
         parent::setUp();
 
+        // Disable CSRF and redirect middleware for HTTP feature tests
+        $this->withoutMiddleware(ValidateCsrfToken::class);
+        $this->withoutMiddleware(\App\Http\Middleware\RedirectBasedOnRole::class);
+
         // Create roles
         Role::create(['name' => 'Employee']);
         Role::create(['name' => 'Manager']);
+
+        // Create permissions required by route middleware
+        \Spatie\Permission\Models\Permission::create(['name' => 'dashboard.employee']);
+        \Spatie\Permission\Models\Permission::create(['name' => 'dashboard.manager']);
+        \Spatie\Permission\Models\Permission::create(['name' => 'shift-swap.request']);
+        \Spatie\Permission\Models\Permission::create(['name' => 'shift-swap.approve']);
 
         // Create departments
         $this->department = Department::create([
@@ -68,6 +79,8 @@ class ShiftSwapWorkflowTest extends TestCase
             'worker_id' => $this->requesterWorker->id,
         ]);
         $this->requesterUser->assignRole('Employee');
+        $this->requesterUser->givePermissionTo('dashboard.employee');
+        $this->requesterUser->givePermissionTo('shift-swap.request');
 
         // Create target worker (same department as requester based on latest business rule)
         $this->targetWorker = $this->createWorker($this->department, 'Target Worker');
@@ -75,6 +88,8 @@ class ShiftSwapWorkflowTest extends TestCase
             'worker_id' => $this->targetWorker->id,
         ]);
         $this->targetUser->assignRole('Employee');
+        $this->targetUser->givePermissionTo('dashboard.employee');
+        $this->targetUser->givePermissionTo('shift-swap.request');
 
         // Create manager
         $this->managerWorker = $this->createWorker($this->department, 'Manager');
@@ -82,6 +97,8 @@ class ShiftSwapWorkflowTest extends TestCase
             'worker_id' => $this->managerWorker->id,
         ]);
         $this->managerUser->assignRole('Manager');
+        $this->managerUser->givePermissionTo('dashboard.manager');
+        $this->managerUser->givePermissionTo('shift-swap.approve');
 
         // Create worker shifts (3 days from now)
         $futureDate = Carbon::now()->addDays(3);

@@ -314,10 +314,12 @@ class WorkerController extends Controller
         $this->authorizePermission('worker.manage');
 
         try {
+            $managerDepartmentId = $this->getManagerDepartmentFilter();
+
             $filters = [
                 'status' => $request->input('status'),
                 'employment_status' => $request->input('employment_status'),
-                'department_id' => $request->input('department_id') ?? $this->getManagerDepartmentFilter(),
+                'department_id' => $managerDepartmentId ?: $request->input('department_id'),
                 'search' => $request->input('search'),
             ];
 
@@ -609,6 +611,11 @@ class WorkerController extends Controller
         // If user doesn't have worker.manage permission, deny access
         if (!$user->can('worker.manage')) {
             return false;
+        }
+
+        // Admin and HR or Super Admin can manage all workers
+        if ($user->hasRole('Super Admin') || $user->can('dashboard.admin') || $user->can('dashboard.hr')) {
+            return true;
         }
 
         // If user has a worker profile (department), only allow managing workers in their department

@@ -1,4 +1,4 @@
-﻿@extends('layouts.employee')
+@extends('layouts.employee')
 
 @section('title', 'Ajukan Cuti')
 
@@ -54,11 +54,13 @@
                         $maxDays   = $type->max_days_per_year ?? 0;
                         $usedCount = $usedDays[$type->id] ?? 0;
                         $remaining = max(0, $maxDays - $usedCount);
+                        $noticeDays = $type->days_notice ?? 0;
                     @endphp
                     <option value="{{ $type->id }}"
                             data-max="{{ $maxDays }}"
                             data-used="{{ $usedCount }}"
                             data-remaining="{{ $remaining }}"
+                            data-notice="{{ $noticeDays }}"
                             {{ old('leave_type_id') == $type->id ? 'selected' : '' }}>
                         {{ $type->name }}
                         @if($maxDays > 0)
@@ -268,18 +270,49 @@ function handleFileSelect(input) {
     }
 }
 
+window.updateCounter = null;
+
+window.updateLeaveNotice = function(noticeDays) {
+    const startInput = document.getElementById('start_date');
+    const endInput   = document.getElementById('end_date');
+    
+    if (!startInput || !endInput) return;
+    
+    const minDateObj = new Date();
+    if (noticeDays > 0) {
+        minDateObj.setDate(minDateObj.getDate() + noticeDays);
+    }
+    
+    // Need to adjust for timezone offset so we get local date string
+    const offset = minDateObj.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(minDateObj - offset)).toISOString().split('T')[0];
+    
+    startInput.min = localISOTime;
+    
+    if (startInput.value && startInput.value < localISOTime) {
+        startInput.value = '';
+        endInput.value = '';
+    }
+    
+    if (startInput.value) {
+        endInput.min = startInput.value;
+    } else {
+        endInput.min = localISOTime;
+    }
+    
+    if (typeof window.updateCounter === 'function') {
+        window.updateCounter();
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function () {
     const startInput = document.getElementById('start_date');
     const endInput   = document.getElementById('end_date');
     const form       = document.getElementById('leaveRequestForm');
     const counter    = document.getElementById('dayCounter');
     const countText  = document.getElementById('dayCount');
-    const today      = new Date().toISOString().split('T')[0];
 
-    startInput.min = today;
-    endInput.min = today;
-
-    function updateCounter() {
+    window.updateCounter = function () {
         if (startInput.value && endInput.value) {
             const start = new Date(startInput.value);
             const end   = new Date(endInput.value);
@@ -293,26 +326,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         counter.classList.add('hidden');
         counter.classList.remove('flex');
-    }
+    };
 
     startInput.addEventListener('change', function () {
         if (!handleLeaveDateInput(this)) {
-            endInput.min = today;
-            updateCounter();
+            endInput.min = startInput.min;
+            window.updateCounter();
             return;
         }
 
         endInput.min = this.value;
         if (endInput.value && new Date(endInput.value) < new Date(this.value)) endInput.value = '';
-        updateCounter();
+        window.updateCounter();
     });
+    
     endInput.addEventListener('change', function () {
         if (!handleLeaveDateInput(this)) {
-            updateCounter();
+            window.updateCounter();
             return;
         }
-
-        updateCounter();
+        window.updateCounter();
     });
 
     form.addEventListener('submit', function (event) {
@@ -326,7 +359,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const end = new Date(endInput.value);
 
             for (let cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
-                const dateString = cursor.toISOString().split('T')[0];
+                // Adjust for timezone offset
+                const offset = cursor.getTimezoneOffset() * 60000;
+                const localDate = new Date(cursor - offset);
+                const dateString = localDate.toISOString().split('T')[0];
+                
                 if (isBlockedLeaveDate(dateString)) {
                     event.preventDefault();
                     window.showWarningAlert('Validasi', 'Rentang tanggal cuti memuat tanggal yang sudah diajukan sebelumnya (pending/disetujui). Silakan pilih rentang lain.');
@@ -338,7 +375,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const reason = document.getElementById('reason');
     if (reason.value) document.getElementById('reasonCount').textContent = reason.value.length + ' karakter';
-    updateCounter();
+    window.updateCounter();
 });
 
 function leaveTypeSelector() {
@@ -347,6 +384,7 @@ function leaveTypeSelector() {
         maxDays: 0,
         used: 0,
         remaining: 0,
+        notice: 0,
 
         init() {
             if (this.selected) this.readOption(this.selected);
@@ -357,12 +395,26 @@ function leaveTypeSelector() {
         },
 
         readOption(val) {
-            if (!val) { this.maxDays = 0; this.used = 0; this.remaining = 0; return; }
+            if (!val) { 
+                this.maxDays = 0; 
+                this.used = 0; 
+                this.remaining = 0; 
+                this.notice = 0; 
+                if (typeof window.updateLeaveNotice === 'function') {
+                    window.updateLeaveNotice(0);
+                }
+                return; 
+            }
             const opt = document.querySelector('#leave_type_id option[value="' + val + '"]');
             if (opt) {
                 this.maxDays   = parseInt(opt.dataset.max   || 0);
                 this.used      = parseInt(opt.dataset.used  || 0);
                 this.remaining = parseInt(opt.dataset.remaining || 0);
+                this.notice    = parseInt(opt.dataset.notice || 0);
+                
+                if (typeof window.updateLeaveNotice === 'function') {
+                    window.updateLeaveNotice(this.notice);
+                }
             }
         }
     };

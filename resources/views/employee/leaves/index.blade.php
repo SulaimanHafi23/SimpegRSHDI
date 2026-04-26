@@ -263,53 +263,86 @@
 
     <!-- Mobile Cards -->
     <div class="sm:hidden space-y-4">
-        @forelse($leaveRequests as $leave)
-            <div class="bg-white rounded-xl shadow-md p-4 space-y-3">
-                <div class="flex items-start justify-between gap-3">
+        @forelse($leaveRequests as $index => $leave)
+            @php
+                $statusBadges = [
+                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                    'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                    'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                    'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
+                ];
+                $badge = $statusBadges[$leave->status] ?? ['variant' => 'secondary', 'label' => ucfirst($leave->status)];
+            @endphp
+            <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
                     <div>
-                        <p class="text-xs text-gray-500">Jenis Cuti</p>
-                        <p class="font-semibold text-gray-900">{{ $leave->leaveType->name ?? '-' }}</p>
+                        <span class="text-xs text-gray-500 font-medium">#{{ $leaveRequests->firstItem() + $index }}</span>
+                        <div class="text-xs text-gray-400 mt-0.5 font-medium">
+                            <i class="far fa-clock mr-1"></i>{{ $leave->created_at->format('d M Y, H:i') }}
+                        </div>
                     </div>
-                    @if($leave->status === 'pending')
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
-                    @elseif($leave->status === 'approved')
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
-                    @else
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
-                    @endif
+                    <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 text-sm text-gray-700">
-                    <div>
-                        <p class="text-xs text-gray-500">Tanggal</p>
-                        <p class="font-medium">{{ \Carbon\Carbon::parse($leave->start_date)->format('d M Y') }} - {{ \Carbon\Carbon::parse($leave->end_date)->format('d M Y') }}</p>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100 flex-shrink-0">
+                            <i class="fas fa-calendar-check text-sm"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400 block mb-0.5">Jenis Pengajuan</span>
+                            <span class="text-sm font-bold text-gray-900 leading-tight block">{{ $leave->leaveType->name ?? '-' }}</span>
+                            @if($leave->reason)
+                                <span class="text-xs text-gray-500 line-clamp-1 italic">"{{ $leave->reason }}"</span>
+                            @endif
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-xs text-gray-500">Durasi</p>
-                        <p class="font-medium">{{ \Carbon\Carbon::parse($leave->start_date)->diffInDays($leave->end_date) + 1 }} hari</p>
+
+                    <div class="bg-gray-50 rounded-xl p-3 grid grid-cols-2 gap-4 border border-gray-100">
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1.5">
+                                <i class="fas fa-calendar-alt text-emerald-400 mr-1"></i>Periode
+                            </span>
+                            <span class="text-xs font-bold text-emerald-700 block">{{ \Carbon\Carbon::parse($leave->start_date)->format('d M') }} - {{ \Carbon\Carbon::parse($leave->end_date)->format('d M Y') }}</span>
+                            <span class="text-[10px] text-gray-400 font-medium">Waktu istirahat</span>
+                        </div>
+                        <div>
+                            <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1.5">
+                                <i class="fas fa-hourglass-half text-amber-400 mr-1"></i>Durasi
+                            </span>
+                            <span class="text-xs font-bold text-amber-700 block">{{ \Carbon\Carbon::parse($leave->start_date)->diffInDays($leave->end_date) + 1 }} Hari</span>
+                            <span class="text-[10px] text-gray-400 font-medium italic">Total hari kerja</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex items-center gap-3 text-sm text-gray-700">
-                    <a href="{{ route('employee.leaves.show', $leave->id) }}" class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition">
-                        <i class="fas fa-eye mr-2"></i>Detail
-                    </a>
+                <div class="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
                     @if($leave->status === 'pending')
                         <form action="{{ route('employee.leaves.cancel', $leave->id) }}" method="POST" class="inline">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="inline-flex items-center px-3 py-2 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition" onclick="event.preventDefault(); showConfirmAlert('Batalkan Permohonan?', 'Yakin ingin membatalkan permohonan cuti ini?', () => this.closest('form').submit());">
-                                <i class="fas fa-times mr-2"></i>Batalkan
+                            <button type="submit" 
+                                    class="flex items-center justify-center w-10 h-10 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition active:scale-95" 
+                                    title="Batalkan"
+                                    onclick="event.preventDefault(); showConfirmAlert('Batalkan Permohonan?', 'Yakin ingin membatalkan permohonan cuti ini?', () => this.closest('form').submit());">
+                                <i class="fas fa-times text-sm"></i>
                             </button>
                         </form>
                     @endif
+                    <a href="{{ route('employee.leaves.show', $leave->id) }}" 
+                       class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg shadow-sm hover:bg-blue-700 transition active:scale-95"
+                       title="Periksa Detail">
+                        <i class="fas fa-eye text-sm"></i>
+                    </a>
                 </div>
             </div>
         @empty
-            <div class="bg-white rounded-xl shadow-md p-6 text-center">
-                <i class="fas fa-inbox text-gray-300 text-5xl mb-3"></i>
-                <p class="text-gray-600 font-medium">Belum ada permohonan cuti</p>
-                <p class="text-gray-400 text-sm">Ajukan permohonan cuti untuk melihat data di sini</p>
+            <div class="bg-white rounded-xl shadow p-10 text-center border border-dashed border-gray-300">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-inbox text-gray-300 text-3xl"></i>
+                </div>
+                <p class="text-gray-600 font-bold">Belum Ada Permohonan Cuti</p>
+                <p class="text-gray-400 text-sm mt-1">Gunakan tombol di atas untuk mengajukan cuti baru.</p>
             </div>
         @endforelse
     </div>
