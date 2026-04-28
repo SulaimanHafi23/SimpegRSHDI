@@ -22,10 +22,32 @@ class BusinessTripApprovalController extends Controller
 
     public function index(Request $request)
     {
+        $user = Auth::user();
+        $isManager = !$user->hasRole(['admin', 'hr']) && $user->hasRole('manager');
         $departmentId = $this->getManagerDepartmentFilter();
 
+        // Manager: View pending requests for verification
+        // HR: View manager_verified requests for final approval
+        $statusToView = $isManager ? 'pending' : 'manager_verified';
+        $requestStatus = $request->input('status', '');
+
+        // If no specific status requested, default to appropriate status
+        if (!$requestStatus) {
+            $requestStatus = $statusToView;
+        }
+
+        // If manager tries to view other statuses, reset to pending
+        if ($isManager && $requestStatus !== 'pending') {
+            $requestStatus = 'pending';
+        }
+
+        // If HR tries to view pending, redirect to manager_verified
+        if (!$isManager && $requestStatus === 'pending') {
+            $requestStatus = 'manager_verified';
+        }
+
         $filters = [
-            'status' => $request->input('status', ''),
+            'status' => $requestStatus,
             'worker_id' => $request->input('worker_id'),
             'month' => $request->input('month'),
             'year' => $request->input('year'),
@@ -77,6 +99,7 @@ class BusinessTripApprovalController extends Controller
         $statistics = [
             'total' => $statsQuery->count(),
             'pending' => (clone $statsQuery)->where('status', 'pending')->count(),
+            'verified' => (clone $statsQuery)->where('status', 'manager_verified')->count(),
             'approved' => (clone $statsQuery)->where('status', 'approved')->count(),
             'rejected' => (clone $statsQuery)->where('status', 'rejected')->count(),
             'cancelled' => (clone $statsQuery)->where('status', 'cancelled')->count(),
@@ -89,7 +112,7 @@ class BusinessTripApprovalController extends Controller
             $workers = Worker::orderBy('name')->get();
         }
 
-        return view('approvals.business-trips.index', compact('trips', 'statistics', 'workers'));
+        return view('approvals.business-trips.index', compact('trips', 'statistics', 'workers', 'isManager'));
     }
 
     public function show(string $id)
@@ -104,66 +127,134 @@ class BusinessTripApprovalController extends Controller
         return view('approvals.business-trips.show', compact('trip'));
     }
 
+    /**
+     * Manager verifies the business trip request (first stage)
+     */
+    public function verify(string $id)
+    {
+        try {
+            $trip = BusinessTrip::findOrFail($id);
+
+            if (empty($trip->supporting_document_path)) {
+                return back()->with('error', 'Permohonan tidak dapat diverifikasi karena tidak memiliki lampiran surat tugas/disposisi.');
+            }
+
+            // Department restriction applies only for manager-scoped users.
+            $departmentId = $this->getManagerDepartmentFilter();
+            if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
+                return back()->with('error', 'Anda tidak memiliki akses untuk memverifikasi permohonan ini.');
+            }
+
+            // Only manager can verify pending requests
+            $user = Auth::user();
+            if ($user->hasRole(['admin', 'hr'])) {
+                throw new \Exception('Hanya manager yang dapat melakukan verifikasi.');
+            }
+
+            if ($trip->status !== 'pending') {
+                throw new \Exception('Hanya permohonan perjalanan dinas yang berstatus pending yang dapat diverifikasi.');
+            }
+
+            // Mark as manager_verified
+            $trip->update([
+                'status' => 'manager_verified',
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+            ]);
+
+            return redirect()->route('approvals.business-trips.index')
+                ->with('success', 'Permohonan perjalanan dinas berhasil diverifikasi dan akan diteruskan ke HR.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function approve(string $id)
     {
-        $trip = BusinessTrip::findOrFail($id);
+        try {
+            $trip = BusinessTrip::findOrFail($id);
 
-        if (empty($trip->supporting_document_path)) {
-            return back()->with('error', 'Permohonan tidak dapat disetujui karena tidak memiliki lampiran surat tugas/disposisi.');
-        }
+            if (empty($trip->supporting_document_path)) {
+                return back()->with('error', 'Permohonan tidak dapat disetujui karena tidak memiliki lampiran surat tugas/disposisi.');
+            }
 
-        // Department restriction applies only for manager-scoped users.
-        $departmentId = $this->getManagerDepartmentFilter();
-        if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
-            return back()->with('error', 'Anda tidak memiliki akses untuk menyetujui permohonan ini.');
-        }
+            // Department restriction applies only for manager-scoped users.
+            $departmentId = $this->getManagerDepartmentFilter();
+            if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
+                return back()->with('error', 'Anda tidak memiliki akses untuk menyetujui permohonan ini.');
+            }
 
-        $user = Auth::user();
+            // Only HR can approve (not manager)
+            $user = Auth::user();
+            if ($user->hasRole('manager') && !$user->hasRole(['admin', 'hr'])) {
+                throw new \Exception('Hanya HR yang dapat menyetujui permohonan perjalanan dinas yang sudah diverifikasi.');
+            }
 
-        $trip->update([
-            'status' => 'approved',
-            'approved_by' => $user->id,
-            'approved_at' => now(),
-        ]);
+            // Can only approve manager_verified requests
+            if ($trip->status !== 'manager_verified') {
+                throw new \Exception('Hanya permohonan perjalanan dinas yang sudah diverifikasi oleh manager yang dapat disetujui.');
+            }
 
-        if ($trip->worker?->user) {
-            $this->notifyBusinessTripApproved($trip->worker->user->id, [
-                'id' => $trip->id,
-                'destination' => $trip->destination,
+            $trip->update([
+                'status' => 'approved',
+                'approved_by' => $user->id,
+                'approved_at' => now(),
             ]);
-        }
 
-        return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas disetujui.');
+            if ($trip->worker?->user) {
+                $this->notifyBusinessTripApproved($trip->worker->user->id, [
+                    'id' => $trip->id,
+                    'destination' => $trip->destination,
+                ]);
+            }
+
+            return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas berhasil disetujui oleh HR.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function reject(Request $request, string $id)
     {
-        $request->validate(['rejection_reason' => 'required|string|max:1000']);
+        try {
+            $request->validate(['rejection_reason' => 'required|string|max:1000']);
 
-        $trip = BusinessTrip::findOrFail($id);
+            $trip = BusinessTrip::findOrFail($id);
 
-        $departmentId = $this->getManagerDepartmentFilter();
-        if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
-            return back()->with('error', 'Anda tidak memiliki akses untuk menolak permohonan ini.');
+            $departmentId = $this->getManagerDepartmentFilter();
+            if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
+                return back()->with('error', 'Anda tidak memiliki akses untuk menolak permohonan ini.');
+            }
+
+            // Only HR can reject (not manager)
+            $user = Auth::user();
+            if ($user->hasRole('manager') && !$user->hasRole(['admin', 'hr'])) {
+                throw new \Exception('Hanya HR yang dapat menolak permohonan perjalanan dinas yang sudah diverifikasi.');
+            }
+
+            // Can only reject manager_verified requests
+            if ($trip->status !== 'manager_verified') {
+                throw new \Exception('Hanya permohonan perjalanan dinas yang sudah diverifikasi oleh manager yang dapat ditolak.');
+            }
+
+            $trip->update([
+                'status' => 'rejected',
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+                'rejection_reason' => $request->rejection_reason,
+            ]);
+
+            if ($trip->worker?->user) {
+                $this->notifyBusinessTripRejected($trip->worker->user->id, [
+                    'id' => $trip->id,
+                    'destination' => $trip->destination,
+                ], $request->rejection_reason);
+            }
+
+            return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas berhasil ditolak.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $user = Auth::user();
-
-        $trip->update([
-            'status' => 'rejected',
-            'approved_by' => $user->id,
-            'approved_at' => now(),
-            'rejection_reason' => $request->rejection_reason,
-        ]);
-
-        if ($trip->worker?->user) {
-            $this->notifyBusinessTripRejected($trip->worker->user->id, [
-                'id' => $trip->id,
-                'destination' => $trip->destination,
-            ], $request->rejection_reason);
-        }
-
-        return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas ditolak.');
     }
 
     public function destroy(string $id)

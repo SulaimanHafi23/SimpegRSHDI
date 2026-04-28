@@ -306,6 +306,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::prefix('leaves')->name('leaves.')->group(function () {
             Route::get('/', [LeaveRequestController::class, 'approvalIndex'])->name('index');
             Route::get('/{id}', [LeaveRequestController::class, 'approvalShow'])->name('show');
+            Route::post('/{id}/verify', [LeaveRequestController::class, 'approvalVerify'])->name('verify');
             Route::post('/{id}/approve', [LeaveRequestController::class, 'approvalApprove'])->name('approve');
             Route::post('/{id}/reject', [LeaveRequestController::class, 'approvalReject'])->name('reject');
         });
@@ -323,6 +324,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
         Route::get('/export', [BusinessTripApprovalController::class, 'export'])->name('export');
         Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
+        Route::post('/{id}/verify', [BusinessTripApprovalController::class, 'verify'])->name('verify');
         Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
         Route::delete('/{id}', [BusinessTripApprovalController::class, 'destroy'])->name('destroy');

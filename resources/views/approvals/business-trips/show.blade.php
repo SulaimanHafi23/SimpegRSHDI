@@ -23,20 +23,61 @@
             <h1 class="text-2xl font-bold text-gray-900">Detail Perjalanan Dinas</h1>
             <p class="text-gray-600">{{ $trip->destination }}</p>
         </div>
-        @if($trip->status === 'pending')
-        <div class="flex gap-2">
-            <button type="button" onclick="confirmBusinessTripApprove()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-                <i class="fas fa-check mr-2"></i>Setujui
-            </button>
-            <button type="button" onclick="confirmBusinessTripReject()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                <i class="fas fa-times mr-2"></i>Tolak
-            </button>
-        </div>
+
+        @php
+            $user = Auth::user();
+            $isManager = !$user->hasRole(['admin', 'hr']) && $user->hasRole('manager');
+        @endphp
+
+        @if($trip->status === 'pending' && $isManager)
+            <!-- Manager: Verify Button -->
+            <form action="{{ route('approvals.business-trips.verify', $trip->id) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        onclick="return confirm('Anda yakin ingin memverifikasi perjalanan dinas ini? Pengajuan akan diteruskan ke HR.')">
+                    <i class="fas fa-check-double mr-2"></i>Verifikasi
+                </button>
+            </form>
+
+        @elseif($trip->status === 'manager_verified' && !$isManager)
+            <!-- HR: Approve & Reject Buttons -->
+            <div class="flex gap-2">
+                <button type="button" onclick="confirmBusinessTripApprove()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+                    <i class="fas fa-check mr-2"></i>Setujui
+                </button>
+                <button type="button" onclick="confirmBusinessTripReject()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <i class="fas fa-times mr-2"></i>Tolak
+                </button>
+            </div>
         @endif
     </div>
 
     <!-- Status Alert -->
-    @if($trip->status === 'approved')
+    @if($trip->status === 'pending')
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex items-start">
+            <i class="fas fa-clock text-yellow-500 text-xl mt-1 mr-3"></i>
+            <div class="flex-1">
+                <h3 class="text-yellow-800 font-semibold">Menunggu Verifikasi Manager</h3>
+                <p class="text-yellow-700 text-sm mt-1">
+                    Pengajuan ini menunggu verifikasi dari manager departemen. Setelah diverifikasi, akan diteruskan ke HR untuk persetujuan final.
+                </p>
+            </div>
+        </div>
+    </div>
+    @elseif($trip->status === 'manager_verified')
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start">
+            <i class="fas fa-check-circle text-blue-500 text-xl mt-1 mr-3"></i>
+            <div class="flex-1">
+                <h3 class="text-blue-800 font-semibold">Telah Diverifikasi Manager</h3>
+                <p class="text-blue-700 text-sm mt-1">
+                    Pengajuan ini telah diverifikasi oleh manager dan sekarang menunggu persetujuan akhir dari HR.
+                </p>
+            </div>
+        </div>
+    </div>
+    @elseif($trip->status === 'approved')
     <div class="bg-green-50 border border-green-200 rounded-lg p-4">
         <div class="flex items-start">
             <i class="fas fa-check-circle text-green-500 text-xl mt-1 mr-3"></i>

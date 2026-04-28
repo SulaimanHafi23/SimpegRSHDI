@@ -27,18 +27,26 @@
     </x-page-header>
 
     {{-- Statistics Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
         <x-stats-card
             title="Total Pengajuan"
             :value="$statistics['total'] ?? 0"
             icon="fas fa-file-alt"
             color="blue" />
 
+        @if(!$isManager)
         <x-stats-card
             title="Menunggu"
             :value="$statistics['pending'] ?? 0"
             icon="fas fa-clock"
             color="yellow" />
+        @endif
+
+        <x-stats-card
+            title="{{ $isManager ? 'Menunggu' : 'Terverifikasi' }}"
+            :value="$isManager ? ($statistics['pending'] ?? 0) : ($statistics['verified'] ?? 0)"
+            :icon="$isManager ? 'fas fa-clock' : 'fas fa-check-double'"
+            :color="$isManager ? 'yellow' : 'blue'" />
 
         <x-stats-card
             title="Disetujui"
@@ -76,12 +84,9 @@
         <x-form.select
             name="status"
             label="Status"
-            :options="[
-                'pending' => 'Menunggu',
-                'approved' => 'Disetujui',
-                'rejected' => 'Ditolak',
-                'cancelled' => 'Dibatalkan'
-            ]"
+            :options="$isManager ? 
+                ['pending' => 'Menunggu (Untuk Diverifikasi)'] :
+                ['manager_verified' => 'Terverifikasi (Sudah Diverifikasi Manager)', 'approved' => 'Disetujui', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan']"
             :selected="request('status') ?? ''"
             placeholder="Semua Status" />
 

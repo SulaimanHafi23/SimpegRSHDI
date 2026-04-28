@@ -11,14 +11,20 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
         <div class="rounded-lg border border-gray-200 bg-white p-4">
             <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Total</p>
             <p class="mt-1 text-2xl font-bold text-gray-900">{{ $totalLeaves ?? 0 }}</p>
         </div>
+        @if(!$isManager)
         <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
             <p class="text-xs font-medium uppercase tracking-wide text-yellow-700">Pending</p>
             <p class="mt-1 text-2xl font-bold text-yellow-800">{{ $pendingCount ?? 0 }}</p>
+        </div>
+        @endif
+        <div class="rounded-lg border border-blue-200 bg-blue-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-blue-700">{{ $isManager ? 'Pending' : 'Verified' }}</p>
+            <p class="mt-1 text-2xl font-bold text-blue-800">{{ $isManager ? ($pendingCount ?? 0) : ($verifiedCount ?? 0) }}</p>
         </div>
         <div class="rounded-lg border border-green-200 bg-green-50 p-4">
             <p class="text-xs font-medium uppercase tracking-wide text-green-700">Approved</p>
@@ -36,7 +42,11 @@
                 <label for="status" class="mb-1 block text-sm font-medium text-gray-700">Status</label>
                 <select id="status" name="status" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
                     <option value="">Semua Status</option>
-                    <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
+                    @if($isManager)
+                        <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending (Untuk Diverifikasi)</option>
+                    @else
+                        <option value="manager_verified" {{ ($filters['status'] ?? '') === 'manager_verified' ? 'selected' : '' }}>Verified (Sudah Diverifikasi Manager)</option>
+                    @endif
                     <option value="approved" {{ ($filters['status'] ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
                     <option value="rejected" {{ ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' }}>Rejected</option>
                     <option value="cancelled" {{ ($filters['status'] ?? '') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>

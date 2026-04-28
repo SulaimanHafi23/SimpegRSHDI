@@ -27,12 +27,14 @@ class LeaveRequestController extends Controller
         $this->middleware('permission:leave.manage')->except([
             'approvalIndex',
             'approvalShow',
+            'approvalVerify',
             'approvalApprove',
             'approvalReject',
         ]);
         $this->middleware('permission:leave.approve')->only([
             'approvalIndex',
             'approvalShow',
+            'approvalVerify',
             'approvalApprove',
             'approvalReject',
         ]);
@@ -40,10 +42,27 @@ class LeaveRequestController extends Controller
 
     public function approvalIndex(Request $request)
     {
+        $user = Auth::user();
+        $isManager = !$user->hasRole(['admin', 'hr']) && $user->hasRole('manager');
         $departmentId = $this->getManagerDepartmentFilter();
 
+        // Manager: View pending requests for verification
+        // HR: View manager_verified requests for final approval
+        $statusToView = $isManager ? 'pending' : 'manager_verified';
+        $requestStatus = $request->input('status', $statusToView);
+
+        // If manager tries to view other statuses, reset to pending
+        if ($isManager && $requestStatus !== 'pending') {
+            $requestStatus = 'pending';
+        }
+
+        // If HR tries to view pending, redirect to manager_verified
+        if (!$isManager && $requestStatus === 'pending') {
+            $requestStatus = 'manager_verified';
+        }
+
         $filters = [
-            'status' => $request->input('status', 'pending'),
+            'status' => $requestStatus,
             'per_page' => 20,
             'department_id' => $departmentId,
         ];
@@ -64,6 +83,7 @@ class LeaveRequestController extends Controller
 
         $totalLeaves = (clone $baseQuery)->count();
         $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
+        $verifiedCount = (clone $baseQuery)->where('status', 'manager_verified')->count();
         $approvedCount = (clone $baseQuery)->where('status', 'approved')->count();
         $rejectedCount = (clone $baseQuery)->where('status', 'rejected')->count();
 
@@ -72,9 +92,11 @@ class LeaveRequestController extends Controller
             'leaveTypes',
             'totalLeaves',
             'pendingCount',
+            'verifiedCount',
             'approvedCount',
             'rejectedCount',
-            'filters'
+            'filters',
+            'isManager'
         ));
     }
 
@@ -89,6 +111,40 @@ class LeaveRequestController extends Controller
         return view('approvals.leaves.show', compact('leave'));
     }
 
+    /**
+     * Manager verifies the leave request (first stage)
+     */
+    public function approvalVerify(Request $request, string $id)
+    {
+        try {
+            $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
+            $this->ensureApprovalAccess($leaveRequest);
+
+            // Only manager can verify pending requests
+            $user = Auth::user();
+            if ($user->hasRole(['admin', 'hr'])) {
+                throw new \Exception('Hanya manager yang dapat melakukan verifikasi.');
+            }
+
+            if ($leaveRequest->status !== 'pending') {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat diverifikasi.');
+            }
+
+            // Mark as manager_verified
+            $leaveRequest->update([
+                'status' => 'manager_verified',
+                'approved_by' => Auth::id(),
+                'approved_at' => now(),
+            ]);
+
+            return redirect()
+                ->route('approvals.leaves.index')
+                ->with('success', 'Pengajuan cuti berhasil diverifikasi dan akan diteruskan ke HR.');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
     public function approvalApprove(Request $request, string $id)
     {
         $request->validate([
@@ -99,8 +155,15 @@ class LeaveRequestController extends Controller
             $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
             $this->ensureApprovalAccess($leaveRequest);
 
-            if ($leaveRequest->status !== 'pending') {
-                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat disetujui.');
+            // Only HR can approve (not manager)
+            $user = Auth::user();
+            if ($user->hasRole('manager') && !$user->hasRole(['admin', 'hr'])) {
+                throw new \Exception('Hanya HR yang dapat menyetujui permohonan cuti yang sudah diverifikasi.');
+            }
+
+            // Can only approve manager_verified requests
+            if ($leaveRequest->status !== 'manager_verified') {
+                throw new \Exception('Hanya permohonan cuti yang sudah diverifikasi oleh manager yang dapat disetujui.');
             }
 
             $leaveRequest->update([
@@ -119,7 +182,7 @@ class LeaveRequestController extends Controller
                     'type' => 'leave_approved',
                     'title' => 'Cuti Disetujui',
                     'message' => sprintf(
-                        'Permohonan cuti Anda dari %s sampai %s telah disetujui.',
+                        'Permohonan cuti Anda dari %s sampai %s telah disetujui oleh HR.',
                         $leaveRequest->start_date,
                         $leaveRequest->end_date
                     ),
@@ -133,7 +196,7 @@ class LeaveRequestController extends Controller
 
             return redirect()
                 ->route('approvals.leaves.index')
-                ->with('success', 'Pengajuan cuti berhasil disetujui.');
+                ->with('success', 'Pengajuan cuti berhasil disetujui oleh HR.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -149,8 +212,15 @@ class LeaveRequestController extends Controller
             $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
             $this->ensureApprovalAccess($leaveRequest);
 
-            if ($leaveRequest->status !== 'pending') {
-                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat ditolak.');
+            // Only HR can reject (not manager)
+            $user = Auth::user();
+            if ($user->hasRole('manager') && !$user->hasRole(['admin', 'hr'])) {
+                throw new \Exception('Hanya HR yang dapat menolak permohonan cuti yang sudah diverifikasi.');
+            }
+
+            // Can only reject manager_verified requests
+            if ($leaveRequest->status !== 'manager_verified') {
+                throw new \Exception('Hanya permohonan cuti yang sudah diverifikasi oleh manager yang dapat ditolak.');
             }
 
             $leaveRequest->update([
@@ -169,7 +239,7 @@ class LeaveRequestController extends Controller
                     'type' => 'leave_rejected',
                     'title' => 'Cuti Ditolak',
                     'message' => sprintf(
-                        'Permohonan cuti Anda dari %s sampai %s telah ditolak. Alasan: %s',
+                        'Permohonan cuti Anda dari %s sampai %s telah ditolak oleh HR. Alasan: %s',
                         $leaveRequest->start_date,
                         $leaveRequest->end_date,
                         $validated['rejection_reason']
