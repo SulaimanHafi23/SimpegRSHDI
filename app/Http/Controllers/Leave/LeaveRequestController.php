@@ -212,36 +212,39 @@ class LeaveRequestController extends Controller
             $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
             $this->ensureApprovalAccess($leaveRequest);
 
-            // Only HR can reject (not manager)
             $user = Auth::user();
-            if ($user->hasRole('manager') && !$user->hasRole(['admin', 'hr'])) {
-                throw new \Exception('Hanya HR yang dapat menolak permohonan cuti yang sudah diverifikasi.');
-            }
+            $isManager = $user->hasRole('manager') && !$user->hasRole(['admin', 'hr']);
+            $requiredStatus = $isManager ? 'pending' : 'manager_verified';
 
-            // Can only reject manager_verified requests
-            if ($leaveRequest->status !== 'manager_verified') {
+            if ($leaveRequest->status !== $requiredStatus) {
+                if ($isManager) {
+                    throw new \Exception('Hanya permohonan cuti yang masih pending yang dapat ditolak oleh manager.');
+                }
+
                 throw new \Exception('Hanya permohonan cuti yang sudah diverifikasi oleh manager yang dapat ditolak.');
             }
 
             $leaveRequest->update([
                 'status' => 'rejected',
-                'approved_by' => Auth::id(),
+                'approved_by' => $user->id,
                 'approved_at' => now(),
                 'rejection_reason' => $validated['rejection_reason'],
             ]);
 
             $user = User::where('worker_id', $leaveRequest->worker_id)->first();
             if ($user) {
+                $rejectedByLabel = $isManager ? 'Manager' : 'HR';
                 Notification::create([
                     'user_id' => $user->id,
                     'notifiable_type' => \App\Models\User::class,
                     'notifiable_id' => $user->id,
                     'type' => 'leave_rejected',
-                    'title' => 'Cuti Ditolak',
+                    'title' => 'Cuti Ditolak oleh ' . $rejectedByLabel,
                     'message' => sprintf(
-                        'Permohonan cuti Anda dari %s sampai %s telah ditolak oleh HR. Alasan: %s',
+                        'Permohonan cuti Anda dari %s sampai %s telah ditolak oleh %s. Alasan: %s',
                         $leaveRequest->start_date,
                         $leaveRequest->end_date,
+                        $rejectedByLabel,
                         $validated['rejection_reason']
                     ),
                     'data' => [

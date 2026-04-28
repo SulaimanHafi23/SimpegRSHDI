@@ -394,6 +394,11 @@
 function toggleUnifiedSidebar() {
     const sidebar = document.getElementById('unified-sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+    if (!sidebar || !backdrop) {
+        return;
+    }
 
     // Toggle sidebar
     sidebar.classList.toggle('-translate-x-full');
@@ -401,12 +406,30 @@ function toggleUnifiedSidebar() {
     // Toggle backdrop
     if (sidebar.classList.contains('-translate-x-full')) {
         // Sidebar is closing
+        backdrop.classList.add('hidden');
         backdrop.classList.add('opacity-0', 'pointer-events-none');
         backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+        backdrop.style.opacity = '0';
+        backdrop.style.pointerEvents = 'none';
+        backdrop.style.display = 'none';
+
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.add('hidden');
+            sidebarOverlay.style.display = 'none';
+        }
     } else {
         // Sidebar is opening
+        backdrop.classList.remove('hidden');
         backdrop.classList.remove('opacity-0', 'pointer-events-none');
         backdrop.classList.add('opacity-100', 'pointer-events-auto');
+        backdrop.style.opacity = '1';
+        backdrop.style.pointerEvents = 'auto';
+        backdrop.style.display = 'block';
+
+        if (sidebarOverlay) {
+            sidebarOverlay.classList.remove('hidden');
+            sidebarOverlay.style.display = 'block';
+        }
     }
 }
 

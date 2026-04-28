@@ -6,6 +6,7 @@
 <div class="space-y-6" x-data="{
     showApproveModal: false,
     showRejectModal: false,
+    rejectContext: 'hr',
     approvalNotes: '',
     rejectionReason: '',
     isSubmitting: false
@@ -39,14 +40,19 @@
         @endphp
 
         @if($leave->status === 'pending' && $isManager)
-            <!-- Manager: Verify Button -->
-            <form action="{{ route('approvals.leaves.verify', $leave->id) }}" method="POST" class="inline">
-                @csrf
-                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center"
-                        onclick="return confirm('Anda yakin ingin memverifikasi pengajuan cuti ini? Pengajuan akan diteruskan ke HR.')">
-                    <i class="fas fa-check-double mr-2"></i>Verifikasi
+            <div class="flex gap-2">
+                <form action="{{ route('approvals.leaves.verify', $leave->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition inline-flex items-center"
+                            onclick="return confirm('Anda yakin ingin memverifikasi pengajuan cuti ini? Pengajuan akan diteruskan ke HR.')">
+                        <i class="fas fa-check-double mr-2"></i>Verifikasi
+                    </button>
+                </form>
+                <button @click="rejectContext = 'manager'; showRejectModal = true"
+                        class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center">
+                    <i class="fas fa-times mr-2"></i>Tolak
                 </button>
-            </form>
+            </div>
 
         @elseif($leave->status === 'manager_verified' && !$isManager)
             <!-- HR: Approve & Reject Buttons -->
@@ -55,7 +61,7 @@
                         class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition inline-flex items-center">
                     <i class="fas fa-check mr-2"></i>Setujui
                 </button>
-                <button @click="showRejectModal = true"
+                <button @click="rejectContext = 'hr'; showRejectModal = true"
                         class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition inline-flex items-center">
                     <i class="fas fa-times mr-2"></i>Tolak
                 </button>
@@ -112,10 +118,15 @@
             <i class="fas fa-times-circle text-red-500 text-xl mt-1 mr-3"></i>
             <div class="flex-1">
                 <h3 class="text-red-800 font-semibold">Cuti Ditolak</h3>
+                @if($leave->approvedBy)
+                    @php
+                        $rejectedByLabel = $leave->approvedBy->hasRole('manager') && !$leave->approvedBy->hasRole(['admin', 'hr']) ? 'Manager' : 'HR';
+                    @endphp
                 <p class="text-red-700 text-sm mt-1">
-                    Ditolak oleh <strong>{{ $leave->approvedBy->name }}</strong>
+                    Ditolak oleh <strong>{{ $leave->approvedBy->name }}</strong> sebagai <strong>{{ $rejectedByLabel }}</strong>
                     pada {{ $leave->approved_at->format('d M Y H:i') }}
                 </p>
+                @endif
                 @if($leave->rejection_reason)
                 <div class="mt-3 rounded-md border border-red-200 bg-red-100/60 px-3 py-2">
                     <p class="text-xs font-semibold uppercase tracking-wide text-red-700">Alasan Penolakan</p>
@@ -275,15 +286,15 @@
                             <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
                             @if($leave->status === 'pending')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold">
-                                    <i class="fas fa-clock mr-2"></i>Pending
+                                    <i class="fas fa-clock mr-2"></i>Menunggu
                                 </span>
                             @elseif($leave->status === 'approved')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-semibold">
-                                    <i class="fas fa-check mr-2"></i>Approved
+                                    <i class="fas fa-check mr-2"></i>Disetujui
                                 </span>
                             @elseif($leave->status === 'rejected')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-800 font-semibold">
-                                    <i class="fas fa-times mr-2"></i>Rejected
+                                    <i class="fas fa-times mr-2"></i>Ditolak
                                 </span>
                             @endif
                         </div>
@@ -370,8 +381,12 @@
                             </div>
                             <div class="ml-3 flex-1">
                                 <p class="text-sm font-medium text-gray-900">Ditolak</p>
+                                @php
+                                    $leaveRejectActorLabel = $leave->approvedBy && $leave->approvedBy->hasRole('manager') && !$leave->approvedBy->hasRole(['admin', 'hr']) ? 'Manager' : 'HR';
+                                @endphp
                                 <p class="text-xs text-gray-500">
                                     oleh {{ $leave->approvedBy->name }}<br>
+                                    Sebagai {{ $leaveRejectActorLabel }}<br>
                                     {{ $leave->approved_at->format('d M Y H:i') }}
                                 </p>
                             </div>
@@ -392,13 +407,13 @@
             <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showApproveModal = false"></div>
 
             <div class="relative bg-white rounded-lg max-w-md w-full p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Approve Pengajuan Cuti</h3>
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Setujui Pengajuan Cuti</h3>
 
                 <form method="POST" action="{{ route('approvals.leaves.approve', $leave->id) }}">
                     @csrf
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
-                            Catatan Approval (Opsional)
+                            Catatan Persetujuan (Opsional)
                         </label>
                         <textarea x-model="approvalNotes"
                                   name="approval_notes"
@@ -415,7 +430,7 @@
                         </button>
                         <button type="submit"
                                 class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                            <i class="fas fa-check mr-2"></i>Approve
+                            <i class="fas fa-check mr-2"></i>Setujui
                         </button>
                     </div>
                 </form>
@@ -432,8 +447,8 @@
             <div class="fixed inset-0 backdrop-blur-sm bg-white/30" @click="showRejectModal = false"></div>
 
             <div class="relative bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-                <h3 class="text-lg font-semibold text-gray-900 mb-1">Tolak Pengajuan Cuti</h3>
-                <p class="text-sm text-gray-500 mb-4">Tuliskan alasan yang jelas agar pegawai dapat melakukan perbaikan.</p>
+                <h3 class="text-lg font-semibold text-gray-900 mb-1" x-text="rejectContext === 'manager' ? 'Tolak Pengajuan Cuti oleh Manager' : 'Tolak Pengajuan Cuti oleh HR'"></h3>
+                <p class="text-sm text-gray-500 mb-4" x-text="rejectContext === 'manager' ? 'Tuliskan alasan penolakan dari manager agar pegawai memahami keputusan awal.' : 'Tuliskan alasan yang jelas agar pegawai dapat melakukan perbaikan.'"></p>
 
                 <form method="POST" action="{{ route('approvals.leaves.reject', $leave->id) }}">
                     @csrf
@@ -458,7 +473,7 @@
                         </button>
                         <button type="submit"
                                 class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-                            <i class="fas fa-times mr-2"></i>Tolak
+                            <i class="fas fa-times mr-2"></i><span x-text="rejectContext === 'manager' ? 'Tolak oleh Manager' : 'Tolak oleh HR'"></span>
                         </button>
                     </div>
                 </form>

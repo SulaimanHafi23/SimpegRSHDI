@@ -30,14 +30,18 @@
         @endphp
 
         @if($trip->status === 'pending' && $isManager)
-            <!-- Manager: Verify Button -->
-            <form action="{{ route('approvals.business-trips.verify', $trip->id) }}" method="POST" class="inline">
-                @csrf
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                        onclick="return confirm('Anda yakin ingin memverifikasi perjalanan dinas ini? Pengajuan akan diteruskan ke HR.')">
-                    <i class="fas fa-check-double mr-2"></i>Verifikasi
+            <div class="flex gap-2">
+                <form action="{{ route('approvals.business-trips.verify', $trip->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            onclick="return confirm('Anda yakin ingin memverifikasi perjalanan dinas ini? Pengajuan akan diteruskan ke HR.')">
+                        <i class="fas fa-check-double mr-2"></i>Verifikasi
+                    </button>
+                </form>
+                <button type="button" onclick="confirmBusinessTripReject('manager')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                    <i class="fas fa-times mr-2"></i>Tolak
                 </button>
-            </form>
+            </div>
 
         @elseif($trip->status === 'manager_verified' && !$isManager)
             <!-- HR: Approve & Reject Buttons -->
@@ -45,7 +49,7 @@
                 <button type="button" onclick="confirmBusinessTripApprove()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
                     <i class="fas fa-check mr-2"></i>Setujui
                 </button>
-                <button type="button" onclick="confirmBusinessTripReject()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+                <button type="button" onclick="confirmBusinessTripReject('hr')" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
                     <i class="fas fa-times mr-2"></i>Tolak
                 </button>
             </div>
@@ -99,8 +103,11 @@
             <div class="flex-1">
                 <h3 class="text-red-800 font-semibold">Permohonan Ditolak</h3>
                 @if($trip->approvedBy)
+                @php
+                    $rejectedByLabel = $trip->approvedBy->hasRole('manager') && !$trip->approvedBy->hasRole(['admin', 'hr']) ? 'Manager' : 'HR';
+                @endphp
                 <p class="text-red-700 text-sm mt-1">
-                    Ditolak oleh <strong>{{ $trip->approvedBy->name }}</strong>
+                    Ditolak oleh <strong>{{ $trip->approvedBy->name }}</strong> sebagai <strong>{{ $rejectedByLabel }}</strong>
                     pada {{ $trip->approved_at->format('d M Y H:i') }}
                 </p>
                 @endif
@@ -189,14 +196,14 @@
 
                         <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Sesi</label>
-                            <p class="text-base font-semibold text-gray-900">{{ $trip->half_day_session_label ?? 'Full Day' }}</p>
+                            <p class="text-base font-semibold text-gray-900">{{ $trip->half_day_session_label ?? 'Sepanjang Hari' }}</p>
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-500 mb-1">Status</label>
                             @if($trip->status === 'pending')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold">
-                                    <i class="fas fa-clock mr-2"></i>Pending
+                                    <i class="fas fa-clock mr-2"></i>Menunggu
                                 </span>
                             @elseif($trip->status === 'approved')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-green-100 text-green-800 font-semibold">
@@ -204,11 +211,11 @@
                                 </span>
                             @elseif($trip->status === 'rejected')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-red-100 text-red-800 font-semibold">
-                                    <i class="fas fa-times mr-2"></i>Rejected
+                                    <i class="fas fa-times mr-2"></i>Ditolak
                                 </span>
                             @elseif($trip->status === 'cancelled')
                                 <span class="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-gray-800 font-semibold">
-                                    <i class="fas fa-ban mr-2"></i>Cancelled
+                                    <i class="fas fa-ban mr-2"></i>Dibatalkan
                                 </span>
                             @endif
                         </div>
@@ -337,7 +344,10 @@
                                                     {{ $trip->status === 'approved' ? 'Disetujui' : 'Ditolak' }}
                                                 </p>
                                                 @if($trip->approvedBy)
-                                                <p class="text-xs text-gray-500">{{ $trip->approvedBy->name }}</p>
+                                                @php
+                                                    $tripRejectActorLabel = $trip->approvedBy->hasRole('manager') && !$trip->approvedBy->hasRole(['admin', 'hr']) ? 'Manager' : 'HR';
+                                                @endphp
+                                                <p class="text-xs text-gray-500">{{ $trip->approvedBy->name }}<br> Sebagai {{ $tripRejectActorLabel }}</p>
                                                 @endif
                                             </div>
                                             @if($trip->approved_at)
@@ -423,9 +433,10 @@
         }
     }
 
-    function confirmBusinessTripReject() {
+    function confirmBusinessTripReject(stage = 'hr') {
         const form = document.getElementById('reject-business-trip-form');
         const reasonInput = document.getElementById('reject-business-trip-reason');
+        const actorLabel = stage === 'manager' ? 'Manager' : 'HR';
 
         if (!form || !reasonInput) {
             return;
@@ -433,8 +444,8 @@
 
         if (window.Swal) {
             window.Swal.fire({
-                title: 'Tolak perjalanan dinas?',
-                text: 'Alasan penolakan wajib diisi.',
+                title: `Tolak perjalanan dinas oleh ${actorLabel}?`,
+                text: stage === 'manager' ? 'Alasan penolakan dari manager wajib diisi.' : 'Alasan penolakan wajib diisi.',
                 icon: 'warning',
                 input: 'textarea',
                 inputPlaceholder: 'Tulis alasan penolakan...',
@@ -442,7 +453,7 @@
                     'aria-label': 'Alasan penolakan',
                 },
                 showCancelButton: true,
-                confirmButtonText: 'Ya, tolak',
+                confirmButtonText: `Ya, tolak oleh ${actorLabel}`,
                 cancelButtonText: 'Batal',
                 reverseButtons: true,
                 inputValidator: (value) => {
@@ -460,7 +471,7 @@
             return;
         }
 
-        const reason = window.prompt('Masukkan alasan penolakan:');
+        const reason = window.prompt(`Masukkan alasan penolakan oleh ${actorLabel}:`);
         if (reason && reason.trim()) {
             reasonInput.value = reason.trim();
             form.submit();

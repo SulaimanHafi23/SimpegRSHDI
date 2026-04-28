@@ -226,14 +226,15 @@ class BusinessTripApprovalController extends Controller
                 return back()->with('error', 'Anda tidak memiliki akses untuk menolak permohonan ini.');
             }
 
-            // Only HR can reject (not manager)
             $user = Auth::user();
-            if ($user->hasRole('manager') && !$user->hasRole(['admin', 'hr'])) {
-                throw new \Exception('Hanya HR yang dapat menolak permohonan perjalanan dinas yang sudah diverifikasi.');
-            }
+            $isManager = $user->hasRole('manager') && !$user->hasRole(['admin', 'hr']);
+            $requiredStatus = $isManager ? 'pending' : 'manager_verified';
 
-            // Can only reject manager_verified requests
-            if ($trip->status !== 'manager_verified') {
+            if ($trip->status !== $requiredStatus) {
+                if ($isManager) {
+                    throw new \Exception('Hanya permohonan perjalanan dinas yang masih pending yang dapat ditolak oleh manager.');
+                }
+
                 throw new \Exception('Hanya permohonan perjalanan dinas yang sudah diverifikasi oleh manager yang dapat ditolak.');
             }
 
@@ -248,10 +249,10 @@ class BusinessTripApprovalController extends Controller
                 $this->notifyBusinessTripRejected($trip->worker->user->id, [
                     'id' => $trip->id,
                     'destination' => $trip->destination,
-                ], $request->rejection_reason);
+                ], $request->rejection_reason, $isManager ? 'Manager' : 'HR');
             }
 
-            return redirect()->route('approvals.business-trips.index')->with('success', 'Permohonan perjalanan dinas berhasil ditolak.');
+            return redirect()->route('approvals.business-trips.index')->with('success', $isManager ? 'Permohonan perjalanan dinas berhasil ditolak oleh manager.' : 'Permohonan perjalanan dinas berhasil ditolak oleh HR.');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -381,11 +382,12 @@ class BusinessTripApprovalController extends Controller
         ]);
     }
 
-    private function notifyBusinessTripRejected(string $userId, array $tripData, ?string $reason = null): void
+    private function notifyBusinessTripRejected(string $userId, array $tripData, ?string $reason = null, string $rejectedByLabel = 'HR'): void
     {
         $message = sprintf(
-            'Permohonan perjalanan dinas ke %s telah ditolak.',
-            $tripData['destination']
+            'Permohonan perjalanan dinas ke %s telah ditolak oleh %s.',
+            $tripData['destination'],
+            $rejectedByLabel
         );
 
         if ($reason) {
@@ -397,7 +399,7 @@ class BusinessTripApprovalController extends Controller
             'notifiable_type' => \App\Models\User::class,
             'notifiable_id' => $userId,
             'type' => 'business_trip_rejected',
-            'title' => 'Perjalanan Dinas Ditolak',
+            'title' => 'Perjalanan Dinas Ditolak oleh ' . $rejectedByLabel,
             'message' => $message,
             'data' => [
                 'business_trip_id' => $tripData['id'],

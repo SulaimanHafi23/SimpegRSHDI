@@ -84,7 +84,7 @@
         <x-form.select
             name="status"
             label="Status"
-            :options="$isManager ? 
+            :options="$isManager ?
                 ['pending' => 'Menunggu (Untuk Diverifikasi)'] :
                 ['manager_verified' => 'Terverifikasi (Sudah Diverifikasi Manager)', 'approved' => 'Disetujui', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan']"
             :selected="request('status') ?? ''"
