@@ -30,7 +30,7 @@
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">Detail Pengajuan Cuti</h1>
-            <p class="text-gray-600 mt-1">Review dan kelola pengajuan cuti pegawai</p>
+            <p class="text-gray-600 mt-1">Periksa dan kelola pengajuan cuti pegawai</p>
         </div>
 
         <!-- Action Buttons -->
