@@ -32,11 +32,12 @@ class ResetPasswordController extends Controller
             'email' => 'required|email',
             'password' => 'required|min:8|confirmed',
         ], [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'password.required' => 'Kata sandi baru wajib diisi.',
-            'password.min' => 'Kata sandi minimal 8 karakter.',
-            'password.confirmed' => 'Konfirmasi kata sandi tidak cocok.',
+            'token.required'      => 'Token reset tidak valid.',
+            'email.required'      => 'Email wajib diisi.',
+            'email.email'         => 'Format email tidak valid.',
+            'password.required'   => 'Kata sandi baru wajib diisi.',
+            'password.min'        => 'Kata sandi minimal 8 karakter.',
+            'password.confirmed'  => 'Konfirmasi kata sandi tidak cocok.',
         ]);
 
         $status = Password::reset(

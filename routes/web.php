@@ -200,6 +200,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::get('/export', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'export'])->name('export');
             Route::get('/create', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'store'])->name('store');
+            Route::get('/api/worker-shifts-in-range', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'getWorkerShiftsInDateRange'])->name('api.worker-shifts-in-range');
             Route::post('/{id}/accept', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'accept'])->name('accept');
             Route::post('/{id}/reject', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'reject'])->name('reject');
             Route::post('/{id}/cancel', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'cancel'])->name('cancel');

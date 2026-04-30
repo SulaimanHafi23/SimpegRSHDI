@@ -319,6 +319,9 @@ document.querySelectorAll('input[name="swap_type"]').forEach(radio => {
         if (section) {
             section.style.display = 'block';
         }
+
+        // Check shift rotation when swap type changes
+        checkShiftRotation();
     });
 });
 
@@ -344,6 +347,25 @@ document.addEventListener('DOMContentLoaded', function() {
             if (endDateInput.value && endDateInput.value < minEndDate) {
                 endDateInput.value = '';
             }
+
+            // Check shift rotation
+            checkShiftRotation();
+        });
+
+        endDateInput.addEventListener('change', checkShiftRotation);
+    }
+
+    // Check shift rotation on date change (single date)
+    const singleDateInput = document.getElementById('swap_date');
+    if (singleDateInput) {
+        singleDateInput.addEventListener('change', checkShiftRotation);
+    }
+
+    // Check shift rotation on target worker change
+    const targetWorkerSelect = document.getElementById('target_worker_id');
+    if (targetWorkerSelect) {
+        targetWorkerSelect.addEventListener('change', function() {
+            checkShiftRotation();
         });
     }
 });
@@ -367,6 +389,9 @@ function addDateInput() {
         </button>
     `;
 
+    const dateInput = newDateDiv.querySelector('input[type="date"]');
+    dateInput.addEventListener('change', checkShiftRotation);
+
     container.appendChild(newDateDiv);
 }
 
@@ -378,6 +403,125 @@ function removeDateInput(button) {
     // Don't remove if it's the last one
     if (dateInputs.length > 1) {
         button.parentElement.remove();
+        checkShiftRotation();
+    }
+}
+
+/**
+ * Check if target worker has shift rotation in selected date range
+ * Display warning if 2+ shifts found
+ */
+async function checkShiftRotation() {
+    const targetWorkerId = document.getElementById('target_worker_id').value;
+    const swapType = document.querySelector('input[name="swap_type"]:checked').value;
+
+    // Only check if target worker is selected
+    if (!targetWorkerId) {
+        clearRotationWarning();
+        return;
+    }
+
+    let startDate, endDate;
+
+    if (swapType === 'single_date') {
+        const dateValue = document.getElementById('swap_date').value;
+        if (!dateValue) {
+            clearRotationWarning();
+            return;
+        }
+        startDate = dateValue;
+        endDate = dateValue;
+    } else if (swapType === 'date_range') {
+        const start = document.getElementById('swap_start_date').value;
+        const end = document.getElementById('swap_end_date').value;
+        if (!start || !end) {
+            clearRotationWarning();
+            return;
+        }
+        startDate = start;
+        endDate = end;
+    } else if (swapType === 'recurring') {
+        // For recurring, check all dates
+        const dateInputs = document.querySelectorAll('#recurring_dates input[name="swap_dates[]"]');
+        if (dateInputs.length === 0) {
+            clearRotationWarning();
+            return;
+        }
+        // Get min and max dates from the inputs
+        const dates = Array.from(dateInputs)
+            .map(input => input.value)
+            .filter(v => v);
+        if (dates.length === 0) {
+            clearRotationWarning();
+            return;
+        }
+        startDate = dates.sort()[0];
+        endDate = dates.sort().reverse()[0];
+    }
+
+    try {
+        const response = await fetch(`{{ route('employee.shift-swaps.api.worker-shifts-in-range') }}?worker_id=${targetWorkerId}&start_date=${startDate}&end_date=${endDate}`);
+        const data = await response.json();
+
+        if (data.success) {
+            if (data.has_rotation && data.warning) {
+                showRotationWarning(data.warning, data.shifts);
+            } else {
+                clearRotationWarning();
+            }
+        }
+    } catch (error) {
+        console.error('Error checking shift rotation:', error);
+    }
+}
+
+/**
+ * Display rotation warning alert
+ */
+function showRotationWarning(warningMessage, shifts) {
+    // Remove existing warning if any
+    const existingWarning = document.getElementById('rotation-warning-alert');
+    if (existingWarning) {
+        existingWarning.remove();
+    }
+
+    // Create warning alert
+    const warningAlert = document.createElement('div');
+    warningAlert.id = 'rotation-warning-alert';
+    warningAlert.className = 'mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-lg';
+    warningAlert.innerHTML = `
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fas fa-exclamation-triangle text-amber-500 text-xl mt-0.5"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-semibold text-amber-800 mb-2">⚠️ ${warningMessage}</h3>
+                <p class="text-sm text-amber-700 mb-2">Pegawai ini memiliki perubahan shift pada periode yang dipilih:</p>
+                <ul class="text-sm text-amber-700 space-y-1 list-disc list-inside">
+                    ${shifts.map(s => `<li><strong>${s.shift_name}</strong> (${s.shift_time}) - Berlaku sejak ${s.effective_from}${s.effective_to ? ' s/d ' + s.effective_to : ''}</li>`).join('')}
+                </ul>
+                <p class="text-sm text-amber-700 mt-2 font-semibold">💡 Saran: Buat permintaan tukar shift secara terpisah untuk setiap periode shift yang berbeda.</p>
+            </div>
+        </div>
+    `;
+
+    // Insert warning after form errors if any, or at the beginning of form
+    const form = document.querySelector('form');
+    const errors = form.querySelector('.bg-red-100');
+    if (errors) {
+        errors.parentNode.insertBefore(warningAlert, errors.nextSibling);
+    } else {
+        form.insertBefore(warningAlert, form.firstChild);
+    }
+}
+
+/**
+ * Clear rotation warning alert
+ */
+function clearRotationWarning() {
+    const warningAlert = document.getElementById('rotation-warning-alert');
+    if (warningAlert) {
+        warningAlert.remove();
     }
 }
 
@@ -455,6 +599,9 @@ document.getElementById('target_worker_id').addEventListener('change', function(
     targetShiftSelect.innerHTML = '<option value="">-- Memuat shift... --</option>';
     targetShiftSelect.disabled = true;
 
+    // Clear rotation warning when changing worker
+    clearRotationWarning();
+
     if (!workerId) {
         targetShiftSelect.innerHTML = '<option value="">-- Pilih Rekan Kerja Terlebih Dahulu --</option>';
         targetShiftSelect.required = false;
@@ -486,6 +633,9 @@ document.getElementById('target_worker_id').addEventListener('change', function(
                 });
             }
             targetShiftSelect.disabled = false;
+
+            // Check shift rotation after loading shifts
+            checkShiftRotation();
         })
         .catch(error => {
             console.error('Error loading shifts:', error);

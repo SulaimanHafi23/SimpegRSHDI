@@ -80,6 +80,35 @@
 
         // Reset state when a tab is restored from history cache or duplicated
         window.addEventListener('pageshow', initializeSidebarState);
+
+        // Hide any stray full-screen overlays that accidentally remain visible
+        function cleanupStaleOverlays() {
+            try {
+                document.querySelectorAll('div.fixed.inset-0, div.fixed.inset-0.z-50, div.fixed.inset-0.backdrop-blur-sm').forEach(function(el) {
+                    const style = window.getComputedStyle(el);
+                    if (style && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                        // If element contains a visible dialog or SweetAlert popup, skip it
+                        const hasDialog = el.querySelector('[role="dialog"], .swal2-container, .swal2-popup, .swal2-toast, [aria-modal="true"]');
+                        if (!hasDialog) {
+                            el.style.display = 'none';
+                            el.style.pointerEvents = 'none';
+                            el.classList.add('hidden');
+                        }
+                    }
+                });
+            } catch (e) {
+                // Silent failure — do not break page load
+                console.warn('cleanupStaleOverlays failed', e);
+            }
+        }
+
+        // Run cleanup on DOM ready and load as a safety net
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', cleanupStaleOverlays);
+        } else {
+            cleanupStaleOverlays();
+        }
+        window.addEventListener('load', cleanupStaleOverlays);
     </script>
 </head>
 <body class="font-sans antialiased bg-gray-50">

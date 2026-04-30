@@ -29,6 +29,85 @@ class ShiftSwapController extends Controller
         $this->middleware('auth');
     }
 
+    /**
+     * API endpoint: Get worker shifts for a given date range
+     * Used to detect if worker has shift rotation (2+ shifts in the period)
+     */
+    public function getWorkerShiftsInDateRange(Request $request)
+    {
+        $workerId = $request->input('worker_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        if (!$workerId || !$startDate || !$endDate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing required parameters',
+            ], 400);
+        }
+
+        try {
+            // Parse dates
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->endOfDay();
+
+            // Get worker shifts that overlap with date range
+            $shifts = WorkerShift::where('worker_id', $workerId)
+                ->where('effective_from', '<=', $end)
+                ->where(function ($query) use ($start) {
+                    $query->whereNull('effective_to')
+                          ->orWhere('effective_to', '>=', $start);
+                })
+                ->with('shift')
+                ->get();
+
+            // Filter by date overlap to get unique shifts
+            $shiftsInPeriod = [];
+            foreach ($shifts as $ws) {
+                $wsStart = $ws->effective_from;
+                $wsEnd = $ws->effective_to ? $ws->effective_to : now();
+
+                // Check if this shift overlaps with our date range
+                if ($wsStart <= $end && $wsEnd >= $start) {
+                    $shiftsInPeriod[] = [
+                        'id' => $ws->id,
+                        'shift_name' => $ws->shift?->name,
+                        'shift_time' => $ws->shift ? sprintf('%s - %s', 
+                            Carbon::parse($ws->shift->start_time)->format('H:i'),
+                            Carbon::parse($ws->shift->end_time)->format('H:i')
+                        ) : 'N/A',
+                        'effective_from' => $ws->effective_from->format('Y-m-d'),
+                        'effective_to' => $ws->effective_to?->format('Y-m-d'),
+                    ];
+                }
+            }
+
+            // Remove duplicates by shift_id
+            $uniqueShifts = [];
+            $seen = [];
+            foreach ($shiftsInPeriod as $s) {
+                if (!isset($seen[$s['id']])) {
+                    $uniqueShifts[] = $s;
+                    $seen[$s['id']] = true;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'shifts' => $uniqueShifts,
+                'shift_count' => count($uniqueShifts),
+                'has_rotation' => count($uniqueShifts) >= 2,
+                'warning' => count($uniqueShifts) >= 2 ? 'Shift pegawai telah berubah harap buat permintaan tukar shift pada waktu yang diinginkan' : null,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching worker shifts: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data shift: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         $worker = Auth::user()?->worker;

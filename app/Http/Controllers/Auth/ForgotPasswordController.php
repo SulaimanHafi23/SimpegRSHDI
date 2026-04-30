@@ -21,14 +21,8 @@ class ForgotPasswordController extends Controller
     /**
      * Handle sending the password reset link.
      */
-    public function sendResetLinkEmail(Request $request)
+    public function sendResetLinkEmail(\App\Http\Requests\Auth\ForgotPasswordRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-        ], [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-        ]);
 
         $inputEmail = strtolower(trim((string) $request->input('email')));
 

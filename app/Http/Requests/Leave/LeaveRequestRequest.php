@@ -56,8 +56,22 @@ class LeaveRequestRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'start_date.after_or_equal' => ':attribute tidak boleh kurang dari hari ini',
-            'end_date.after_or_equal' => ':attribute harus setelah atau sama dengan tanggal mulai',
+            'worker_id.required'          => 'Pekerja wajib dipilih.',
+            'worker_id.exists'            => 'Pekerja yang dipilih tidak ditemukan.',
+            'leave_type_id.required'      => 'Jenis cuti wajib dipilih.',
+            'leave_type_id.exists'        => 'Jenis cuti yang dipilih tidak valid.',
+            'start_date.required'         => 'Tanggal Mulai wajib diisi.',
+            'start_date.date'             => 'Format Tanggal Mulai tidak valid.',
+            'start_date.after_or_equal'   => 'Tanggal Mulai tidak boleh kurang dari hari ini.',
+            'end_date.required'           => 'Tanggal Selesai wajib diisi.',
+            'end_date.date'               => 'Format Tanggal Selesai tidak valid.',
+            'end_date.after_or_equal'     => 'Tanggal Selesai harus setelah atau sama dengan Tanggal Mulai.',
+            'reason.required'             => 'Alasan cuti wajib diisi.',
+            'reason.max'                  => 'Alasan maksimal 1000 karakter.',
+            'attachment.file'             => 'Lampiran harus berupa file.',
+            'attachment.mimes'            => 'Lampiran hanya mendukung format: pdf, jpg, jpeg, png.',
+            'attachment.max'              => 'Ukuran lampiran maksimal 5MB.',
+            'notes.max'                   => 'Catatan maksimal 500 karakter.',
         ];
     }
 }

@@ -267,7 +267,8 @@
 
                     <!-- Action Buttons -->
                     <div class="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                        <button type="submit" id="btn-submit"
+                        <button type="button" id="btn-submit"
+                                onclick="handleCheckoutSubmit()"
                                 class="w-full sm:flex-1 px-4 sm:px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-md transition duration-150 {{ $isCheckoutExpired ? 'opacity-50 cursor-not-allowed' : '' }}"
                                 {{ $isCheckoutExpired ? 'disabled' : '' }}>
                             <i class="fas fa-sign-out-alt"></i>
@@ -299,6 +300,68 @@
     </form>
 </div>
 
+<!-- Modal Konfirmasi Early Checkout -->
+<div id="early-checkout-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true" aria-labelledby="early-checkout-title">
+    <!-- Backdrop -->
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEarlyCheckoutModal()"></div>
+
+    <!-- Modal Panel -->
+    <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-5">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 id="early-checkout-title" class="text-lg font-bold text-white">Konfirmasi Pulang Lebih Awal</h2>
+                    <p class="text-amber-100 text-sm mt-0.5">Jam kerja Anda belum berakhir</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="px-6 py-5">
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-clock text-amber-500 mt-0.5 text-lg flex-shrink-0"></i>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-800">Sisa Waktu Kerja</p>
+                        <p id="modal-time-remaining" class="text-2xl font-bold text-amber-700 mt-1">—</p>
+                        <p id="modal-shift-end" class="text-xs text-amber-600 mt-1">Jam selesai shift: <span id="modal-shift-end-time" class="font-medium">—</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-700 leading-relaxed">
+                Anda mencoba absen pulang sebelum jam kerja Anda berakhir.
+                Tindakan ini akan dicatat sebagai <strong class="text-red-600">pulang lebih awal</strong> dan dapat mempengaruhi rekap kehadiran Anda.
+            </p>
+
+            <p class="text-sm text-gray-600 mt-3">
+                Apakah Anda yakin ingin absen keluar sekarang?
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 pb-6 flex flex-col sm:flex-row gap-3">
+            <button type="button"
+                    onclick="closeEarlyCheckoutModal()"
+                    class="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-colors duration-150">
+                <i class="fas fa-arrow-left mr-1.5"></i>
+                Tidak, Kembali
+            </button>
+            <button type="button"
+                    id="btn-confirm-early-checkout"
+                    onclick="confirmEarlyCheckout()"
+                    class="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl transition-colors duration-150">
+                <i class="fas fa-sign-out-alt mr-1.5"></i>
+                Ya, Absen Sekarang
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
@@ -306,6 +369,20 @@
     let map, userMarker, officeCircle;
 
     const HARD_REJECT_ACCURACY = 5000; // meters
+
+    // Global notification helper (accessible from outside DOMContentLoaded)
+    function showNotification(message, type) {
+        const notice = document.getElementById('gpsNotice');
+        if (!notice) return;
+        const classes = {
+            success: 'text-green-700 bg-green-100 border border-green-200',
+            warning: 'text-amber-700 bg-amber-100 border border-amber-200',
+            error:   'text-red-700 bg-red-100 border border-red-200',
+        };
+        notice.className = `text-xs mt-2 rounded-md px-2 py-1 ${classes[type] || classes.error}`;
+        notice.textContent = message;
+        notice.classList.remove('hidden');
+    }
 
     function getBestAvailablePosition(maxWaitMs = 18000, targetAccuracy = {{ config('attendance.max_accuracy', 300) }}) {
         return new Promise((resolve, reject) => {
@@ -651,6 +728,77 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
         });
+    });
+
+    // ============================================
+    // EARLY CHECKOUT CONFIRMATION
+    // ============================================
+    @php
+        $isPastShiftEnd   = (bool) ($checkoutWindowInfo['is_past_shift_end'] ?? true);
+        $minutesToShiftEnd = (int) ($checkoutWindowInfo['minutes_to_shift_end'] ?? 0);
+        $shiftEndTimeFormatted = isset($checkoutWindowInfo['shift_end_time'])
+            ? \Carbon\Carbon::parse($checkoutWindowInfo['shift_end_time'])->format('H:i')
+            : null;
+    @endphp
+
+    const IS_EARLY_CHECKOUT = @json(!$isPastShiftEnd && !$isCheckoutExpired && $shiftEndTimeFormatted !== null);
+    const MINUTES_TO_SHIFT_END = @json($minutesToShiftEnd);
+    const SHIFT_END_TIME = @json($shiftEndTimeFormatted);
+    let earlyCheckoutConfirmed = false;
+
+    function handleCheckoutSubmit() {
+        if (IS_EARLY_CHECKOUT && !earlyCheckoutConfirmed) {
+            // Populate modal with remaining time
+            const hours = Math.floor(MINUTES_TO_SHIFT_END / 60);
+            const mins  = MINUTES_TO_SHIFT_END % 60;
+            let remaining = '';
+            if (hours > 0) remaining += hours + ' jam ';
+            if (mins > 0)  remaining += mins + ' menit';
+            if (!remaining) remaining = 'kurang dari 1 menit';
+
+            document.getElementById('modal-time-remaining').textContent = remaining + ' lagi';
+            document.getElementById('modal-shift-end-time').textContent = SHIFT_END_TIME;
+
+            document.getElementById('early-checkout-modal').classList.remove('hidden');
+            return; // block direct submit
+        }
+
+        // Validate GPS & location before allowing form submit
+        const lat = document.getElementById('latitude').value;
+        const lng = document.getElementById('longitude').value;
+        const locationId = document.getElementById('location_id').value;
+
+        if (!locationId) {
+            showNotification('Pilih lokasi check-out terlebih dahulu', 'error');
+            return;
+        }
+        if (!lat || !lng) {
+            showNotification('Lokasi GPS belum terdeteksi. Mohon tunggu atau refresh lokasi.', 'error');
+            return;
+        }
+
+        // Show loading & submit
+        const submitBtn = document.getElementById('btn-submit');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+        document.getElementById('checkout-form').submit();
+    }
+
+    function confirmEarlyCheckout() {
+        earlyCheckoutConfirmed = true;
+        closeEarlyCheckoutModal();
+
+        // Re-use the same validation flow
+        handleCheckoutSubmit();
+    }
+
+    function closeEarlyCheckoutModal() {
+        document.getElementById('early-checkout-modal').classList.add('hidden');
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeEarlyCheckoutModal();
     });
 
     // ============================================

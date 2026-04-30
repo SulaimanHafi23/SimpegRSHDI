@@ -54,14 +54,9 @@ class HolidayController extends Controller
     /**
      * Store new holiday
      */
-    public function store(Request $request)
+    public function store(\App\Http\Requests\Admin\HolidayRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'date' => 'required|date',
-            'description' => 'nullable|string',
-            'is_national' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         Holiday::create($validated);
 
@@ -81,14 +76,9 @@ class HolidayController extends Controller
     /**
      * Update holiday
      */
-    public function update(Request $request, string $id)
+    public function update(\App\Http\Requests\Admin\HolidayRequest $request, string $id)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'date' => 'required|date',
-            'description' => 'nullable|string',
-            'is_national' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         $holiday = Holiday::findOrFail($id);
         $holiday->update($validated);
@@ -120,15 +110,9 @@ class HolidayController extends Controller
     /**
      * Store bulk holidays
      */
-    public function bulkStore(Request $request)
+    public function bulkStore(\App\Http\Requests\Admin\BulkHolidayRequest $request)
     {
-        $validated = $request->validate([
-            'year' => 'required|integer|min:2024|max:2050',
-            'holidays' => 'required|array|min:1',
-            'holidays.*.name' => 'required|string|max:255',
-            'holidays.*.date' => 'required|date',
-            'holidays.*.description' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $submittedDates = collect($validated['holidays'])
             ->map(fn ($holiday) => \Carbon\Carbon::parse($holiday['date'])->toDateString())
