@@ -47,50 +47,49 @@ class ShiftSwapController extends Controller
         }
 
         try {
-            // Parse dates
             $start = Carbon::parse($startDate)->startOfDay();
-            $end = Carbon::parse($endDate)->endOfDay();
+            $end = Carbon::parse($endDate)->startOfDay();
 
-            // Get worker shifts that overlap with date range
-            $shifts = WorkerShift::where('worker_id', $workerId)
-                ->where('effective_from', '<=', $end)
-                ->where(function ($query) use ($start) {
-                    $query->whereNull('effective_to')
-                          ->orWhere('effective_to', '>=', $start);
-                })
-                ->with('shift')
-                ->get();
+            $worker = Worker::find($workerId);
+            if (!$worker) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pekerja tidak ditemukan.',
+                ], 404);
+            }
 
-            // Filter by date overlap to get unique shifts
-            $shiftsInPeriod = [];
-            foreach ($shifts as $ws) {
-                $wsStart = $ws->effective_from;
-                $wsEnd = $ws->effective_to ? $ws->effective_to : now();
+            // Resolve the shift for every date in the period, then collapse consecutive
+            // days with the same shift into one segment.
+            $segments = [];
+            $currentSegmentIndex = null;
 
-                // Check if this shift overlaps with our date range
-                if ($wsStart <= $end && $wsEnd >= $start) {
-                    $shiftsInPeriod[] = [
-                        'id' => $ws->id,
-                        'shift_name' => $ws->shift?->name,
-                        'shift_time' => $ws->shift ? sprintf('%s - %s', 
-                            Carbon::parse($ws->shift->start_time)->format('H:i'),
-                            Carbon::parse($ws->shift->end_time)->format('H:i')
-                        ) : 'N/A',
-                        'effective_from' => $ws->effective_from->format('Y-m-d'),
-                        'effective_to' => $ws->effective_to?->format('Y-m-d'),
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                $resolved = $worker->resolveShiftForDate($date);
+                $shift = $resolved['shift'] ?? null;
+
+                if (!$shift) {
+                    continue;
+                }
+
+                if ($currentSegmentIndex === null || $segments[$currentSegmentIndex]['id'] !== $shift->id) {
+                    $segments[] = [
+                        'id' => $shift->id,
+                        'shift_name' => $shift->name,
+                        'shift_time' => sprintf(
+                            '%s - %s',
+                            Carbon::parse($shift->start_time)->format('H:i'),
+                            Carbon::parse($shift->end_time)->format('H:i')
+                        ),
+                        'effective_from' => $date->format('Y-m-d'),
+                        'effective_to' => $date->format('Y-m-d'),
                     ];
+                    $currentSegmentIndex = array_key_last($segments);
+                } else {
+                    $segments[$currentSegmentIndex]['effective_to'] = $date->format('Y-m-d');
                 }
             }
 
-            // Remove duplicates by shift_id
-            $uniqueShifts = [];
-            $seen = [];
-            foreach ($shiftsInPeriod as $s) {
-                if (!isset($seen[$s['id']])) {
-                    $uniqueShifts[] = $s;
-                    $seen[$s['id']] = true;
-                }
-            }
+            $uniqueShifts = $segments;
 
             return response()->json([
                 'success' => true,
