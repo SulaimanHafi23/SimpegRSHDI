@@ -402,12 +402,13 @@ class ShiftSwapController extends Controller
 
         return WorkerShift::where('worker_id', $workerId)
             ->where('is_active', true)
+            ->where('effective_from', '<=', $today)  // Shift must have started
             ->where(function ($query) use ($today) {
                 $query->whereNull('effective_until')
-                    ->orWhere('effective_until', '>=', $today);
+                ->orWhere('effective_until', '>=', $today);  // Shift must still be active or no end date
             })
             ->with('shift')
-            ->orderBy('effective_from')
+            ->orderBy('effective_from', 'desc')  // Show latest first
             ->get();
     }
 

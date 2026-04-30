@@ -72,7 +72,7 @@
                         <option value="{{ $ws->id }}" {{ old('requester_shift_id') == $ws->id ? 'selected' : '' }}>
                             {{ $ws->shift?->name ?? 'N/A' }}
                             ({{ $ws->shift ? \Carbon\Carbon::parse($ws->shift->start_time)->format('H:i') : '' }} - {{ $ws->shift ? \Carbon\Carbon::parse($ws->shift->end_time)->format('H:i') : '' }})
-                            — Berlaku sejak {{ $ws->effective_from->format('d M Y') }}
+                                — {{ $ws->effective_from->format('d M Y') }} s/d {{ $ws->effective_until?->format('d M Y') ?? 'Selamanya' }}
                         </option>
                     @endforeach
                 </select>
