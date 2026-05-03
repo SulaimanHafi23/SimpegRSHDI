@@ -180,16 +180,16 @@ class LeaveRequestController extends Controller
                     'notifiable_type' => \App\Models\User::class,
                     'notifiable_id' => $user->id,
                     'type' => 'leave_approved',
-                    'title' => 'Cuti Disetujui',
-                    'message' => sprintf(
-                        'Permohonan cuti Anda dari %s sampai %s telah disetujui oleh HR.',
-                        $leaveRequest->start_date,
-                        $leaveRequest->end_date
-                    ),
                     'data' => [
                         'leave_id' => $leaveRequest->id,
                         'type' => 'leave',
                         'action' => 'approved',
+                        'title' => 'Cuti Disetujui',
+                        'message' => sprintf(
+                            'Permohonan cuti Anda dari %s sampai %s telah disetujui oleh HR.',
+                            $leaveRequest->start_date,
+                            $leaveRequest->end_date
+                        ),
                     ],
                 ]);
             }
@@ -239,19 +239,19 @@ class LeaveRequestController extends Controller
                     'notifiable_type' => \App\Models\User::class,
                     'notifiable_id' => $user->id,
                     'type' => 'leave_rejected',
-                    'title' => 'Cuti Ditolak oleh ' . $rejectedByLabel,
-                    'message' => sprintf(
-                        'Permohonan cuti Anda dari %s sampai %s telah ditolak oleh %s. Alasan: %s',
-                        $leaveRequest->start_date,
-                        $leaveRequest->end_date,
-                        $rejectedByLabel,
-                        $validated['rejection_reason']
-                    ),
                     'data' => [
                         'leave_id' => $leaveRequest->id,
                         'type' => 'leave',
                         'action' => 'rejected',
                         'reason' => $validated['rejection_reason'],
+                        'title' => 'Cuti Ditolak oleh ' . $rejectedByLabel,
+                        'message' => sprintf(
+                            'Permohonan cuti Anda dari %s sampai %s telah ditolak oleh %s. Alasan: %s',
+                            $leaveRequest->start_date,
+                            $leaveRequest->end_date,
+                            $rejectedByLabel,
+                            $validated['rejection_reason']
+                        ),
                     ],
                 ]);
             }
@@ -481,16 +481,16 @@ class LeaveRequestController extends Controller
                     'notifiable_type' => \App\Models\User::class,
                     'notifiable_id' => $user->id,
                     'type' => 'leave_approved',
-                    'title' => 'Cuti Disetujui',
-                    'message' => sprintf(
-                        'Permohonan cuti Anda dari %s sampai %s telah disetujui.',
-                        $leaveRequest->start_date,
-                        $leaveRequest->end_date
-                    ),
                     'data' => [
                         'leave_id' => $leaveRequest->id,
                         'type' => 'leave',
                         'action' => 'approved',
+                        'title' => 'Cuti Disetujui',
+                        'message' => sprintf(
+                            'Permohonan cuti Anda dari %s sampai %s telah disetujui.',
+                            $leaveRequest->start_date,
+                            $leaveRequest->end_date
+                        ),
                     ],
                 ]);
             }
@@ -532,18 +532,18 @@ class LeaveRequestController extends Controller
                     'notifiable_type' => \App\Models\User::class,
                     'notifiable_id' => $user->id,
                     'type' => 'leave_rejected',
-                    'title' => 'Cuti Ditolak',
-                    'message' => sprintf(
-                        'Permohonan cuti Anda dari %s sampai %s telah ditolak. Alasan: %s',
-                        $leaveRequest->start_date,
-                        $leaveRequest->end_date,
-                        $validated['rejection_reason']
-                    ),
                     'data' => [
                         'leave_id' => $leaveRequest->id,
                         'type' => 'leave',
                         'action' => 'rejected',
                         'reason' => $validated['rejection_reason'],
+                        'title' => 'Cuti Ditolak',
+                        'message' => sprintf(
+                            'Permohonan cuti Anda dari %s sampai %s telah ditolak. Alasan: %s',
+                            $leaveRequest->start_date,
+                            $leaveRequest->end_date,
+                            $validated['rejection_reason']
+                        ),
                     ],
                 ]);
             }

@@ -369,15 +369,15 @@ class BusinessTripApprovalController extends Controller
             'notifiable_type' => \App\Models\User::class,
             'notifiable_id' => $userId,
             'type' => 'business_trip_approved',
-            'title' => 'Perjalanan Dinas Disetujui',
-            'message' => sprintf(
-                'Permohonan perjalanan dinas ke %s telah disetujui.',
-                $tripData['destination']
-            ),
             'data' => [
                 'business_trip_id' => $tripData['id'],
                 'type' => 'business_trip',
                 'action' => 'approved',
+                'title' => 'Perjalanan Dinas Disetujui',
+                'message' => sprintf(
+                    'Permohonan perjalanan dinas ke %s telah disetujui.',
+                    $tripData['destination']
+                ),
             ],
         ]);
     }
@@ -399,13 +399,13 @@ class BusinessTripApprovalController extends Controller
             'notifiable_type' => \App\Models\User::class,
             'notifiable_id' => $userId,
             'type' => 'business_trip_rejected',
-            'title' => 'Perjalanan Dinas Ditolak oleh ' . $rejectedByLabel,
-            'message' => $message,
             'data' => [
                 'business_trip_id' => $tripData['id'],
                 'type' => 'business_trip',
                 'action' => 'rejected',
                 'reason' => $reason,
+                'title' => 'Perjalanan Dinas Ditolak oleh ' . $rejectedByLabel,
+                'message' => $message,
             ],
         ]);
     }
