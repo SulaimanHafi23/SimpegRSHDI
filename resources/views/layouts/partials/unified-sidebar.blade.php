@@ -45,7 +45,7 @@
                 <span class="font-medium text-sm {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard Admin</span>
             </a>
         @endif
-        @if(auth()->user()->hasRole('hr') && !auth()->user()->hasRole('admin'))
+        @if(auth()->user()->can('dashboard.hr'))
             <a href="{{ route('hr.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('hr.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('hr.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
@@ -54,7 +54,7 @@
                 <span class="font-medium text-sm {{ request()->routeIs('hr.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard HR</span>
             </a>
         @endif
-        @if(auth()->user()->hasRole('manager') && !auth()->user()->hasRole('admin'))
+        @if(auth()->user()->can('dashboard.manager'))
             <a href="{{ route('manager.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('manager.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('manager.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
@@ -63,7 +63,7 @@
                 <span class="font-medium text-sm {{ request()->routeIs('manager.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard Manager</span>
             </a>
         @endif
-        @if(auth()->user()->can('dashboard.employee') || auth()->user()->can('dashboard.employee'))
+        @if(auth()->user()->can('dashboard.employee'))
             <a href="{{ route('employee.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('employee.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('employee.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
@@ -77,7 +77,7 @@
              1. DATA MASTER
              Referensi sistem: agama, jenis kelamin, departemen, shift, dll.
         ============================================================ --}}
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.hr') || auth()->user()->can('master.manage'))
+        @if(auth()->user()->can('master.manage'))
 
         <div class="pt-4 pb-1.5 px-1">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-yellow-500/10 border border-yellow-500/20">
@@ -86,7 +86,7 @@
             </div>
         </div>
 
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('master.manage'))
+        @if(auth()->user()->can('master.manage'))
         <a href="{{ route('admin.master.departments.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.departments.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.departments.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
@@ -95,7 +95,7 @@
             <span class="text-sm {{ request()->routeIs('admin.master.departments.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Departemen</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('master.manage'))
+        @if(auth()->user()->can('master.manage'))
         <a href="{{ route('admin.master.shifts.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.shifts.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.shifts.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
@@ -104,7 +104,7 @@
             <span class="text-sm {{ request()->routeIs('admin.master.shifts.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Shift Kerja</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('master.manage'))
+        @if(auth()->user()->can('master.manage'))
         <a href="{{ route('admin.master.leave-types.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.leave-types.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.leave-types.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
@@ -113,7 +113,7 @@
             <span class="text-sm {{ request()->routeIs('admin.master.leave-types.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jenis Cuti</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('master.manage'))
+        @if(auth()->user()->can('master.manage'))
         <a href="{{ route('admin.master.document-types.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.document-types.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.document-types.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
@@ -122,7 +122,7 @@
             <span class="text-sm {{ request()->routeIs('admin.master.document-types.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jenis Dokumen</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('master.manage'))
+        @if(auth()->user()->can('master.manage'))
         <a href="{{ route('admin.master.department-document-types.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.master.department-document-types.*') ? 'bg-white/20' : 'bg-yellow-500/15' }} rounded-lg flex-shrink-0">
@@ -137,7 +137,7 @@
              2. MANAJERIAL
              Pengelolaan pegawai, absensi, jadwal — Admin / HR / Manager
         ============================================================ --}}
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.hr') || auth()->user()->can('dashboard.manager') || auth()->user()->can('worker.manage') || auth()->user()->can('attendance.manage') || auth()->user()->can('schedule.manage') || auth()->user()->can('worker-document.manage'))
+        @if(auth()->user()->can('worker.manage') || auth()->user()->can('attendance.manage') || auth()->user()->can('schedule.manage') || auth()->user()->can('worker-document.manage'))
 
         <div class="pt-4 pb-1.5 px-1">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-blue-500/10 border border-blue-500/20">
@@ -146,7 +146,7 @@
             </div>
         </div>
 
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('worker.manage'))
+        @if(auth()->user()->can('worker.manage'))
         <a href="{{ route('admin.workers.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.workers.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.workers.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
@@ -155,7 +155,7 @@
             <span class="text-sm {{ request()->routeIs('admin.workers.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Data Pegawai</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('attendance.manage'))
+        @if(auth()->user()->can('attendance.manage'))
         <a href="{{ route('admin.attendance.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.attendance.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.attendance.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
@@ -164,7 +164,7 @@
             <span class="text-sm {{ request()->routeIs('admin.attendance.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Rekap Absensi</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('schedule.manage'))
+        @if(auth()->user()->can('schedule.manage'))
         <a href="{{ route('admin.worker-shifts.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-shifts.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
@@ -173,7 +173,7 @@
             <span class="text-sm {{ request()->routeIs('admin.worker-shifts.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Jadwal Pegawai</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('worker-document.manage'))
+        @if(auth()->user()->can('worker-document.manage'))
         <a href="{{ route('admin.worker-documents.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.worker-documents.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.worker-documents.*') ? 'bg-white/20' : 'bg-blue-500/20' }} rounded-lg flex-shrink-0">
@@ -189,7 +189,7 @@
              3. PERSETUJUAN
              Approval cuti, tukar shift, perjalanan dinas
         ============================================================ --}}
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.hr') || auth()->user()->can('dashboard.manager') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve') || auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve') || auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
+        @if(auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve') || auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve') || auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
 
         <div class="pt-4 pb-1.5 px-1">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-orange-500/10 border border-orange-500/20">
@@ -198,7 +198,7 @@
             </div>
         </div>
 
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.hr') || auth()->user()->can('dashboard.manager') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
+        @if(auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
         <a href="{{ route('admin.leave.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.leave.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
@@ -210,7 +210,7 @@
             @endif
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve'))
+        @if(auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve'))
         <a href="{{ route('manager.shift-swap-approvals.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
@@ -219,7 +219,7 @@
             <span class="text-sm {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Tukar Shift</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.hr') || auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
+        @if(auth()->user()->can('business-trip.manage') || auth()->user()->can('business-trip.approve'))
         <a href="{{ route('approvals.business-trips.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('approvals.business-trips.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('approvals.business-trips.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
@@ -234,8 +234,7 @@
              4. PORTAL PEGAWAI
              Fitur self-service: absensi, jadwal, cuti, dokumen pribadi
         ============================================================ --}}
-        @if((auth()->user()->can('dashboard.employee') || auth()->user()->can('dashboard.manager') || auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.hr')) && auth()->user()->worker)
-
+        @if(auth()->user()->worker && auth()->user()->can('dashboard.employee'))
         <div class="pt-4 pb-1.5 px-1">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-green-500/10 border border-green-500/20">
                 <i class="fas fa-user-circle text-xs text-green-400"></i>
@@ -306,8 +305,7 @@
              5. ADMINISTRASI SISTEM
              Konfigurasi, role, pengguna, audit log
         ============================================================ --}}
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.manager') || auth()->user()->can('holiday.manage') || auth()->user()->can('role.manage') || auth()->user()->can('user.manage') || auth()->user()->can('system-settings.manage'))
-
+        @if(auth()->user()->can('holiday.manage') || auth()->user()->can('role.manage') || auth()->user()->can('user.manage') || auth()->user()->can('system-settings.manage') || auth()->user()->can('audit.view'))
         <div class="pt-4 pb-1.5 px-1">
             <div class="flex items-center gap-2 px-2 py-1.5 rounded-md bg-slate-500/10 border border-slate-500/20">
                 <i class="fas fa-shield-alt text-xs text-slate-400"></i>
@@ -315,7 +313,7 @@
             </div>
         </div>
 
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('dashboard.manager') || auth()->user()->can('holiday.manage'))
+        @if(auth()->user()->can('holiday.manage'))
         <a href="{{ route('admin.holidays.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.holidays.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.holidays.*') ? 'bg-white/20' : 'bg-slate-500/20' }} rounded-lg flex-shrink-0">
@@ -333,7 +331,7 @@
             <span class="text-sm {{ request()->routeIs('admin.roles.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Hak Akses (Role)</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
+        @if(auth()->user()->can('user.manage'))
         <a href="{{ route('admin.users.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.users.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.users.*') ? 'bg-white/20' : 'bg-slate-500/20' }} rounded-lg flex-shrink-0">
@@ -342,7 +340,7 @@
             <span class="text-sm {{ request()->routeIs('admin.users.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Akun Pengguna</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin'))
+        @if(auth()->user()->can('audit.view'))
         <a href="{{ route('admin.audit-logs.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.audit-logs.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.audit-logs.*') ? 'bg-white/20' : 'bg-slate-500/20' }} rounded-lg flex-shrink-0">
