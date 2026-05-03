@@ -210,6 +210,15 @@
             @endif
         </a>
         @endif
+        @if(auth()->user()->can('leave.verify'))
+        <a href="{{ route('manager.leave-approvals.index') }}"
+           class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('manager.leave-approvals.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
+            <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('manager.leave-approvals.*') ? 'bg-white/20' : 'bg-orange-500/20' }} rounded-lg flex-shrink-0">
+                <i class="fas fa-check-circle text-xs {{ request()->routeIs('manager.leave-approvals.*') ? 'text-white' : 'text-orange-300' }}"></i>
+            </div>
+            <span class="text-sm {{ request()->routeIs('manager.leave-approvals.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Verifikasi Cuti</span>
+        </a>
+        @endif
         @if(auth()->user()->can('shift-swap.manage') || auth()->user()->can('shift-swap.approve'))
         <a href="{{ route('manager.shift-swap-approvals.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('manager.shift-swap-approvals.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">

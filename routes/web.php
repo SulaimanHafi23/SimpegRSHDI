@@ -270,9 +270,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== MANAGER ROUTES ==========
-    Route::prefix('manager')->name('manager.')->middleware('permission:shift-swap.approve')->group(function () {
-        // Shift swap approvals
-        Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->group(function () {
+    Route::prefix('manager')->name('manager.')->group(function () {
+        // Manager Shift swap approvals
+        Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->middleware('permission:shift-swap.approve')->group(function () {
             Route::get('/', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'index'])->name('index');
             Route::get('/export', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'export'])->name('export');
             Route::get('/{id}', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'show'])->name('show');
@@ -280,6 +280,14 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::post('/{id}/reject', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'reject'])->name('reject');
             Route::post('/{id}/execute', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'execute'])->name('execute');
             Route::post('/{id}/revert', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'revert'])->name('revert');
+        });
+
+        // Manager Leave approvals (verification stage)
+        Route::prefix('leave-approvals')->name('leave-approvals.')->middleware('permission:leave.verify')->group(function () {
+            Route::get('/', [LeaveRequestController::class, 'managerApprovalIndex'])->name('index');
+            Route::get('/{id}', [LeaveRequestController::class, 'managerApprovalShow'])->name('show');
+            Route::post('/{id}/verify', [LeaveRequestController::class, 'managerApprovalVerify'])->name('verify');
+            Route::post('/{id}/reject', [LeaveRequestController::class, 'managerApprovalReject'])->name('reject');
         });
     });
 

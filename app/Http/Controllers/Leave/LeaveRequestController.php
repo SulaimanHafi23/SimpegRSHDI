@@ -30,13 +30,23 @@ class LeaveRequestController extends Controller
             'approvalVerify',
             'approvalApprove',
             'approvalReject',
+            'managerApprovalIndex',
+            'managerApprovalShow',
+            'managerApprovalVerify',
+            'managerApprovalReject',
         ]);
-        $this->middleware('permission:leave.approve')->only([
+        $this->middleware('permission:leave.approve,leave.verify', ['only' => [
             'approvalIndex',
             'approvalShow',
             'approvalVerify',
             'approvalApprove',
             'approvalReject',
+        ]]);
+        $this->middleware('permission:leave.verify')->only([
+            'managerApprovalIndex',
+            'managerApprovalShow',
+            'managerApprovalVerify',
+            'managerApprovalReject',
         ]);
     }
 
@@ -717,4 +727,27 @@ class LeaveRequestController extends Controller
             abort(403, 'Unauthorized');
         }
     }
-}
+
+    /**
+     * Manager approval methods - delegate to approval methods
+     */
+    public function managerApprovalIndex(Request $request)
+    {
+        return $this->approvalIndex($request);
+    }
+
+    public function managerApprovalShow(string $id)
+    {
+        return $this->approvalShow($id);
+    }
+
+    public function managerApprovalVerify(Request $request, string $id)
+    {
+        return $this->approvalVerify($request, $id);
+    }
+
+    public function managerApprovalReject(Request $request, string $id)
+    {
+        return $this->approvalReject($request, $id);
+    }
+    }
