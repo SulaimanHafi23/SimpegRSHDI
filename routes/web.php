@@ -510,8 +510,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/auto-generate', [HolidayController::class, 'storeAutoGenerate'])->name('auto-generate.store');
     });
 
-    // ========== AUDIT LOG ==========
-    Route::prefix('audit-logs')->name('admin.audit-logs.')->middleware(['auth', 'permission:audit.view'])->group(function () {
+    // ========== AUDIT LOG (Super Admin only) ==========
+    Route::prefix('audit-logs')->name('admin.audit-logs.')->middleware(['auth', 'role:Super Admin'])->group(function () {
         Route::get('/', [AuditLogController::class, 'index'])->name('index');
         Route::get('/{id}', [AuditLogController::class, 'show'])->name('show');
     });
