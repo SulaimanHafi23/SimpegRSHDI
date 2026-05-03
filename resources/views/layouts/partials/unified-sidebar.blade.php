@@ -45,7 +45,7 @@
                 <span class="font-medium text-sm {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard Admin</span>
             </a>
         @endif
-        @if(!auth()->user()->hasRole('admin') && auth()->user()->can('dashboard.hr'))
+        @if(auth()->user()->hasRole('hr') && !auth()->user()->hasRole('admin'))
             <a href="{{ route('hr.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('hr.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('hr.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">
@@ -54,7 +54,7 @@
                 <span class="font-medium text-sm {{ request()->routeIs('hr.dashboard') ? 'text-white' : 'text-white hover:text-yellow-300' }}">Dashboard HR</span>
             </a>
         @endif
-        @if(!auth()->user()->hasRole('admin') && auth()->user()->can('dashboard.manager'))
+        @if(auth()->user()->hasRole('manager') && !auth()->user()->hasRole('admin'))
             <a href="{{ route('manager.dashboard') }}"
                class="group flex items-center space-x-2.5 px-3 py-2.5 rounded-lg bg-white/10 border-2 border-white/20 {{ request()->routeIs('manager.dashboard') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50 border-yellow-400' : 'hover:bg-white/15 hover:border-white/30' }} transition-all duration-300">
                 <div class="flex items-center justify-center w-9 h-9 {{ request()->routeIs('manager.dashboard') ? 'bg-white/20 border border-white/30' : 'bg-white/10 border border-white/20' }} rounded-lg group-hover:scale-110 transition-transform flex-shrink-0">

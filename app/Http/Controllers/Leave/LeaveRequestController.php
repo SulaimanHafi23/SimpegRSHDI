@@ -133,8 +133,8 @@ class LeaveRequestController extends Controller
             // Mark as manager_verified
             $leaveRequest->update([
                 'status' => 'manager_verified',
-                'approved_by' => Auth::id(),
-                'approved_at' => now(),
+                'manager_id' => Auth::id(),
+                'manager_verified_at' => now(),
             ]);
 
             return redirect()

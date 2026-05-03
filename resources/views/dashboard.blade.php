@@ -105,17 +105,17 @@
                                     </a>
                                 @endrole
 
-                                @can('dashboard.hr')
+                                @if(!auth()->user()->hasRole('admin') && auth()->user()->can('dashboard.hr'))
                                     <a href="{{ route('hr.dashboard') }}" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                         <span class="text-gray-800 font-medium">HR Dashboard</span>
                                     </a>
-                                @endrole
+                                @endif
 
-                                @can('dashboard.manager')
+                                @if(!auth()->user()->hasRole('admin') && auth()->user()->can('dashboard.manager'))
                                     <a href="{{ route('manager.dashboard') }}" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                         <span class="text-gray-800 font-medium">Manager Dashboard</span>
                                     </a>
-                                @endrole
+                                @endif
 
                                 <a href="#" class="block p-3 bg-white rounded-lg hover:bg-indigo-50 border border-gray-200 hover:border-indigo-300 transition">
                                     <span class="text-gray-800 font-medium">Profile Saya</span>

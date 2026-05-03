@@ -114,7 +114,27 @@ class ShiftSwapApprovalController extends Controller
     }
 
     /**
-     * Approve swap request
+     * Verify swap request (manager only - first stage)
+     */
+    public function verify(Request $request, string $id)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            $this->verifyByManager($id, $user->id, $request->input('notes'));
+            return redirect()->route('manager.shift-swap-approvals.index')
+                ->with('success', 'Permintaan tukar shift berhasil diverifikasi dan akan diteruskan ke HR.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memverifikasi permintaan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve swap request (manager only for backward compatibility - for execution)
      */
     public function approve(Request $request, string $id)
     {
@@ -125,6 +145,22 @@ class ShiftSwapApprovalController extends Controller
         $user = Auth::user();
 
         try {
+            $swap = ShiftSwapRequest::findOrFail($id);
+
+            // If swap is manager_verified, only HR can approve
+            // If still pending, manager must verify first
+            if ($swap->status === 'manager_verified') {
+                throw new \Exception('Permintaan tukar shift sudah diverifikasi. Tunggu persetujuan dari HR.');
+            }
+
+            if ($swap->status === 'approved') {
+                // Manager can execute an approved swap
+                $this->executeSwap($id, $user->id);
+                return redirect()->route('manager.shift-swap-approvals.index')
+                    ->with('success', 'Pertukaran shift berhasil dieksekusi.');
+            }
+
+            // For pending swaps with no verification stage, approve directly (legacy support)
             $this->approveByManager($id, $user->id, $request->input('notes'));
             return redirect()->route('manager.shift-swap-approvals.index')
                 ->with('success', 'Permintaan tukar shift disetujui.');
@@ -307,6 +343,70 @@ class ShiftSwapApprovalController extends Controller
                 $item->setAttribute('effective_target_shift', $overrideTarget?->shift ?? $item->targetShift?->shift);
             }
         });
+    }
+
+    private function verifyByManager(string $swapId, string $managerId, ?string $notes = null): ShiftSwapRequest
+    {
+        $swap = ShiftSwapRequest::findOrFail($swapId);
+        $verifier = User::findOrFail($managerId);
+
+        if (!$verifier->can('shift-swap.approve')) {
+            throw new \Exception('Anda tidak berhak memverifikasi permintaan tukar shift ini.');
+        }
+
+        if ($swap->status !== 'pending') {
+            throw new \Exception('Hanya permintaan tukar shift yang berstatus pending yang dapat diverifikasi.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $oldStatus = $swap->status;
+            $swap->status = 'manager_verified';
+            $swap->manager_id = $managerId;
+            $swap->manager_verified_at = Carbon::now();
+
+            if ($notes) {
+                $metadata = $swap->metadata ?? [];
+                $metadata['manager_verification_notes'] = $notes;
+                $swap->metadata = $metadata;
+            }
+
+            $swap->save();
+
+            ShiftSwapAuditLog::log(
+                shiftSwapRequestId: $swap->id,
+                action: 'verified_by_manager',
+                newStatus: 'manager_verified',
+                userId: $managerId,
+                oldStatus: $oldStatus,
+                notes: $notes ?? 'Manager verified the swap request',
+                metadata: [
+                    'manager_id' => $managerId,
+                    'verified_at' => Carbon::now()->toDateTimeString(),
+                ]
+            );
+
+            Log::info('Shift swap verified by manager', [
+                'swap_id' => $swapId,
+                'manager_id' => $managerId,
+                'notes' => $notes,
+            ]);
+
+            if ($swap->requester && $swap->requester->user) {
+                $swap->requester->user->notify(new ShiftSwapNotification($swap, 'verified_by_manager', $notes));
+            }
+            if ($swap->targetWorker && $swap->targetWorker->user) {
+                $swap->targetWorker->user->notify(new ShiftSwapNotification($swap, 'verified_by_manager', $notes));
+            }
+
+            DB::commit();
+
+            return $swap;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to verify shift swap', ['swap_id' => $swapId, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     private function approveByManager(string $swapId, string $managerId, ?string $notes = null): ShiftSwapRequest

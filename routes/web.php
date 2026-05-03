@@ -331,6 +331,14 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::delete('/{id}', [BusinessTripApprovalController::class, 'destroy'])->name('destroy');
     });
 
+    // HR Shift Swap Approvals (second stage - needs shift-swap.approve permission)
+    Route::prefix('hr/shift-swap-approvals')->name('hr.shift-swap-approvals.')->middleware('permission:shift-swap.approve')->group(function () {
+        Route::get('/', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'reject'])->name('reject');
+    });
+
     // ========== REPORT ROUTES ==========
     Route::middleware('permission:report.view')->prefix('reports')->name('reports.')->group(function () {
         Route::get('/attendance', [ReportController::class, 'attendance'])->name('attendance');

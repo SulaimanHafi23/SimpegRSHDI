@@ -158,8 +158,8 @@ class BusinessTripApprovalController extends Controller
             // Mark as manager_verified
             $trip->update([
                 'status' => 'manager_verified',
-                'approved_by' => $user->id,
-                'approved_at' => now(),
+                'manager_id' => $user->id,
+                'manager_verified_at' => now(),
             ]);
 
             return redirect()->route('approvals.business-trips.index')
