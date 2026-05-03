@@ -31,6 +31,12 @@
 			@method('PUT')
 
 			<div class="grid grid-cols-1 gap-4">
+				<div class="flex items-center">
+					<input type="hidden" name="is_active" value="0">
+					<input type="checkbox" name="is_active" value="1" {{ old('is_active', $user->is_active) ? 'checked' : '' }} class="rounded">
+					<label class="ml-2 text-sm font-medium text-gray-700">Akun Aktif</label>
+				</div>
+
 				<div>
 					<label class="block text-sm font-medium text-gray-700">Pekerja (Worker)</label>
 					<select name="worker_id" class="mt-1 block w-full border rounded px-3 py-2">
