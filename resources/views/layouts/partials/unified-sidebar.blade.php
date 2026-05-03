@@ -324,7 +324,7 @@
             <span class="text-sm {{ request()->routeIs('admin.holidays.*') ? 'text-white font-medium' : 'text-white hover:text-yellow-300' }}">Libur Nasional</span>
         </a>
         @endif
-        @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('role.manage'))
+        @if(auth()->user()->can('role.manage'))
         <a href="{{ route('admin.roles.index') }}"
            class="flex items-center space-x-2.5 px-3 py-2 rounded-lg {{ request()->routeIs('admin.roles.*') ? 'bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/50' : 'bg-white/5 hover:bg-white/10' }} transition-all duration-200">
             <div class="flex items-center justify-center w-7 h-7 {{ request()->routeIs('admin.roles.*') ? 'bg-white/20' : 'bg-slate-500/20' }} rounded-lg flex-shrink-0">
