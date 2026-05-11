@@ -131,6 +131,10 @@ class DocumentApprovalController extends Controller
         try {
             $document = WorkerDocument::findOrFail($id);
 
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat melakukan verifikasi.');
+            }
+
             // Department restriction applies only for manager-scoped users.
             $departmentId = $this->getManagerDepartmentFilter();
             if ($departmentId && (string) $document->worker->department_id !== (string) $departmentId) {
@@ -160,6 +164,10 @@ class DocumentApprovalController extends Controller
 
         try {
             $document = WorkerDocument::findOrFail($id);
+
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat menolak dokumen.');
+            }
 
             // Department restriction applies only for manager-scoped users.
             $departmentId = $this->getManagerDepartmentFilter();

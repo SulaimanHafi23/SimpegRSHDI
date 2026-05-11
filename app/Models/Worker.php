@@ -249,6 +249,7 @@ class Worker extends Model
 
             return [
                 'shift' => $override->shift,
+                'worker_shift_id' => null, // Overrides don't have a worker_shift_id
                 'schedule' => $override->shift->getScheduleForDate($dateObj),
                 'source' => $override->shift_swap_request_id ? 'shift_swap' : 'override',
                 'override' => $override,
@@ -271,6 +272,7 @@ class Worker extends Model
         if ($workerShift && $workerShift->shift) {
             return [
                 'shift' => $workerShift->shift,
+                'worker_shift_id' => $workerShift->id,
                 'schedule' => $workerShift->shift->getScheduleForDate($dateObj),
                 'source' => 'worker_shift',
                 'override' => null,
@@ -282,6 +284,7 @@ class Worker extends Model
         if ($this->shift) {
             return [
                 'shift' => $this->shift,
+                'worker_shift_id' => null,
                 'schedule' => $this->shift->getScheduleForDate($dateObj),
                 'source' => 'default_shift',
                 'override' => null,
@@ -292,6 +295,7 @@ class Worker extends Model
 
         return [
             'shift' => null,
+            'worker_shift_id' => null,
             'schedule' => null,
             'source' => 'none',
             'override' => null,

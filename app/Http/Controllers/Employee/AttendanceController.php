@@ -1354,8 +1354,7 @@ class AttendanceController extends Controller
             }
 
             $schedule = $shift->getScheduleForDate($attendance->attendance_date);
-            $checkInDateTime = \Carbon\Carbon::parse($attendance->check_in);
-            $shiftBaseDate = $checkInDateTime->copy()->startOfDay();
+            $shiftBaseDate = \Carbon\Carbon::parse($attendance->attendance_date)->startOfDay();
             $shiftStartDateTime = \Carbon\Carbon::parse($shiftBaseDate->format('Y-m-d') . ' ' . $schedule['start_time']);
             $shiftEndDateTime = \Carbon\Carbon::parse($shiftBaseDate->format('Y-m-d') . ' ' . $schedule['end_time']);
 

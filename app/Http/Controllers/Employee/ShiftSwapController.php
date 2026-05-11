@@ -71,9 +71,12 @@ class ShiftSwapController extends Controller
                     continue;
                 }
 
-                if ($currentSegmentIndex === null || $segments[$currentSegmentIndex]['id'] !== $shift->id) {
+                $shiftId = $shift->id;
+ 
+                if ($currentSegmentIndex === null || $segments[$currentSegmentIndex]['shift_id'] !== $shiftId) {
                     $segments[] = [
-                        'id' => $shift->id,
+                        'id' => $resolved['worker_shift_id'] ?? $shift->id,
+                        'shift_id' => $shiftId,
                         'shift_name' => $shift->name,
                         'shift_time' => sprintf(
                             '%s - %s',
@@ -120,7 +123,7 @@ class ShiftSwapController extends Controller
         // Calculate summary statistics
         $summary = [
             'total' => $items->count(),
-            'pending' => $items->whereIn('status', ['pending', 'awaiting_approval'])->count(),
+            'pending' => $items->whereIn('status', ['pending', 'awaiting_approval', 'manager_verified'])->count(),
             'approved' => $items->whereIn('status', ['approved', 'executed', 'accepted'])->count(),
             'history' => $items->whereIn('status', ['rejected', 'cancelled'])->count(),
             'open_requests' => $openRequests->count(),

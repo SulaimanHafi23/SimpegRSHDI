@@ -17,6 +17,7 @@
                     <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
                         <option value="">Semua Status</option>
                         <option value="pending">Menunggu</option>
+                        <option value="manager_verified">Terverifikasi</option>
                         <option value="approved">Disetujui</option>
                         <option value="rejected">Ditolak</option>
                         <option value="cancelled">Dibatalkan</option>
@@ -34,19 +35,17 @@
             icon="fas fa-file-alt"
             color="blue" />
 
-        @if(!$isManager)
         <x-stats-card
             title="Menunggu"
             :value="$statistics['pending'] ?? 0"
             icon="fas fa-clock"
             color="yellow" />
-        @endif
 
         <x-stats-card
-            title="{{ $isManager ? 'Menunggu' : 'Terverifikasi' }}"
-            :value="$isManager ? ($statistics['pending'] ?? 0) : ($statistics['verified'] ?? 0)"
-            :icon="$isManager ? 'fas fa-clock' : 'fas fa-check-double'"
-            :color="$isManager ? 'yellow' : 'blue'" />
+            title="Terverifikasi"
+            :value="$statistics['verified'] ?? 0"
+            icon="fas fa-check-double"
+            color="blue" />
 
         <x-stats-card
             title="Disetujui"
@@ -84,10 +83,10 @@
         <x-form.select
             name="status"
             label="Status"
-            :options="$isManager ?
-                ['pending' => 'Menunggu (Untuk Diverifikasi)'] :
+            :options="($isManager || (auth()->user()->hasRole(['admin', 'Super Admin', 'super admin', 'superadmin']))) ?
+                ['pending' => 'Menunggu (Untuk Diverifikasi)', 'manager_verified' => 'Terverifikasi (Sudah Diverifikasi Manager)', 'approved' => 'Disetujui', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan'] :
                 ['manager_verified' => 'Terverifikasi (Sudah Diverifikasi Manager)', 'approved' => 'Disetujui', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan']"
-            :selected="request('status') ?? ''"
+            :selected="$filters['original_status'] ?? ''"
             placeholder="Semua Status" />
 
         <x-form.select
@@ -177,6 +176,7 @@
                                class="inline-flex items-center rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 shadow-sm transition active:scale-95">
                                 <i class="fas fa-search mr-1.5"></i> Periksa Pengajuan
                             </a>
+                            @if($trip->status === 'cancelled')
                             <form action="{{ route('approvals.business-trips.destroy', $trip->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
@@ -187,6 +187,7 @@
                                     <i class="fas fa-trash-alt mr-1.5"></i> Hapus
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -243,6 +244,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                             </svg>
                                         </a>
+                                        @if($trip->status === 'cancelled')
                                         <form action="{{ route('approvals.business-trips.destroy', $trip->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -252,6 +254,7 @@
                                                 </svg>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

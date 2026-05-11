@@ -17,7 +17,13 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $query = Notification::query()
-            ->where('user_id', Auth::id())
+            ->where(function ($q) {
+                $q->where('user_id', Auth::id())
+                    ->orWhere(function ($sq) {
+                        $sq->where('notifiable_id', Auth::id())
+                            ->where('notifiable_type', \App\Models\User::class);
+                    });
+            })
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('is_read')) {
@@ -38,7 +44,13 @@ class NotificationController extends Controller
      */
     public function getUnreadCount()
     {
-        $count = Notification::where('user_id', Auth::id())->whereNull('read_at')->count();
+        $count = Notification::where(function ($q) {
+            $q->where('user_id', Auth::id())
+                ->orWhere(function ($sq) {
+                    $sq->where('notifiable_id', Auth::id())
+                        ->where('notifiable_type', \App\Models\User::class);
+                });
+        })->whereNull('read_at')->count();
         return response()->json(['count' => $count]);
     }
 
@@ -47,7 +59,13 @@ class NotificationController extends Controller
      */
     public function getUnread()
     {
-        $notifications = Notification::where('user_id', Auth::id())
+        $notifications = Notification::where(function ($q) {
+            $q->where('user_id', Auth::id())
+                ->orWhere(function ($sq) {
+                    $sq->where('notifiable_id', Auth::id())
+                        ->where('notifiable_type', \App\Models\User::class);
+                });
+        })
             ->whereNull('read_at')
             ->orderBy('created_at', 'desc')
             ->limit(10)
@@ -61,11 +79,24 @@ class NotificationController extends Controller
     public function markAsRead($id)
     {
         try {
-            $notification = Notification::where('user_id', Auth::id())->findOrFail($id);
+            $notification = Notification::where(function ($q) {
+                $q->where('user_id', Auth::id())
+                    ->orWhere(function ($sq) {
+                        $sq->where('notifiable_id', Auth::id())
+                            ->where('notifiable_type', \App\Models\User::class);
+                    });
+            })->findOrFail($id);
             $notification->markAsRead();
-            return response()->json(['message' => 'Notifikasi ditandai sudah dibaca']);
+            
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Notifikasi ditandai sudah dibaca']);
+            }
+            return redirect()->back()->with('success', 'Notifikasi ditandai sudah dibaca');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal menandai notifikasi'], 500);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Gagal menandai notifikasi'], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal menandai notifikasi');
         }
     }
 
@@ -75,12 +106,25 @@ class NotificationController extends Controller
     public function markAllAsRead()
     {
         try {
-            Notification::where('user_id', Auth::id())
+            Notification::where(function ($q) {
+                $q->where('user_id', Auth::id())
+                    ->orWhere(function ($sq) {
+                        $sq->where('notifiable_id', Auth::id())
+                            ->where('notifiable_type', \App\Models\User::class);
+                    });
+            })
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
-            return response()->json(['message' => 'Semua notifikasi ditandai sudah dibaca']);
+
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Semua notifikasi ditandai sudah dibaca']);
+            }
+            return redirect()->back()->with('success', 'Semua notifikasi ditandai sudah dibaca');
         } catch (\Exception $e) {
-            return response()->json(['message' => 'Gagal menandai notifikasi'], 500);
+            if (request()->wantsJson()) {
+                return response()->json(['message' => 'Gagal menandai notifikasi'], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal menandai notifikasi');
         }
     }
 
@@ -90,7 +134,13 @@ class NotificationController extends Controller
     public function destroy($id)
     {
         try {
-            Notification::where('user_id', Auth::id())->findOrFail($id)->delete();
+            Notification::where(function ($q) {
+                $q->where('user_id', Auth::id())
+                    ->orWhere(function ($sq) {
+                        $sq->where('notifiable_id', Auth::id())
+                            ->where('notifiable_type', \App\Models\User::class);
+                    });
+            })->findOrFail($id)->delete();
             return redirect()->route('employee.notifications.index')
                 ->with('success', 'Notifikasi berhasil dihapus');
         } catch (\Exception $e) {

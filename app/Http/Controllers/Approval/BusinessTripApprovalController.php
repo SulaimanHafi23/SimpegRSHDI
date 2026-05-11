@@ -23,36 +23,60 @@ class BusinessTripApprovalController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $isManager = !$user->hasRole(['admin', 'hr']) && $user->hasRole('manager');
+        $isHR = $user->hasRole(['hr', 'HR']) && !$user->hasRole(['admin', 'Super Admin']);
+        $isAdmin = $user->hasRole(['admin', 'Super Admin', 'super admin', 'superadmin']);
+        $isManager = $user->hasRole(['manager', 'Manager']) && !$isHR && !$isAdmin;
         $departmentId = $this->getManagerDepartmentFilter();
 
-        // Manager: View pending requests for verification
-        // HR: View manager_verified requests for final approval
-        $statusToView = $isManager ? 'pending' : 'manager_verified';
-        $requestStatus = $request->input('status', '');
-
-        // If no specific status requested, default to appropriate status
-        if (!$requestStatus) {
-            $requestStatus = $statusToView;
+        // Determine default status
+        if ($isManager) {
+            $defaultStatus = 'all';
+        } elseif ($isHR) {
+            $defaultStatus = 'manager_verified';
+        } else {
+            $defaultStatus = 'all'; // Admin sees all by default
         }
 
-        // If manager tries to view other statuses, reset to pending
-        if ($isManager && $requestStatus !== 'pending') {
-            $requestStatus = 'pending';
+        $status = $request->input('status');
+        
+        // Handle pagination where 'status' might be dropped if it was null ('all' selection)
+        if ($status === null && $request->has('original_status')) {
+            $status = $request->input('original_status');
+        }
+        
+        if ($status === null) {
+            if ($request->exists('status')) {
+                $status = 'all'; 
+            } else {
+                $status = $defaultStatus;
+            }
         }
 
-        // If HR tries to view pending, redirect to manager_verified
-        if (!$isManager && $requestStatus === 'pending') {
-            $requestStatus = 'manager_verified';
+        $displayStatus = $status;
+        
+        if ($status === 'all' || $status === '') {
+            $status = null;
+            $displayStatus = 'all';
+        }
+
+        // Role-based status constraints
+        if ($isHR && !$isAdmin) {
+            // HR cannot see pending requests
+            if ($status === 'pending') {
+                $status = 'manager_verified';
+                $displayStatus = 'manager_verified';
+            }
         }
 
         $filters = [
-            'status' => $requestStatus,
+            'status' => $status,
+            'original_status' => $displayStatus,
             'worker_id' => $request->input('worker_id'),
             'month' => $request->input('month'),
             'year' => $request->input('year'),
             'department_id' => $departmentId,
             'per_page' => 15,
+            'hr_only_verified' => ($isHR && !$isAdmin), // Custom filter for HR
         ];
 
         $query = BusinessTrip::with(['worker.user', 'worker.department']);
@@ -65,8 +89,11 @@ class BusinessTripApprovalController extends Controller
         }
 
         // Apply status filter
-        if (isset($filters['status']) && $filters['status'] !== '') {
+        if ($filters['status']) {
             $query->where('status', $filters['status']);
+        } elseif ($filters['hr_only_verified']) {
+            // HR viewing 'all' should not see 'pending'
+            $query->where('status', '!=', 'pending');
         }
 
         // Apply worker filter
@@ -95,9 +122,13 @@ class BusinessTripApprovalController extends Controller
                 $q->where('department_id', $departmentId);
             });
         }
+        
+        if ($isHR && !$isAdmin) {
+            $statsQuery->where('status', '!=', 'pending');
+        }
 
         $statistics = [
-            'total' => $statsQuery->count(),
+            'total' => (clone $statsQuery)->count(),
             'pending' => (clone $statsQuery)->where('status', 'pending')->count(),
             'verified' => (clone $statsQuery)->where('status', 'manager_verified')->count(),
             'approved' => (clone $statsQuery)->where('status', 'approved')->count(),
@@ -112,12 +143,12 @@ class BusinessTripApprovalController extends Controller
             $workers = Worker::orderBy('name')->get();
         }
 
-        return view('approvals.business-trips.index', compact('trips', 'statistics', 'workers', 'isManager'));
+        return view('approvals.business-trips.index', compact('trips', 'statistics', 'workers', 'isManager', 'isHR', 'isAdmin', 'filters'));
     }
 
     public function show(string $id)
     {
-        $trip = BusinessTrip::with(['worker.user', 'worker.department', 'approvedBy'])->findOrFail($id);
+        $trip = BusinessTrip::with(['worker.user', 'worker.department', 'approvedBy', 'manager'])->findOrFail($id);
 
         $departmentId = $this->getManagerDepartmentFilter();
         if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
@@ -135,9 +166,11 @@ class BusinessTripApprovalController extends Controller
         try {
             $trip = BusinessTrip::findOrFail($id);
 
-            if (empty($trip->supporting_document_path)) {
-                return back()->with('error', 'Permohonan tidak dapat diverifikasi karena tidak memiliki lampiran surat tugas/disposisi.');
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat melakukan verifikasi.');
             }
+
+
 
             // Department restriction applies only for manager-scoped users.
             $departmentId = $this->getManagerDepartmentFilter();
@@ -174,9 +207,11 @@ class BusinessTripApprovalController extends Controller
         try {
             $trip = BusinessTrip::findOrFail($id);
 
-            if (empty($trip->supporting_document_path)) {
-                return back()->with('error', 'Permohonan tidak dapat disetujui karena tidak memiliki lampiran surat tugas/disposisi.');
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat memberikan persetujuan.');
             }
+
+
 
             // Department restriction applies only for manager-scoped users.
             $departmentId = $this->getManagerDepartmentFilter();
@@ -220,6 +255,10 @@ class BusinessTripApprovalController extends Controller
             $request->validate(['rejection_reason' => 'required|string|max:1000']);
 
             $trip = BusinessTrip::findOrFail($id);
+
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat menolak pengajuan.');
+            }
 
             $departmentId = $this->getManagerDepartmentFilter();
             if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
@@ -265,6 +304,10 @@ class BusinessTripApprovalController extends Controller
         $departmentId = $this->getManagerDepartmentFilter();
         if ($departmentId && (string) $trip->worker->department_id !== (string) $departmentId) {
             return back()->with('error', 'Anda tidak memiliki akses untuk menghapus permohonan ini.');
+        }
+
+        if ($trip->status !== 'cancelled') {
+            return back()->with('error', 'Hanya permohonan perjalanan dinas yang sudah dibatalkan yang dapat dihapus.');
         }
 
         $trip->delete();

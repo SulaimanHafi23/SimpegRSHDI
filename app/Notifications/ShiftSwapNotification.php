@@ -8,7 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ShiftSwapNotification extends Notification implements ShouldQueue
+class ShiftSwapNotification extends Notification
 {
     use Queueable;
 
@@ -90,6 +90,8 @@ class ShiftSwapNotification extends Notification implements ShouldQueue
             'awaiting_approval' => 'Menunggu Persetujuan Manager/HR',
             'approved_by_manager' => 'Permintaan Disetujui Manager',
             'rejected_by_manager' => 'Permintaan Ditolak Manager',
+            'approved_by_hr' => 'Permintaan Disetujui HR',
+            'rejected_by_hr' => 'Permintaan Ditolak HR',
             'executed' => 'Pertukaran Shift Berhasil',
             'manager_approval_needed' => 'Persetujuan Diperlukan',
             default => 'Notifikasi Tukar Shift',
@@ -119,8 +121,10 @@ class ShiftSwapNotification extends Notification implements ShouldQueue
             'awaiting_approval' => "Permintaan tukar shift Anda menunggu persetujuan manager/HR.",
             'approved_by_manager' => "Manager menyetujui permintaan tukar shift Anda.",
             'rejected_by_manager' => "Manager menolak permintaan tukar shift Anda.",
+            'approved_by_hr' => "HR telah menyetujui secara final permintaan tukar shift Anda.",
+            'rejected_by_hr' => "HR menolak permintaan tukar shift Anda.",
             'executed' => "Pertukaran shift antara {$requester} dan {$target} telah berhasil dieksekusi.",
-            'manager_approval_needed' => "Permintaan tukar shift cross-department dari {$requester} memerlukan persetujuan Anda.",
+            'manager_approval_needed' => "Permintaan tukar shift dari {$requester} memerlukan persetujuan Anda.",
             default => "Perubahan status pada permintaan tukar shift.",
         };
     }

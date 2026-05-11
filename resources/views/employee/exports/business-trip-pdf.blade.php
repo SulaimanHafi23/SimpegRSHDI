@@ -1,213 +1,166 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>{{ $title }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 11px;
-            margin: 15px;
-        }
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
-            border-bottom: 3px solid #8B5CF6;
-            padding-bottom: 15px;
-        }
-        .header h1 {
-            margin: 0;
-            color: #8B5CF6;
-            font-size: 20px;
-        }
-        .header p {
-            margin: 5px 0;
-            color: #666;
-        }
-        .info-section {
-            margin-bottom: 15px;
-            background: #f3f4f6;
-            padding: 12px;
-            border-radius: 5px;
-        }
-        .info-row {
-            margin: 4px 0;
-        }
-        .info-label {
-            font-weight: bold;
-            display: inline-block;
-            width: 140px;
-        }
-        .summary {
-            margin: 15px 0;
-            padding: 12px;
-            background: #f5f3ff;
-            border: 1px solid #ddd6fe;
-            border-radius: 5px;
-        }
-        .summary h3 {
-            margin-top: 0;
-            color: #8B5CF6;
-            font-size: 13px;
-        }
-        .summary-item {
-            display: inline-block;
-            margin-right: 20px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 9px;
-        }
-        th {
-            background-color: #8B5CF6;
-            color: white;
-            padding: 8px 4px;
-            text-align: left;
-            font-weight: bold;
-            font-size: 9px;
-        }
-        td {
-            padding: 6px 4px;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 8px;
-            font-weight: bold;
-        }
-        .badge-success { background-color: #d1fae5; color: #065f46; }
-        .badge-warning { background-color: #fef3c7; color: #92400e; }
-        .badge-danger { background-color: #fee2e2; color: #991b1b; }
-        .badge-secondary { background-color: #e5e7eb; color: #374151; }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .footer {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 9px;
-            color: #999;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>LAPORAN PERJALANAN DINAS</h1>
-        @if(isset($worker))
-        <p>Pegawai: {{ $worker->name }} ({{ $worker->nip ?? '-' }})</p>
-        @endif
-        <p>Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WITA</p>
-    </div>
+@extends('exports.pdf-header', ['title' => $title ?? 'Laporan Perjalanan Dinas'])
 
-    <div class="info-section">
-        @if(!empty($filters['date_from']) || !empty($filters['date_to']))
-        <div class="info-row">
-            <span class="info-label">Periode:</span>
-            {{ !empty($filters['date_from']) ? \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d M Y') : 'Awal' }}
-            s/d
-            {{ !empty($filters['date_to']) ? \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d M Y') : 'Sekarang' }}
-        </div>
-        @endif
-        @if(!empty($filters['status']))
-        <div class="info-row">
-            <span class="info-label">Status:</span>
-            @php
-                $statusLabel = match($filters['status']) {
-                    'pending' => 'Menunggu',
-                    'approved' => 'Disetujui',
-                    'rejected' => 'Ditolak',
-                    'cancelled' => 'Dibatalkan',
-                    default => ucfirst($filters['status'])
-                };
-            @endphp
-            {{ $statusLabel }}
-        </div>
-        @endif
-        <div class="info-row">
-            <span class="info-label">Total Data:</span> {{ $trips->count() }} perjalanan
-        </div>
-    </div>
+@section('content')
+<h3>RIWAYAT PERJALANAN DINAS PEGAWAI</h3>
 
-    <div class="summary">
-        <h3>Ringkasan</h3>
-        <div>
-            <span class="summary-item">Total: {{ $trips->count() }}</span>
-            <span class="summary-item">Menunggu: {{ $trips->where('status', 'pending')->count() }}</span>
-            <span class="summary-item">Disetujui: {{ $trips->where('status', 'approved')->count() }}</span>
-            <span class="summary-item">Ditolak: {{ $trips->where('status', 'rejected')->count() }}</span>
-            <span class="summary-item">Dibatalkan: {{ $trips->where('status', 'cancelled')->count() }}</span>
+<div class="info-box">
+    <table style="width: 100%; border: none; border-collapse: collapse; margin-top: 0;">
+        <tr>
+            <td style="border: none; padding: 4px 0; width: 50%; vertical-align: top;">
+                <table style="border: none; border-collapse: collapse; margin-top: 0;">
+                    <tr>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; color: #6b7280; width: 90px;">Pegawai</td>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; width: 10px;">:</td>
+                        <td style="border: none; padding: 2px 0; font-size: 11px; font-weight: bold; color: #111827;">{{ $worker->name }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; color: #6b7280;">NIP</td>
+                        <td style="border: none; padding: 2px 0; font-size: 10px;">:</td>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; color: #111827;">{{ $worker->nip ?? '-' }}</td>
+                    </tr>
+                </table>
+            </td>
+            <td style="border: none; padding: 4px 0; width: 50%; vertical-align: top;">
+                <table style="border: none; border-collapse: collapse; margin-top: 0;">
+                    <tr>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; color: #6b7280; width: 90px;">Departemen</td>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; width: 10px;">:</td>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; color: #111827;">{{ $worker->department->name ?? '-' }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; color: #6b7280;">Periode</td>
+                        <td style="border: none; padding: 2px 0; font-size: 10px;">:</td>
+                        <td style="border: none; padding: 2px 0; font-size: 10px; color: #111827;">
+                            {{ !empty($filters['date_from']) ? \Carbon\Carbon::parse($filters['date_from'])->translatedFormat('d M Y') : 'Awal' }}
+                            s/d
+                            {{ !empty($filters['date_to']) ? \Carbon\Carbon::parse($filters['date_to'])->translatedFormat('d M Y') : 'Sekarang' }}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    @if(!empty($filters['status']))
+    <div style="margin-top: 4px; padding-top: 4px; border-top: 1px dashed #a7f3d0;">
+        <span style="font-size: 9px; color: #6b7280;">Filter Status:</span>
+        @php
+            $filterStatusLabel = match($filters['status']) {
+                'pending' => 'Menunggu',
+                'approved' => 'Disetujui',
+                'rejected' => 'Ditolak',
+                'cancelled' => 'Dibatalkan',
+                default => ucfirst($filters['status'])
+            };
+        @endphp
+        <span style="font-size: 9px; font-weight: bold; color: #0f766e;">{{ $filterStatusLabel }}</span>
+    </div>
+    @endif
+</div>
+
+<div class="summary-box" style="background-color: #f0fdf4; border: 1px solid #bbf7d0;">
+    <p class="summary-title">Ringkasan Perjalanan Dinas</p>
+    <table class="summary-grid">
+        <tr>
+            <td style="width: 20%;">
+                <span style="font-size: 10px;">Total: <strong>{{ $trips->count() }}</strong></span>
+            </td>
+            <td style="width: 20%;">
+                <span style="font-size: 10px;">Menunggu: <strong style="color: #d97706;">{{ $trips->where('status', 'pending')->count() }}</strong></span>
+            </td>
+            <td style="width: 20%;">
+                <span style="font-size: 10px;">Disetujui: <strong style="color: #059669;">{{ $trips->where('status', 'approved')->count() }}</strong></span>
+            </td>
+            <td style="width: 20%;">
+                <span style="font-size: 10px;">Ditolak: <strong style="color: #dc2626;">{{ $trips->where('status', 'rejected')->count() }}</strong></span>
+            </td>
+            <td style="width: 20%;">
+                <span style="font-size: 10px;">Dibatalkan: <strong style="color: #6b7280;">{{ $trips->where('status', 'cancelled')->count() }}</strong></span>
+            </td>
+        </tr>
+        <tr>
             @php
                 $totalDays = $trips->where('status', 'approved')->sum(fn($t) => (float) $t->duration_value);
                 $totalEstimatedCost = $trips->sum('estimated_cost');
             @endphp
-            <span class="summary-item">Total Hari (Disetujui): {{ rtrim(rtrim(number_format($totalDays, 1, '.', ''), '0'), '.') }} hari</span>
-            <span class="summary-item">Total Estimasi: Rp {{ number_format($totalEstimatedCost, 0, ',', '.') }}</span>
-        </div>
-    </div>
-
-    <table>
-        <thead>
-            <tr>
-                <th class="text-center" width="5%">No</th>
-                <th width="18%">Tujuan</th>
-                <th width="20%">Keperluan</th>
-                <th width="12%">Tanggal Mulai</th>
-                <th width="12%">Tanggal Selesai</th>
-                <th class="text-center" width="8%">Durasi</th>
-                <th class="text-right" width="13%">Estimasi Biaya</th>
-                <th width="12%">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($trips as $index => $trip)
-            <tr>
-                <td class="text-center">{{ $index + 1 }}</td>
-                <td>{{ $trip->destination ?? '-' }}</td>
-                <td style="font-size: 8px;">{{ \Illuminate\Support\Str::limit($trip->purpose, 80) ?? '-' }}</td>
-                <td>{{ $trip->start_date?->translatedFormat('d M Y') ?? '-' }}</td>
-                <td>{{ $trip->end_date?->translatedFormat('d M Y') ?? '-' }}</td>
-                <td class="text-center">{{ $trip->duration_label }}</td>
-                <td class="text-right">{{ $trip->estimated_cost ? 'Rp ' . number_format($trip->estimated_cost, 0, ',', '.') : '-' }}</td>
-                <td>
-                    @php
-                        $statusClass = match($trip->status) {
-                            'approved' => 'badge-success',
-                            'pending' => 'badge-warning',
-                            'rejected' => 'badge-danger',
-                            default => 'badge-secondary'
-                        };
-                        $statusLabel = match($trip->status) {
-                            'approved' => 'Disetujui',
-                            'pending' => 'Menunggu',
-                            'rejected' => 'Ditolak',
-                            'cancelled' => 'Dibatalkan',
-                            default => ucfirst($trip->status)
-                        };
-                    @endphp
-                    <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="8" class="text-center" style="padding: 20px; color: #666;">
-                    Tidak ada data perjalanan dinas
-                </td>
-            </tr>
-            @endforelse
-        </tbody>
+            <td colspan="3">
+                <span style="font-size: 10px;">Total Hari (Disetujui): <strong style="color: #0f766e;">{{ rtrim(rtrim(number_format($totalDays, 1, '.', ''), '0'), '.') }} hari</strong></span>
+            </td>
+            <td colspan="2">
+                <span style="font-size: 10px;">Total Estimasi: <strong style="color: #0f766e;">Rp {{ number_format($totalEstimatedCost, 0, ',', '.') }}</strong></span>
+            </td>
+        </tr>
     </table>
+</div>
 
-    <div class="footer">
-        <p>Dokumen ini dicetak secara otomatis oleh SIDIA - Sistem Informasi Darlan Ismail dan Absensi</p>
-        <p>{{ now()->translatedFormat('d F Y H:i:s') }} WITA</p>
-    </div>
-</body>
-</html>
+<table>
+    <thead>
+        <tr>
+            <th class="text-center" width="4%">No</th>
+            <th width="16%">Tujuan</th>
+            <th width="20%">Keperluan</th>
+            <th width="12%">Tgl Mulai</th>
+            <th width="12%">Tgl Selesai</th>
+            <th class="text-center" width="8%">Durasi</th>
+            <th class="text-right" width="14%">Est. Biaya</th>
+            <th width="14%">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse($trips as $index => $trip)
+        <tr>
+            <td class="text-center">{{ $index + 1 }}</td>
+            <td>{{ $trip->destination ?? '-' }}</td>
+            <td>{{ \Illuminate\Support\Str::limit($trip->purpose, 70) ?? '-' }}</td>
+            <td class="nowrap">{{ $trip->start_date?->translatedFormat('d M Y') ?? '-' }}</td>
+            <td class="nowrap">{{ $trip->end_date?->translatedFormat('d M Y') ?? '-' }}</td>
+            <td class="text-center">{{ $trip->duration_label }}</td>
+            <td class="text-right">{{ $trip->estimated_cost ? 'Rp ' . number_format($trip->estimated_cost, 0, ',', '.') : '-' }}</td>
+            <td>
+                @php
+                    $statusClass = match($trip->status) {
+                        'approved' => 'badge-success',
+                        'pending', 'manager_verified' => 'badge-warning',
+                        'rejected' => 'badge-danger',
+                        'cancelled' => 'badge-secondary',
+                        default => 'badge-secondary'
+                    };
+                    $statusLabel = match($trip->status) {
+                        'approved' => 'Disetujui',
+                        'pending' => 'Menunggu',
+                        'manager_verified' => 'Terverifikasi',
+                        'rejected' => 'Ditolak',
+                        'cancelled' => 'Dibatalkan',
+                        default => ucfirst($trip->status)
+                    };
+                @endphp
+                <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
+            </td>
+        </tr>
+        @empty
+        <tr>
+            <td colspan="8" class="empty-state">Tidak ada data perjalanan dinas</td>
+        </tr>
+        @endforelse
+    </tbody>
+</table>
+
+@php
+    $approvedTrips = $trips->where('status', 'approved');
+    $totalApprovedCost = $approvedTrips->sum('estimated_cost');
+    $totalApprovedDays = $approvedTrips->sum(fn($t) => (float) $t->duration_value);
+@endphp
+
+@if($approvedTrips->count() > 0)
+<div class="summary-box" style="margin-top: 8px;">
+    <p class="summary-title">Total Biaya Perjalanan Dinas (Disetujui)</p>
+    <table class="summary-grid">
+        <tr>
+            <td style="width: 33%;"><strong>Jumlah Perjalanan:</strong> {{ $approvedTrips->count() }}</td>
+            <td style="width: 33%;"><strong>Total Durasi:</strong> {{ rtrim(rtrim(number_format($totalApprovedDays, 1, '.', ''), '0'), '.') }} hari</td>
+            <td style="width: 34%;"><strong>Total Estimasi Biaya:</strong> <span style="color: #0f766e; font-size: 11px;">Rp {{ number_format($totalApprovedCost, 0, ',', '.') }}</span></td>
+        </tr>
+    </table>
+</div>
+@endif
+@endsection
+

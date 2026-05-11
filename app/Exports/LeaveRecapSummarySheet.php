@@ -18,11 +18,15 @@ class LeaveRecapSummarySheet implements FromCollection, WithHeadings, WithStyles
 
     public function collection()
     {
+        $user = auth()->user();
+        $isHR = $user->hasRole(['HR', 'hr']) && !$user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+
         $leaves = LeaveRequest::with(['worker.department', 'leaveType', 'approver'])
             ->when(!empty($this->filters['worker_id']), fn ($query) => $query->where('worker_id', $this->filters['worker_id']))
-            ->when(!empty($this->filters['date_from']), fn ($query) => $query->whereDate('start_date', '>=', $this->filters['date_from']))
-            ->when(!empty($this->filters['date_to']), fn ($query) => $query->whereDate('start_date', '<=', $this->filters['date_to']))
+            ->when(!empty($this->filters['date_from']), fn ($query) => $query->where('start_date', '>=', $this->filters['date_from']))
+            ->when(!empty($this->filters['date_to']), fn ($query) => $query->where('end_date', '<=', $this->filters['date_to']))
             ->when(!empty($this->filters['status']), fn ($query) => $query->where('status', $this->filters['status']))
+            ->when(empty($this->filters['status']) && $isHR, fn ($query) => $query->where('status', '!=', 'pending'))
             ->when(!empty($this->filters['leave_type_id']), fn ($query) => $query->where('leave_type_id', $this->filters['leave_type_id']))
             ->when(!empty($this->filters['department_id']), function ($query) {
                 $query->whereHas('worker', function ($workerQuery) {

@@ -4,22 +4,37 @@
 <h3>LAPORAN PERJALANAN DINAS</h3>
 
 <div class="info-box">
-    <p><strong>Periode:</strong> {{ $dateFrom }} s/d {{ $dateTo }}</p>
-    @if(isset($status) && $status)
-    <p><strong>Status:</strong>
-        @php
-            $statusLabel = match($status) {
-                'pending' => 'Menunggu Persetujuan',
-                'approved' => 'Disetujui',
-                'rejected' => 'Ditolak',
-                'cancelled' => 'Dibatalkan',
-                default => ucfirst($status)
-            };
-        @endphp
-        {{ $statusLabel }}
-    </p>
-    @endif
-    <p><strong>Total Data:</strong> {{ $trips->count() }} perjalanan</p>
+    <table class="meta-table">
+        <tr>
+            <td style="width: 18%;"><strong>Periode</strong></td>
+            <td style="width: 2%;">:</td>
+            <td>{{ $dateFrom }} s/d {{ $dateTo }}</td>
+        </tr>
+        @if(isset($status) && $status)
+        <tr>
+            <td><strong>Status</strong></td>
+            <td>:</td>
+            <td>
+                @php
+                    $statusLabel = match($status) {
+                        'pending' => 'Menunggu Persetujuan',
+                        'manager_verified' => 'Terverifikasi Manager',
+                        'approved' => 'Disetujui',
+                        'rejected' => 'Ditolak',
+                        'cancelled' => 'Dibatalkan',
+                        default => ucfirst($status)
+                    };
+                @endphp
+                <span class="badge badge-warning">{{ $statusLabel }}</span>
+            </td>
+        </tr>
+        @endif
+        <tr>
+            <td><strong>Total Data</strong></td>
+            <td>:</td>
+            <td><strong>{{ $trips->count() }} perjalanan</strong></td>
+        </tr>
+    </table>
 </div>
 
 <table>
@@ -27,11 +42,11 @@
         <tr>
             <th class="text-center" width="4%">No</th>
             <th width="14%">Pegawai</th>
-            <th width="10%">Tanggal Mulai</th>
-            <th width="10%">Tanggal Selesai</th>
+            <th width="10%">Tgl Mulai</th>
+            <th width="10%">Tgl Selesai</th>
             <th width="8%" class="text-center">Durasi</th>
             <th width="14%">Tujuan</th>
-            <th width="12%">Estimasi Biaya</th>
+            <th width="12%">Est. Biaya</th>
             <th width="9%">Status</th>
             <th width="11%">Disetujui Oleh</th>
             <th width="16%">Keperluan</th>
@@ -42,11 +57,11 @@
         <tr>
             <td class="text-center">{{ $index + 1 }}</td>
             <td>
-                {{ $trip->worker->name ?? '-' }}<br>
-                <small style="color: #666;">{{ $trip->worker->nip ?? '-' }}</small>
+                <strong>{{ $trip->worker->name ?? '-' }}</strong><br>
+                <span class="muted">{{ $trip->worker->nip ?? '-' }}</span>
             </td>
-            <td>{{ \Carbon\Carbon::parse($trip->start_date)->translatedFormat('d M Y') }}</td>
-            <td>{{ \Carbon\Carbon::parse($trip->end_date)->translatedFormat('d M Y') }}</td>
+            <td class="nowrap">{{ \Carbon\Carbon::parse($trip->start_date)->translatedFormat('d M Y') }}</td>
+            <td class="nowrap">{{ \Carbon\Carbon::parse($trip->end_date)->translatedFormat('d M Y') }}</td>
             <td class="text-center">{{ $trip->duration_label }}</td>
             <td>{{ $trip->destination }}</td>
             <td>Rp {{ number_format($trip->estimated_cost ?? 0, 0, ',', '.') }}</td>
@@ -54,13 +69,15 @@
                 @php
                     $statusClass = match($trip->status) {
                         'approved' => 'badge-success',
-                        'pending' => 'badge-warning',
+                        'pending', 'manager_verified' => 'badge-warning',
                         'rejected' => 'badge-danger',
+                        'cancelled' => 'badge-secondary',
                         default => 'badge-secondary'
                     };
                     $statusLabel = match($trip->status) {
                         'approved' => 'Disetujui',
                         'pending' => 'Menunggu',
+                        'manager_verified' => 'Terverifikasi',
                         'rejected' => 'Ditolak',
                         'cancelled' => 'Dibatalkan',
                         default => ucfirst($trip->status)
@@ -68,33 +85,60 @@
                 @endphp
                 <span class="badge {{ $statusClass }}">{{ $statusLabel }}</span>
             </td>
-            <td>{{ $trip->approvedBy->name ?? '-' }}</td>
-            <td style="font-size: 9px;">{{ \Illuminate\Support\Str::limit($trip->purpose, 70) }}</td>
+            <td class="wrap-2">{{ $trip->approvedBy->name ?? '-' }}</td>
+            <td class="wrap-3">{{ \Illuminate\Support\Str::limit($trip->purpose, 70) }}</td>
         </tr>
         @empty
         <tr>
-            <td colspan="10" class="text-center" style="padding: 20px; color: #666;">
-                Tidak ada data perjalanan dinas
-            </td>
+            <td colspan="10" class="empty-state">Tidak ada data perjalanan dinas untuk periode ini.</td>
         </tr>
         @endforelse
     </tbody>
 </table>
 
 @if($trips->count() > 0)
-<div style="margin-top: 20px; padding: 10px; background-color: #e0e7ff; border-radius: 4px;">
-    <p style="margin: 5px 0; font-size: 10px;"><strong>Ringkasan:</strong></p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Perjalanan: {{ $trips->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Disetujui: {{ $trips->where('status', 'approved')->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Menunggu: {{ $trips->where('status', 'pending')->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Ditolak: {{ $trips->where('status', 'rejected')->count() }}</p>
-    <p style="margin: 5px 0; font-size: 10px;">Dibatalkan: {{ $trips->where('status', 'cancelled')->count() }}</p>
-    @php
-        $totalDays = $trips->where('status', 'approved')->sum(fn($t) => (float) $t->duration_value);
-        $totalEstimatedCost = $trips->sum('estimated_cost');
-    @endphp
-    <p style="margin: 5px 0; font-size: 10px;">Total Hari Perjalanan: {{ rtrim(rtrim(number_format($totalDays, 1, '.', ''), '0'), '.') }} hari</p>
-    <p style="margin: 5px 0; font-size: 10px;">Total Estimasi Biaya: Rp {{ number_format($totalEstimatedCost, 0, ',', '.') }}</p>
+<div class="summary-box">
+    <p class="summary-title">Ringkasan</p>
+    <table class="summary-grid">
+        <tr>
+            <td style="width: 50%;"><strong>Total Perjalanan:</strong> {{ $trips->count() }}</td>
+            <td><strong>Disetujui:</strong> {{ $trips->where('status', 'approved')->count() }}</td>
+        </tr>
+        <tr>
+            <td><strong>Menunggu:</strong> {{ $trips->where('status', 'pending')->count() }}</td>
+            <td><strong>Ditolak:</strong> {{ $trips->where('status', 'rejected')->count() }}</td>
+        </tr>
+        @php
+            $approvedTrips = $trips->where('status', 'approved');
+            $totalDays = $approvedTrips->sum(fn($t) => (float) $t->duration_value);
+            $totalEstimatedCost = $trips->sum('estimated_cost');
+            $totalApprovedCost = $approvedTrips->sum('estimated_cost');
+        @endphp
+        <tr>
+            <td><strong>Total Hari (Disetujui):</strong> {{ rtrim(rtrim(number_format($totalDays, 1, '.', ''), '0'), '.') }} hari</td>
+            <td><strong>Total Estimasi Biaya:</strong> Rp {{ number_format($totalEstimatedCost, 0, ',', '.') }}</td>
+        </tr>
+    </table>
+</div>
+@endif
+
+@php
+    $approvedTrips = $trips->where('status', 'approved');
+    $totalApprovedCost = $approvedTrips->sum('estimated_cost');
+    $totalApprovedDays = $approvedTrips->sum(fn($t) => (float) $t->duration_value);
+@endphp
+
+@if($approvedTrips->count() > 0)
+<div class="summary-box" style="margin-top: 8px;">
+    <p class="summary-title">Total Biaya Perjalanan Dinas (Disetujui)</p>
+    <table class="summary-grid">
+        <tr>
+            <td style="width: 33%;"><strong>Jumlah Perjalanan:</strong> {{ $approvedTrips->count() }}</td>
+            <td style="width: 33%;"><strong>Total Durasi:</strong> {{ rtrim(rtrim(number_format($totalApprovedDays, 1, '.', ''), '0'), '.') }} hari</td>
+            <td style="width: 34%;"><strong>Total Estimasi Biaya:</strong> <span style="color: #0f766e; font-size: 11px;">Rp {{ number_format($totalApprovedCost, 0, ',', '.') }}</span></td>
+        </tr>
+    </table>
 </div>
 @endif
 @endsection
+

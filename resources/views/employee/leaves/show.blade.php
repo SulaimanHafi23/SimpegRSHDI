@@ -1,4 +1,4 @@
-﻿@extends('layouts.employee')
+@extends('layouts.employee')
 
 @section('title', 'Detail Cuti')
 
@@ -21,17 +21,31 @@
         @if($leave->status === 'pending')
             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-yellow-100 text-yellow-800 self-start sm:self-auto shrink-0">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Menunggu
+                Menunggu Atasan
+            </span>
+        @elseif($leave->status === 'manager_verified')
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-blue-100 text-blue-800 self-start sm:self-auto shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Terverifikasi (Menunggu HR)
             </span>
         @elseif($leave->status === 'approved')
             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-green-100 text-green-800 self-start sm:self-auto shrink-0">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                 Disetujui
             </span>
-        @else
+        @elseif($leave->status === 'rejected')
             <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-red-100 text-red-800 self-start sm:self-auto shrink-0">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 Ditolak
+            </span>
+        @elseif($leave->status === 'cancelled')
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-gray-100 text-gray-700 self-start sm:self-auto shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                Dibatalkan
+            </span>
+        @else
+            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-full bg-gray-100 text-gray-700 self-start sm:self-auto shrink-0">
+                {{ ucfirst(str_replace('_', ' ', $leave->status)) }}
             </span>
         @endif
     </div>

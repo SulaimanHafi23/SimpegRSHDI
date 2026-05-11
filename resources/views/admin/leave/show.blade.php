@@ -39,6 +39,11 @@
 
             {{-- Approval Actions --}}
             @if($normalizedStatus === 'pending')
+                <div class="text-sm font-medium text-yellow-700 bg-yellow-50 px-4 py-2 rounded-lg border border-yellow-200">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Menunggu verifikasi dari Manager sebelum dapat disetujui oleh HR/Admin.
+                </div>
+            @elseif($normalizedStatus === 'manager_verified')
                 <div class="flex gap-3">
                     <form action="{{ route('admin.leave.approve', $leaveRequest->id) }}" method="POST" class="inline">
                         @csrf
@@ -93,7 +98,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-sm font-medium text-gray-500">Jenis Cuti</label>
-                            <p class="text-base font-semibold text-gray-900 mt-1">{{ $leaveRequest->leave_type }}</p>
+                            <p class="text-base font-semibold text-gray-900 mt-1">{{ $leaveRequest->leaveType->name ?? '-' }}</p>
                         </div>
                         <div>
                             <label class="text-sm font-medium text-gray-500">Durasi</label>
@@ -242,7 +247,7 @@
             {{-- Quick Actions --}}
             <x-card title="Aksi Cepat">
                 <div class="space-y-2">
-                    @if($normalizedStatus === 'pending')
+                    @if($normalizedStatus === 'cancelled')
                         @can('delete-leave')
                             <x-button
                                 variant="outline"
@@ -264,7 +269,7 @@
     </div>
  </div>
 
-@if($normalizedStatus === 'pending')
+@if(in_array($normalizedStatus, ['pending', 'manager_verified']))
     <div id="leave-reject-modal" class="hidden fixed inset-0 z-50" onclick="if(event.target === this) closeLeaveRejectModal()">
         <div class="absolute inset-0 bg-black/30"></div>
         <div class="relative flex min-h-screen items-center justify-center p-4">

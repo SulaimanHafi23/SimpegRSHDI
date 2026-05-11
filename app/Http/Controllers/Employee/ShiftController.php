@@ -47,11 +47,29 @@ class ShiftController extends Controller
                 return Carbon::parse($holiday->date)->format('Y-m-d');
             });
 
-        // Get all worker shifts to handle date ranges correctly
+        // Get all worker shifts (including inactive ones if they fall in range)
         $workerShifts = WorkerShift::with(['worker', 'shift'])
             ->where('worker_id', $worker->id)
-            ->latest()
             ->get();
+
+        // Get shift history for this worker to fill past gaps in calendar
+        $shiftHistories = WorkerShiftHistory::where('worker_id', $worker->id)
+            ->with('shift')
+            ->get();
+
+        // Merge current shifts and histories for calendar building
+        $allHistoricalShifts = $shiftHistories->map(function($history) {
+            return (object)[
+                'shift_id' => $history->shift_id,
+                'shift' => $history->shift,
+                'effective_from' => $history->effective_from,
+                'effective_until' => $history->effective_until,
+                'is_active' => true, // Treat as active for calendar display
+                'is_history' => true
+            ];
+        });
+
+        $combinedShifts = $workerShifts->concat($allHistoricalShifts);
 
         // Get shift overrides for this month
         $shiftOverrides = ShiftOverride::with(['worker', 'shift', 'creator'])
@@ -69,9 +87,9 @@ class ShiftController extends Controller
             ->whereDate('end_date', '>=', $startOfMonth->format('Y-m-d'))
             ->get();
 
-        // Build calendar data
+        // Build calendar data using combined shifts
         $requiresHolidayAttendance = $worker->department && $worker->department->requires_holiday_attendance;
-        $calendar = $this->buildCalendar($worker, $startOfMonth, $endOfMonth, $workerShifts, $shiftOverrides, $holidays, $leaveRequests, $requiresHolidayAttendance);
+        $calendar = $this->buildCalendar($worker, $startOfMonth, $endOfMonth, $combinedShifts, $shiftOverrides, $holidays, $leaveRequests, $requiresHolidayAttendance);
 
         // Urutkan shift dari yang terbaru (effective_from descending) untuk penentuan info header
         $sortedShifts = collect($workerShifts)->sortByDesc('effective_from');
@@ -245,14 +263,26 @@ class ShiftController extends Controller
                 } else {
                     // Find applicable shift from list using model helper
                     $applicableShift = $sortedShifts->first(function ($shift) use ($current) {
+                        // For historical shifts (plain objects)
+                        if (isset($shift->is_history)) {
+                            $dateString = $current->format('Y-m-d');
+                            $from = $shift->effective_from ? (is_string($shift->effective_from) ? $shift->effective_from : $shift->effective_from->format('Y-m-d')) : null;
+                            $until = $shift->effective_until ? (is_string($shift->effective_until) ? $shift->effective_until : $shift->effective_until->format('Y-m-d')) : null;
+
+                            if ($from && $from > $dateString) return false;
+                            if ($until && $until < $dateString) return false;
+                            return true;
+                        }
+
+                        // For Model objects
                         if (!method_exists($shift, 'isActiveOnDate')) return false;
                         return $shift->isActiveOnDate($current->toDateTime());
                     });
 
                     if ($applicableShift) {
-                        $shiftId = $applicableShift->getShiftForDate($current->toDateTime());
+                        $shiftId = $applicableShift->shift_id;
                         if ($shiftId) {
-                            $dayData['shift'] = Shift::find($shiftId);
+                            $dayData['shift'] = $applicableShift->shift ?? Shift::find($shiftId);
                             if ($dayData['shift']) {
                                 $dayData['schedule'] = $dayData['shift']->getScheduleForDate($current->toDateTime());
                             }

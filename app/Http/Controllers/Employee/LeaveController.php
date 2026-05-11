@@ -57,7 +57,7 @@ class LeaveController extends Controller
             ->whereYear('start_date', $year)
             ->selectRaw("
                 COUNT(*) as total,
-                SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+                SUM(CASE WHEN status IN ('pending', 'manager_verified') THEN 1 ELSE 0 END) as pending,
                 SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved,
                 SUM(CASE WHEN status = 'rejected' THEN 1 ELSE 0 END) as rejected,
                 SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled
@@ -332,7 +332,7 @@ class LeaveController extends Controller
         }
 
         // Default: PDF
-        return $this->exportLeavePdfReport($leaves->toArray(), $worker, $filters);
+        return $this->exportLeavePdfReport($leaves, $worker, $filters);
     }
 
     /**
@@ -361,8 +361,7 @@ class LeaveController extends Controller
         // Get all records without pagination for PDF
         $leaves = $this->buildLeaveQuery($filters)
             ->latest('start_date')
-            ->get()
-            ->all();
+            ->get();
 
         return $this->exportLeavePdfReport($leaves, $worker, $filters);
     }
@@ -414,7 +413,7 @@ class LeaveController extends Controller
         return $query;
     }
 
-    private function exportLeavePdfReport(array $leaves, $worker, array $filters)
+    private function exportLeavePdfReport($leaves, $worker, array $filters)
     {
         $collection = collect($leaves);
 

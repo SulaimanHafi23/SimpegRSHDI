@@ -30,51 +30,74 @@ class LeaveRequestController extends Controller
             'approvalVerify',
             'approvalApprove',
             'approvalReject',
-            'managerApprovalIndex',
-            'managerApprovalShow',
-            'managerApprovalVerify',
-            'managerApprovalReject',
+            'export',
         ]);
-        $this->middleware('permission:leave.approve,leave.verify', ['only' => [
+        $this->middleware('permission:leave.approve')->only([
             'approvalIndex',
             'approvalShow',
             'approvalVerify',
             'approvalApprove',
             'approvalReject',
-        ]]);
-        $this->middleware('permission:leave.verify')->only([
-            'managerApprovalIndex',
-            'managerApprovalShow',
-            'managerApprovalVerify',
-            'managerApprovalReject',
+            'export',
         ]);
     }
 
     public function approvalIndex(Request $request)
     {
         $user = Auth::user();
-        $isManager = !$user->hasRole(['admin', 'hr']) && $user->hasRole('manager');
+        $isHR = $user->hasRole(['HR', 'hr']) && !$user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        $isAdmin = $user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        $isManager = $user->hasRole(['Manager', 'manager']) && !$isHR && !$isAdmin;
         $departmentId = $this->getManagerDepartmentFilter();
 
-        // Manager: View pending requests for verification
-        // HR: View manager_verified requests for final approval
-        $statusToView = $isManager ? 'pending' : 'manager_verified';
-        $requestStatus = $request->input('status', $statusToView);
-
-        // If manager tries to view other statuses, reset to pending
-        if ($isManager && $requestStatus !== 'pending') {
-            $requestStatus = 'pending';
+        // Determine default status
+        if ($isManager) {
+            $defaultStatus = 'all';
+        } elseif ($isHR) {
+            $defaultStatus = 'manager_verified';
+        } else {
+            $defaultStatus = 'all';
+        }
+        $status = $request->input('status');
+        
+        // Handle pagination where 'status' might be dropped if it was null ('all' selection)
+        if ($status === null && $request->has('original_status')) {
+            $status = $request->input('original_status');
+        }
+        
+        if ($status === null) {
+            if ($request->exists('status')) {
+                $status = 'all';
+            } else {
+                $status = $defaultStatus;
+            }
         }
 
-        // If HR tries to view pending, redirect to manager_verified
-        if (!$isManager && $requestStatus === 'pending') {
-            $requestStatus = 'manager_verified';
+        $displayStatus = $status;
+        
+        if ($status === 'all' || $status === '') {
+            $status = null;
+            $displayStatus = 'all';
+        }
+
+        if ($isHR && !$isAdmin) {
+            // HR cannot see pending requests
+            if ($status === 'pending') {
+                $status = 'manager_verified';
+                $displayStatus = 'manager_verified';
+            }
         }
 
         $filters = [
-            'status' => $requestStatus,
-            'per_page' => 20,
+            'status' => $status,
+            'original_status' => $displayStatus, // for dropdown selection state
+            'worker_id' => $request->worker_id,
+            'leave_type_id' => $request->leave_type_id,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'per_page' => $request->input('per_page', 20),
             'department_id' => $departmentId,
+            'hr_only_verified' => ($isHR && !$isAdmin), // Custom filter for HR
         ];
 
         $leaves = $this->buildLeaveQuery($filters)
@@ -90,12 +113,25 @@ class LeaveRequestController extends Controller
                 $q->where('department_id', $filters['department_id']);
             });
         }
+        
+        // Allow all statuses for manager, restricted by department only.
+        // Base query already filtered by department_id.
 
-        $totalLeaves = (clone $baseQuery)->count();
-        $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
-        $verifiedCount = (clone $baseQuery)->where('status', 'manager_verified')->count();
-        $approvedCount = (clone $baseQuery)->where('status', 'approved')->count();
-        $rejectedCount = (clone $baseQuery)->where('status', 'rejected')->count();
+        $isHR = $user->hasRole(['HR', 'hr']) && !$user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        $isAdmin = $user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+
+        // Stats query based on role
+        $statsQuery = clone $baseQuery;
+        if ($isHR && !$isAdmin) {
+            $statsQuery->where('status', '!=', 'pending');
+        }
+
+        $totalLeaves = (clone $statsQuery)->count();
+        $pendingCount = (clone $statsQuery)->where('status', 'pending')->count();
+        $verifiedCount = (clone $statsQuery)->where('status', 'manager_verified')->count();
+        $approvedCount = (clone $statsQuery)->where('status', 'approved')->count();
+        $rejectedCount = (clone $statsQuery)->where('status', 'rejected')->count();
+        $cancelledCount = (clone $statsQuery)->where('status', 'cancelled')->count();
 
         return view('approvals.leaves.index', compact(
             'leaves',
@@ -105,8 +141,11 @@ class LeaveRequestController extends Controller
             'verifiedCount',
             'approvedCount',
             'rejectedCount',
+            'cancelledCount',
             'filters',
-            'isManager'
+            'isManager',
+            'isAdmin',
+            'isHR'
         ));
     }
 
@@ -128,12 +167,17 @@ class LeaveRequestController extends Controller
     {
         try {
             $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
+
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat melakukan verifikasi.');
+            }
+
             $this->ensureApprovalAccess($leaveRequest);
 
             // Only manager can verify pending requests
             $user = Auth::user();
-            if ($user->hasRole(['admin', 'hr'])) {
-                throw new \Exception('Hanya manager yang dapat melakukan verifikasi.');
+            if ($user->hasRole(['Super Admin', 'Admin', 'admin', 'HR', 'hr'])) {
+                throw new \Exception('Hanya manager yang dapat melakukan verifikasi awal.');
             }
 
             if ($leaveRequest->status !== 'pending') {
@@ -163,11 +207,16 @@ class LeaveRequestController extends Controller
 
         try {
             $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
+
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat memberikan persetujuan.');
+            }
+
             $this->ensureApprovalAccess($leaveRequest);
 
             // Only HR can approve (not manager)
             $user = Auth::user();
-            if ($user->hasRole('manager') && !$user->hasRole(['admin', 'hr'])) {
+            if ($user->hasRole(['Manager', 'manager']) && !$user->hasRole(['Super Admin', 'Admin', 'admin', 'HR', 'hr'])) {
                 throw new \Exception('Hanya HR yang dapat menyetujui permohonan cuti yang sudah diverifikasi.');
             }
 
@@ -220,10 +269,15 @@ class LeaveRequestController extends Controller
 
         try {
             $leaveRequest = LeaveRequest::with('worker')->findOrFail($id);
+
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat menolak pengajuan.');
+            }
+
             $this->ensureApprovalAccess($leaveRequest);
 
             $user = Auth::user();
-            $isManager = $user->hasRole('manager') && !$user->hasRole(['admin', 'hr']);
+            $isManager = $user->hasRole(['Manager', 'manager']) && !$user->hasRole(['Super Admin', 'Admin', 'admin', 'HR', 'hr']);
             $requiredStatus = $isManager ? 'pending' : 'manager_verified';
 
             if ($leaveRequest->status !== $requiredStatus) {
@@ -293,8 +347,26 @@ class LeaveRequestController extends Controller
             }
         }
 
+        $user = Auth::user();
+        $isSuperAdmin = $user && $user->hasRole(['Super Admin', 'SuperAdmin', 'super admin', 'superadmin']);
+
+        // Default status filtering logic based on role
+        $status = $request->status;
+        $displayStatus = $status;
+        
+        if (!$isSuperAdmin && $status === null) {
+            // By default, HR should only see what they need to verify
+            $status = 'manager_verified';
+            $displayStatus = 'manager_verified';
+        } elseif ($status === 'all') {
+            // 'all' represents "Semua Status" from dropdown
+            $status = null;
+            $displayStatus = 'all';
+        }
+
         $filters = [
-            'status' => $request->status,
+            'status' => $status,
+            'original_status' => $displayStatus, // For dropdown selection state
             'worker_id' => $request->worker_id,
             'leave_type_id' => $request->leave_type_id,
             'leave_type' => $request->leave_type,
@@ -306,7 +378,14 @@ class LeaveRequestController extends Controller
             'per_page' => $request->per_page ?? 15,
         ];
 
-        $leaveRequests = $this->buildLeaveQuery($filters)
+        $query = $this->buildLeaveQuery($filters);
+
+        // Even when viewing 'all', HR/Admin should not process 'pending' requests
+        if (!$isSuperAdmin && empty($filters['status'])) {
+            $query->where('status', '!=', 'pending');
+        }
+
+        $leaveRequests = $query
             ->latest('start_date')
             ->paginate($filters['per_page'])
             ->appends($filters);
@@ -328,8 +407,9 @@ class LeaveRequestController extends Controller
             ->pluck('cnt', 'status');
 
         $statistics = [
-            'total' => $statCounts->sum(),
-            'pending' => $statCounts->get('pending', 0),
+            'total' => $isSuperAdmin ? $statCounts->sum() : $statCounts->except(['pending'])->sum(),
+            'pending' => $isSuperAdmin ? $statCounts->get('pending', 0) : $statCounts->get('manager_verified', 0),
+            'manager_verified' => $statCounts->get('manager_verified', 0),
             'approved' => $statCounts->get('approved', 0),
             'rejected' => $statCounts->get('rejected', 0),
             'cancelled' => $statCounts->get('cancelled', 0),
@@ -338,7 +418,7 @@ class LeaveRequestController extends Controller
         // Rename for view compatibility
         $leaves = $leaveRequests;
 
-        return view('admin.leave.index', compact('leaves', 'leaveRequests', 'workers', 'leaveTypes', 'statistics', 'filters'));
+        return view('admin.leave.index', compact('leaves', 'leaveRequests', 'workers', 'leaveTypes', 'statistics', 'filters', 'isSuperAdmin'));
     }
 
     public function create()
@@ -454,6 +534,10 @@ class LeaveRequestController extends Controller
                 }
             }
 
+            if ($leaveRequest->status !== 'cancelled') {
+                return back()->with('error', 'Hanya permohonan cuti yang sudah dibatalkan yang dapat dihapus.');
+            }
+
             $leaveRequest->delete();
 
             return redirect()
@@ -473,8 +557,17 @@ class LeaveRequestController extends Controller
             }
 
             $leaveRequest = LeaveRequest::findOrFail($id);
-            if ($leaveRequest->status !== 'pending') {
-                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat disetujui.');
+
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat memberikan persetujuan.');
+            }
+            if (!in_array($leaveRequest->status, ['pending', 'manager_verified'])) {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending atau sudah diverifikasi manager yang dapat disetujui.');
+            }
+            
+            // If we enforce two-step verification, prevent HR from approving pending
+            if ($leaveRequest->status === 'pending') {
+                throw new \Exception('Menunggu verifikasi dari Manager sebelum dapat disetujui oleh HR.');
             }
 
             $leaveRequest->update([
@@ -524,8 +617,19 @@ class LeaveRequestController extends Controller
             }
 
             $leaveRequest = LeaveRequest::findOrFail($id);
-            if ($leaveRequest->status !== 'pending') {
-                throw new \Exception('Hanya permohonan cuti yang berstatus pending yang dapat ditolak.');
+
+            if (Auth::user()->hasRole('Super Admin')) {
+                return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat menolak pengajuan.');
+            }
+            if (!in_array($leaveRequest->status, ['pending', 'manager_verified'])) {
+                throw new \Exception('Hanya permohonan cuti yang berstatus pending atau sudah diverifikasi manager yang dapat ditolak.');
+            }
+            
+            // If we enforce two-step verification, prevent HR from rejecting pending directly
+            // Note: In some systems, HR can reject pending requests directly, but we'll enforce it
+            // for consistency with the approval process.
+            if ($leaveRequest->status === 'pending') {
+                throw new \Exception('Menunggu verifikasi dari Manager sebelum dapat ditolak oleh HR.');
             }
 
             $leaveRequest->update([
@@ -586,6 +690,11 @@ class LeaveRequestController extends Controller
         try {
             $format = $request->input('format', 'excel');
 
+            $user = Auth::user();
+            $isHR = $user->hasRole(['HR', 'hr']) && !$user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+            $isAdmin = $user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+            $isManager = $user->hasRole(['Manager', 'manager']) && !$isHR && !$isAdmin;
+
             $filters = [
                 'worker_id' => $request->input('worker_id'),
                 'date_from' => $request->input('date_from'),
@@ -593,26 +702,13 @@ class LeaveRequestController extends Controller
                 'status' => $request->input('status'),
                 'leave_type_id' => $request->input('leave_type_id'),
                 'department_id' => $this->getManagerDepartmentFilter(),
+                'hr_only_verified' => $isHR,
             ];
 
-            $query = \App\Models\LeaveRequest::with(['worker.department', 'leaveType', 'approver']);
+            $query = $this->buildLeaveQuery($filters);
 
-            if ($filters['worker_id']) {
-                $query->where('worker_id', $filters['worker_id']);
-            }
-            if ($filters['date_from']) {
-                $query->whereDate('start_date', '>=', $filters['date_from']);
-            }
-            if ($filters['date_to']) {
-                $query->whereDate('start_date', '<=', $filters['date_to']);
-            }
-            if ($filters['status']) {
-                $query->where('status', $filters['status']);
-            }
-            if ($filters['leave_type_id']) {
-                $query->where('leave_type_id', $filters['leave_type_id']);
-            }
-            if ($filters['department_id']) {
+            // Additional security for manager
+            if ($isManager && $filters['department_id']) {
                 $query->whereHas('worker', function ($q) use ($filters) {
                     $q->where('department_id', $filters['department_id']);
                 });
@@ -692,8 +788,11 @@ class LeaveRequestController extends Controller
             });
         }
 
-        if (!empty($filters['status'])) {
+        if ($filters['status']) {
             $query->where('status', $filters['status']);
+        } elseif (!empty($filters['hr_only_verified'])) {
+            // HR viewing 'all' should not see 'pending'
+            $query->where('status', '!=', 'pending');
         }
 
         if (!empty($filters['leave_type_id'])) {
@@ -714,6 +813,8 @@ class LeaveRequestController extends Controller
         if (!empty($filters['year'])) {
             $query->whereYear('start_date', $filters['year']);
         }
+        
+        // No longer restricting manager to specific statuses. Manager can see all within department.
 
         return $query;
     }
@@ -727,27 +828,4 @@ class LeaveRequestController extends Controller
             abort(403, 'Unauthorized');
         }
     }
-
-    /**
-     * Manager approval methods - delegate to approval methods
-     */
-    public function managerApprovalIndex(Request $request)
-    {
-        return $this->approvalIndex($request);
-    }
-
-    public function managerApprovalShow(string $id)
-    {
-        return $this->approvalShow($id);
-    }
-
-    public function managerApprovalVerify(Request $request, string $id)
-    {
-        return $this->approvalVerify($request, $id);
-    }
-
-    public function managerApprovalReject(Request $request, string $id)
-    {
-        return $this->approvalReject($request, $id);
-    }
-    }
+}

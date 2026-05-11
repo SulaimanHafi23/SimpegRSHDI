@@ -301,7 +301,7 @@
 </div>
 
 <!-- Modal Konfirmasi Early Checkout -->
-<div id="early-checkout-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden" role="dialog" aria-modal="true" aria-labelledby="early-checkout-title">
+<div id="early-checkout-modal" class="fixed inset-0 z-[9999] flex items-center justify-center hidden" role="dialog" aria-modal="true" aria-labelledby="early-checkout-title">
     <!-- Backdrop -->
     <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="closeEarlyCheckoutModal()"></div>
 

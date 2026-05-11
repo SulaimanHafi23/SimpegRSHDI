@@ -266,12 +266,13 @@
         @forelse($leaveRequests as $index => $leave)
             @php
                 $statusBadges = [
-                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
+                    'manager_verified' => ['variant' => 'info', 'label' => 'Terverifikasi (Menunggu HR)'],
                     'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
                     'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
                     'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
                 ];
-                $badge = $statusBadges[$leave->status] ?? ['variant' => 'secondary', 'label' => ucfirst($leave->status)];
+                $badge = $statusBadges[$leave->status] ?? ['variant' => 'secondary', 'label' => ucfirst(str_replace('_', ' ', $leave->status))];
             @endphp
             <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                 <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
@@ -385,11 +386,15 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($leave->status === 'pending')
-                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Pending</span>
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Menunggu Atasan</span>
+                                @elseif($leave->status === 'manager_verified')
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">Terverifikasi (Menunggu HR)</span>
                                 @elseif($leave->status === 'approved')
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Disetujui</span>
-                                @else
+                                @elseif($leave->status === 'rejected')
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Ditolak</span>
+                                @else
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ ucfirst(str_replace('_', ' ', $leave->status)) }}</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">

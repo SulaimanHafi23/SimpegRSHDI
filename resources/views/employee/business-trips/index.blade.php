@@ -142,12 +142,13 @@
         @forelse($businessTrips as $index => $trip)
             @php
                 $statusBadges = [
-                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                    'pending' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
+                    'manager_verified' => ['variant' => 'info', 'label' => 'Terverifikasi (Menunggu HR)'],
                     'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
                     'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
                     'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
                 ];
-                $badge = $statusBadges[$trip->status] ?? ['variant' => 'secondary', 'label' => ucfirst($trip->status)];
+                $badge = $statusBadges[$trip->status] ?? ['variant' => 'secondary', 'label' => ucfirst(str_replace('_', ' ', $trip->status))];
             @endphp
             <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                 <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
@@ -275,12 +276,13 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @php
                                     $statusBadges = [
-                                        'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                                        'pending' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
+                                        'manager_verified' => ['variant' => 'info', 'label' => 'Terverifikasi (Menunggu HR)'],
                                         'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
                                         'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
                                         'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
                                     ];
-                                    $badge = $statusBadges[$trip->status] ?? ['variant' => 'secondary', 'label' => ucfirst($trip->status)];
+                                    $badge = $statusBadges[$trip->status] ?? ['variant' => 'secondary', 'label' => ucfirst(str_replace('_', ' ', $trip->status))];
                                 @endphp
                                 <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
                             </td>

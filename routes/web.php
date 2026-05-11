@@ -177,7 +177,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('permission:dashboard.manager')->name('manager.dashboard');
 
     // ========== EMPLOYEE ROUTES ==========
-    Route::prefix('employee')->name('employee.')->middleware('permission:dashboard.employee')->group(function () {
+    Route::prefix('employee')->name('employee.')->middleware('permission:dashboard.employee|dashboard.hr|dashboard.manager')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         // Attendance for employees
         Route::prefix('attendance')->name('attendance.')->group(function () {
@@ -270,24 +270,17 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== MANAGER ROUTES ==========
-    Route::prefix('manager')->name('manager.')->group(function () {
-        // Manager Shift swap approvals
-        Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->middleware('permission:shift-swap.approve')->group(function () {
+    Route::prefix('manager')->name('manager.')->middleware('permission:shift-swap.approve')->group(function () {
+        // Shift swap approvals
+        Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'index'])->name('index');
             Route::get('/export', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'export'])->name('export');
+            Route::post('/{id}/verify', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'verify'])->name('verify');
             Route::get('/{id}', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'show'])->name('show');
             Route::post('/{id}/approve', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'reject'])->name('reject');
             Route::post('/{id}/execute', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'execute'])->name('execute');
             Route::post('/{id}/revert', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'revert'])->name('revert');
-        });
-
-        // Manager Leave approvals (verification stage)
-        Route::prefix('leave-approvals')->name('leave-approvals.')->middleware('permission:leave.verify')->group(function () {
-            Route::get('/', [LeaveRequestController::class, 'managerApprovalIndex'])->name('index');
-            Route::get('/{id}', [LeaveRequestController::class, 'managerApprovalShow'])->name('show');
-            Route::post('/{id}/verify', [LeaveRequestController::class, 'managerApprovalVerify'])->name('verify');
-            Route::post('/{id}/reject', [LeaveRequestController::class, 'managerApprovalReject'])->name('reject');
         });
     });
 
@@ -314,6 +307,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Leave Approvals
         Route::prefix('leaves')->name('leaves.')->group(function () {
             Route::get('/', [LeaveRequestController::class, 'approvalIndex'])->name('index');
+            Route::get('/export', [LeaveRequestController::class, 'export'])->name('export');
             Route::get('/{id}', [LeaveRequestController::class, 'approvalShow'])->name('show');
             Route::post('/{id}/verify', [LeaveRequestController::class, 'approvalVerify'])->name('verify');
             Route::post('/{id}/approve', [LeaveRequestController::class, 'approvalApprove'])->name('approve');
@@ -345,6 +339,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/{id}', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'show'])->name('show');
         Route::post('/{id}/approve', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'reject'])->name('reject');
+        Route::delete('/{id}', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'destroy'])->name('destroy');
     });
 
     // ========== REPORT ROUTES ==========

@@ -26,7 +26,9 @@
 
         @php
             $user = Auth::user();
-            $isManager = !$user->hasRole(['admin', 'hr']) && $user->hasRole('manager');
+            $isAdmin = $user->hasRole(['admin', 'Super Admin', 'super admin', 'superadmin']);
+            $isHR = $user->hasRole(['hr', 'HR']) || $isAdmin;
+            $isManager = $user->hasRole(['manager', 'Manager']) || $isAdmin;
         @endphp
 
         @if($trip->status === 'pending' && $isManager)
@@ -42,8 +44,9 @@
                     <i class="fas fa-times mr-2"></i>Tolak
                 </button>
             </div>
+        @endif
 
-        @elseif($trip->status === 'manager_verified' && !$isManager)
+        @if($trip->status === 'manager_verified' && $isHR)
             <!-- HR: Approve & Reject Buttons -->
             <div class="flex gap-2">
                 <button type="button" onclick="confirmBusinessTripApprove()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
@@ -328,7 +331,33 @@
                                 </div>
                             </li>
 
-                            <!-- Approved/Rejected -->
+                            <!-- Verified by Manager -->
+                            @if($trip->manager_verified_at || $trip->status === 'manager_verified' || in_array($trip->status, ['approved', 'rejected']))
+                            <li>
+                                <div class="relative pb-8">
+                                    <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+                                    <div class="relative flex space-x-3">
+                                        <div>
+                                            <span class="h-8 w-8 rounded-full {{ ($trip->manager_verified_at || in_array($trip->status, ['approved', 'rejected'])) ? 'bg-blue-400' : 'bg-gray-300' }} flex items-center justify-center ring-8 ring-white">
+                                                <i class="fas fa-check-double text-white text-xs"></i>
+                                            </span>
+                                        </div>
+                                        <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+                                            <div>
+                                                <p class="text-sm text-gray-900 font-medium">Telah Diverifikasi</p>
+                                                <p class="text-xs text-gray-500">{{ $trip->manager->name ?? 'Manager' }}<br> Sebagai Manager</p>
+                                            </div>
+                                            @if($trip->manager_verified_at)
+                                            <div class="whitespace-nowrap text-right text-xs text-gray-500">
+                                                <p>{{ $trip->manager_verified_at->format('d M Y') }}</p>
+                                                <p>{{ $trip->manager_verified_at->format('H:i') }}</p>
+                                            </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            @endif
                             @if(in_array($trip->status, ['approved', 'rejected']))
                             <li>
                                 <div class="relative pb-8">

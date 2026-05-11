@@ -108,159 +108,59 @@ class RolePermissionSeeder extends Seeder
          * - Can manage roles, users, and all configurations
          */
         $superAdmin = Role::firstOrCreate(['name' => 'Super Admin', 'guard_name' => 'web']);
-        $superAdmin->syncPermissions(Permission::all());
+        $superAdmin->syncPermissions([
+            'dashboard.admin', 'dashboard.hr', 'dashboard.manager', 'dashboard.employee',
+            'department.manage', 'shift.manage', 'leave-type.manage', 'document-type.manage',
+            'department-document-type.manage', 'holiday.manage', 'master.manage',
+            'worker.manage', 'worker.view', 'attendance.manage', 'attendance.view', 'attendance.checkin',
+            'schedule.manage', 'schedule.view', 'worker-document.manage', 'worker-document.view',
+            'leave.manage', 'leave.approve', 'leave.request', 'leave.view',
+            'business-trip.manage', 'business-trip.approve', 'business-trip.request', 'business-trip.view',
+            'shift-swap.manage', 'shift-swap.approve', 'shift-swap.request', 'shift-swap.view',
+            'notification.manage', 'notification.view', 'calendar.view', 'profile.view', 'profile.edit',
+            'report.view', 'report.export', 'role.manage', 'user.manage', 'system-settings.manage', 'audit.view'
+        ]);
 
         /**
          * HR ROLE
-         * - Full worker lifecycle management
-         * - Master data configuration
-         * - Attendance and document management
-         * - Leave approval
-         * - Reports access
-         * - User management (except roles)
          */
         $hr = Role::firstOrCreate(['name' => 'HR', 'guard_name' => 'web']);
         $hr->syncPermissions([
-            // Dashboard
-            'dashboard.admin',
-            'dashboard.hr',
-
-            // Master Data - Full Configuration Access
-            'master.manage',
-            'department.manage',
-            'shift.manage',
-            'leave-type.manage',
-            'document-type.manage',
-            'department-document-type.manage',
-            'holiday.manage',
-
-            // Worker Management - Full Access
-            'worker.manage',
-            'attendance.manage',
-            'schedule.manage',
-            'worker-document.manage',
-
-            // Leave - Manage & Approve
-            'leave.manage',
-            'leave.approve',
-
-            // Business Trip - Manage & Approve
-            'business-trip.manage',
-            'business-trip.approve',
-
-            // Shift Swap - Manage & Approve
-            'shift-swap.manage',
-            'shift-swap.approve',
-
-            // Notifications - Manage
-            'notification.manage',
-
-            // Calendar
-            'calendar.view',
-
-            // Profile
-            'profile.view',
-            'profile.edit',
-
-            // Reports - Full Access
-            'report.view',
-            'report.export',
-
-            // Audit
-            'audit.view',
-
-            // User Management (not roles)
-            'user.manage',
+            'dashboard.hr', 'dashboard.employee', 'department.manage', 'shift.manage',
+            'document-type.manage', 'department-document-type.manage',
+            'worker.manage', 'worker.view', 'attendance.manage', 'attendance.view', 'attendance.checkin',
+            'schedule.manage', 'schedule.view', 'worker-document.manage', 'worker-document.view',
+            'leave.approve', 'leave.request', 'leave.view',
+            'business-trip.approve', 'business-trip.request', 'business-trip.view',
+            'shift-swap.manage', 'shift-swap.approve', 'shift-swap.request', 'shift-swap.view',
+            'notification.view', 'calendar.view', 'profile.view',
+            'report.view', 'report.export', 'user.manage', 'audit.view'
         ]);
 
         /**
          * MANAGER ROLE
-         * - Team oversight and approval authority
-         * - View workers and schedules
-         * - Approve leave
-         * - View reports
-         * - Full management access for leaves, business trips, shift swaps
          */
         $manager = Role::firstOrCreate(['name' => 'Manager', 'guard_name' => 'web']);
         $manager->syncPermissions([
-            // Dashboard
-            'dashboard.admin',
-            'dashboard.manager',
-
-            // Worker & Attendance - View & Manage
-            'worker.manage',      // Can view worker lists and manage within dept
-            'attendance.manage',  // Can view attendance records
-            'schedule.manage',    // Can view and adjust schedules
-
-            // Full Management & Approval Authority
-            'leave.manage',       // Full CRUD + approve/reject all leave requests
-            'leave.approve',
-            'leave.view',
-            'business-trip.manage',  // Full CRUD + approve/reject all business trips
-            'business-trip.approve',
-            'business-trip.view',
-            'shift-swap.manage',  // Full CRUD + approve/reject all shift swaps
-            'shift-swap.approve',
-            'shift-swap.view',
-            'worker-document.manage', // Manage worker documents
-
-            // Holiday management
-            'holiday.manage',
-
-            // Notifications
-            'notification.view',
-
-            // Calendar
-            'calendar.view',
-
-            // Profile
-            'profile.view',
-            'profile.edit',
-
-            // Reports - View & Export
-            'report.view',
-            'report.export',
+            'dashboard.manager', 'dashboard.employee', 'leave-type.manage',
+            'worker.manage', 'worker.view', 'attendance.manage', 'attendance.view', 'attendance.checkin',
+            'schedule.manage', 'schedule.view', 'worker-document.manage', 'worker-document.view',
+            'leave.approve', 'leave.request', 'leave.view',
+            'business-trip.approve', 'business-trip.request', 'business-trip.view',
+            'shift-swap.manage', 'shift-swap.approve', 'shift-swap.request', 'shift-swap.view',
+            'notification.view', 'calendar.view', 'profile.view',
+            'report.view', 'report.export', 'audit.view'
         ]);
 
         /**
          * EMPLOYEE ROLE
-         * - Personal data access only
-         * - Submit requests (leave)
-         * - View own records and schedule
-         * - Check in/out attendance
-         * - View own documents
          */
         $employee = Role::firstOrCreate(['name' => 'Employee', 'guard_name' => 'web']);
         $employee->syncPermissions([
-            // Dashboard
-            'dashboard.employee',
-
-            // Personal Profile & Documents
-            'worker.view',              // View own profile
-            'worker-document.view',     // View own documents
-
-            // Attendance
-            'attendance.checkin',       // Can check in/out
-            'attendance.view',          // View own attendance history
-
-            // Schedule
-            'schedule.view',            // View own work schedule
-
-            // Request Submissions
-            'leave.request',            // Submit leave requests
-            'leave.view',               // View own leave requests
-            'business-trip.request',    // Submit business trip requests
-            'business-trip.view',       // View own business trip requests
-            'shift-swap.request',       // Submit shift swap requests
-            'shift-swap.view',          // View own shift swap requests
-
-            // Notifications & Calendar
-            'notification.view',        // View own notifications
-
-            // Calendar & Profile
-            'calendar.view',            // View calendar
-            'profile.view',             // View own profile
-            'profile.edit',             // Edit own profile
+            'dashboard.employee', 'worker.view', 'attendance.view', 'attendance.checkin',
+            'schedule.view', 'worker-document.view', 'leave.request', 'leave.view',
+            'business-trip.request', 'business-trip.view', 'shift-swap.request', 'shift-swap.view',
+            'notification.view', 'calendar.view', 'profile.view', 'profile.edit'
         ]);
 
         $this->command->info('✅ Role-based permissions created successfully!');

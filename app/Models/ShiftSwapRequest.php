@@ -27,6 +27,9 @@ class ShiftSwapRequest extends Model
         'status',
         'requires_manager_approval',
         'manager_id',
+        'manager_verified_at',
+        'approved_by',
+        'approved_at',
         'manager_approved_at',
         'reason',
         'metadata',
@@ -42,6 +45,8 @@ class ShiftSwapRequest extends Model
         'swap_start_date' => 'date',
         'swap_end_date' => 'date',
         'requested_at' => 'datetime',
+        'manager_verified_at' => 'datetime',
+        'approved_at' => 'datetime',
         'manager_approved_at' => 'datetime',
         'executed_at' => 'datetime',
     ];

@@ -34,7 +34,7 @@ class BusinessTripRequest extends FormRequest
             'accommodation' => 'nullable|string|max:255',
             'estimated_cost' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'supporting_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'supporting_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ];
     }
 
@@ -95,7 +95,7 @@ class BusinessTripRequest extends FormRequest
             'estimated_cost.numeric'          => 'Estimasi biaya harus berupa angka.',
             'estimated_cost.min'              => 'Estimasi biaya tidak boleh negatif.',
             'notes.max'                       => 'Catatan maksimal 500 karakter.',
-            'supporting_document.required'    => 'Perjalanan dinas wajib melampirkan surat tugas atau surat disposisi.',
+
             'supporting_document.file'        => 'Dokumen pendukung harus berupa file.',
             'supporting_document.mimes'       => 'Dokumen pendukung hanya mendukung format: pdf, jpg, jpeg, png.',
             'supporting_document.max'         => 'Ukuran dokumen pendukung maksimal 5MB.',

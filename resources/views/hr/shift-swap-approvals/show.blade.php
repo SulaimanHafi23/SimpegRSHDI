@@ -177,6 +177,13 @@
         </div>
 
         <!-- Right Column - Actions -->
+        @php
+            $canApprove = ($isAdmin || $isHR) && $swap->status === 'manager_verified';
+            $canReject = ($isAdmin || ($isHR && $swap->status === 'manager_verified'));
+            $canExecute = ($isAdmin || $isHR || $isManager) && $swap->status === 'approved';
+            $canVerify = ($isAdmin || $isManager) && $swap->status === 'awaiting_approval';
+        @endphp
+
         <div class="lg:col-span-1">
             <div class="bg-white rounded-xl shadow-lg p-6 sticky top-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">
@@ -185,17 +192,52 @@
                 </h3>
 
                 <div class="space-y-3">
-                    <button type="button" onclick="openModal('approveModal')" class="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition font-bold shadow-md">
-                        <i class="fas fa-check mr-2"></i>
-                        Setujui
-                    </button>
+                    @if($canVerify)
+                        <form action="{{ route('manager.shift-swap-approvals.verify', $swap->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition font-bold shadow-md">
+                                <i class="fas fa-user-check mr-2"></i>
+                                Verifikasi Manager
+                            </button>
+                        </form>
+                    @endif
 
-                    <button type="button" onclick="openModal('rejectModal')" class="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition font-bold shadow-md">
-                        <i class="fas fa-times mr-2"></i>
-                        Tolak
-                    </button>
+                    @if($canApprove)
+                        <button type="button" onclick="openModal('approveModal')" class="w-full px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-lg transition font-bold shadow-md">
+                            <i class="fas fa-check mr-2"></i>
+                            Setujui HR
+                        </button>
+                    @endif
+
+                    @if($canExecute)
+                        <form action="{{ route('manager.shift-swap-approvals.execute', $swap->id) }}" method="POST">
+                            @csrf
+                            <button type="submit" class="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg transition font-bold shadow-md">
+                                <i class="fas fa-play mr-2"></i>
+                                Eksekusi Pertukaran
+                            </button>
+                        </form>
+                    @endif
+
+                    @if($canReject)
+                        <button type="button" onclick="openModal('rejectModal')" class="w-full px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition font-bold shadow-md">
+                            <i class="fas fa-times mr-2"></i>
+                            Tolak
+                        </button>
+                    @endif
+                    @if($swap->status === 'cancelled')
+                        <form action="{{ route('hr.shift-swap-approvals.destroy', $swap->id) }}" method="POST" onsubmit="return confirm('Hapus data pengajuan ini?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full px-6 py-3 border-2 border-red-500 text-red-600 hover:bg-red-50 rounded-lg transition font-bold shadow-sm">
+                                <i class="fas fa-trash-alt mr-2"></i>
+                                Hapus Pengajuan
+                            </button>
+                        </form>
+                    @endif
                 </div>
 
+                @if($swap->status === 'manager_verified' && $isHR)
                 <div class="mt-6 pt-6 border-t border-gray-200">
                     <div class="bg-blue-50 rounded-lg p-4">
                         <p class="text-xs text-blue-700 leading-relaxed">
@@ -204,6 +246,7 @@
                         </p>
                     </div>
                 </div>
+                @endif
             </div>
         </div>
     </div>
