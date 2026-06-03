@@ -44,7 +44,9 @@
             label="Status"
             :options="[
                 '1' => 'Aktif',
-                '0' => 'Nonaktif'
+                '0' => 'Nonaktif',
+                'deleted' => 'Terhapus',
+                'all' => 'Semua'
             ]"
             :selected="$filters['is_active'] ?? ''"
             placeholder="Semua Status" />
@@ -111,9 +113,14 @@
                         </x-table.cell>
 
                         <x-table.cell>
-                            <x-badge :variant="$user->is_active ? 'success' : 'danger'">
-                                {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
-                            </x-badge>
+                            @if($user->trashed())
+                                <x-badge variant="danger">Terhapus</x-badge>
+                                <div class="text-xs text-gray-500 mt-1">{{ $user->deleted_at?->diffForHumans() }}</div>
+                            @else
+                                <x-badge :variant="$user->is_active ? 'success' : 'danger'">
+                                    {{ $user->is_active ? 'Aktif' : 'Nonaktif' }}
+                                </x-badge>
+                            @endif
                         </x-table.cell>
 
                         <x-table.cell>
@@ -125,27 +132,31 @@
                         <x-table.cell>
                             <div class="flex justify-end space-x-2">
                                 @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
-                                    <a href="{{ route('admin.users.show', $user->id) }}"
-                                       class="text-blue-600 hover:text-blue-900"
-                                       title="Detail">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                                        </svg>
-                                    </a>
+                                    @unless($user->trashed())
+                                        <a href="{{ route('admin.users.show', $user->id) }}"
+                                           class="text-blue-600 hover:text-blue-900"
+                                           title="Detail">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                            </svg>
+                                        </a>
+                                    @endunless
                                 @endif
 
                                 @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
-                                    <a href="{{ route('admin.users.edit', $user->id) }}"
-                                       class="text-green-600 hover:text-green-900"
-                                       title="Edit">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                        </svg>
-                                    </a>
+                                    @unless($user->trashed())
+                                        <a href="{{ route('admin.users.edit', $user->id) }}"
+                                           class="text-green-600 hover:text-green-900"
+                                           title="Edit">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
+                                        </a>
+                                    @endunless
                                 @endif
 
-                                @if($user->id !== auth()->id())
+                                @if($user->id !== auth()->id() && !$user->trashed())
                                     @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage'))
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="inline">
                                             @csrf
@@ -160,6 +171,20 @@
                                             </button>
                                         </form>
                                     @endif
+                                @endif
+
+                                @if($user->trashed() && (auth()->user()->can('dashboard.admin') || auth()->user()->can('user.manage')))
+                                    <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        <button type="submit"
+                                                class="text-emerald-600 hover:text-emerald-900"
+                                                title="Pulihkan Akun"
+                                                onclick="event.preventDefault(); showConfirmAlert('Pulihkan Akun?', 'Akun ini akan dipulihkan dan dapat digunakan kembali.', () => this.closest('form').submit());">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h11M9 21V3m12 10h-7m0 0l3-3m-3 3l3 3"/>
+                                            </svg>
+                                        </button>
+                                    </form>
                                 @endif
                             </div>
                         </x-table.cell>

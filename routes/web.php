@@ -346,6 +346,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     });
 
     // ========== USER MANAGEMENT ==========
+    Route::middleware('permission:user.manage')->post('users/{id}/restore', [UserController::class, 'restore'])->name('admin.users.restore');
     Route::middleware('permission:user.manage')->resource('users', UserController::class)->names('admin.users');
 
     // ========== WORKER MANAGEMENT ==========

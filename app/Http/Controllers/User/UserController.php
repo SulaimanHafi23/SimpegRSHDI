@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Worker;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -31,7 +32,13 @@ class UserController extends Controller
         $query = User::with(['worker', 'roles']);
 
         if ($request->filled('is_active')) {
-            $query->where('is_active', (bool) $request->is_active);
+            if ($request->is_active === 'deleted') {
+                $query->onlyTrashed();
+            } elseif ($request->is_active === 'all') {
+                $query->withTrashed();
+            } else {
+                $query->where('is_active', (bool) $request->is_active);
+            }
         }
 
         if ($request->filled('role')) {
@@ -67,7 +74,15 @@ class UserController extends Controller
 
     public function create()
     {
-        $workers = Worker::where('status', 'active')->orderBy('name')->get();
+        $assignedWorkerIds = User::withTrashed()
+            ->whereNotNull('worker_id')
+            ->pluck('worker_id');
+
+        $workers = Worker::where('status', 'active')
+            ->whereNotIn('id', $assignedWorkerIds)
+            ->orderBy('name')
+            ->get();
+
         $roles = Role::with('permissions')->orderBy('name')->get();
 
         return view('admin.users.create', compact('workers', 'roles'));
@@ -94,11 +109,20 @@ class UserController extends Controller
 
             DB::beginTransaction();
 
-            if (User::where('username', $validated['username'])->exists()) {
+            if (User::withTrashed()->where('username', $validated['username'])->exists()) {
                 throw new \Exception('Username already exists.');
             }
 
-            if (Worker::where('id', $validated['worker_id'])->exists() && User::where('worker_id', $validated['worker_id'])->exists()) {
+            $existingByWorker = User::withTrashed()
+                ->where('worker_id', $validated['worker_id'])
+                ->lockForUpdate()
+                ->first();
+
+            if ($existingByWorker) {
+                if ($existingByWorker->trashed()) {
+                    throw new \Exception('Pegawai ini sudah pernah memiliki akun (terhapus). Pulihkan akun lama atau pilih pegawai lain.');
+                }
+
                 throw new \Exception('A user is already associated with the selected worker.');
             }
 
@@ -117,7 +141,8 @@ class UserController extends Controller
                 'email' => $validated['email'],
                 'username' => $validated['username'],
                 'password' => Hash::make($validated['password']),
-                'is_active' => $request->boolean('is_active'),
+                // If create form does not send is_active, keep account active by default.
+                'is_active' => $request->has('is_active') ? $request->boolean('is_active') : true,
             ]);
 
             if (!empty($validated['roles'])) {
@@ -129,6 +154,13 @@ class UserController extends Controller
             return redirect()
                 ->route('admin.users.index')
                 ->with('success', 'User berhasil ditambahkan');
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error('Database error creating user: ' . $e->getMessage());
+
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi konflik data. Worker, email, atau username sudah digunakan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error creating user: ' . $e->getMessage());
@@ -155,7 +187,24 @@ class UserController extends Controller
     {
         try {
             $user = User::with(['worker', 'roles.permissions'])->findOrFail($id);
-            $workers = Worker::where('status', 'active')->orderBy('name')->get();
+
+            $assignedWorkerIds = User::withTrashed()
+                ->whereNotNull('worker_id')
+                ->where('id', '!=', $user->id)
+                ->pluck('worker_id');
+
+            $workers = Worker::where('status', 'active')
+                ->where(function ($query) use ($user, $assignedWorkerIds) {
+                    if (!empty($user->worker_id)) {
+                        $query->where('id', $user->worker_id)
+                            ->orWhereNotIn('id', $assignedWorkerIds);
+                    } else {
+                        $query->whereNotIn('id', $assignedWorkerIds);
+                    }
+                })
+                ->orderBy('name')
+                ->get();
+
             $roles = Role::with('permissions')->orderBy('name')->get();
 
             return view('admin.users.edit', compact('user', 'workers', 'roles'));
@@ -202,12 +251,31 @@ class UserController extends Controller
                 }
             }
 
+            if (!empty($validated['worker_id']) && $validated['worker_id'] !== $existingUser->worker_id) {
+                $workerOwner = User::withTrashed()
+                    ->where('worker_id', $validated['worker_id'])
+                    ->where('id', '!=', $id)
+                    ->first();
+
+                if ($workerOwner) {
+                    if ($workerOwner->trashed()) {
+                        throw new \Exception('Pegawai ini terkait dengan akun terhapus. Pulihkan akun lama atau pilih pegawai lain.');
+                    }
+
+                    throw new \Exception('Pegawai ini sudah terkait akun lain.');
+                }
+            }
+
             $payload = [
                 'worker_id' => $validated['worker_id'] ?? null,
                 'email' => $validated['email'],
                 'username' => $validated['username'],
-                'is_active' => $request->boolean('is_active'),
             ];
+
+            // Preserve existing status when edit form does not include is_active input.
+            if ($request->has('is_active')) {
+                $payload['is_active'] = $request->boolean('is_active');
+            }
 
             if (!empty($validated['password'])) {
                 $payload['password'] = Hash::make($validated['password']);
@@ -229,6 +297,13 @@ class UserController extends Controller
             return redirect()
                 ->route('admin.users.show', $id)
                 ->with('success', 'User berhasil diupdate');
+        } catch (QueryException $e) {
+            DB::rollBack();
+            Log::error('Database error updating user: ' . $e->getMessage());
+
+            return back()
+                ->withInput()
+                ->with('error', 'Terjadi konflik data saat update. Worker, email, atau username sudah digunakan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating user: ' . $e->getMessage());
@@ -249,6 +324,36 @@ class UserController extends Controller
                 ->with('success', 'User berhasil dihapus');
         } catch (\Exception $e) {
             Log::error('Error deleting user: ' . $e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
+    }
+
+    public function restore(string $id)
+    {
+        try {
+            $user = User::withTrashed()->findOrFail($id);
+
+            if (!$user->trashed()) {
+                return back()->with('info', 'Akun sudah aktif, tidak perlu dipulihkan.');
+            }
+
+            $conflictByWorker = !empty($user->worker_id)
+                ? User::where('id', '!=', $user->id)->where('worker_id', $user->worker_id)->exists()
+                : false;
+
+            $conflictByEmail = User::where('id', '!=', $user->id)->where('email', $user->email)->exists();
+            $conflictByUsername = User::where('id', '!=', $user->id)->where('username', $user->username)->exists();
+
+            if ($conflictByWorker || $conflictByEmail || $conflictByUsername) {
+                return back()->with('error', 'Akun tidak dapat dipulihkan karena worker/email/username sudah dipakai akun aktif lain.');
+            }
+
+            $user->restore();
+
+            return back()->with('success', 'Akun user berhasil dipulihkan.');
+        } catch (\Exception $e) {
+            Log::error('Error restoring user: ' . $e->getMessage());
 
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
