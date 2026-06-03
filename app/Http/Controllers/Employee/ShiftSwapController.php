@@ -29,6 +29,87 @@ class ShiftSwapController extends Controller
         $this->middleware('auth');
     }
 
+    /**
+     * API endpoint: Get worker shifts for a given date range
+     * Used to detect if worker has shift rotation (2+ shifts in the period)
+     */
+    public function getWorkerShiftsInDateRange(Request $request)
+    {
+        $workerId = $request->input('worker_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        if (!$workerId || !$startDate || !$endDate) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Missing required parameters',
+            ], 400);
+        }
+
+        try {
+            $start = Carbon::parse($startDate)->startOfDay();
+            $end = Carbon::parse($endDate)->startOfDay();
+
+            $worker = Worker::find($workerId);
+            if (!$worker) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data pekerja tidak ditemukan.',
+                ], 404);
+            }
+
+            // Resolve the shift for every date in the period, then collapse consecutive
+            // days with the same shift into one segment.
+            $segments = [];
+            $currentSegmentIndex = null;
+
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                $resolved = $worker->resolveShiftForDate($date);
+                $shift = $resolved['shift'] ?? null;
+
+                if (!$shift) {
+                    continue;
+                }
+
+                $shiftId = $shift->id;
+ 
+                if ($currentSegmentIndex === null || $segments[$currentSegmentIndex]['shift_id'] !== $shiftId) {
+                    $segments[] = [
+                        'id' => $resolved['worker_shift_id'] ?? $shift->id,
+                        'shift_id' => $shiftId,
+                        'shift_name' => $shift->name,
+                        'shift_time' => sprintf(
+                            '%s - %s',
+                            Carbon::parse($shift->start_time)->format('H:i'),
+                            Carbon::parse($shift->end_time)->format('H:i')
+                        ),
+                        'effective_from' => $date->format('Y-m-d'),
+                        'effective_to' => $date->format('Y-m-d'),
+                    ];
+                    $currentSegmentIndex = array_key_last($segments);
+                } else {
+                    $segments[$currentSegmentIndex]['effective_to'] = $date->format('Y-m-d');
+                }
+            }
+
+            $uniqueShifts = $segments;
+
+            return response()->json([
+                'success' => true,
+                'shifts' => $uniqueShifts,
+                'shift_count' => count($uniqueShifts),
+                'has_rotation' => count($uniqueShifts) >= 2,
+                'warning' => count($uniqueShifts) >= 2 ? 'Shift pegawai telah berubah harap buat permintaan tukar shift pada waktu yang diinginkan' : null,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching worker shifts: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data shift: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function index(Request $request)
     {
         $worker = Auth::user()?->worker;
@@ -42,7 +123,7 @@ class ShiftSwapController extends Controller
         // Calculate summary statistics
         $summary = [
             'total' => $items->count(),
-            'pending' => $items->whereIn('status', ['pending', 'awaiting_approval'])->count(),
+            'pending' => $items->whereIn('status', ['pending', 'awaiting_approval', 'manager_verified'])->count(),
             'approved' => $items->whereIn('status', ['approved', 'executed', 'accepted'])->count(),
             'history' => $items->whereIn('status', ['rejected', 'cancelled'])->count(),
             'open_requests' => $openRequests->count(),
@@ -323,12 +404,13 @@ class ShiftSwapController extends Controller
 
         return WorkerShift::where('worker_id', $workerId)
             ->where('is_active', true)
+            ->where('effective_from', '<=', $today)  // Shift must have started
             ->where(function ($query) use ($today) {
                 $query->whereNull('effective_until')
-                    ->orWhere('effective_until', '>=', $today);
+                ->orWhere('effective_until', '>=', $today);  // Shift must still be active or no end date
             })
             ->with('shift')
-            ->orderBy('effective_from')
+            ->orderBy('effective_from', 'desc')  // Show latest first
             ->get();
     }
 

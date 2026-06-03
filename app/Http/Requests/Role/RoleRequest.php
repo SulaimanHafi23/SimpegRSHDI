@@ -55,10 +55,13 @@ class RoleRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'Nama role harus diisi.',
-            'name.unique' => 'Nama role sudah digunakan.',
-            'permissions.*.integer' => 'Permission ID harus berupa angka.',
-            'permissions.*.exists' => 'Permission tidak valid.',
+            'name.required'        => 'Nama role wajib diisi.',
+            'name.max'             => 'Nama role maksimal 255 karakter.',
+            'name.unique'          => 'Nama role sudah digunakan.',
+            'display_name.max'     => 'Nama tampilan role maksimal 255 karakter.',
+            'permissions.array'    => 'Data permission tidak valid.',
+            'permissions.*.integer' => 'ID permission harus berupa angka.',
+            'permissions.*.exists'  => 'Permission yang dipilih tidak valid.',
         ];
     }
 }

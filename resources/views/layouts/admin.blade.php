@@ -26,12 +26,96 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('styles')
+    <script>
+        // Initialize sidebar state on page load - comprehensive fix
+        function initializeSidebarState() {
+            const sidebar = document.getElementById('unified-sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+            const employeeBackdrop = document.getElementById('employee-sidebar-overlay');
+
+            if (sidebar) {
+                // Ensure sidebar is closed (off-screen)
+                sidebar.classList.add('-translate-x-full');
+                sidebar.classList.remove('translate-x-0');
+            }
+
+            if (backdrop) {
+                // Ensure backdrop is hidden and not clickable
+                backdrop.classList.add('hidden');
+                backdrop.classList.add('opacity-0', 'pointer-events-none');
+                backdrop.classList.remove('opacity-100', 'pointer-events-auto');
+                backdrop.style.opacity = '0';
+                backdrop.style.pointerEvents = 'none';
+                backdrop.style.display = 'none';
+            }
+
+            if (sidebarOverlay) {
+                // Hide sidebar overlay if exists
+                sidebarOverlay.classList.add('hidden');
+                sidebarOverlay.style.display = 'none';
+            }
+
+            if (employeeBackdrop) {
+                employeeBackdrop.classList.add('hidden');
+                employeeBackdrop.style.display = 'none';
+                employeeBackdrop.style.opacity = '0';
+                employeeBackdrop.style.pointerEvents = 'none';
+            }
+        }
+
+        // Run initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeSidebarState);
+        } else {
+            // DOM is already loaded
+            initializeSidebarState();
+        }
+
+        // Also initialize after a short delay to ensure all scripts are loaded
+        setTimeout(initializeSidebarState, 100);
+
+        // Initialize again when page is fully loaded
+        window.addEventListener('load', initializeSidebarState);
+
+        // Reset state when a tab is restored from history cache or duplicated
+        window.addEventListener('pageshow', initializeSidebarState);
+
+        // Hide any stray full-screen overlays that accidentally remain visible
+        function cleanupStaleOverlays() {
+            try {
+                document.querySelectorAll('div.fixed.inset-0, div.fixed.inset-0.z-50, div.fixed.inset-0.backdrop-blur-sm').forEach(function(el) {
+                    const style = window.getComputedStyle(el);
+                    if (style && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
+                        // If element contains a visible dialog or SweetAlert popup, skip it
+                        const hasDialog = el.querySelector('[role="dialog"], .swal2-container, .swal2-popup, .swal2-toast, [aria-modal="true"]');
+                        if (!hasDialog) {
+                            el.style.display = 'none';
+                            el.style.pointerEvents = 'none';
+                            el.classList.add('hidden');
+                        }
+                    }
+                });
+            } catch (e) {
+                // Silent failure — do not break page load
+                console.warn('cleanupStaleOverlays failed', e);
+            }
+        }
+
+        // Run cleanup on DOM ready and load as a safety net
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', cleanupStaleOverlays);
+        } else {
+            cleanupStaleOverlays();
+        }
+        window.addEventListener('load', cleanupStaleOverlays);
+    </script>
 </head>
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen">
         <!-- Backdrop Overlay for Mobile -->
         <div id="sidebar-backdrop"
-             class="fixed inset-0 backdrop-blur-sm bg-white/30 z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
+             class="fixed inset-0 hidden backdrop-blur-sm bg-white/30 z-40 lg:hidden transition-opacity duration-300 opacity-0 pointer-events-none"
              onclick="toggleUnifiedSidebar()"></div>
 
         <!-- Unified Sidebar -->

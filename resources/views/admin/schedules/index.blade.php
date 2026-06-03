@@ -170,6 +170,7 @@
                                     <div class="text-sm text-gray-500">{{ $worker->employee_number ?? '-' }}</div>
                                 </div>
                             </div>
+                        </x-table.cell>
                         <x-table.cell class="hidden md:table-cell">
                             @if($worker->latestShift)
                                 <div class="text-sm font-medium text-gray-900">{{ $worker->latestShift->shift->name }}</div>

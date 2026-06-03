@@ -67,4 +67,31 @@ class UserRequest extends FormRequest
             'photo' => 'Foto',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'worker_id.required'              => 'Pekerja wajib dipilih.',
+            'worker_id.uuid'                  => 'ID Pekerja tidak valid.',
+            'worker_id.exists'                => 'Pekerja yang dipilih tidak ditemukan.',
+            'email.required'                  => 'Email wajib diisi.',
+            'email.email'                     => 'Format email tidak valid.',
+            'email.max'                       => 'Email maksimal 255 karakter.',
+            'email.unique'                    => 'Email sudah digunakan.',
+            'username.required'               => 'Username wajib diisi.',
+            'username.max'                    => 'Username maksimal 255 karakter.',
+            'username.unique'                 => 'Username sudah digunakan.',
+            'password.required'               => 'Password wajib diisi.',
+            'password.min'                    => 'Password minimal 8 karakter.',
+            'password.confirmed'              => 'Konfirmasi password tidak cocok.',
+            'password_confirmation.required'  => 'Konfirmasi password wajib diisi.',
+            'password_confirmation.min'       => 'Konfirmasi password minimal 8 karakter.',
+            'photo.image'                     => 'Foto harus berupa file gambar.',
+            'photo.mimes'                     => 'Foto hanya mendukung format: jpeg, jpg, png.',
+            'photo.max'                       => 'Ukuran foto maksimal 10MB.',
+            'roles.array'                     => 'Data role tidak valid.',
+            'roles.*.integer'                 => 'ID role tidak valid.',
+            'roles.*.exists'                  => 'Role yang dipilih tidak ditemukan.',
+        ];
+    }
 }

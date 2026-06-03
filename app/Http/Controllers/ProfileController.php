@@ -140,7 +140,7 @@ class ProfileController extends Controller
 
         try {
             if (!Hash::check($request->current_password, (string) $user->password)) {
-                throw new \Exception('Current password is incorrect.');
+                throw new \Exception('Password lama yang Anda masukkan tidak sesuai.');
             }
 
             $user->update([
@@ -168,7 +168,7 @@ class ProfileController extends Controller
                 ->exists();
 
             if (($emailOwner && $emailOwner->id !== $user->id) || $workerEmailConflict) {
-                throw new \Exception('Email already exists.');
+                throw new \Exception('Email sudah digunakan oleh pengguna lain.');
             }
         }
 
@@ -197,7 +197,7 @@ class ProfileController extends Controller
                 ->first();
 
             if (($existingWorker && $existingWorker->id !== $worker->id) || $existingUser) {
-                throw new \Exception('Email already exists.');
+                throw new \Exception('Email sudah digunakan oleh pengguna lain.');
             }
         }
 

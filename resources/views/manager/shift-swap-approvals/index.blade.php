@@ -3,513 +3,507 @@
 @section('title', 'Persetujuan Tukar Shift')
 
 @section('content')
-<div class="space-y-6">
-    {{-- Page Header --}}
-    <x-page-header
-        title="Persetujuan Tukar Shift"
-        description="Kelola permintaan pertukaran shift dari pegawai"
-        icon="fas fa-exchange-alt">
-        <x-slot name="actions">
-            <x-export-buttons :route="route('manager.shift-swap-approvals.export')" title="Export Tukar Shift">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                    <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        <option value="">Semua Status</option>
-                        <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Menunggu Respon Pegawai</option>
-                        <option value="awaiting_approval" {{ request('status') === 'awaiting_approval' ? 'selected' : '' }}>Menunggu Persetujuan Atasan</option>
-                        <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Disetujui (Belum Dieksekusi)</option>
-                        <option value="executed" {{ request('status') === 'executed' ? 'selected' : '' }}>Dieksekusi</option>
-                        <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                        <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Dibatalkan</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Pemohon</label>
-                    <select name="requester_id" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        <option value="">Semua Pemohon</option>
-                        @foreach($workers as $w)
-                            <option value="{{ $w->id }}" {{ request('requester_id') === $w->id ? 'selected' : '' }}>{{ $w->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </x-export-buttons>
-        </x-slot>
-    </x-page-header>
+    <div class="space-y-6">
+        {{-- Page Header --}}
+        <x-page-header title="Persetujuan Tukar Shift" description="Kelola permintaan pertukaran shift dari pegawai"
+            icon="fas fa-exchange-alt">
+            <x-slot name="actions">
+                <x-export-buttons :route="route('manager.shift-swap-approvals.export')" title="Export Tukar Shift">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select name="status"
+                            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="">Semua Status</option>
+                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>Menunggu Respon
+                                Pegawai</option>
+                            <option value="awaiting_approval" {{ request('status') === 'awaiting_approval' ? 'selected' : '' }}>Menunggu Persetujuan Atasan</option>
+                            <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Disetujui (Belum
+                                Dieksekusi)</option>
+                            <option value="executed" {{ request('status') === 'executed' ? 'selected' : '' }}>Dieksekusi
+                            </option>
+                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>Dibatalkan
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pemohon</label>
+                        <select name="requester_id"
+                            class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                            <option value="">Semua Pemohon</option>
+                            @foreach($workers as $w)
+                                <option value="{{ $w->id }}" {{ request('requester_id') === $w->id ? 'selected' : '' }}>
+                                    {{ $w->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </x-export-buttons>
+            </x-slot>
+        </x-page-header>
 
-    {{-- Statistics Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <x-stats-card
-            title="Total Permintaan"
-            :value="$statistics['total'] ?? 0"
-            icon="fas fa-file-alt"
-            color="blue" />
+        {{-- Statistics Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+            <x-stats-card title="Total Permintaan" :value="$statistics['total'] ?? 0" icon="fas fa-file-alt" color="blue" />
 
-        <x-stats-card
-            title="Menunggu Persetujuan"
-            :value="$statistics['awaiting_approval'] ?? 0"
-            icon="fas fa-clock"
-            color="yellow" />
+            <x-stats-card title="Menunggu Atasan" :value="$statistics['awaiting_approval'] ?? 0" icon="fas fa-clock"
+                color="yellow" />
 
-        <x-stats-card
-            title="Disetujui"
-            :value="$statistics['approved'] ?? 0"
-            icon="fas fa-check-circle"
-            color="green" />
+            <x-stats-card title="Verifikasi Manager" :value="$statistics['manager_verified'] ?? 0" icon="fas fa-user-check"
+                color="info" />
 
-        <x-stats-card
-            title="Ditolak"
-            :value="$statistics['rejected'] ?? 0"
-            icon="fas fa-times-circle"
-            color="red" />
+            <x-stats-card title="Disetujui HR" :value="$statistics['approved'] ?? 0" icon="fas fa-check-circle"
+                color="green" />
 
-        <x-stats-card
-            title="Dieksekusi"
-            :value="$statistics['executed'] ?? 0"
-            icon="fas fa-check-double"
-            color="purple" />
-    </div>
+            <x-stats-card title="Ditolak" :value="$statistics['rejected'] ?? 0" icon="fas fa-times-circle" color="red" />
 
-    {{-- Filter Section --}}
-    <x-filter-section action="{{ route('manager.shift-swap-approvals.index') }}">
-        <x-form.select
-            name="status"
-            label="Status"
-            :selected="$filters['status'] ?? ''"
-            placeholder="Semua Status">
-            <option value="pending">Menunggu Respon Pegawai</option>
-            <option value="awaiting_approval">Menunggu Persetujuan Atasan</option>
-            <option value="approved">Disetujui (Belum Dieksekusi)</option>
-            <option value="executed">Dieksekusi</option>
-            <option value="rejected">Ditolak</option>
-            <option value="cancelled">Dibatalkan</option>
-        </x-form.select>
+            <x-stats-card title="Dieksekusi" :value="$statistics['executed'] ?? 0" icon="fas fa-check-double"
+                color="purple" />
+        </div>
 
-        <x-form.select
-            name="requester_id"
-            label="Pemohon"
-            :selected="$filters['requester_id'] ?? ''"
-            placeholder="Semua Pemohon">
-            @foreach($workers as $worker)
-                <option value="{{ $worker->id }}">{{ $worker->name }}</option>
-            @endforeach
-        </x-form.select>
+        {{-- Filter Section --}}
+        <x-filter-section action="{{ route('manager.shift-swap-approvals.index') }}">
+            <x-form.select name="status" label="Status" :selected="$filters['original_status'] ?? ''"
+                placeholder="Semua Status">
+                @if(!$isHR || $isAdmin)
+                    <option value="pending">Menunggu Respon Pegawai</option>
+                    <option value="awaiting_approval">Menunggu Persetujuan Atasan</option>
+                @endif
+                <option value="manager_verified">Terverifikasi Manager</option>
+                <option value="approved">Disetujui (Belum Dieksekusi)</option>
+                <option value="executed">Dieksekusi</option>
+                <option value="rejected">Ditolak</option>
+                <option value="cancelled">Dibatalkan</option>
+            </x-form.select>
 
-        <x-form.input
-            type="date"
-            name="date_from"
-            label="Dari Tanggal"
-            :value="$filters['date_from'] ?? ''" />
+            <x-form.select name="requester_id" label="Pemohon" :selected="$filters['requester_id'] ?? ''"
+                placeholder="Semua Pemohon">
+                @foreach($workers as $worker)
+                    <option value="{{ $worker->id }}">{{ $worker->name }}</option>
+                @endforeach
+            </x-form.select>
 
-        <x-form.input
-            type="date"
-            name="date_to"
-            label="Sampai Tanggal"
-            :value="$filters['date_to'] ?? ''" />
-    </x-filter-section>
+            <x-form.input type="date" name="date_from" label="Dari Tanggal" :value="$filters['date_from'] ?? ''" />
 
-    {{-- Main Table --}}
-    <x-card>
-        @if(isset($items) && $items->isEmpty())
-            <x-empty-state
-                icon="fas fa-exchange-alt"
-                title="Tidak ada data tukar shift"
-                description="Permintaan tukar shift akan ditampilkan di sini" />
-        @elseif(isset($items))
-            {{-- Mobile Card Layout --}}
-            <div class="md:hidden space-y-4">
-                @foreach($items as $index => $item)
-                    @php
-                        $statusBadges = [
-                            'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Pegawai'],
-                            'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
-                            'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
-                            'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
-                            'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
-                            'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
-                            'executed' => ['variant' => 'success', 'label' => 'Dieksekusi'],
-                        ];
-                        $badge = $statusBadges[$item->status] ?? ['variant' => 'secondary', 'label' => ucfirst($item->status)];
-                        $reqShift = $item->requesterShift?->shift;
-                        $tgtShift = $item->targetShift?->shift;
-                    @endphp
-                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                        <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
-                            <div>
-                                <span class="text-xs text-gray-500 font-medium">#{{ $items->firstItem() + $index }}</span>
-                                <div class="text-xs text-gray-400 mt-0.5">
-                                    {{ $item->requested_at?->format('d M Y, H:i') ?? $item->created_at->format('d M Y, H:i') }}
+            <x-form.input type="date" name="date_to" label="Sampai Tanggal" :value="$filters['date_to'] ?? ''" />
+        </x-filter-section>
+
+        {{-- Main Table --}}
+        <x-card>
+            @if(isset($items) && $items->isEmpty())
+                <x-empty-state icon="fas fa-exchange-alt" title="Tidak ada data tukar shift"
+                    description="Permintaan tukar shift akan ditampilkan di sini" />
+            @elseif(isset($items))
+                {{-- Mobile Card Layout --}}
+                <div class="md:hidden space-y-4">
+                    @foreach($items as $index => $item)
+                        @php
+                            $statusBadges = [
+                                'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Pegawai'],
+                                'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
+                                'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
+                                'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                                'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                                'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
+                                'executed' => ['variant' => 'success', 'label' => 'Dieksekusi'],
+                            ];
+                            $badge = $statusBadges[$item->status] ?? ['variant' => 'secondary', 'label' => ucfirst($item->status)];
+                            $reqShift = $item->requesterShift?->shift;
+                            $tgtShift = $item->targetShift?->shift;
+                        @endphp
+                        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
+                                <div>
+                                    <span class="text-xs text-gray-500 font-medium">#{{ $items->firstItem() + $index }}</span>
+                                    <div class="text-xs text-gray-400 mt-0.5">
+                                        {{ $item->requested_at?->format('d M Y, H:i') ?? $item->created_at->format('d M Y, H:i') }}
+                                    </div>
                                 </div>
+                                <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
                             </div>
-                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
-                        </div>
 
-                        <div class="space-y-4">
-                            <div class="flex items-center justify-between">
-                                <div class="flex flex-col">
-                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Pemohon</span>
-                                    <span class="text-sm font-semibold text-gray-900">{{ $item->requester->name }}</span>
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex flex-col">
+                                        <span
+                                            class="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Pemohon</span>
+                                        <span class="text-sm font-semibold text-gray-900">{{ $item->requester->name }}</span>
+                                    </div>
+                                    <div class="px-2 text-gray-300">
+                                        <i class="fas fa-exchange-alt"></i>
+                                    </div>
+                                    <div class="flex flex-col text-right">
+                                        <span
+                                            class="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Target</span>
+                                        @if($item->targetWorker)
+                                            <span class="text-sm font-semibold text-gray-900">{{ $item->targetWorker->name }}</span>
+                                        @else
+                                            <x-badge variant="secondary">Open Request</x-badge>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="px-2 text-gray-300">
-                                    <i class="fas fa-exchange-alt"></i>
+
+                                <div class="bg-gray-50 rounded-lg p-3 grid grid-cols-2 gap-4 border border-gray-100">
+                                    <div>
+                                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Shift
+                                            Awal</span>
+                                        @if($reqShift)
+                                            <span class="text-sm font-bold text-indigo-700 block">{{ $reqShift->name }}</span>
+                                            <span class="text-xs text-gray-500 font-medium">{{ $reqShift->start_time }} -
+                                                {{ $reqShift->end_time }}</span>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Shift
+                                            Tujuan</span>
+                                        @if($tgtShift)
+                                            <span class="text-sm font-bold text-emerald-700 block">{{ $tgtShift->name }}</span>
+                                            <span class="text-xs text-gray-500 font-medium">{{ $tgtShift->start_time }} -
+                                                {{ $tgtShift->end_time }}</span>
+                                        @else
+                                            <span class="text-gray-400">-</span>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div class="flex flex-col text-right">
-                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-0.5">Target</span>
+
+                                <div
+                                    class="flex items-center justify-between text-sm bg-blue-50/50 rounded-lg p-3 border border-blue-100/50">
+                                    <span class="font-medium text-gray-600">
+                                        <i class="fas fa-calendar-alt text-blue-400 mr-1.5"></i>Tanggal Tukar
+                                    </span>
+                                    @if($item->swap_type === 'single_date' && $item->swap_date)
+                                        <span class="font-bold text-gray-900">{{ $item->swap_date->format('d M Y') }}</span>
+                                    @elseif($item->swap_type === 'date_range' && $item->swap_start_date && $item->swap_end_date)
+                                        <span class="font-bold text-gray-900">{{ $item->swap_start_date->format('d M') }} -
+                                            {{ $item->swap_end_date->format('d M Y') }}</span>
+                                    @elseif($item->swap_type === 'recurring' && $item->swap_dates)
+                                        <span
+                                            class="font-bold text-gray-900 text-xs">{{ collect($item->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))->join(', ') }}</span>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </div>
+
+                                @if($item->reason)
+                                    <div class="text-sm bg-gray-50 rounded-lg p-3 border border-gray-100">
+                                        <span class="font-medium text-gray-600 block mb-1">
+                                            <i class="fas fa-comment-alt text-gray-400 mr-1.5"></i>Alasan
+                                        </span>
+                                        <span class="text-gray-700 italic">{{ Str::limit($item->reason, 80) }}</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="flex justify-end gap-3 mt-3 pt-3 border-t border-gray-100">
+                                <a href="{{ route('manager.shift-swap-approvals.show', $item->id) }}"
+                                    class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                                    <i class="fas fa-eye mr-1"></i> Detail
+                                </a>
+                                @if($item->status === 'awaiting_approval')
+                                    <button onclick="approveSwap('{{ $item->id }}')"
+                                        class="text-green-600 hover:text-green-900 text-sm font-medium">
+                                        <i class="fas fa-check mr-1"></i> Setujui
+                                    </button>
+                                    <button onclick="rejectSwap('{{ $item->id }}')"
+                                        class="text-red-600 hover:text-red-900 text-sm font-medium">
+                                        <i class="fas fa-times mr-1"></i> Tolak
+                                    </button>
+                                @endif
+                                @if($item->status === 'approved' && !$item->executed_at)
+                                    <button onclick="executeSwap('{{ $item->id }}')"
+                                        class="text-purple-600 hover:text-purple-900 text-sm font-medium">
+                                        <i class="fas fa-check-double mr-1"></i> Eksekusi
+                                    </button>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Desktop Table --}}
+                <div class="hidden md:block">
+                    <x-table>
+                        <x-slot:thead>
+                            <x-table.row>
+                                <x-table.cell header>No</x-table.cell>
+                                <x-table.cell header>Tanggal Permintaan</x-table.cell>
+                                <x-table.cell header>Pemohon</x-table.cell>
+                                <x-table.cell header>Target</x-table.cell>
+                                <x-table.cell header>Shift Pemohon</x-table.cell>
+                                <x-table.cell header>Shift Target</x-table.cell>
+                                <x-table.cell header>Tanggal Tukar</x-table.cell>
+                                <x-table.cell header>Alasan</x-table.cell>
+                                <x-table.cell header>Status</x-table.cell>
+                                <x-table.cell header>Aksi</x-table.cell>
+                            </x-table.row>
+                        </x-slot:thead>
+
+                        @foreach($items as $index => $item)
+                            <x-table.row>
+                                <x-table.cell>{{ $items->firstItem() + $index }}</x-table.cell>
+
+                                <x-table.cell>
+                                    <div class="text-sm">
+                                        {{ $item->requested_at?->format('d M Y') ?? $item->created_at->format('d M Y') }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ $item->requested_at?->format('H:i') ?? $item->created_at->format('H:i') }}</div>
+                                </x-table.cell>
+
+                                <x-table.cell>
+                                    <div class="font-medium text-gray-900">{{ $item->requester->name }}</div>
+                                    <div class="text-sm text-gray-500">{{ $item->requester->nip ?? '-' }}</div>
+                                </x-table.cell>
+
+                                <x-table.cell>
                                     @if($item->targetWorker)
-                                        <span class="text-sm font-semibold text-gray-900">{{ $item->targetWorker->name }}</span>
+                                        <div class="font-medium text-gray-900">{{ $item->targetWorker->name }}</div>
+                                        <div class="text-sm text-gray-500">{{ $item->targetWorker->nip ?? '-' }}</div>
                                     @else
                                         <x-badge variant="secondary">Open Request</x-badge>
                                     @endif
-                                </div>
-                            </div>
+                                </x-table.cell>
 
-                            <div class="bg-gray-50 rounded-lg p-3 grid grid-cols-2 gap-4 border border-gray-100">
-                                <div>
-                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Shift Awal</span>
+                                <x-table.cell>
+                                    @php
+                                        $reqShift = $item->requesterShift?->shift;
+                                    @endphp
                                     @if($reqShift)
-                                        <span class="text-sm font-bold text-indigo-700 block">{{ $reqShift->name }}</span>
-                                        <span class="text-xs text-gray-500 font-medium">{{ $reqShift->start_time }} - {{ $reqShift->end_time }}</span>
+                                        <div class="text-sm">{{ $reqShift->name }}</div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $reqShift->start_time }} - {{ $reqShift->end_time }}
+                                        </div>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
-                                </div>
-                                <div>
-                                    <span class="text-[10px] uppercase tracking-wider font-bold text-gray-500 block mb-1">Shift Tujuan</span>
+                                </x-table.cell>
+
+                                <x-table.cell>
+                                    @php
+                                        $tgtShift = $item->targetShift?->shift;
+                                    @endphp
                                     @if($tgtShift)
-                                        <span class="text-sm font-bold text-emerald-700 block">{{ $tgtShift->name }}</span>
-                                        <span class="text-xs text-gray-500 font-medium">{{ $tgtShift->start_time }} - {{ $tgtShift->end_time }}</span>
+                                        <div class="text-sm">{{ $tgtShift->name }}</div>
+                                        <div class="text-xs text-gray-500">
+                                            {{ $tgtShift->start_time }} - {{ $tgtShift->end_time }}
+                                        </div>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif
-                                </div>
-                            </div>
-                            
-                            <div class="flex items-center justify-between text-sm bg-blue-50/50 rounded-lg p-3 border border-blue-100/50">
-                                <span class="font-medium text-gray-600">
-                                    <i class="fas fa-calendar-alt text-blue-400 mr-1.5"></i>Tanggal Tukar
-                                </span>
-                                @if($item->swap_type === 'single_date' && $item->swap_date)
-                                    <span class="font-bold text-gray-900">{{ $item->swap_date->format('d M Y') }}</span>
-                                @elseif($item->swap_type === 'date_range' && $item->swap_start_date && $item->swap_end_date)
-                                    <span class="font-bold text-gray-900">{{ $item->swap_start_date->format('d M') }} - {{ $item->swap_end_date->format('d M Y') }}</span>
-                                @elseif($item->swap_type === 'recurring' && $item->swap_dates)
-                                    <span class="font-bold text-gray-900 text-xs">{{ collect($item->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))->join(', ') }}</span>
-                                @else
-                                    <span class="text-gray-400">-</span>
-                                @endif
-                            </div>
+                                </x-table.cell>
 
-                            @if($item->reason)
-                                <div class="text-sm bg-gray-50 rounded-lg p-3 border border-gray-100">
-                                    <span class="font-medium text-gray-600 block mb-1">
-                                        <i class="fas fa-comment-alt text-gray-400 mr-1.5"></i>Alasan
-                                    </span>
-                                    <span class="text-gray-700 italic">{{ Str::limit($item->reason, 80) }}</span>
-                                </div>
-                            @endif
-                        </div>
+                                <x-table.cell>
+                                    @if($item->swap_type === 'single_date' && $item->swap_date)
+                                        <div class="text-sm">{{ $item->swap_date->format('d M Y') }}</div>
+                                    @elseif($item->swap_type === 'date_range' && $item->swap_start_date && $item->swap_end_date)
+                                        <div class="text-sm">{{ $item->swap_start_date->format('d M') }} -
+                                            {{ $item->swap_end_date->format('d M Y') }}</div>
+                                    @elseif($item->swap_type === 'recurring' && $item->swap_dates)
+                                        <div class="text-xs">
+                                            {{ collect($item->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))->join(', ') }}
+                                        </div>
+                                    @else
+                                        <span class="text-gray-400">-</span>
+                                    @endif
+                                </x-table.cell>
 
-                        <div class="flex justify-end gap-3 mt-3 pt-3 border-t border-gray-100">
-                            <a href="{{ route('manager.shift-swap-approvals.show', $item->id) }}"
-                               class="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                                <i class="fas fa-eye mr-1"></i> Detail
-                            </a>
-                            @if($item->status === 'awaiting_approval')
-                                <button onclick="approveSwap('{{ $item->id }}')"
-                                        class="text-green-600 hover:text-green-900 text-sm font-medium">
-                                    <i class="fas fa-check mr-1"></i> Setujui
-                                </button>
-                                <button onclick="rejectSwap('{{ $item->id }}')"
-                                        class="text-red-600 hover:text-red-900 text-sm font-medium">
-                                    <i class="fas fa-times mr-1"></i> Tolak
-                                </button>
-                            @endif
-                            @if($item->status === 'approved' && !$item->executed_at)
-                                <button onclick="executeSwap('{{ $item->id }}')"
-                                        class="text-purple-600 hover:text-purple-900 text-sm font-medium">
-                                    <i class="fas fa-check-double mr-1"></i> Eksekusi
-                                </button>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+                                <x-table.cell>
+                                    <span class="text-sm text-gray-600">{{ Str::limit($item->reason ?? '-', 40) }}</span>
+                                </x-table.cell>
 
-            {{-- Desktop Table --}}
-            <div class="hidden md:block">
-            <x-table>
-                <x-slot:thead>
-                    <x-table.row>
-                        <x-table.cell header>No</x-table.cell>
-                        <x-table.cell header>Tanggal Permintaan</x-table.cell>
-                        <x-table.cell header>Pemohon</x-table.cell>
-                        <x-table.cell header>Target</x-table.cell>
-                        <x-table.cell header>Shift Pemohon</x-table.cell>
-                        <x-table.cell header>Shift Target</x-table.cell>
-                        <x-table.cell header>Tanggal Tukar</x-table.cell>
-                        <x-table.cell header>Alasan</x-table.cell>
-                        <x-table.cell header>Status</x-table.cell>
-                        <x-table.cell header>Aksi</x-table.cell>
-                    </x-table.row>
-                </x-slot:thead>
+                                <x-table.cell>
+                                    @php
+                                        $statusBadges = [
+                                            'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Pegawai'],
+                                            'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
+                                            'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
+                                            'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                                            'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                                            'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
+                                            'executed' => ['variant' => 'success', 'label' => 'Dieksekusi'],
+                                        ];
+                                        $badge = $statusBadges[$item->status] ?? ['variant' => 'secondary', 'label' => ucfirst($item->status)];
+                                    @endphp
+                                    <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
+                                </x-table.cell>
 
-                @foreach($items as $index => $item)
-                    <x-table.row>
-                        <x-table.cell>{{ $items->firstItem() + $index }}</x-table.cell>
+                                <x-table.cell>
+                                    <div class="flex justify-end space-x-2">
+                                        <a href="{{ route('manager.shift-swap-approvals.show', $item->id) }}"
+                                            class="text-blue-600 hover:text-blue-900 inline-flex items-center" title="Detail">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
 
-                        <x-table.cell>
-                            <div class="text-sm">{{ $item->requested_at?->format('d M Y') ?? $item->created_at->format('d M Y') }}</div>
-                            <div class="text-xs text-gray-500">{{ $item->requested_at?->format('H:i') ?? $item->created_at->format('H:i') }}</div>
-                        </x-table.cell>
+                                        {{-- @if($item->status === 'awaiting_approval')
+                                        <button onclick="approveSwap('{{ $item->id }}')"
+                                            class="text-green-600 hover:text-green-900 inline-flex items-center" title="Setujui">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                        <button onclick="rejectSwap('{{ $item->id }}')"
+                                            class="text-red-600 hover:text-red-900 inline-flex items-center" title="Tolak">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        @endif --}}
 
-                        <x-table.cell>
-                            <div class="font-medium text-gray-900">{{ $item->requester->name }}</div>
-                            <div class="text-sm text-gray-500">{{ $item->requester->nip ?? '-' }}</div>
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            @if($item->targetWorker)
-                                <div class="font-medium text-gray-900">{{ $item->targetWorker->name }}</div>
-                                <div class="text-sm text-gray-500">{{ $item->targetWorker->nip ?? '-' }}</div>
-                            @else
-                                <x-badge variant="secondary">Open Request</x-badge>
-                            @endif
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            @php
-                                $reqShift = $item->requesterShift?->shift;
-                            @endphp
-                            @if($reqShift)
-                                <div class="text-sm">{{ $reqShift->name }}</div>
-                                <div class="text-xs text-gray-500">
-                                    {{ $reqShift->start_time }} - {{ $reqShift->end_time }}
-                                </div>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            @php
-                                $tgtShift = $item->targetShift?->shift;
-                            @endphp
-                            @if($tgtShift)
-                                <div class="text-sm">{{ $tgtShift->name }}</div>
-                                <div class="text-xs text-gray-500">
-                                    {{ $tgtShift->start_time }} - {{ $tgtShift->end_time }}
-                                </div>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            @if($item->swap_type === 'single_date' && $item->swap_date)
-                                <div class="text-sm">{{ $item->swap_date->format('d M Y') }}</div>
-                            @elseif($item->swap_type === 'date_range' && $item->swap_start_date && $item->swap_end_date)
-                                <div class="text-sm">{{ $item->swap_start_date->format('d M') }} - {{ $item->swap_end_date->format('d M Y') }}</div>
-                            @elseif($item->swap_type === 'recurring' && $item->swap_dates)
-                                <div class="text-xs">{{ collect($item->swap_dates)->map(fn($d) => \Carbon\Carbon::parse($d)->format('d M'))->join(', ') }}</div>
-                            @else
-                                <span class="text-gray-400">-</span>
-                            @endif
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            <span class="text-sm text-gray-600">{{ Str::limit($item->reason ?? '-', 40) }}</span>
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            @php
-                                $statusBadges = [
-                                    'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Pegawai'],
-                                    'accepted' => ['variant' => 'info', 'label' => 'Diterima'],
-                                    'awaiting_approval' => ['variant' => 'warning', 'label' => 'Menunggu Atasan'],
-                                    'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
-                                    'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
-                                    'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
-                                    'executed' => ['variant' => 'success', 'label' => 'Dieksekusi'],
-                                ];
-                                $badge = $statusBadges[$item->status] ?? ['variant' => 'secondary', 'label' => ucfirst($item->status)];
-                            @endphp
-                            <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
-                        </x-table.cell>
-
-                        <x-table.cell>
-                            <div class="flex justify-end space-x-2">
-                                <a href="{{ route('manager.shift-swap-approvals.show', $item->id) }}"
-                                   class="text-blue-600 hover:text-blue-900 inline-flex items-center"
-                                   title="Detail">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-
-                                @if($item->status === 'awaiting_approval')
-                                    <button onclick="approveSwap('{{ $item->id }}')"
-                                            class="text-green-600 hover:text-green-900 inline-flex items-center"
-                                            title="Setujui">
-                                        <i class="fas fa-check"></i>
-                                    </button>
-                                    <button onclick="rejectSwap('{{ $item->id }}')"
-                                            class="text-red-600 hover:text-red-900 inline-flex items-center"
-                                            title="Tolak">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                @endif
-
-                                @if($item->status === 'approved' && !$item->executed_at)
-                                    <button onclick="executeSwap('{{ $item->id }}')"
-                                            class="text-purple-600 hover:text-purple-900 inline-flex items-center"
-                                            title="Eksekusi">
-                                        <i class="fas fa-check-double"></i>
-                                    </button>
-                                @endif
-                            </div>
-                        </x-table.cell>
-                    </x-table.row>
-                @endforeach
-            </x-table>
-            </div>
-
-            {{-- Pagination --}}
-            @if($items->hasPages())
-                <div class="mt-4">
-                    <x-pagination :paginator="$items" />
+                                        @if($item->status === 'approved' && !$item->executed_at)
+                                            <button onclick="executeSwap('{{ $item->id }}')"
+                                                class="text-purple-600 hover:text-purple-900 inline-flex items-center" title="Eksekusi">
+                                                <i class="fas fa-check-double"></i>
+                                            </button>
+                                        @endif
+                                    </div>
+                                </x-table.cell>
+                            </x-table.row>
+                        @endforeach
+                    </x-table>
                 </div>
-            @endif
-        @else
-            <x-empty-state
-                icon="fas fa-exchange-alt"
-                title="Tidak ada data tukar shift"
-                description="Gunakan filter di atas untuk melihat data" />
-        @endif
-    </x-card>
-</div>
 
-<div id="rejectSwapModal" class="hidden fixed inset-0 z-50" onclick="if(event.target === this) closeRejectSwapModal()">
-    <div class="absolute inset-0 bg-black/30"></div>
-    <div class="relative flex min-h-screen items-center justify-center p-4">
-        <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl" onclick="event.stopPropagation()">
-            <div class="border-b border-gray-200 px-5 py-4">
-                <h3 class="text-base font-semibold text-gray-900">Tolak Permintaan Tukar Shift</h3>
-                <p class="mt-1 text-sm text-gray-500">Masukkan alasan penolakan agar keputusan lebih jelas untuk pemohon.</p>
-            </div>
-            <div class="px-5 py-4">
-                <label for="rejectSwapReason" class="mb-2 block text-sm font-medium text-gray-700">Alasan Penolakan <span class="text-red-500">*</span></label>
-                <textarea id="rejectSwapReason" rows="4" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100" placeholder="Tuliskan alasan penolakan..."></textarea>
-                <p id="rejectSwapError" class="mt-2 hidden text-xs text-red-600">Alasan penolakan wajib diisi.</p>
-            </div>
-            <div class="flex justify-end gap-2 border-t border-gray-200 px-5 py-4">
-                <button type="button" onclick="closeRejectSwapModal()" class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
-                <button type="button" onclick="submitRejectSwap()" class="rounded-lg border border-red-700 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Tolak Permintaan</button>
+                {{-- Pagination --}}
+                @if($items->hasPages())
+                    <div class="mt-4">
+                        <x-pagination :paginator="$items" />
+                    </div>
+                @endif
+            @else
+                <x-empty-state icon="fas fa-exchange-alt" title="Tidak ada data tukar shift"
+                    description="Gunakan filter di atas untuk melihat data" />
+            @endif
+        </x-card>
+    </div>
+
+    <div id="rejectSwapModal" class="hidden fixed inset-0 z-50" onclick="if(event.target === this) closeRejectSwapModal()">
+        <div class="absolute inset-0 backdrop-blur-sm bg-black/30"></div>
+        <div class="relative flex min-h-screen items-center justify-center p-4">
+            <div class="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl"
+                onclick="event.stopPropagation()">
+                <div class="border-b border-gray-200 px-5 py-4">
+                    <h3 class="text-base font-semibold text-gray-900">Tolak Permintaan Tukar Shift</h3>
+                    <p class="mt-1 text-sm text-gray-500">Masukkan alasan penolakan agar keputusan lebih jelas untuk
+                        pemohon.</p>
+                </div>
+                <div class="px-5 py-4">
+                    <label for="rejectSwapReason" class="mb-2 block text-sm font-medium text-gray-700">Alasan Penolakan
+                        <span class="text-red-500">*</span></label>
+                    <textarea id="rejectSwapReason" rows="4"
+                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-100"
+                        placeholder="Tuliskan alasan penolakan..."></textarea>
+                    <p id="rejectSwapError" class="mt-2 hidden text-xs text-red-600">Alasan penolakan wajib diisi.</p>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-gray-200 px-5 py-4">
+                    <button type="button" onclick="closeRejectSwapModal()"
+                        class="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                    <button type="button" onclick="submitRejectSwap()"
+                        class="rounded-lg border border-red-700 bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Tolak
+                        Permintaan</button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-@push('scripts')
-<script>
-    let rejectSwapId = null;
+    @push('scripts')
+        <script>
+            let rejectSwapId = null;
 
-    function approveSwap(id) {
-        if (confirm('Apakah Anda yakin ingin menyetujui permintaan tukar shift ini?')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/manager/shift-swap-approvals/${id}/approve`;
+            function approveSwap(id) {
+                if (confirm('Apakah Anda yakin ingin menyetujui permintaan tukar shift ini?')) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = `/manager/shift-swap-approvals/${id}/approve`;
 
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = '{{ csrf_token() }}';
+                    form.appendChild(csrfToken);
 
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-
-    function rejectSwap(id) {
-        rejectSwapId = id;
-
-        const modal = document.getElementById('rejectSwapModal');
-        const textarea = document.getElementById('rejectSwapReason');
-        const error = document.getElementById('rejectSwapError');
-
-        if (!modal || !textarea) {
-            return;
-        }
-
-        textarea.value = '';
-        textarea.classList.remove('border-red-500');
-        if (error) {
-            error.classList.add('hidden');
-        }
-
-        modal.classList.remove('hidden');
-        setTimeout(() => textarea.focus(), 50);
-    }
-
-    function closeRejectSwapModal() {
-        const modal = document.getElementById('rejectSwapModal');
-        if (modal) {
-            modal.classList.add('hidden');
-        }
-        rejectSwapId = null;
-    }
-
-    function submitRejectSwap() {
-        const textarea = document.getElementById('rejectSwapReason');
-        const error = document.getElementById('rejectSwapError');
-
-        if (!rejectSwapId || !textarea) {
-            return;
-        }
-
-        const reason = textarea.value.trim();
-        if (!reason) {
-            textarea.classList.add('border-red-500');
-            if (error) {
-                error.classList.remove('hidden');
+                    document.body.appendChild(form);
+                    form.submit();
+                }
             }
-            textarea.focus();
-            return;
-        }
 
-        const form = document.createElement('form');
+            function rejectSwap(id) {
+                rejectSwapId = id;
+
+                const modal = document.getElementById('rejectSwapModal');
+                const textarea = document.getElementById('rejectSwapReason');
+                const error = document.getElementById('rejectSwapError');
+
+                if (!modal || !textarea) {
+                    return;
+                }
+
+                textarea.value = '';
+                textarea.classList.remove('border-red-500');
+                if (error) {
+                    error.classList.add('hidden');
+                }
+
+                modal.classList.remove('hidden');
+                setTimeout(() => textarea.focus(), 50);
+            }
+
+            function closeRejectSwapModal() {
+                const modal = document.getElementById('rejectSwapModal');
+                if (modal) {
+                    modal.classList.add('hidden');
+                }
+                rejectSwapId = null;
+            }
+
+            function submitRejectSwap() {
+                const textarea = document.getElementById('rejectSwapReason');
+                const error = document.getElementById('rejectSwapError');
+
+                if (!rejectSwapId || !textarea) {
+                    return;
+                }
+
+                const reason = textarea.value.trim();
+                if (!reason) {
+                    textarea.classList.add('border-red-500');
+                    if (error) {
+                        error.classList.remove('hidden');
+                    }
+                    textarea.focus();
+                    return;
+                }
+
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/manager/shift-swap-approvals/${rejectSwapId}/reject`;
+
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = '_token';
+                csrfToken.value = '{{ csrf_token() }}';
+                form.appendChild(csrfToken);
+
+                const reasonInput = document.createElement('input');
+                reasonInput.type = 'hidden';
+                reasonInput.name = 'reason';
+                reasonInput.value = reason;
+                form.appendChild(reasonInput);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+
+            function executeSwap(id) {
+                if (confirm('Apakah Anda yakin ingin mengeksekusi pertukaran shift ini? Shift akan segera ditukar.')) {
+                    const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `/manager/shift-swap-approvals/${rejectSwapId}/reject`;
+                            form.action = `/manager/shift-swap-approvals/${id}/execute`;
 
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = '{{ csrf_token() }}';
-        form.appendChild(csrfToken);
+                            const csrfToken = document.createElement('input');
+                            csrfToken.type = 'hidden';
+                            csrfToken.name = '_token';
+                            csrfToken.value = '{{ csrf_token() }}';
+                            form.appendChild(csrfToken);
 
-        const reasonInput = document.createElement('input');
-        reasonInput.type = 'hidden';
-        reasonInput.name = 'reason';
-        reasonInput.value = reason;
-        form.appendChild(reasonInput);
-
-        document.body.appendChild(form);
-        form.submit();
-    }
-
-    function executeSwap(id) {
-        if (confirm('Apakah Anda yakin ingin mengeksekusi pertukaran shift ini? Shift akan segera ditukar.')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = `/manager/shift-swap-approvals/${id}/execute`;
-
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            form.appendChild(csrfToken);
-
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-</script>
-@endpush
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    }
+                </script>
+    @endpush
 @endsection

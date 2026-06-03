@@ -77,7 +77,7 @@
             placeholder="Cari nama/NIP..."
             :value="$filters['search'] ?? ''" />
 
-        @if(auth()->user()->worker)
+        @if(auth()->user()->hasRole('manager') && !auth()->user()->hasRole('admin'))
             {{-- Manager: show locked department badge instead of dropdown --}}
             @php
                 $managerDept = $departments->firstWhere('id', $filters['department_id'] ?? null);

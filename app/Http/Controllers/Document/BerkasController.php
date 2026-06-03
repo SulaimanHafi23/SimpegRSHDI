@@ -296,12 +296,12 @@ class BerkasController extends Controller
                 'notifiable_type' => \App\Models\User::class,
                 'notifiable_id' => $user->id,
                 'type' => 'document_verified',
-                'title' => 'Dokumen Terverifikasi',
-                'message' => sprintf('Dokumen %s Anda telah diverifikasi.', $document->documentType?->name ?? 'Dokumen'),
                 'data' => [
                     'document_id' => $document->id,
                     'type' => 'document',
                     'action' => 'verified',
+                    'title' => 'Dokumen Terverifikasi',
+                    'message' => sprintf('Dokumen %s Anda telah diverifikasi.', $document->documentType?->name ?? 'Dokumen'),
                 ],
             ]);
         }
@@ -339,17 +339,17 @@ class BerkasController extends Controller
                 'notifiable_type' => \App\Models\User::class,
                 'notifiable_id' => $user->id,
                 'type' => 'document_rejected',
-                'title' => 'Dokumen Ditolak',
-                'message' => sprintf(
-                    'Dokumen %s Anda ditolak. Alasan: %s',
-                    $document->documentType?->name ?? 'Dokumen',
-                    $request->rejection_reason
-                ),
                 'data' => [
                     'document_id' => $document->id,
                     'type' => 'document',
                     'action' => 'rejected',
                     'reason' => $request->rejection_reason,
+                    'title' => 'Dokumen Ditolak',
+                    'message' => sprintf(
+                        'Dokumen %s Anda ditolak. Alasan: %s',
+                        $document->documentType?->name ?? 'Dokumen',
+                        $request->rejection_reason
+                    ),
                 ],
             ]);
         }

@@ -29,6 +29,8 @@ class BusinessTrip extends Model
         'status',
         'approved_by',
         'approved_at',
+        'manager_id',
+        'manager_verified_at',
         'rejection_reason',
     ];
 
@@ -37,6 +39,7 @@ class BusinessTrip extends Model
         'end_date' => 'date',
         'estimated_cost' => 'decimal:2',
         'approved_at' => 'datetime',
+        'manager_verified_at' => 'datetime',
     ];
 
     public function worker()
@@ -47,6 +50,11 @@ class BusinessTrip extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
     }
 
     public function getHalfDaySessionLabelAttribute(): ?string

@@ -61,9 +61,22 @@ class BerkasRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'file.required' => ':attribute harus diupload',
-            'file.mimes' => ':attribute harus berformat: pdf, doc, docx, jpg, jpeg, png',
-            'file.max' => ':attribute maksimal 10MB',
+            'worker_id.required'                    => 'Pekerja wajib dipilih.',
+            'worker_id.uuid'                        => 'ID Pekerja tidak valid.',
+            'worker_id.exists'                      => 'Pekerja yang dipilih tidak ditemukan.',
+            'document_type_id.uuid'                 => 'ID Jenis Dokumen tidak valid.',
+            'document_type_id.exists'               => 'Jenis Dokumen yang dipilih tidak ditemukan.',
+            'document_type_id.required_without'     => 'Jenis Dokumen atau Jenis Dokumen Departemen wajib dipilih.',
+            'department_document_type_id.uuid'      => 'ID Jenis Dokumen Departemen tidak valid.',
+            'department_document_type_id.exists'    => 'Jenis Dokumen Departemen yang dipilih tidak ditemukan.',
+            'department_document_type_id.required_without' => 'Jenis Dokumen atau Jenis Dokumen Departemen wajib dipilih.',
+            'file.required'                         => 'File dokumen wajib diupload.',
+            'file.file'                             => 'File tidak valid.',
+            'file.mimes'                            => 'File harus berformat: pdf, doc, docx, jpg, jpeg, png.',
+            'file.max'                              => 'Ukuran file maksimal 10MB.',
+            'notes.max'                             => 'Catatan maksimal 1000 karakter.',
+            'expired_date.date'                     => 'Format Tanggal Kadaluarsa tidak valid.',
+            'expired_date.after'                    => 'Tanggal Kadaluarsa harus setelah hari ini.',
         ];
     }
 }

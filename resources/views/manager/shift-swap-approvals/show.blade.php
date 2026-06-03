@@ -249,14 +249,14 @@
 
             <!-- Additional Info Card -->
             <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div class="bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-4">
+                {{-- <div class="bg-gradient-to-r from-gray-600 to-gray-700 px-6 py-4">
                     <h2 class="text-xl font-bold text-white flex items-center">
                         <i class="fas fa-info mr-2"></i>
                         Informasi Tambahan
                     </h2>
-                </div>
-                <div class="p-6 space-y-4">
-                    <div class="flex items-center justify-between py-3 border-b border-gray-200">
+                </div> --}}
+                {{-- <div class="p-6 space-y-4"> --}}
+                    {{-- <div class="flex items-center justify-between py-3 border-b border-gray-200">
                         <span class="text-gray-700 font-medium flex items-center">
                             <i class="fas fa-user-shield text-gray-500 mr-2"></i>
                             Perlu Approval Manager:
@@ -270,7 +270,7 @@
                                 <i class="fas fa-times-circle mr-1"></i> Tidak
                             </span>
                         @endif
-                    </div>
+                    </div> --}}
 
                     @if($swap->manager_id)
                         <div class="flex items-center justify-between py-3 border-b border-gray-200">
@@ -307,43 +307,53 @@
                             <span class="text-gray-800 font-bold">{{ $swap->executedBy?->name ?? 'N/A' }}</span>
                         </div>
                     @endif
-                </div>
+                {{-- </div> --}}
             </div>
 
             <!-- Action Buttons -->
-            @if($swap->status === 'awaiting_approval')
+            @php
+                $canVerify = ($isAdmin || $isManager) && $swap->status === 'awaiting_approval';
+                $canApprove = ($isAdmin || $isHR) && $swap->status === 'manager_verified';
+                $canReject = ($isAdmin || $isManager || ($isHR && $swap->status === 'manager_verified'));
+                $canExecute = ($isAdmin || $isHR || $isManager) && $swap->status === 'approved';
+            @endphp
+
+            @if($canVerify || $canApprove || $canReject || $canExecute)
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
                         <i class="fas fa-hand-pointer text-blue-600 mr-2"></i>
                         Aksi Persetujuan
                     </h3>
-                    <p class="text-sm text-gray-500 mb-4">
-                        <i class="fas fa-info-circle mr-1"></i>
-                        Kedua pegawai sudah saling menyetujui. Menunggu persetujuan Manager/HR.
-                    </p>
+                    
                     <div class="flex flex-col sm:flex-row gap-3">
-                        <button type="button" onclick="approveSwap('{{ $swap->id }}')" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
-                            <i class="fas fa-check-circle mr-2"></i>
-                            Setujui Permintaan
-                        </button>
-                        <button type="button" onclick="rejectSwap('{{ $swap->id }}')" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
-                            <i class="fas fa-times-circle mr-2"></i>
-                            Tolak Permintaan
-                        </button>
-                    </div>
-                </div>
-            @endif
+                        @if($canVerify)
+                            <button type="button" onclick="openModal('verifyModal')" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
+                                <i class="fas fa-user-check mr-2"></i>
+                                Verifikasi Manager
+                            </button>
+                        @endif
 
-            @if(in_array($swap->status, ['approved', 'accepted']))
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
-                        <i class="fas fa-play text-purple-600 mr-2"></i>
-                        Eksekusi Pertukaran
-                    </h3>
-                    <button type="button" onclick="executeSwap('{{ $swap->id }}')" class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
-                        <i class="fas fa-play-circle mr-2"></i>
-                        Eksekusi Pertukaran Shift
-                    </button>
+                        @if($canApprove)
+                            <button type="button" onclick="openModal('approveModal')" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
+                                <i class="fas fa-check-circle mr-2"></i>
+                                Setujui (HR)
+                            </button>
+                        @endif
+
+                        @if($canExecute)
+                            <button type="button" onclick="openModal('executeModal')" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
+                                <i class="fas fa-play mr-2"></i>
+                                Eksekusi Pertukaran
+                            </button>
+                        @endif
+
+                        @if($canReject && in_array($swap->status, ['awaiting_approval', 'manager_verified', 'approved']))
+                            <button type="button" onclick="openModal('rejectModal')" class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-lg shadow-lg transition duration-200 transform hover:scale-105">
+                                <i class="fas fa-times-circle mr-2"></i>
+                                Tolak
+                            </button>
+                        @endif
+                    </div>
                 </div>
             @endif
         </div>
@@ -418,10 +428,45 @@
     </div>
 </div>
 
-<!-- Approve Modal -->
-<div id="approveModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+<!-- Verify Modal -->
+<div id="verifyModal" class="hidden fixed inset-0 backdrop-blur-sm bg-black/30 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
-        <form action="{{ route('manager.shift-swap-approvals.approve', $swap->id) }}" method="POST">
+        <form action="{{ route('manager.shift-swap-approvals.verify', $swap->id) }}" method="POST">
+            @csrf
+            <div class="flex items-center justify-between mb-4 pb-3 border-b">
+                <h3 class="text-xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-user-check text-blue-600 mr-2"></i>
+                    Verifikasi Manager
+                </h3>
+                <button type="button" onclick="closeModal('verifyModal')" class="text-gray-400 hover:text-gray-600 transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Catatan (opsional)
+                </label>
+                <textarea name="notes" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="Tambahkan catatan jika diperlukan..."></textarea>
+            </div>
+
+            <div class="flex gap-3 justify-end">
+                <button type="button" onclick="closeModal('verifyModal')" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium">
+                    Batal
+                </button>
+                <button type="submit" class="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg transition font-bold shadow-lg">
+                    <i class="fas fa-check mr-2"></i>
+                    Verifikasi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div id="approveModal" class="hidden fixed inset-0 backdrop-blur-sm bg-black/30 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+        <form action="{{ $isHR ? route('hr.shift-swap-approvals.approve', $swap->id) : route('manager.shift-swap-approvals.approve', $swap->id) }}" method="POST">
             @csrf
             <div class="flex items-center justify-between mb-4 pb-3 border-b">
                 <h3 class="text-xl font-bold text-gray-800 flex items-center">
@@ -454,9 +499,9 @@
 </div>
 
 <!-- Reject Modal -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+<div id="rejectModal" class="hidden fixed inset-0 backdrop-blur-sm bg-black/30 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
-        <form action="{{ route('manager.shift-swap-approvals.reject', $swap->id) }}" method="POST">
+        <form action="{{ $isHR ? route('hr.shift-swap-approvals.reject', $swap->id) : route('manager.shift-swap-approvals.reject', $swap->id) }}" method="POST">
             @csrf
             <div class="flex items-center justify-between mb-4 pb-3 border-b">
                 <h3 class="text-xl font-bold text-gray-800 flex items-center">
@@ -490,7 +535,7 @@
 </div>
 
 <!-- Execute Modal -->
-<div id="executeModal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+<div id="executeModal" class="hidden fixed inset-0 backdrop-blur-sm bg-black/30 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
         <form action="{{ route('manager.shift-swap-approvals.execute', $swap->id) }}" method="POST">
             @csrf
@@ -527,6 +572,10 @@
 </div>
 
 <script>
+function openModal(id) {
+    document.getElementById(id).classList.remove('hidden');
+}
+
 function approveSwap(id) {
     document.getElementById('approveModal').classList.remove('hidden');
 }

@@ -14,7 +14,7 @@ class DashboardController extends Controller
     public function __construct()
     {
         $this->middleware('auth');
-        $this->middleware('permission:dashboard.employee');
+        $this->middleware('permission:dashboard.employee|dashboard.hr|dashboard.manager');
     }
 
     public function index()

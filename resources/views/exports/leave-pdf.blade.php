@@ -1,7 +1,7 @@
 @extends('exports.pdf-header', ['title' => 'Laporan Cuti'])
 
 @section('content')
-<h3>Laporan Permohonan Cuti</h3>
+<h3>LAPORAN PERMOHONAN CUTI</h3>
 
 <div class="info-box">
     <table class="meta-table">
@@ -18,8 +18,10 @@
                 @php
                     $statusLabel = match($status) {
                         'pending' => 'Menunggu Persetujuan',
+                        'manager_verified' => 'Terverifikasi Manager',
                         'approved' => 'Disetujui',
                         'rejected' => 'Ditolak',
+                        'cancelled' => 'Dibatalkan',
                         default => ucfirst($status)
                     };
                 @endphp
@@ -65,14 +67,17 @@
                 @php
                     $statusClass = match($leave->status) {
                         'approved' => 'badge-success',
-                        'pending' => 'badge-warning',
+                        'pending', 'manager_verified' => 'badge-warning',
                         'rejected' => 'badge-danger',
+                        'cancelled' => 'badge-secondary',
                         default => 'badge-secondary'
                     };
                     $statusLabel = match($leave->status) {
                         'approved' => 'Disetujui',
                         'pending' => 'Menunggu',
+                        'manager_verified' => 'Terverifikasi',
                         'rejected' => 'Ditolak',
+                        'cancelled' => 'Dibatalkan',
                         default => ucfirst($leave->status)
                     };
                 @endphp
@@ -101,11 +106,12 @@
             <td><strong>Disetujui:</strong> {{ $leaves->where('status', 'approved')->count() }}</td>
         </tr>
         <tr>
-            <td><strong>Menunggu:</strong> {{ $leaves->where('status', 'pending')->count() }}</td>
+            <td><strong>Menunggu:</strong> {{ $leaves->whereIn('status', ['pending', 'manager_verified'])->count() }}</td>
             <td><strong>Ditolak:</strong> {{ $leaves->where('status', 'rejected')->count() }}</td>
         </tr>
         <tr>
-            <td colspan="2"><strong>Total Hari Cuti Disetujui:</strong> {{ $leaves->where('status', 'approved')->sum('total_days') }} hari</td>
+            <td><strong>Dibatalkan:</strong> {{ $leaves->where('status', 'cancelled')->count() }}</td>
+            <td><strong>Total Hari Disetujui:</strong> {{ $leaves->where('status', 'approved')->sum('total_days') }} hari</td>
         </tr>
     </table>
 </div>

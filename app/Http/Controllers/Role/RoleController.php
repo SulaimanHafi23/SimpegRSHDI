@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
+use App\Http\Requests\Role\RoleRequest;
 
 class RoleController extends Controller
 {
@@ -36,15 +37,9 @@ class RoleController extends Controller
         return view('admin.settings.roles.create', compact('permissions'));
     }
 
-    public function store(Request $request)
+    public function store(RoleRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name',
-            'display_name' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'integer|exists:permissions,id',
-        ]);
+        $validated = $request->validated();
 
         try {
             DB::beginTransaction();
@@ -104,15 +99,9 @@ class RoleController extends Controller
         }
     }
 
-    public function update(Request $request, string $id)
+    public function update(RoleRequest $request, string $id)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:roles,name,' . $id,
-            'display_name' => 'nullable|string|max:255',
-            'description' => 'nullable|string',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'integer|exists:permissions,id',
-        ]);
+        $validated = $request->validated();
 
         try {
             DB::beginTransaction();

@@ -42,7 +42,7 @@ class BusinessTripController extends Controller
         // Calculate Summary before applying filters (except worker_id)
         $summary = [
             'total' => (clone $query)->count(),
-            'pending' => (clone $query)->where('status', 'pending')->count(),
+            'pending' => (clone $query)->whereIn('status', ['pending', 'manager_verified'])->count(),
             'approved' => (clone $query)->where('status', 'approved')->count(),
             'rejected' => (clone $query)->where('status', 'rejected')->count(),
         ];
@@ -99,7 +99,7 @@ class BusinessTripController extends Controller
     {
         $user = Auth::user();
         $worker = $user->worker;
-        $trip = BusinessTrip::findOrFail($id);
+        $trip = BusinessTrip::with(['worker.user', 'worker.department', 'approvedBy', 'manager'])->findOrFail($id);
 
         if ($trip->worker_id !== $worker->id) {
             abort(403, 'Unauthorized');

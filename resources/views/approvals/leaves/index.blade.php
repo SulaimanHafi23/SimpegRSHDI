@@ -4,72 +4,105 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-900">Persetujuan Cuti</h1>
-            <p class="mt-1 text-sm text-gray-600">Daftar pengajuan cuti untuk proses persetujuan.</p>
-        </div>
+    {{-- Page Header --}}
+    <x-page-header
+        title="Persetujuan Cuti"
+        description="Daftar pengajuan cuti untuk proses persetujuan"
+        icon="fas fa-calendar-times">
+        <x-slot:actions>
+            {{-- Export Buttons --}}
+            <x-export-buttons :route="route('approvals.leaves.export')" title="Export Persetujuan Cuti">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="">Semua Status</option>
+                        <option value="pending">Menunggu</option>
+                        <option value="manager_verified">Terverifikasi</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
+                        <option value="cancelled">Dibatalkan</option>
+                    </select>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Cuti</label>
+                    <select name="leave_type_id" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                        <option value="">Semua Jenis</option>
+                        @foreach($leaveTypes as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </x-export-buttons>
+        </x-slot:actions>
+    </x-page-header>
+
+    {{-- Statistics Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <x-stats-card
+            title="Total"
+            :value="$totalLeaves ?? 0"
+            icon="fas fa-file-alt"
+            color="gray" />
+
+        <x-stats-card
+            title="Menunggu"
+            :value="$pendingCount ?? 0"
+            icon="fas fa-clock"
+            color="yellow" />
+
+        <x-stats-card
+            title="Terverifikasi"
+            :value="$verifiedCount ?? 0"
+            icon="fas fa-check-double"
+            color="blue" />
+
+        <x-stats-card
+            title="Disetujui"
+            :value="$approvedCount ?? 0"
+            icon="fas fa-check-circle"
+            color="green" />
+
+        <x-stats-card
+            title="Ditolak"
+            :value="$rejectedCount ?? 0"
+            icon="fas fa-times-circle"
+            color="red" />
+
+        <x-stats-card
+            title="Dibatalkan"
+            :value="$cancelledCount ?? 0"
+            icon="fas fa-ban"
+            color="gray" />
     </div>
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-        <div class="rounded-lg border border-gray-200 bg-white p-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Total</p>
-            <p class="mt-1 text-2xl font-bold text-gray-900">{{ $totalLeaves ?? 0 }}</p>
-        </div>
-        <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-yellow-700">Pending</p>
-            <p class="mt-1 text-2xl font-bold text-yellow-800">{{ $pendingCount ?? 0 }}</p>
-        </div>
-        <div class="rounded-lg border border-green-200 bg-green-50 p-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-green-700">Approved</p>
-            <p class="mt-1 text-2xl font-bold text-green-800">{{ $approvedCount ?? 0 }}</p>
-        </div>
-        <div class="rounded-lg border border-red-200 bg-red-50 p-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-red-700">Rejected</p>
-            <p class="mt-1 text-2xl font-bold text-red-800">{{ $rejectedCount ?? 0 }}</p>
-        </div>
-    </div>
+    {{-- Filter Section --}}
+    <x-filter-section action="{{ route('approvals.leaves.index') }}">
+        <x-form.select
+            name="status"
+            label="Status"
+            :options="($isManager || auth()->user()->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin'])) ?
+                ['pending' => 'Pending (Menunggu Verifikasi)', 'manager_verified' => 'Telah Diverifikasi', 'approved' => 'Disetujui HR', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan'] :
+                ['manager_verified' => 'Verified (Sudah Diverifikasi Manager)', 'approved' => 'Approved', 'rejected' => 'Rejected', 'cancelled' => 'Cancelled']"
+            :selected="$filters['original_status'] ?? ''"
+            placeholder="Semua Status" />
 
-    <div class="rounded-lg border border-gray-200 bg-white p-4">
-        <form method="GET" action="{{ route('approvals.leaves.index') }}" class="grid grid-cols-1 gap-3 md:grid-cols-3">
-            <div>
-                <label for="status" class="mb-1 block text-sm font-medium text-gray-700">Status</label>
-                <select id="status" name="status" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    <option value="">Semua Status</option>
-                    <option value="pending" {{ ($filters['status'] ?? '') === 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="approved" {{ ($filters['status'] ?? '') === 'approved' ? 'selected' : '' }}>Approved</option>
-                    <option value="rejected" {{ ($filters['status'] ?? '') === 'rejected' ? 'selected' : '' }}>Rejected</option>
-                    <option value="cancelled" {{ ($filters['status'] ?? '') === 'cancelled' ? 'selected' : '' }}>Cancelled</option>
-                </select>
-            </div>
-            <div>
-                <label for="leave_type_id" class="mb-1 block text-sm font-medium text-gray-700">Jenis Cuti</label>
-                <select id="leave_type_id" name="leave_type_id" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
-                    <option value="">Semua Jenis</option>
-                    @foreach($leaveTypes as $type)
-                        <option value="{{ $type->id }}" {{ (string)($filters['leave_type_id'] ?? '') === (string)$type->id ? 'selected' : '' }}>
-                            {{ $type->name }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="flex items-end gap-2">
-                <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
-                    Filter
-                </button>
-                <a href="{{ route('approvals.leaves.index') }}" class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-                    Reset
-                </a>
-            </div>
-        </form>
-    </div>
+        <x-form.select
+            name="leave_type_id"
+            label="Jenis Cuti"
+            :selected="$filters['leave_type_id'] ?? ''"
+            placeholder="Semua Jenis">
+            @foreach($leaveTypes as $type)
+                <option value="{{ $type->id }}">{{ $type->name }}</option>
+            @endforeach
+        </x-form.select>
+    </x-filter-section>
 
-    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+    <x-card>
         @if($leaves->isEmpty())
-            <div class="px-4 py-10 text-center text-sm text-gray-500">
-                <i class="fas fa-folder-open text-gray-300 text-4xl mb-3 block"></i>
-                Tidak ada data pengajuan cuti.
-            </div>
+            <x-empty-state
+                icon="fas fa-folder-open"
+                title="Tidak ada data pengajuan cuti"
+                description="Belum ada pengajuan cuti yang perlu diproses" />
         @else
             {{-- Mobile View --}}
             <div class="md:hidden space-y-4 p-4 bg-gray-50/50">
@@ -148,6 +181,7 @@
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead class="bg-gray-50">
                         <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-700">No</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-700">Pegawai</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-700">Jenis Cuti</th>
                             <th class="px-4 py-3 text-left font-semibold text-gray-700">Tanggal</th>
@@ -159,6 +193,7 @@
                     <tbody class="divide-y divide-gray-100 bg-white">
                         @foreach($leaves as $leave)
                             <tr>
+                                <td class="px-4 py-3 text-gray-500 font-medium">{{ $leaves->firstItem() + $loop->index }}</td>
                                 <td class="px-4 py-3">
                                     <p class="font-medium text-gray-900">{{ $leave->worker->name ?? '-' }}</p>
                                     <p class="text-xs text-gray-500">{{ $leave->worker->nip ?? '-' }}</p>
@@ -170,20 +205,23 @@
                                 <td class="px-4 py-3 text-gray-700">{{ $leave->total_days }} hari</td>
                                 <td class="px-4 py-3">
                                     @php
-                                        $statusClass = [
-                                            'pending' => 'bg-yellow-100 text-yellow-800',
-                                            'approved' => 'bg-green-100 text-green-800',
-                                            'rejected' => 'bg-red-100 text-red-800',
-                                            'cancelled' => 'bg-gray-100 text-gray-700',
-                                        ][$leave->status] ?? 'bg-gray-100 text-gray-700';
+                                        $statusBadges = [
+                                            'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                                            'manager_verified' => ['variant' => 'info', 'label' => 'Terverifikasi'],
+                                            'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
+                                            'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
+                                            'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
+                                        ];
+                                        $badge = $statusBadges[$leave->status] ?? ['variant' => 'secondary', 'label' => ucfirst($leave->status)];
                                     @endphp
-                                    <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusClass }}">
-                                        {{ ucfirst($leave->status) }}
-                                    </span>
+                                    <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('approvals.leaves.show', $leave->id) }}" class="inline-flex items-center rounded-md bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">
-                                        Review
+                                    <a href="{{ route('approvals.leaves.show', $leave->id) }}" class="text-blue-600 hover:text-blue-900" title="Periksa">
+                                        <svg class="w-5 h-5 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
                                     </a>
                                 </td>
                             </tr>
@@ -192,12 +230,13 @@
                 </table>
             </div>
 
+            {{-- Pagination --}}
             @if($leaves->hasPages())
-                <div class="border-t border-gray-100 px-4 py-3">
-                    {{ $leaves->links() }}
+                <div class="mt-4">
+                    <x-pagination :paginator="$leaves" />
                 </div>
             @endif
         @endif
-    </div>
+    </x-card>
 </div>
 @endsection

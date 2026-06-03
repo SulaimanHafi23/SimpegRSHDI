@@ -324,15 +324,15 @@ class WorkerDocumentController extends Controller
                     'notifiable_type' => \App\Models\User::class,
                     'notifiable_id' => $user->id,
                     'type' => 'document_verified',
-                    'title' => 'Dokumen Terverifikasi',
-                    'message' => sprintf(
-                        'Dokumen %s Anda telah diverifikasi.',
-                        $document->documentType?->name ?? 'Dokumen'
-                    ),
                     'data' => [
                         'document_id' => $document->id,
                         'type' => 'document',
                         'action' => 'verified',
+                        'title' => 'Dokumen Terverifikasi',
+                        'message' => sprintf(
+                            'Dokumen %s Anda telah diverifikasi.',
+                            $document->documentType?->name ?? 'Dokumen'
+                        ),
                     ],
                 ]);
             }
@@ -379,13 +379,13 @@ class WorkerDocumentController extends Controller
                     'notifiable_type' => \App\Models\User::class,
                     'notifiable_id' => $user->id,
                     'type' => 'document_rejected',
-                    'title' => 'Dokumen Ditolak',
-                    'message' => $message,
                     'data' => [
                         'document_id' => $document->id,
                         'type' => 'document',
                         'action' => 'rejected',
                         'reason' => $validated['notes'],
+                        'title' => 'Dokumen Ditolak',
+                        'message' => $message,
                     ],
                 ]);
             }

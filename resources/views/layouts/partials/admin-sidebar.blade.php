@@ -135,8 +135,8 @@
                    :class="{ 'rotate-180': openMenu === 'approval' }"></i>
             </button>
             <div x-show="openMenu === 'approval'" x-collapse class="ml-4 mt-2 space-y-1">
-                @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('leave.manage'))
-                <a href="{{ route('admin.leave.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.leave.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
+                @if(auth()->user()->can('dashboard.admin') || auth()->user()->can('leave.manage') || auth()->user()->can('leave.approve'))
+                <a href="{{ auth()->user()->can('leave.manage') ? route('admin.leave.index') : route('approvals.leaves.index') }}" class="flex items-center space-x-3 px-4 py-2 rounded-lg {{ request()->routeIs('admin.leave.*') || request()->routeIs('approvals.leaves.*') ? 'bg-yellow-500 text-green-900' : 'hover:bg-green-600' }} transition duration-200 text-sm">
                     <i class="fas fa-calendar-times w-4"></i>
                     <span>Permohonan Cuti</span>
                     @if(isset($pendingLeaves) && $pendingLeaves > 0)

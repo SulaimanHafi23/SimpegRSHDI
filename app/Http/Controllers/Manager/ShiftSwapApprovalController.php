@@ -35,21 +35,57 @@ class ShiftSwapApprovalController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $isHR = $user->hasRole(['HR', 'hr']) && !$user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        $isAdmin = $user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        $isManager = $user->hasRole(['Manager', 'manager']) && !$isHR && !$isAdmin;
+        $departmentId = $this->getManagerDepartmentFilter();
+
+        // Default to 'all' to show data immediately
+        $defaultStatus = 'all';
+
+        $status = $request->input('status');
+        
+        // Handle pagination where 'status' might be dropped if it was null ('all' selection)
+        if ($status === null && $request->has('original_status')) {
+            $status = $request->input('original_status');
+        }
+        
+        if ($status === null) {
+            if ($request->exists('status')) {
+                $status = 'all'; 
+            } else {
+                $status = $defaultStatus;
+            }
+        }
+
+        $displayStatus = $status;
+        
+        if ($status === 'all' || $status === '') {
+            $status = null;
+            $displayStatus = 'all';
+        }
+
+        // Role-based status constraints
+        if ($isHR && !$isAdmin) {
+            // HR cannot see pending or awaiting acceptance requests
+            if ($status === 'pending' || $status === 'awaiting_approval') {
+                $status = 'manager_verified';
+                $displayStatus = 'manager_verified';
+            }
+        }
 
         try {
             $filters = [
-                // Default empty string means "show all statuses" when user has not chosen a specific filter.
-                'status' => $request->input('status', ''),
+                'status' => $status,
+                'original_status' => $displayStatus,
                 'requester_id' => $request->input('requester_id'),
                 'date_from' => $request->input('date_from'),
                 'date_to' => $request->input('date_to'),
                 'per_page' => $request->input('per_page', 15),
+                'hr_only_verified' => ($isHR && !$isAdmin),
             ];
 
             $items = $this->listPendingApprovalsForManager($user->id, $filters);
-
-            // Get department filter for statistics and workers
-            $departmentId = $this->getManagerDepartmentFilter();
 
             // Get statistics filtered by department for Manager
             $statsQuery = ShiftSwapRequest::query();
@@ -59,9 +95,16 @@ class ShiftSwapApprovalController extends Controller
                       ->orWhereHas('targetWorker', fn($r) => $r->where('department_id', $departmentId));
                 });
             }
+
+            // Statistics based on role access
+            if ($isHR && !$isAdmin) {
+                $statsQuery->where('status', '!=', 'pending')->where('status', '!=', 'awaiting_approval');
+            }
+
             $statistics = [
                 'total' => (clone $statsQuery)->count(),
                 'awaiting_approval' => (clone $statsQuery)->where('status', 'awaiting_approval')->count(),
+                'manager_verified' => (clone $statsQuery)->where('status', 'manager_verified')->count(),
                 'approved' => (clone $statsQuery)->where('status', 'approved')->count(),
                 'rejected' => (clone $statsQuery)->where('status', 'rejected')->count(),
                 'executed' => (clone $statsQuery)->whereNotNull('executed_at')->count(),
@@ -74,7 +117,7 @@ class ShiftSwapApprovalController extends Controller
                 $workers = Worker::orderBy('name')->get();
             }
 
-            return view('manager.shift-swap-approvals.index', compact('items', 'statistics', 'workers', 'filters'));
+            return view('manager.shift-swap-approvals.index', compact('items', 'statistics', 'workers', 'filters', 'isHR', 'isAdmin', 'isManager'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal mengambil data: ' . $e->getMessage());
         }
@@ -85,6 +128,11 @@ class ShiftSwapApprovalController extends Controller
      */
     public function show(string $id)
     {
+        $user = Auth::user();
+        $isHR = $user->hasRole(['HR', 'hr']) && !$user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        $isAdmin = $user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        $isManager = $user->hasRole(['Manager', 'manager']) && !$isHR && !$isAdmin;
+
         $swap = ShiftSwapRequest::with([
             'requester.user',
             'requester.department',
@@ -110,11 +158,35 @@ class ShiftSwapApprovalController extends Controller
         // Enrich with effective shifts (considering ShiftOverride)
         $this->enrichWithEffectiveShifts(collect([$swap]));
 
-        return view('manager.shift-swap-approvals.show', compact('swap'));
+        return view('manager.shift-swap-approvals.show', compact('swap', 'isHR', 'isAdmin', 'isManager'));
     }
 
     /**
-     * Approve swap request
+     * Verify swap request (manager only - first stage)
+     */
+    public function verify(Request $request, string $id)
+    {
+        $request->validate([
+            'notes' => 'nullable|string|max:500',
+        ]);
+
+        $user = Auth::user();
+
+        if ($user->hasRole('Super Admin')) {
+            return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat melakukan verifikasi.');
+        }
+
+        try {
+            $this->verifyByManager($id, $user->id, $request->input('notes'));
+            return redirect()->route('manager.shift-swap-approvals.index')
+                ->with('success', 'Permintaan tukar shift berhasil diverifikasi dan akan diteruskan ke HR.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal memverifikasi permintaan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Approve swap request (manager only for backward compatibility - for execution)
      */
     public function approve(Request $request, string $id)
     {
@@ -124,7 +196,27 @@ class ShiftSwapApprovalController extends Controller
 
         $user = Auth::user();
 
+        if ($user->hasRole('Super Admin')) {
+            return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat memberikan persetujuan.');
+        }
+
         try {
+            $swap = ShiftSwapRequest::findOrFail($id);
+
+            // If swap is manager_verified, only HR can approve
+            // If still pending, manager must verify first
+            if ($swap->status === 'manager_verified') {
+                throw new \Exception('Permintaan tukar shift sudah diverifikasi. Tunggu persetujuan dari HR.');
+            }
+
+            if ($swap->status === 'approved') {
+                // Manager can execute an approved swap
+                $this->executeSwap($id, $user->id);
+                return redirect()->route('manager.shift-swap-approvals.index')
+                    ->with('success', 'Pertukaran shift berhasil dieksekusi.');
+            }
+
+            // For pending swaps with no verification stage, approve directly (legacy support)
             $this->approveByManager($id, $user->id, $request->input('notes'));
             return redirect()->route('manager.shift-swap-approvals.index')
                 ->with('success', 'Permintaan tukar shift disetujui.');
@@ -144,6 +236,10 @@ class ShiftSwapApprovalController extends Controller
 
         $user = Auth::user();
 
+        if ($user->hasRole('Super Admin')) {
+            return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat menolak pengajuan.');
+        }
+
         try {
             $this->rejectByManager($id, $user->id, $request->input('reason'));
             return redirect()->route('manager.shift-swap-approvals.index')
@@ -159,6 +255,10 @@ class ShiftSwapApprovalController extends Controller
     public function execute(Request $request, string $id)
     {
         $user = Auth::user();
+
+        if ($user->hasRole('Super Admin')) {
+            return back()->with('error', 'Super Admin hanya dapat menghapus data, tidak dapat mengeksekusi pertukaran.');
+        }
 
         try {
             $this->executeSwap($id, $user->id);
@@ -255,11 +355,11 @@ class ShiftSwapApprovalController extends Controller
             });
         }
 
-        if (isset($filters['status']) && $filters['status'] !== '') {
+        if ($filters['status']) {
             $query->where('status', $filters['status']);
-        } elseif (!isset($filters['status'])) {
-            $query->where('status', 'awaiting_approval')
-                ->where('requires_manager_approval', true);
+        } elseif (!empty($filters['hr_only_verified'])) {
+            // HR viewing 'all' should not see pending/awaiting_approval
+            $query->whereNotIn('status', ['pending', 'awaiting_approval']);
         }
 
         if (!empty($filters['requester_id'])) {
@@ -307,6 +407,75 @@ class ShiftSwapApprovalController extends Controller
                 $item->setAttribute('effective_target_shift', $overrideTarget?->shift ?? $item->targetShift?->shift);
             }
         });
+    }
+
+    private function verifyByManager(string $swapId, string $managerId, ?string $notes = null): ShiftSwapRequest
+    {
+        $swap = ShiftSwapRequest::findOrFail($swapId);
+        $verifier = User::findOrFail($managerId);
+
+        if (!$verifier->can('shift-swap.approve')) {
+            throw new \Exception('Anda tidak berhak memverifikasi permintaan tukar shift ini.');
+        }
+
+        if ($swap->status !== 'awaiting_approval') {
+            throw new \Exception('Hanya permintaan tukar shift yang berstatus awaiting approval yang dapat diverifikasi.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $oldStatus = $swap->status;
+            $swap->status = 'manager_verified';
+            $swap->manager_id = $managerId;
+            $swap->manager_verified_at = Carbon::now();
+
+            if ($notes) {
+                $metadata = $swap->metadata ?? [];
+                $metadata['manager_verification_notes'] = $notes;
+                $swap->metadata = $metadata;
+            }
+
+            $swap->save();
+
+            ShiftSwapAuditLog::log(
+                shiftSwapRequestId: $swap->id,
+                action: 'verified_by_manager',
+                newStatus: 'manager_verified',
+                userId: $managerId,
+                oldStatus: $oldStatus,
+                notes: $notes ?? 'Manager verified the swap request',
+                metadata: [
+                    'manager_id' => $managerId,
+                    'verified_at' => Carbon::now()->toDateTimeString(),
+                ]
+            );
+
+            Log::info('Shift swap verified by manager', [
+                'swap_id' => $swapId,
+                'manager_id' => $managerId,
+                'notes' => $notes,
+            ]);
+
+            // Notify requester
+            if ($swap->requester && $swap->requester->user) {
+                \Log::info('Notifying requester for shift swap verification', ['user_id' => $swap->requester->user->id]);
+                $swap->requester->user->notify(new ShiftSwapNotification($swap, 'manager_verified', $notes));
+                \Log::info('Notified requester for shift swap verification', ['user_id' => $swap->requester->user->id]);
+            } else {
+                \Log::warning('Could not notify requester: user not found', ['requester_id' => $swap->requester_id]);
+            }
+            if ($swap->targetWorker && $swap->targetWorker->user) {
+                $swap->targetWorker->user->notify(new ShiftSwapNotification($swap, 'verified_by_manager', $notes));
+            }
+
+            DB::commit();
+
+            return $swap;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to verify shift swap', ['swap_id' => $swapId, 'error' => $e->getMessage()]);
+            throw $e;
+        }
     }
 
     private function approveByManager(string $swapId, string $managerId, ?string $notes = null): ShiftSwapRequest

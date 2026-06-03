@@ -62,4 +62,27 @@ class AttendanceRequest extends FormRequest
             'photo_out' => 'Foto Keluar',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'worker_id.required'   => 'Pekerja wajib dipilih.',
+            'worker_id.exists'     => 'Pekerja yang dipilih tidak ditemukan.',
+            'date.required'        => 'Tanggal wajib diisi.',
+            'date.date'            => 'Format tanggal tidak valid.',
+            'check_in.required'    => 'Jam Masuk wajib diisi.',
+            'check_in.date'        => 'Format Jam Masuk tidak valid.',
+            'check_out.date'       => 'Format Jam Keluar tidak valid.',
+            'check_out.after'      => 'Jam Keluar harus setelah Jam Masuk.',
+            'status.required'      => 'Status kehadiran wajib dipilih.',
+            'status.in'            => 'Status kehadiran tidak valid.',
+            'notes.max'            => 'Catatan maksimal 500 karakter.',
+            'photo_in.image'       => 'Foto Masuk harus berupa file gambar.',
+            'photo_in.mimes'       => 'Foto Masuk hanya mendukung format: jpeg, jpg, png.',
+            'photo_in.max'         => 'Ukuran Foto Masuk maksimal 2MB.',
+            'photo_out.image'      => 'Foto Keluar harus berupa file gambar.',
+            'photo_out.mimes'      => 'Foto Keluar hanya mendukung format: jpeg, jpg, png.',
+            'photo_out.max'        => 'Ukuran Foto Keluar maksimal 2MB.',
+        ];
+    }
 }

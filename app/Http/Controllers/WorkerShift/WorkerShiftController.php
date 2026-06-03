@@ -783,6 +783,17 @@ class WorkerShiftController extends Controller
         return DB::transaction(function () use ($id, $data) {
             $workerShift = WorkerShift::findOrFail($id);
 
+            // Log current shift state before update
+            WorkerShiftHistory::logChange(
+                $workerShift->worker_id,
+                $workerShift->shift_id,
+                $workerShift->effective_from?->toDateString(),
+                $workerShift->effective_until?->toDateString(),
+                'shift_updated',
+                null,
+                'Riwayat sebelum diupdate'
+            );
+
             $this->logShiftsToHistory($workerShift->worker_id, $id, 'shift_replaced');
             $this->deleteOldShifts($workerShift->worker_id, $id);
 

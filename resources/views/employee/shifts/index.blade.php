@@ -343,7 +343,6 @@
     </div>
 
     <!-- Riwayat Perubahan Shift -->
-    @if(isset($shiftHistories) && $shiftHistories->count() > 0)
     <div class="mt-6 bg-white rounded-xl shadow-md overflow-hidden">
         <div class="border-b border-gray-200 bg-gray-50 px-5 py-4">
             <div class="flex items-center gap-2">
@@ -356,102 +355,111 @@
             <p class="text-sm text-gray-500 mt-1">Daftar shift sebelumnya yang pernah berlaku untuk Anda</p>
         </div>
 
-        <!-- Desktop Table -->
-        <div class="hidden md:block overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Berlaku</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Diganti</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    @foreach($shiftHistories->take(10) as $history)
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="flex items-center">
-                                <div class="bg-orange-100 rounded-lg p-2 mr-3">
-                                    <i class="fas fa-clock text-orange-600 text-sm"></i>
+        @if(isset($shiftHistories) && $shiftHistories->count() > 0)
+            <!-- Desktop Table -->
+            <div class="hidden md:block overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Shift</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Periode Berlaku</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Diganti</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alasan</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        @foreach($shiftHistories->take(10) as $history)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="bg-orange-100 rounded-lg p-2 mr-3">
+                                        <i class="fas fa-clock text-orange-600 text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</p>
+                                        @if($history->shift)
+                                            <p class="text-xs text-gray-500">
+                                                {{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} -
+                                                {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}
+                                            </p>
+                                        @endif
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</p>
-                                    @if($history->shift)
-                                        <p class="text-xs text-gray-500">
-                                            {{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} -
-                                            {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}
-                                        </p>
-                                    @endif
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }}
-                            <span class="text-gray-400 mx-1">—</span>
-                            @if($history->effective_until)
-                                {{ \Carbon\Carbon::parse($history->effective_until)->format('d M Y') }}
-                            @else
-                                <span class="text-gray-400 italic">Tanpa batas</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            @php
-                                $reasonLabels = [
-                                    'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
-                                    'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
-                                    'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
-                                ];
-                                $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
-                            @endphp
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
-                                {{ $label[0] }}
-                            </span>
-                        </td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        <!-- Mobile Cards -->
-        <div class="md:hidden divide-y divide-gray-200">
-            @foreach($shiftHistories->take(10) as $history)
-            <div class="p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="flex items-center gap-2">
-                        <div class="bg-orange-100 rounded-lg p-1.5">
-                            <i class="fas fa-clock text-orange-600 text-xs"></i>
-                        </div>
-                        <span class="text-sm font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</span>
-                    </div>
-                    @php
-                        $reasonLabels = [
-                            'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
-                            'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
-                            'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
-                        ];
-                        $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
-                    @endphp
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
-                        {{ $label[0] }}
-                    </span>
-                </div>
-                <div class="text-xs text-gray-500 space-y-1">
-                    @if($history->shift)
-                        <p><i class="fas fa-clock mr-1"></i>{{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}</p>
-                    @endif
-                    <p><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }} — {{ $history->effective_until ? \Carbon\Carbon::parse($history->effective_until)->format('d M Y') : 'Tanpa batas' }}</p>
-                    <p><i class="fas fa-exchange-alt mr-1"></i>Diganti: {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}</p>
-                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }}
+                                <span class="text-gray-400 mx-1">—</span>
+                                @if($history->effective_until)
+                                    {{ \Carbon\Carbon::parse($history->effective_until)->format('d M Y') }}
+                                @else
+                                    <span class="text-gray-400 italic">Tanpa batas</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                @php
+                                    $reasonLabels = [
+                                        'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
+                                        'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
+                                        'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
+                                    ];
+                                    $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
+                                @endphp
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
+                                    {{ $label[0] }}
+                                </span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-            @endforeach
-        </div>
+
+            <!-- Mobile Cards -->
+            <div class="md:hidden divide-y divide-gray-200">
+                @foreach($shiftHistories->take(10) as $history)
+                <div class="p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="flex items-center gap-2">
+                            <div class="bg-orange-100 rounded-lg p-1.5">
+                                <i class="fas fa-clock text-orange-600 text-xs"></i>
+                            </div>
+                            <span class="text-sm font-medium text-gray-900">{{ $history->shift->name ?? '-' }}</span>
+                        </div>
+                        @php
+                            $reasonLabels = [
+                                'shift_replaced' => ['Diganti', 'bg-blue-100 text-blue-800'],
+                                'shift_updated' => ['Diperbarui', 'bg-yellow-100 text-yellow-800'],
+                                'shift_deleted' => ['Dihapus', 'bg-red-100 text-red-800'],
+                            ];
+                            $label = $reasonLabels[$history->change_reason] ?? [$history->change_reason, 'bg-gray-100 text-gray-800'];
+                        @endphp
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $label[1] }}">
+                            {{ $label[0] }}
+                        </span>
+                    </div>
+                    <div class="text-xs text-gray-500 space-y-1">
+                        @if($history->shift)
+                            <p><i class="fas fa-clock mr-1"></i>{{ \Carbon\Carbon::parse($history->shift->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($history->shift->end_time)->format('H:i') }}</p>
+                        @endif
+                        <p><i class="fas fa-calendar mr-1"></i>{{ \Carbon\Carbon::parse($history->effective_from)->format('d M Y') }} — {{ $history->effective_until ? \Carbon\Carbon::parse($history->effective_until)->format('d M Y') : 'Tanpa batas' }}</p>
+                        <p><i class="fas fa-exchange-alt mr-1"></i>Diganti: {{ \Carbon\Carbon::parse($history->changed_at)->format('d M Y') }}</p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        @else
+            <div class="p-10 text-center">
+                <div class="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-history text-gray-400 text-2xl"></i>
+                </div>
+                <h4 class="text-gray-800 font-medium">Belum Ada Riwayat</h4>
+                <p class="text-gray-500 text-sm mt-1">Anda belum memiliki riwayat perubahan jadwal shift.</p>
+            </div>
+        @endif
     </div>
-    @endif
 
     <!-- Modal for Shift Detail -->
     <div x-show="showModal"

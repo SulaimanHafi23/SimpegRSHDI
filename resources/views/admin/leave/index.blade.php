@@ -15,8 +15,11 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select name="status" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
-                        <option value="">Semua Status</option>
-                        <option value="pending">Menunggu</option>
+                        <option value="all">Semua Status</option>
+                        @if($isSuperAdmin)
+                            <option value="pending">Menunggu Manager</option>
+                        @endif
+                        <option value="manager_verified">Menunggu (Diverifikasi Manager)</option>
                         <option value="approved">Disetujui</option>
                         <option value="rejected">Ditolak</option>
                         <option value="cancelled">Dibatalkan</option>
@@ -36,7 +39,7 @@
     </x-page-header>
 
     {{-- Statistics Cards --}}
-    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div class="grid grid-cols-1 {{ $isSuperAdmin ? 'md:grid-cols-6' : 'md:grid-cols-5' }} gap-4">
         <x-stats-card
             title="Total Pengajuan"
             :value="$statistics['total'] ?? 0"
@@ -44,10 +47,18 @@
             color="blue" />
 
         <x-stats-card
-            title="Menunggu"
+            title="{{ $isSuperAdmin ? 'Menunggu Manager' : 'Menunggu' }}"
             :value="$statistics['pending'] ?? 0"
             icon="fas fa-clock"
             color="yellow" />
+
+        @if($isSuperAdmin)
+        <x-stats-card
+            title="Diverifikasi Manager"
+            :value="$statistics['manager_verified'] ?? 0"
+            icon="fas fa-user-check"
+            color="orange" />
+        @endif
 
         <x-stats-card
             title="Disetujui"
@@ -90,17 +101,24 @@
             @endforeach
         </x-form.select>
 
-        <x-form.select
-            name="status"
-            label="Status"
-            :options="[
-                'pending' => 'Menunggu',
+        @php
+            $statusOptions = [
+                'all' => 'Semua Status',
+                'manager_verified' => 'Menunggu (Diverifikasi Manager)',
                 'approved' => 'Disetujui',
                 'rejected' => 'Ditolak',
                 'cancelled' => 'Dibatalkan'
-            ]"
-            :selected="$filters['status'] ?? ''"
-            placeholder="Semua Status" />
+            ];
+            if ($isSuperAdmin) {
+                // Insert 'pending' after 'all'
+                $statusOptions = ['all' => 'Semua Status', 'pending' => 'Menunggu Manager'] + $statusOptions;
+            }
+        @endphp
+        <x-form.select
+            name="status"
+            label="Status"
+            :options="$statusOptions"
+            :selected="$filters['original_status'] ?? ''" />
 
         <x-form.select
             name="month"
@@ -138,7 +156,8 @@
                 @foreach($leaves as $index => $leave)
                     @php
                         $statusBadges = [
-                            'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
+                            'manager_verified' => ['variant' => 'warning', 'label' => 'Menunggu (Diverifikasi Manager)'],
+                            'pending' => ['variant' => 'secondary', 'label' => 'Menunggu Manager'],
                             'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
                             'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
                             'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
@@ -164,7 +183,8 @@
                                 <div>
                                     <span class="text-[10px] uppercase tracking-wider font-bold text-gray-400 block mb-0.5">Pegawai</span>
                                     <span class="text-sm font-bold text-gray-900 leading-tight block">{{ $leave->worker->name ?? '-' }}</span>
-                                    <span class="text-xs text-gray-500">{{ $leave->worker->nip ?? '-' }}</span>
+                                    <span class="text-xs text-gray-500 block">{{ $leave->worker->nip ?? '-' }}</span>
+                                    <span class="text-xs text-indigo-500 block mt-0.5"><i class="fas fa-building mr-1"></i>{{ $leave->worker->department->name ?? '-' }}</span>
                                 </div>
                             </div>
 
@@ -200,6 +220,7 @@
                                class="inline-flex items-center rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-blue-700 shadow-sm transition active:scale-95">
                                 <i class="fas fa-search mr-1.5"></i> Periksa Pengajuan
                             </a>
+                            @if($leave->status === 'cancelled')
                             <form action="{{ route('admin.leave.destroy', $leave->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('DELETE')
@@ -210,6 +231,7 @@
                                     <i class="fas fa-trash-alt mr-1.5"></i> Hapus
                                 </button>
                             </form>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -236,6 +258,7 @@
                                 <td class="px-6 py-3">
                                     <div class="font-medium text-gray-900">{{ $leave->worker->name ?? '-' }}</div>
                                     <div class="text-sm text-gray-500">{{ $leave->worker->nip ?? '-' }}</div>
+                                    <div class="text-xs text-indigo-500 mt-0.5"><i class="fas fa-building mr-1"></i>{{ $leave->worker->department->name ?? '-' }}</div>
                                 </td>
                                 <td class="px-6 py-3 text-gray-700">{{ $leave->leaveType->name ?? '-' }}</td>
                                 <td class="px-6 py-3">
@@ -245,15 +268,26 @@
                                 <td class="px-6 py-3 text-gray-700">{{ $leave->total_days ?? 0 }} hari</td>
                                 <td class="px-6 py-3">
                                     @php
-                                        $statusBadges = [
-                                            'pending' => ['variant' => 'warning', 'label' => 'Menunggu'],
-                                            'approved' => ['variant' => 'success', 'label' => 'Disetujui'],
-                                            'rejected' => ['variant' => 'danger', 'label' => 'Ditolak'],
-                                            'cancelled' => ['variant' => 'secondary', 'label' => 'Dibatalkan'],
-                                        ];
-                                        $badge = $statusBadges[$leave->status] ?? ['variant' => 'secondary', 'label' => $leave->status];
+                                        $statusClass = match($leave->status) {
+                                            'manager_verified' => 'bg-yellow-100 text-yellow-800',
+                                            'pending' => 'bg-gray-100 text-gray-600',
+                                            'approved' => 'bg-green-100 text-green-800',
+                                            'rejected' => 'bg-red-100 text-red-800',
+                                            'cancelled' => 'bg-gray-100 text-gray-800',
+                                            default => 'bg-gray-100 text-gray-800'
+                                        };
+                                        $statusText = match($leave->status) {
+                                            'manager_verified' => 'Menunggu',
+                                            'pending' => 'Menunggu Manager',
+                                            'approved' => 'Disetujui',
+                                            'rejected' => 'Ditolak',
+                                            'cancelled' => 'Dibatalkan',
+                                            default => ucfirst($leave->status)
+                                        };
                                     @endphp
-                                    <x-badge :variant="$badge['variant']">{{ $badge['label'] }}</x-badge>
+                                    <span class="inline-flex rounded-full px-2 text-xs font-semibold leading-5 {{ $statusClass }}">
+                                        {{ $statusText }}
+                                    </span>
                                 </td>
                                 <td class="px-6 py-3 text-right">
                                     <div class="flex justify-end space-x-2">
@@ -263,6 +297,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                                             </svg>
                                         </a>
+                                        @if($leave->status === 'cancelled')
                                         <form action="{{ route('admin.leave.destroy', $leave->id) }}" method="POST" class="inline">
                                             @csrf
                                             @method('DELETE')
@@ -272,6 +307,7 @@
                                                 </svg>
                                             </button>
                                         </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

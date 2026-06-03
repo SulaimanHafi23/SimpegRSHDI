@@ -1,4 +1,4 @@
-﻿@extends('layouts.employee')
+@extends('layouts.employee')
 
 @section('title', 'Ajukan Perjalanan Dinas')
 
@@ -130,6 +130,19 @@
                     @error('half_day_session')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                     @enderror
+
+                    {{-- Dynamic Session Guidance --}}
+                    <div id="sessionGuidance" class="mt-3 hidden p-3 rounded-xl border border-amber-200 bg-amber-50 animate-fadeIn">
+                        <div class="flex gap-2.5">
+                            <svg class="w-5 h-5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div>
+                                <p class="text-xs font-bold text-amber-800 uppercase tracking-wider mb-1">Panduan Absensi</p>
+                                <p id="sessionGuidanceText" class="text-xs sm:text-sm text-amber-700 leading-relaxed"></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -257,11 +270,11 @@
 
             <div class="mt-4">
                 <label for="supporting_document" class="block text-sm font-medium text-gray-700 mb-1.5">
-                    Surat Tugas / Disposisi <span class="text-red-500">*</span>
+                    Surat Tugas / Disposisi <span class="text-gray-400 font-normal text-xs">(Opsional)</span>
                 </label>
-                <input type="file" name="supporting_document" id="supporting_document" accept=".pdf,.jpg,.jpeg,.png" required
+                <input type="file" name="supporting_document" id="supporting_document" accept=".pdf,.jpg,.jpeg,.png"
                        class="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm sm:text-base @error('supporting_document') border-red-400 bg-red-50 @enderror">
-                <p class="mt-1 text-xs text-gray-500">Wajib upload surat tugas/disposisi (PDF/JPG/PNG, maks 5MB).</p>
+                <p class="mt-1 text-xs text-gray-500">Upload surat tugas/disposisi jika ada (PDF/JPG/PNG, maks 5MB).</p>
                 @error('supporting_document')
                     <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                 @enderror
@@ -320,6 +333,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function updateDateCounter() {
         if (startDateInput.value && endDateInput.value) {
             if (isHalfDay()) {
+                var session = halfDaySessionInput.value;
+                var guidance = document.getElementById('sessionGuidance');
+                var guidanceText = document.getElementById('sessionGuidanceText');
+
+                if (session === 'pagi') {
+                    guidanceText.innerHTML = '<strong>Sesi Pagi:</strong> Anda diperbolehkan tidak melakukan <strong>Absen Masuk</strong>. Namun, Anda tetap wajib melakukan <strong>Absen Pulang</strong> di kantor setelah perjalanan selesai.';
+                    guidance.classList.remove('hidden');
+                } else if (session === 'siang') {
+                    guidanceText.innerHTML = '<strong>Sesi Siang:</strong> Anda tetap wajib melakukan <strong>Absen Masuk</strong> di pagi hari. Anda diperbolehkan tidak melakukan <strong>Absen Pulang</strong> karena perjalanan berakhir di luar kantor.';
+                    guidance.classList.remove('hidden');
+                } else {
+                    guidance.classList.add('hidden');
+                }
+
                 var sessionLabel = halfDaySessionInput.value ? ' (' + halfDaySessionInput.options[halfDaySessionInput.selectedIndex].text + ')' : '';
                 countText.textContent = '0.5 hari' + sessionLabel;
                 counter.classList.remove('hidden');
@@ -429,4 +456,13 @@ function updatePurposeCounter(el) {
     }
 }
 </script>
+<style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+        animation: fadeIn 0.3s ease-out forwards;
+    }
+</style>
 @endsection

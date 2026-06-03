@@ -34,7 +34,7 @@ class BusinessTripRequest extends FormRequest
             'accommodation' => 'nullable|string|max:255',
             'estimated_cost' => 'required|numeric|min:0',
             'notes' => 'nullable|string|max:500',
-            'supporting_document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'supporting_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ];
     }
 
@@ -74,8 +74,31 @@ class BusinessTripRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'start_date.after_or_equal' => 'Perjalanan dinas harus diajukan minimal 1 hari sebelum keberangkatan. Tanggal keberangkatan paling cepat besok (' . now()->addDay()->format('d M Y') . ').',
-            'supporting_document.required' => 'Perjalanan dinas wajib melampirkan surat tugas atau surat disposisi.',
+            'destination.required'            => 'Tujuan perjalanan wajib diisi.',
+            'destination.max'                 => 'Tujuan perjalanan maksimal 255 karakter.',
+            'purpose.required'                => 'Tujuan/keperluan perjalanan wajib diisi.',
+            'purpose.max'                     => 'Tujuan/keperluan maksimal 1000 karakter.',
+            'start_date.required'             => 'Tanggal keberangkatan wajib diisi.',
+            'start_date.date'                 => 'Format tanggal keberangkatan tidak valid.',
+            'start_date.after_or_equal'       => 'Perjalanan dinas harus diajukan minimal 1 hari sebelum keberangkatan. Tanggal keberangkatan paling cepat besok (' . now()->addDay()->format('d M Y') . ').',
+            'end_date.required'               => 'Tanggal kembali wajib diisi.',
+            'end_date.date'                   => 'Format tanggal kembali tidak valid.',
+            'end_date.after_or_equal'         => 'Tanggal kembali harus setelah atau sama dengan tanggal keberangkatan.',
+            'trip_duration_type.required'     => 'Tipe durasi perjalanan wajib dipilih.',
+            'trip_duration_type.in'           => 'Tipe durasi tidak valid. Pilih Satu Hari Penuh atau Setengah Hari.',
+            'half_day_session.required_if'    => 'Sesi setengah hari wajib dipilih untuk tipe setengah hari.',
+            'half_day_session.in'             => 'Sesi setengah hari tidak valid.',
+            'transportation.required'         => 'Transportasi wajib diisi.',
+            'transportation.max'              => 'Transportasi maksimal 255 karakter.',
+            'accommodation.max'               => 'Akomodasi maksimal 255 karakter.',
+            'estimated_cost.required'         => 'Estimasi biaya wajib diisi.',
+            'estimated_cost.numeric'          => 'Estimasi biaya harus berupa angka.',
+            'estimated_cost.min'              => 'Estimasi biaya tidak boleh negatif.',
+            'notes.max'                       => 'Catatan maksimal 500 karakter.',
+
+            'supporting_document.file'        => 'Dokumen pendukung harus berupa file.',
+            'supporting_document.mimes'       => 'Dokumen pendukung hanya mendukung format: pdf, jpg, jpeg, png.',
+            'supporting_document.max'         => 'Ukuran dokumen pendukung maksimal 5MB.',
         ];
     }
 

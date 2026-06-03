@@ -2,6 +2,15 @@
 
 @section('title', 'Tambah Shift')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-time input {
+        border: none !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="space-y-6">
     <!-- Header -->
@@ -61,11 +70,12 @@
                     <label for="start_time" class="block text-sm font-medium text-gray-700 mb-2">
                         Jam Masuk <span class="text-red-500">*</span>
                     </label>
-                    <input type="time"
+                    <input type="text"
                            name="start_time"
                            id="start_time"
                            value="{{ old('start_time') }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('start_time') border-red-500 @enderror"
+                           placeholder="00:00"
                            required>
                     @error('start_time')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -77,11 +87,12 @@
                     <label for="end_time" class="block text-sm font-medium text-gray-700 mb-2">
                         Jam Keluar <span class="text-red-500">*</span>
                     </label>
-                    <input type="time"
+                    <input type="text"
                            name="end_time"
                            id="end_time"
                            value="{{ old('end_time') }}"
                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent @error('end_time') border-red-500 @enderror"
+                           placeholder="00:00"
                            required>
                     @error('end_time')
                         <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -152,18 +163,20 @@
                                 <div class="grid grid-cols-2 gap-2">
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Masuk</label>
-                                             <input type="time"
+                                             <input type="text"
                                                name="day_times[{{ $dayKey }}][start_time]"
                                                value="{{ old('day_times.' . $dayKey . '.start_time') }}"
                                                  data-day-start
+                                                 placeholder="00:00"
                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                                     </div>
                                     <div>
                                         <label class="block text-xs text-gray-500 mb-1">Pulang</label>
-                                             <input type="time"
+                                             <input type="text"
                                                name="day_times[{{ $dayKey }}][end_time]"
                                                value="{{ old('day_times.' . $dayKey . '.end_time') }}"
                                                  data-day-end
+                                                 placeholder="00:00"
                                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                                     </div>
                                 </div>
@@ -220,6 +233,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     // Function to calculate total hours
     function calculateTotalHours() {
@@ -338,6 +352,24 @@
                 });
             });
         }
+
+        // Initialize Flatpickr for 24h time
+        const timePickerConfig = {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            allowInput: true,
+            onChange: function(selectedDates, dateStr, instance) {
+                // Trigger change event for total hours calculation
+                instance.element.dispatchEvent(new Event('change'));
+            }
+        };
+
+        flatpickr("#start_time", timePickerConfig);
+        flatpickr("#end_time", timePickerConfig);
+        flatpickr("[data-day-start]", timePickerConfig);
+        flatpickr("[data-day-end]", timePickerConfig);
 
         syncDayActiveState();
     });

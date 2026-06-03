@@ -177,7 +177,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
     Route::get('/manager/dashboard', [ManagerDashboardController::class, 'index'])->middleware('permission:dashboard.manager')->name('manager.dashboard');
 
     // ========== EMPLOYEE ROUTES ==========
-    Route::prefix('employee')->name('employee.')->middleware('permission:dashboard.employee')->group(function () {
+    Route::prefix('employee')->name('employee.')->middleware('permission:dashboard.employee|dashboard.hr|dashboard.manager')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
         // Attendance for employees
         Route::prefix('attendance')->name('attendance.')->group(function () {
@@ -200,6 +200,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
             Route::get('/export', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'export'])->name('export');
             Route::get('/create', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'create'])->name('create');
             Route::post('/', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'store'])->name('store');
+            Route::get('/api/worker-shifts-in-range', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'getWorkerShiftsInDateRange'])->name('api.worker-shifts-in-range');
             Route::post('/{id}/accept', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'accept'])->name('accept');
             Route::post('/{id}/reject', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'reject'])->name('reject');
             Route::post('/{id}/cancel', [\App\Http\Controllers\Employee\ShiftSwapController::class, 'cancel'])->name('cancel');
@@ -274,6 +275,7 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::prefix('shift-swap-approvals')->name('shift-swap-approvals.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'index'])->name('index');
             Route::get('/export', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'export'])->name('export');
+            Route::post('/{id}/verify', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'verify'])->name('verify');
             Route::get('/{id}', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'show'])->name('show');
             Route::post('/{id}/approve', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'approve'])->name('approve');
             Route::post('/{id}/reject', [\App\Http\Controllers\Manager\ShiftSwapApprovalController::class, 'reject'])->name('reject');
@@ -305,7 +307,9 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         // Leave Approvals
         Route::prefix('leaves')->name('leaves.')->group(function () {
             Route::get('/', [LeaveRequestController::class, 'approvalIndex'])->name('index');
+            Route::get('/export', [LeaveRequestController::class, 'export'])->name('export');
             Route::get('/{id}', [LeaveRequestController::class, 'approvalShow'])->name('show');
+            Route::post('/{id}/verify', [LeaveRequestController::class, 'approvalVerify'])->name('verify');
             Route::post('/{id}/approve', [LeaveRequestController::class, 'approvalApprove'])->name('approve');
             Route::post('/{id}/reject', [LeaveRequestController::class, 'approvalReject'])->name('reject');
         });
@@ -323,9 +327,19 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::get('/', [BusinessTripApprovalController::class, 'index'])->name('index');
         Route::get('/export', [BusinessTripApprovalController::class, 'export'])->name('export');
         Route::get('/{id}', [BusinessTripApprovalController::class, 'show'])->name('show');
+        Route::post('/{id}/verify', [BusinessTripApprovalController::class, 'verify'])->name('verify');
         Route::post('/{id}/approve', [BusinessTripApprovalController::class, 'approve'])->name('approve');
         Route::post('/{id}/reject', [BusinessTripApprovalController::class, 'reject'])->name('reject');
         Route::delete('/{id}', [BusinessTripApprovalController::class, 'destroy'])->name('destroy');
+    });
+
+    // HR Shift Swap Approvals (second stage - needs shift-swap.approve permission)
+    Route::prefix('hr/shift-swap-approvals')->name('hr.shift-swap-approvals.')->middleware('permission:shift-swap.approve')->group(function () {
+        Route::get('/', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'index'])->name('index');
+        Route::get('/{id}', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'show'])->name('show');
+        Route::post('/{id}/approve', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'reject'])->name('reject');
+        Route::delete('/{id}', [\App\Http\Controllers\HR\ShiftSwapApprovalController::class, 'destroy'])->name('destroy');
     });
 
     // ========== REPORT ROUTES ==========
@@ -500,8 +514,8 @@ Route::middleware(['auth', 'redirect_role'])->group(function () {
         Route::post('/auto-generate', [HolidayController::class, 'storeAutoGenerate'])->name('auto-generate.store');
     });
 
-    // ========== AUDIT LOG ==========
-    Route::prefix('audit-logs')->name('admin.audit-logs.')->middleware(['auth', 'permission:audit.view'])->group(function () {
+    // ========== AUDIT LOG (Super Admin only) ==========
+    Route::prefix('audit-logs')->name('admin.audit-logs.')->middleware(['auth', 'role:Super Admin'])->group(function () {
         Route::get('/', [AuditLogController::class, 'index'])->name('index');
         Route::get('/{id}', [AuditLogController::class, 'show'])->name('show');
     });

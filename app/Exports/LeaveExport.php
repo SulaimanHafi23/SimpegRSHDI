@@ -22,6 +22,9 @@ class LeaveExport implements FromCollection, WithHeadings, WithMapping, WithStyl
 
     public function collection()
     {
+        $user = auth()->user();
+        $isHR = $user->hasRole(['HR', 'hr']) && !$user->hasRole(['Admin', 'Super Admin', 'admin', 'super admin', 'superadmin']);
+        
         $query = LeaveRequest::with(['worker.department', 'leaveType', 'approver']);
 
         if (!empty($this->filters['worker_id'])) {
@@ -29,15 +32,18 @@ class LeaveExport implements FromCollection, WithHeadings, WithMapping, WithStyl
         }
 
         if (!empty($this->filters['date_from'])) {
-            $query->whereDate('start_date', '>=', $this->filters['date_from']);
+            $query->where('start_date', '>=', $this->filters['date_from']);
         }
 
         if (!empty($this->filters['date_to'])) {
-            $query->whereDate('start_date', '<=', $this->filters['date_to']);
+            $query->where('end_date', '<=', $this->filters['date_to']);
         }
 
         if (!empty($this->filters['status'])) {
             $query->where('status', $this->filters['status']);
+        } elseif ($isHR) {
+            // HR viewing 'all' should not see 'pending'
+            $query->where('status', '!=', 'pending');
         }
 
         if (!empty($this->filters['leave_type_id'])) {

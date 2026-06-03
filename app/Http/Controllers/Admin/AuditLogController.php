@@ -12,17 +12,10 @@ class AuditLogController extends Controller
     /**
      * Display audit log listing.
      */
-    public function index(Request $request): View
+    public function index(\App\Http\Requests\Admin\AuditLogFilterRequest $request): View
     {
         // Validate inputs to prevent SQL injection
-        $validated = $request->validate([
-            'action' => 'nullable|string|in:created,updated,deleted,login,logout',
-            'user_id' => 'nullable|uuid|exists:users,id',
-            'model_type' => 'nullable|string|regex:/^[A-Za-z]+$/', // Only letters to prevent injection
-            'date_from' => 'nullable|date',
-            'date_to' => 'nullable|date',
-            'search' => 'nullable|string|max:255',
-        ]);
+        $validated = $request->validated();
 
         $query = AuditLog::with('user')
             ->orderBy('created_at', 'desc');
